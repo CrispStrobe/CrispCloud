@@ -169,7 +169,8 @@ void main() {
               before.text,
               before.fontSizePt,
               before.color,
-              before.fontFamily,
+              // A newly saved deck supplies the default theme's minor face.
+              format ? before.fontFamily : 'Arial',
               before.bold,
               before.italic,
               before.underline,

@@ -90,6 +90,9 @@ Uint8List _fixture({
   int textCount = 1,
   bool deletedShape = false,
   bool compressedTitle = false,
+  bool paddedUserStream = false,
+  bool ansiOnlyRecordLength = false,
+  bool emptyNameRecordLength = false,
   String title = 'CURRENT 世界 😀',
 }) {
   final stream = BytesBuilder();
@@ -181,12 +184,27 @@ Uint8List _fixture({
     ..setUint16(14, oldVersion ? 0x1234 : 0x03f4, Endian.little)
     ..setUint8(16, 3)
     ..setUint32(20, 8, Endian.little);
+  final userName = ansiOnlyRecordLength ? 'AB'.codeUnits : const <int>[];
+  currentUser.setUint16(12, userName.length, Endian.little);
+  final userRecord = _record(0x0ff6, [
+    ...currentUser.buffer.asUint8List().take(20),
+    ...userName,
+    ...currentUser.buffer.asUint8List().skip(20),
+    for (final unit in userName) ...[unit, 0],
+  ]);
+  final lengthOffset = ByteData.sublistView(userRecord);
+  if (ansiOnlyRecordLength) {
+    lengthOffset.setUint32(4, 24 + userName.length, Endian.little);
+  } else if (emptyNameRecordLength) {
+    lengthOffset.setUint32(4, 28, Endian.little);
+  }
+  final userStream = paddedUserStream
+      ? (Uint8List(kPowerPointCurrentUserLimit)
+          ..setRange(0, userRecord.length, userRecord))
+      : userRecord;
   final prefix = nestedStorageOnly ? 'Embedded/' : '';
   return (CfbfWriter()
-        ..addStream(
-          '${prefix}Current User',
-          _record(0x0ff6, currentUser.buffer.asUint8List()),
-        )
+        ..addStream('${prefix}Current User', userStream)
         ..addStream('${prefix}PowerPoint Document', data)
         ..addStream(
           'Unrelated',
@@ -264,6 +282,38 @@ void main() {
     expect(
       extractLegacyPowerPoint(_fixture(nestedDepth: 4)).slides.first.text,
       'CURRENT 世界 😀',
+    );
+  });
+
+  test('accepts ANSI record length, Unicode names and zero sector padding', () {
+    for (final fixture in [
+      _fixture(ansiOnlyRecordLength: true),
+      _fixture(ansiOnlyRecordLength: true, paddedUserStream: true),
+      _fixture(emptyNameRecordLength: true),
+      _fixture(emptyNameRecordLength: true, paddedUserStream: true),
+    ]) {
+      expect(extractLegacyPowerPoint(fixture).slides.length, 2);
+    }
+    final reader = BoundedCfbReader(_fixture(paddedUserStream: true));
+    final user = reader.readPath('Current User')!..last = 1;
+    expect(
+      () => readPowerPointCurrentEditOffset(user),
+      _error(LegacyPowerPointErrorCode.malformed),
+    );
+  });
+
+  test('normalizes template preview bytes without modifying the source', () {
+    final source = _fixture(emptyNameRecordLength: true);
+    final normalized = legacyPowerPointGraphicalInput(source);
+    expect(identical(source, normalized), isFalse);
+    int recordLength(Uint8List file) =>
+        ByteData.sublistView(BoundedCfbReader(file).readPath('Current User')!)
+            .getUint32(4, Endian.little);
+    expect(recordLength(normalized), 24);
+    expect(recordLength(source), 28);
+    expect(
+      extractLegacyPowerPoint(normalized).plainText,
+      extractLegacyPowerPoint(source).plainText,
     );
   });
 

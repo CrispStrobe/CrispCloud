@@ -54,7 +54,7 @@ part of 'word_layout.dart';
       final heightLimit =
           physical.contentHeight -
           18 -
-          2 * owner._containedCellMargin -
+          owner._containedVerticalInsets -
           10 * (depth - 1);
       if (!absolute && heightLimit <= 0) {
         throw UnsupportedError(

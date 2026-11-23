@@ -9,6 +9,7 @@ import 'formula_functions.dart';
 enum FormulaTokenKind {
   number,
   string,
+  error,
   boolTrue,
   boolFalse,
   name,
@@ -337,6 +338,26 @@ class CellNode extends FormulaNode {
   }
 }
 
+/// A single cell resolved from a saved external workbook cache.
+class ExternalCellNode extends FormulaNode {
+  ExternalCellNode(this.linkIndex, this.sheetName, this.ref);
+
+  final int linkIndex;
+  final String sheetName;
+  final SmlCellRef ref;
+
+  @override
+  Object eval(FormulaContext ctx) {
+    final value = ctx
+        .workbook
+        .externalCellValues[(linkIndex, sheetName.toLowerCase(), ref.a1)];
+    if (value == null) {
+      throw UnsupportedError('External cell has no stored value');
+    }
+    return value;
+  }
+}
+
 /// Class RangeNode.
 class RangeNode extends FormulaNode {
   /// RangeNode API.
@@ -391,8 +412,9 @@ class BinaryNode extends FormulaNode {
     if (op == '&') {
       return '${_str(a)}${_str(b)}';
     }
-    final double? na = _num(a);
-    final double? nb = _num(b);
+    final arithmetic = const {'+', '-', '*', '/', '^'}.contains(op);
+    final double? na = a == null && (arithmetic || b is! String) ? 0 : _num(a);
+    final double? nb = b == null && (arithmetic || a is! String) ? 0 : _num(b);
     if (na == null || nb == null) {
       if (op == '=' || op == '<>') {
         final bool eq = _str(a) == _str(b);
@@ -529,7 +551,16 @@ double? _num(Object? v) {
   return null;
 }
 
-String _str(Object? v) => v == null ? '' : v.toString();
+String _str(Object? value) {
+  if (value == null) return '';
+  if (value is bool) return value ? 'TRUE' : 'FALSE';
+  if (value is double && value == 0) return '0';
+  final text = value.toString();
+  if (value is double && text.endsWith('.0')) {
+    return text.substring(0, text.length - 2);
+  }
+  return text;
+}
 
 /// formulaString helper.
 String formulaString(Object? v) => _str(v);

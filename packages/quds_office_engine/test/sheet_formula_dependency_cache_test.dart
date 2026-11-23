@@ -15,6 +15,125 @@ SmlCell _formula(
   ..type = type;
 
 void main() {
+  test('external cell caches recalculate without opening the source', () {
+    const x = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    const r =
+        'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const workbookUri = '/xl/workbook.xml';
+    final original = SmlWorkbook();
+    final sheet = original.firstSheet;
+    sheet.cellA1('B1').value = 7;
+    _formula(sheet, 'A1', r"'[1]Other Data'!$A$1+B1", 100);
+    _formula(sheet, 'A2', '[2]Other!A1', 100);
+    _formula(
+      sheet,
+      'A3',
+      r'''LEN('[1]Other Data'!A2)+IF('[1]Other Data'!A3,1,0)''',
+      100,
+    );
+    _formula(sheet, 'A4', r"IFNA('[1]Other Data'!A4,99)", 100);
+    _formula(sheet, 'A5', r"IFERROR('[1]Other Data'!A5+A5,0)", 95);
+    _formula(sheet, 'A6', 'A5+B1', 101);
+    _formula(sheet, 'A7', r"SUM('[1]Other Data'!A1:A5)", 102);
+    _formula(
+      sheet,
+      'A8',
+      r'''CELL("filename",'[1]Other Data'!A1)''',
+      'previous',
+    );
+    final package = SheetSerializer().write(original, recalculate: false);
+    final workbook = package.getPart(workbookUri)!;
+    const nativeMetadata =
+        '<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">'
+        '<mc:Fallback/></mc:AlternateContent>'
+        '<xr:revisionPtr xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"'
+        ' revIDLastSave="0"/>';
+    workbook.writeText(
+      workbook
+          .readText()
+          .replaceFirst('<sheets>', '$nativeMetadata<sheets>')
+          .replaceFirst(
+            '</sheets>',
+            '</sheets><externalReferences><externalReference r:id="first"/>'
+                '<externalReference r:id="second"/></externalReferences><extLst/>',
+          ),
+    );
+
+    // Workbook relationship order and part names are independent of indices.
+    for (final (id, file, body) in [
+      (
+        'second',
+        'externalLink1.xml',
+        '<sheetNames><sheetName val="Other"/></sheetNames>'
+            '<sheetDataSet><sheetData sheetId="0"><row r="1">'
+            '<cell r="A1"><v>82</v></cell></row></sheetData></sheetDataSet>',
+      ),
+      (
+        'first',
+        'externalLink9.xml',
+        '<sheetNames><sheetName val="Unused"/><sheetName val="Other Data"/></sheetNames>'
+            '<sheetDataSet><sheetData sheetId="1">'
+            '<row r="1"><cell r="A1"><v>42</v></cell></row>'
+            '<row r="2"><cell r="A2" t="str"><v xml:space="preserve"> </v></cell></row>'
+            '<row r="3"><cell r="A3" t="b"><v>1</v></cell></row>'
+            '<row r="4"><cell r="A4" t="e"><v>#N/A</v></cell></row>'
+            '</sheetData></sheetDataSet>',
+      ),
+    ]) {
+      final uri = '/xl/externalLinks/$file';
+      package
+          .relationshipsFor(workbookUri)
+          .add(id: id, type: '$r/externalLink', target: 'externalLinks/$file');
+      package.createPart(
+        uri,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml',
+        '<externalLink xmlns="$x" xmlns:r="$r">'
+                '<externalBook r:id="outside">$body</externalBook></externalLink>'
+            .codeUnits,
+      );
+      package
+          .relationshipsFor(uri)
+          .add(
+            id: 'outside',
+            type: '$r/externalLinkPath',
+            target: 'file:///missing.xlsx',
+            targetMode: RelationshipTargetMode.external,
+          );
+    }
+
+    final book = SheetDeserializer().read(package);
+    final graph = FormulaDepGraph(book)..recalculate();
+    expect(graph.circular, isEmpty);
+    final values = [49, 82, 2, 99, 95, 101, 102, 'previous'];
+    expect(
+      List.generate(8, (i) => book.firstSheet.cellA1('A${i + 1}').value),
+      values,
+    );
+    final saved = SheetSerializer().writeBytes(book);
+    final reopened = SheetDeserializer().readBytes(saved);
+    final xml = reopened.package!.getPart(workbookUri)!.readText();
+    expect(xml, contains('$nativeMetadata<sheets>'));
+    expect(xml, contains('</externalReferences><extLst'));
+    FormulaDepGraph(reopened).recalculate();
+    expect(
+      List.generate(8, (i) => reopened.firstSheet.cellA1('A${i + 1}').value),
+      values,
+    );
+    expect(
+      reopened.firstSheet.cellA1('A1').formula,
+      r"'[1]Other Data'!$A$1+B1",
+    );
+    const uri = '/xl/externalLinks/externalLink9.xml';
+    expect(
+      reopened.package!.getPart(uri)!.readBytes(),
+      package.getPart(uri)!.readBytes(),
+    );
+    expect(
+      reopened.package!.relationshipsFor(uri).byId('outside')!.target,
+      'file:///missing.xlsx',
+    );
+  });
+
   for (final reverse in [false, true]) {
     test('unsupported dependencies retain every cache; reverse=$reverse', () {
       final book = SmlWorkbook();

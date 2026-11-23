@@ -259,6 +259,7 @@ final class _OfficeFormulaPreflight {
     _charge(1, 1);
     switch (node) {
       case LiteralNode():
+      case ExternalCellNode():
         break;
       case CellNode(:final ref):
         _range(SmlRange(ref, ref));

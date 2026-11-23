@@ -1,6 +1,7 @@
 import '../model/sml_workbook.dart';
 import 'dep_graph.dart';
 import 'formula_ast.dart';
+import 'formula_functions.dart';
 
 /// Tokenizes an Excel formula (leading `=` optional).
 class FormulaLexer {
@@ -30,8 +31,13 @@ class FormulaLexer {
       final int ch = _src.codeUnitAt(_i);
       if (ch == 0x22) {
         tokens.add(_string());
+      } else if (ch == 0x23) {
+        tokens.add(_errorOrOperator());
       } else if (ch == 0x27) {
         tokens.add(_quotedSheetRef());
+      } else if (ch == 0x5B &&
+          _externalPrefix.matchAsPrefix(_src, _i) != null) {
+        tokens.add(_externalRef());
       } else if (_isDigit(ch) || (ch == 0x2E && _peekIsDigit())) {
         tokens.add(_number());
       } else if (_isIdentStart(ch)) {
@@ -60,6 +66,24 @@ class FormulaLexer {
     }
     tokens.add(FormulaToken(FormulaTokenKind.eof, '', start: _raw, end: _raw));
     return tokens;
+  }
+
+  static final _errorToken = RegExp(
+    r'#(?:NULL!|DIV/0!|VALUE!|REF!|NAME\?|NUM!|N/A|SPILL!|CALC!|GETTING_DATA)',
+    caseSensitive: false,
+  );
+
+  FormulaToken _errorOrOperator() {
+    final match = _errorToken.matchAsPrefix(_src, _i);
+    if (match == null) return _operator();
+    final start = _raw;
+    _i = match.end;
+    return FormulaToken(
+      FormulaTokenKind.error,
+      match.group(0)!.toUpperCase(),
+      start: start,
+      end: _raw,
+    );
   }
 
   /// length API.
@@ -180,6 +204,18 @@ class FormulaLexer {
       if (!_done && _src[_i] == ']') {
         _i++;
       }
+    }
+    return _classifyRef(_src.substring(start, _i), start: rawStart, end: _raw);
+  }
+
+  static final _externalPrefix = RegExp(r'\[[1-9][0-9]*\]');
+
+  FormulaToken _externalRef() {
+    final start = _i;
+    final rawStart = _raw;
+    _i = _externalPrefix.matchAsPrefix(_src, _i)!.end;
+    while (!_done && _isIdentPart(_src.codeUnitAt(_i))) {
+      _i++;
     }
     return _classifyRef(_src.substring(start, _i), start: rawStart, end: _raw);
   }
@@ -318,6 +354,8 @@ class FormulaParser {
         return LiteralNode(tok.number);
       case FormulaTokenKind.string:
         return LiteralNode(tok.lexeme);
+      case FormulaTokenKind.error:
+        return LiteralNode(FormulaErrorValue(tok.lexeme));
       case FormulaTokenKind.boolTrue:
       case FormulaTokenKind.boolFalse:
         // Boolean constants also have zero-argument function spellings.
@@ -334,14 +372,31 @@ class FormulaParser {
       case FormulaTokenKind.range:
         return _range(tok.lexeme);
       case FormulaTokenKind.name:
+        if (tok.lexeme.endsWith('!') &&
+            _cur.kind == FormulaTokenKind.error &&
+            _cur.lexeme == '#REF!') {
+          _eat();
+          return LiteralNode(const FormulaErrorValue('#REF!'));
+        }
         if (_cur.kind == FormulaTokenKind.lparen) {
           _eat();
           final List<FormulaNode> args = <FormulaNode>[];
           if (_cur.kind != FormulaTokenKind.rparen) {
-            args.add(_expr(0));
-            while (_cur.kind == FormulaTokenKind.comma) {
+            final allowOmitted =
+                FormulaFunctions.stripFutureFunctionPrefix(
+                  tok.lexeme.toUpperCase(),
+                ) ==
+                'NUMBERVALUE';
+            while (true) {
+              args.add(
+                allowOmitted &&
+                        (_cur.kind == FormulaTokenKind.comma ||
+                            _cur.kind == FormulaTokenKind.rparen)
+                    ? LiteralNode(null)
+                    : _expr(0),
+              );
+              if (_cur.kind != FormulaTokenKind.comma) break;
               _eat();
-              args.add(_expr(0));
             }
           }
           if (_cur.kind != FormulaTokenKind.rparen) {
@@ -387,10 +442,17 @@ class FormulaParser {
   static FormulaNode _cell(String lex) {
     final int bang = lex.lastIndexOf('!');
     if (bang >= 0) {
-      return CellNode(
-        SmlCellRef.parse(lex.substring(bang + 1)),
-        sheetName: _sheetName(lex.substring(0, bang)),
-      );
+      final qualifier = _unquoteSheet(lex.substring(0, bang));
+      final ref = SmlCellRef.parse(lex.substring(bang + 1));
+      final external = _externalSheet.firstMatch(qualifier);
+      if (external != null &&
+          ref.col >= 0 &&
+          ref.col < SmlWorksheet.excelColumnCount &&
+          ref.row >= 0 &&
+          ref.row < SmlWorksheet.excelRowCount) {
+        return ExternalCellNode(int.parse(external[1]!), external[2]!, ref);
+      }
+      return CellNode(ref, sheetName: _sheetName(lex.substring(0, bang)));
     }
     return CellNode(SmlCellRef.parse(lex));
   }
@@ -416,13 +478,18 @@ class FormulaParser {
     throw const FormatException('Invalid range');
   }
 
+  static final _externalSheet = RegExp(r'^\[([1-9][0-9]*)\]([^\[\]:]+)$');
+
+  static String _unquoteSheet(String raw) =>
+      raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'")
+      ? raw.substring(1, raw.length - 1).replaceAll("''", "'")
+      : raw;
+
   static String _sheetName(String raw) {
-    final name = raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'")
-        ? raw.substring(1, raw.length - 1).replaceAll("''", "'")
-        : raw;
+    final name = _unquoteSheet(raw);
     if (name.contains('[') || name.contains(']') || name.contains(':')) {
       throw UnsupportedError(
-        'External and 3-D formula references are not evaluated',
+        'This external or 3-D formula reference is not evaluated',
       );
     }
     return name;
@@ -459,7 +526,9 @@ Object? evaluateFormula(String source, FormulaContext ctx) =>
 Object? evaluateFormulaForCache(String source, FormulaContext ctx) =>
     ctx.withErrorTypes(() {
       try {
-        return parseFormula(source).eval(ctx);
+        final formula = parseFormula(source);
+        final result = formula.eval(ctx);
+        return result ?? (formula is CellNode ? 0.0 : null);
       } on Object catch (error) {
         return FormulaErrorValue('#ERROR! $error', isUnsupported: true);
       }

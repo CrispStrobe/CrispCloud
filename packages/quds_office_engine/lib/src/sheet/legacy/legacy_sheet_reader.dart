@@ -308,6 +308,7 @@ class _BiffWorkbookParser {
   final List<({int supBook, int first, int last})> _externSheets =
       <({int supBook, int first, int last})>[];
   bool _sawGlobals = false;
+  bool _uses1904Dates = false;
   double? _defaultRowHeightPx;
 
   SmlWorkbook parse() {
@@ -325,7 +326,8 @@ class _BiffWorkbookParser {
             );
           }
         case 0x0022: // DATEMODE
-          break;
+          final reader = _Reader(record.data);
+          if (reader.remaining >= 2) _uses1904Dates = reader.u16() == 1;
         case 0x0042: // CODEPAGE
           break;
         case 0x0225: // DEFAULTROWHEIGHT
@@ -409,7 +411,11 @@ class _BiffWorkbookParser {
     if (_sheets.isEmpty) {
       throw const LegacySheetFormatException('Workbook has no worksheets');
     }
-    final book = SmlWorkbook(sheets: <SmlWorksheet>[], styles: SmlStyleSheet());
+    final book = SmlWorkbook(
+      sheets: <SmlWorksheet>[],
+      styles: SmlStyleSheet(),
+      uses1904Dates: _uses1904Dates,
+    );
     final styles = book.styles!;
     final styleCache = <int, int>{};
     var sheetId = 0;

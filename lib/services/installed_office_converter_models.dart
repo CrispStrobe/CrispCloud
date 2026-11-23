@@ -82,6 +82,25 @@ class InstalledOfficeConversionException implements Exception {
 }
 
 const kInstalledOfficeInputLimit = 64 * 1024 * 1024;
+bool isInstalledOfficePresentationName(String name) =>
+    const {
+      'ppt',
+      'pot',
+      'pps',
+      'pptx',
+      'potx',
+      'ppsx',
+      'pptm',
+      'potm',
+      'ppsm',
+    }.contains(name.split('.').last.toLowerCase()) &&
+    name.contains('.');
+
+int installedOfficePreviewInputLimit(String name) =>
+    isInstalledOfficePresentationName(name)
+    ? 256 * 1024 * 1024
+    : kInstalledOfficeInputLimit;
+
 const kInstalledOfficeOutputLimit = 64 * 1024 * 1024;
 const kInstalledOfficeDefaultTimeout = Duration(minutes: 2);
 

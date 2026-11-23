@@ -201,10 +201,9 @@ abstract final class WordBookmarks {
   }
 
   /// Import-time repair of unpaired endpoints, matching how Word reads
-  /// them: a start without an end extends to the end of its story, an end
-  /// without a start is ignored. Returns the number of repairs. Documents
-  /// with such bookmarks are common (edited templates, form fields) and were
-  /// previously refused as a whole.
+  /// them: a start without an end extends to the end of its story, unless a
+  /// complete range already owns its name. An end without a start is ignored.
+  /// Returns the number of repairs.
   static int repairUnpaired(WmlDocument document) {
     // Frame anchors appear in story lists as synthetic paragraphs that are
     // never written; only close ranges in paragraphs the model owns.
@@ -229,16 +228,22 @@ abstract final class WordBookmarks {
       ]);
     var repairs = 0;
     for (final story in _stories(document)) {
-      final open = <String, WmlBookmarkBoundary>{};
+      final open = <String, (WmlParagraph, WmlBookmarkBoundary)>{};
+      final completeNames = <String>{};
       for (final paragraph in story) {
         paragraph.inlines.removeWhere((inline) {
           if (inline is! WmlBookmarkBoundary) return false;
           final id = canonicalId(inline.id);
           if (inline.isStart) {
-            open[id] = inline;
+            open[id] = (paragraph, inline);
             return false;
           }
-          if (open.remove(id) != null) return false;
+          final start = open.remove(id)?.$2;
+          if (start != null) {
+            final name = start.name;
+            if (name != null) completeNames.add(name);
+            return false;
+          }
           repairs++;
           return true;
         });
@@ -246,9 +251,32 @@ abstract final class WordBookmarks {
       if (open.isEmpty) continue;
       final last = story.lastWhere(real.contains, orElse: () => WmlParagraph());
       if (!real.contains(last)) continue;
-      for (final start in open.values) {
-        last.inlines.add(WmlBookmarkBoundary(id: start.id, isStart: false));
+      final discarded = Map<WmlParagraph, Set<WmlBookmarkBoundary>>.identity();
+      for (final (paragraph, start) in open.values) {
+        if (completeNames.contains(start.name)) {
+          (discarded[paragraph] ??= Set<WmlBookmarkBoundary>.identity()).add(
+            start,
+          );
+        } else {
+          last.inlines.add(WmlBookmarkBoundary(id: start.id, isStart: false));
+        }
         repairs++;
+      }
+      for (final MapEntry(key: paragraph, value: starts) in discarded.entries) {
+        paragraph.inlines.removeWhere(starts.contains);
+        final properties = paragraph.properties;
+        if (starts.any(
+          (start) => start.name == properties.sourceBookmarkName,
+        )) {
+          final name = paragraph.inlines
+              .whereType<WmlBookmarkBoundary>()
+              .where((marker) => marker.isStart)
+              .firstOrNull
+              ?.name;
+          properties
+            ..bookmarkName = name
+            ..sourceBookmarkName = name;
+        }
       }
     }
     return repairs;

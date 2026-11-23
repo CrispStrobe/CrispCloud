@@ -31,6 +31,24 @@ void main() {
     );
   });
 
+  test('empty cells use their own left and right ruler insets', () {
+    expect(
+      WordRuler.paragraphContentBox(
+        margins: margins,
+        pageWidth: 400,
+        cellX: 35,
+        cellWidth: 100,
+        cellInsets: const WmlTableCellInsets(
+          left: 3.5,
+          top: 2,
+          right: 6,
+          bottom: 9,
+        ),
+      ),
+      (left: 38.5, right: 129),
+    );
+  });
+
   test('actual line box takes precedence over fallback cell padding', () {
     expect(
       WordRuler.paragraphContentBox(

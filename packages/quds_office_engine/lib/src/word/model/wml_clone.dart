@@ -116,6 +116,7 @@ abstract final class WmlClone {
           WmlTableRow(
             cantSplit: row.cantSplit,
             height: row.height,
+            heightIsExact: row.heightIsExact,
             gridBefore: row.gridBefore,
             gridAfter: row.gridAfter,
             cells: <WmlTableCell>[
@@ -129,6 +130,7 @@ abstract final class WmlClone {
   /// cellOf API.
   static WmlTableCell cellOf(WmlTableCell cell) {
     return WmlTableCell(
+      contentControlWrappers: List.of(cell.contentControlWrappers),
       gridSpan: cell.gridSpan,
       vMerge: cell.vMerge,
       width: cell.width,
@@ -263,6 +265,7 @@ abstract final class WmlClone {
       return WmlNoteMarker(
         endnote: inline.endnote,
         properties: inline.properties.copy(),
+        runPropertiesXml: inline.runPropertiesXml,
       );
     }
     if (inline is WmlRun) {
@@ -280,6 +283,7 @@ abstract final class WmlClone {
         fieldInstruction: inline.fieldInstruction,
         fieldLocked: inline.fieldLocked,
         fieldDirty: inline.fieldDirty,
+        formattingAnchor: inline.formattingAnchor,
       );
     }
     if (inline is WmlBreak) {

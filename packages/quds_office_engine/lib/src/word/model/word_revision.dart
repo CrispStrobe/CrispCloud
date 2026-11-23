@@ -56,6 +56,9 @@ class WmlRevision {
     this.moveStory,
     this.moveStartXml,
     this.moveEndXml,
+    this.nativeWrapper,
+    this.nativeAncestors = const [],
+    this.emptyFormattingAnchor,
   }) : _targetCaptured = targetParagraph != null;
 
   /// id API.
@@ -118,6 +121,21 @@ class WmlRevision {
   final String? moveStory;
   String? moveStartXml;
   String? moveEndXml;
+
+  /// Identity of the imported XML container, and its outer-to-inner parents.
+  /// Editor-generated overlaps have no corresponding native nesting.
+  final Object? nativeWrapper;
+  final List<Object> nativeAncestors;
+
+  /// An authored zero-width formatting target. Several native runs can share
+  /// a text offset without representing the same run.
+  final Object? emptyFormattingAnchor;
+
+  bool hasNativeAncestor(WmlRevision outer) =>
+      outer.nativeWrapper != null &&
+      outer.start <= start &&
+      end <= outer.end &&
+      nativeAncestors.contains(outer.nativeWrapper);
 
   /// Why this pending span cannot safely be resolved or exported.
   ///
@@ -244,6 +262,9 @@ abstract final class WordRevisions {
     String? propertyChangeXml,
     String? moveName,
     String? moveStory,
+    Object? nativeWrapper,
+    List<Object> nativeAncestors = const [],
+    Object? emptyFormattingAnchor,
   }) {
     document.trackRevisions = true;
     var id = 1;
@@ -281,6 +302,9 @@ abstract final class WordRevisions {
       propertyChangeXml: propertyChangeXml,
       moveName: moveName,
       moveStory: moveStory,
+      nativeWrapper: nativeWrapper,
+      nativeAncestors: nativeAncestors,
+      emptyFormattingAnchor: emptyFormattingAnchor,
     );
     revision._targetCaptured = true;
     for (final other in document.revisions) {
@@ -297,7 +321,9 @@ abstract final class WordRevisions {
                 !identical(other.targetParagraph, target)) &&
             identical(resolveParagraph(document, other), target) &&
             start < other.end &&
-            other.start < end) {
+            other.start < end &&
+            !revision.hasNativeAncestor(other) &&
+            !other.hasNativeAncestor(revision)) {
           const problem =
               'Tracked changes overlap. Undo the overlapping '
               'edit before resolving or saving their attribution.';
@@ -491,11 +517,22 @@ abstract final class WordRevisions {
     final attached = Set<WmlParagraph>.identity()
       ..addAll(_allParagraphs(document));
     final resolved = Map<WmlRevision, WmlParagraph?>.identity();
+    final byParagraph = Map<WmlParagraph, List<WmlRevision>>.identity();
     for (final revision in document.revisions) {
-      resolved[revision] = _resolveIn(document, revision, attached);
+      final paragraph = _resolveIn(document, revision, attached);
+      resolved[revision] = paragraph;
+      if (paragraph != null) {
+        byParagraph.putIfAbsent(paragraph, () => []).add(revision);
+      }
     }
     for (final revision in document.revisions) {
-      validateRevision(document, revision, resolved: resolved, forExport: true);
+      _validateRevision(
+        document,
+        revision,
+        resolved: resolved,
+        forExport: true,
+        peers: byParagraph[resolved[revision]] ?? const [],
+      );
     }
   }
 
@@ -507,6 +544,20 @@ abstract final class WordRevisions {
     WmlRevision revision, {
     Map<WmlRevision, WmlParagraph?>? resolved,
     bool forExport = false,
+  }) => _validateRevision(
+    document,
+    revision,
+    resolved: resolved,
+    forExport: forExport,
+    peers: document.revisions,
+  );
+
+  static void _validateRevision(
+    WmlDocument document,
+    WmlRevision revision, {
+    required Map<WmlRevision, WmlParagraph?>? resolved,
+    required bool forExport,
+    required Iterable<WmlRevision> peers,
   }) {
     WmlParagraph? targetOf(WmlRevision r) =>
         resolved != null ? resolved[r] : resolveParagraph(document, r);
@@ -543,7 +594,13 @@ abstract final class WordRevisions {
       var offset = 0;
       var emptyRuns = 0;
       for (final run in paragraph!.inlines.whereType<WmlRun>()) {
-        if (offset == revision.start && run.text.isEmpty) {
+        if (offset == revision.start &&
+            run.text.isEmpty &&
+            (revision.emptyFormattingAnchor == null ||
+                identical(
+                  revision.emptyFormattingAnchor,
+                  run.formattingAnchor,
+                ))) {
           emptyRuns++;
         }
         offset += run.text.length;
@@ -606,7 +663,7 @@ abstract final class WordRevisions {
         }
       }
     }
-    for (final other in document.revisions) {
+    for (final other in peers) {
       if (identical(revision, other) ||
           (revision.kind.isFormatting != other.kind.isFormatting) ||
           (revision.kind.isFormatting && revision.kind != other.kind) ||
@@ -618,6 +675,19 @@ abstract final class WordRevisions {
               revision.start == revision.end &&
               other.start == other.end &&
               revision.start == other.start) {
+        if (revision.emptyFormattingAnchor != null &&
+            other.emptyFormattingAnchor != null &&
+            !identical(
+              revision.emptyFormattingAnchor,
+              other.emptyFormattingAnchor,
+            )) {
+          continue;
+        }
+        if (forExport &&
+            (revision.hasNativeAncestor(other) ||
+                other.hasNativeAncestor(revision))) {
+          continue;
+        }
         throw StateError(
           'Tracked changes ${revision.id} and ${other.id} '
           'overlap. Resolve their attribution before resolving or saving.',
@@ -730,7 +800,13 @@ abstract final class WordRevisions {
           final paragraph = resolveParagraph(document, item)!;
           var offset = 0;
           for (final run in paragraph.inlines.whereType<WmlRun>()) {
-            if (offset == item.start && run.text.isEmpty) {
+            if (offset == item.start &&
+                run.text.isEmpty &&
+                (item.emptyFormattingAnchor == null ||
+                    identical(
+                      item.emptyFormattingAnchor,
+                      run.formattingAnchor,
+                    ))) {
               run.properties.hasEmptyFormattingRevision = false;
             }
             offset += run.text.length;

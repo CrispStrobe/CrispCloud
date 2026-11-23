@@ -5,6 +5,184 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('footer text flows upward from the bottom margin', () {
+    WmlParagraph paragraph(String text, int halfPoints, double lineHeight) =>
+        WmlParagraph(
+          inlines: [
+            WmlRun(
+              text: text,
+              properties: WmlRunProps(fontSizeHalfPoints: halfPoints),
+            ),
+          ],
+          properties: WmlParagraphProps(
+            spacingAfter: 0,
+            lineSpacingRule: WmlLineSpacingRule.exact,
+            lineSpacing: lineHeight,
+          ),
+        );
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          pageSize: WmlPageSize(width: 612, height: 792),
+          margins: WmlPageMargins(footer: 36),
+          blocks: [paragraph('Body', 24, 18)],
+          footer: [
+            paragraph('273840', 24, 18),
+            paragraph('Tall', 40, 24),
+            paragraph('Section\t481602', 24, 18),
+          ],
+        ),
+      ],
+    );
+    final page = WordLayoutEngine(font: null).layout(document).pages.single;
+    final footer = page.footer;
+    expect(footer.map((line) => line.text), [
+      '273840',
+      'Tall',
+      'Section',
+      '481602',
+    ]);
+    expect(footer.map((line) => line.y), [696, 714, 738, 738]);
+    expect(footer[1].overlaySize, 20);
+    expect(footer[1].overlayBaseline, closeTo(19.2, 1e-8));
+    expect(footer.first.proofingOffsetAt(0), 0);
+    expect(footer.last.proofingOffsetAt(0), 8);
+
+    final story = document.sections.single.footer;
+    story[0].properties
+      ..spacingBefore = 3
+      ..spacingAfter = 9;
+    story[1].properties
+      ..spacingBefore = 6
+      ..spacingAfter = 4;
+    story[2].properties
+      ..spacingBefore = 2
+      ..spacingAfter = 8;
+    final spaced = WordLayoutEngine(font: null).layout(document).pages.single;
+    expect(spaced.footer.map((line) => line.y), [675, 702, 730, 730]);
+  });
+
+  test('positioned footer paragraphs share a frame and leave ordinary flow', () {
+    const marginFrame =
+        '<w:framePr w:w="3600" w:h="720" w:hRule="exact" '
+        'w:hAnchor="margin" w:vAnchor="margin" w:x="2400" w:y="12000"/>';
+    const rightFrame =
+        '<w:framePr w:hAnchor="margin" w:vAnchor="text" w:xAlign="right" w:y="1"/>';
+    String paragraph(String content, [String frame = '']) =>
+        '<w:p><w:pPr>$frame<w:spacing w:before="0" w:after="0" '
+        'w:line="360" w:lineRule="exact"/></w:pPr>$content</w:p>';
+    String run(String text) =>
+        '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>$text</w:t></w:r>';
+    String marker(String kind) =>
+        '<w:r><w:fldChar w:fldCharType="$kind"/></w:r>';
+    final builder = DocxDocumentBuilder()
+      ..paragraph('Body')
+      ..footer(left: 'Placeholder', pageNumber: false);
+    final package = OpcPackage.openBytes(builder.build());
+    final body = package.getPart('/word/document.xml')!;
+    body.writeText(
+      body.readText().replaceFirst(
+        RegExp(r'<w:pgMar\b[^>]*/>'),
+        '<w:pgMar w:top="1440" w:right="1440" w:bottom="1800" '
+        'w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>',
+      ),
+    );
+    final footer = package.getPart('/word/footer1.xml')!;
+    footer.writeText(
+      '<w:ftr xmlns:w="${OfficeNamespaces.w}">'
+      '${paragraph('${marker('begin')}<w:r><w:instrText> IF 1 = 1 "Frame A" "" </w:instrText></w:r>', marginFrame)}'
+      '${paragraph('${marker('separate')}${run('Frame A')}${marker('end')}', marginFrame)}'
+      '${paragraph(run('Frame B'), marginFrame)}'
+      '${paragraph(run('Frame right'), rightFrame)}'
+      '${paragraph(run('Ordinary'))}${paragraph(run('Last'))}</w:ftr>',
+    );
+
+    void verify(WmlDocument document) {
+      final page = WordLayoutEngine(font: null).layout(document).pages.single;
+      final lines = page.footer;
+      expect(lines.map((line) => line.text), [
+        'Frame A',
+        'Frame B',
+        'Frame right',
+        'Ordinary',
+        'Last',
+      ]);
+      expect(lines[0].x, 192);
+      expect(lines[1].x, 192);
+      expect(lines[0].y, 672);
+      expect(lines[1].y, 690);
+      expect(lines[2].x + lines[2].width, closeTo(page.width - 72, 1e-8));
+      expect(lines[2].y, closeTo(lines[3].y + .05, 1e-8));
+      expect(lines[4].y + lines[4].height, page.height - 36);
+    }
+
+    final document = WordDeserializer().read(package);
+    verify(document);
+    final reopened = WordSerializer().writeBytes(document);
+    verify(WordDeserializer().readBytes(reopened));
+    final savedFooter = OpcPackage.openBytes(
+      reopened,
+    ).getPart('/word/footer1.xml')!.readText();
+    expect(RegExp('w:framePr').allMatches(savedFooter), hasLength(4));
+    expect(savedFooter, contains('w:x="2400"'));
+    expect(savedFooter, contains('w:xAlign="right"'));
+  });
+
+  test(
+    'positioned PAGE displays the current page without changing its cache',
+    () {
+      WmlParagraph field({required bool locked}) => WmlParagraph(
+        properties: WmlParagraphProps()
+          ..sourcePropertiesXml =
+              '<w:pPr xmlns:w="${OfficeNamespaces.w}">'
+              '<w:framePr w:hAnchor="margin" w:vAnchor="text" w:xAlign="right"/>'
+              '</w:pPr>',
+        inlines: [
+          WmlFieldBoundary(
+            kind: WmlFieldBoundaryKind.begin,
+            sourceXml: locked
+                ? '<w:fldChar xmlns:w="${OfficeNamespaces.w}" '
+                      'w:fldCharType="begin" w:fldLock="true"/>'
+                : null,
+          ),
+          WmlFieldBoundary(
+            kind: WmlFieldBoundaryKind.instruction,
+            text: ' PAGE ',
+          ),
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+          WmlRun(text: '9'),
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+        ],
+      );
+      final live = field(locked: false);
+      final locked = field(locked: true);
+      final doc = WmlDocument(
+        sections: [
+          WmlSection(
+            blocks: [
+              WmlParagraph(inlines: [WmlRun(text: 'One')]),
+              WmlParagraph(
+                properties: WmlParagraphProps(pageBreakBefore: true),
+                inlines: [WmlRun(text: 'Two')],
+              ),
+            ],
+            footer: [live, locked],
+          ),
+        ],
+      );
+      final laid = WordLayoutEngine(font: null).layout(doc);
+      expect(
+        laid.pages.map((p) => p.footer.map((line) => line.text).toList()),
+        [
+          ['1', '9'],
+          ['2', '9'],
+        ],
+      );
+      expect(live.text, '9');
+      expect(laid.pages.last.footer.first.proofingOffsetAt(0), isNull);
+    },
+  );
+
   test('page numbers increment on each laid-out page', () {
     final WmlDocument doc = WmlDocument(
       sections: <WmlSection>[

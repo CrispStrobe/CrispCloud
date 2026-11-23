@@ -42,6 +42,18 @@ class ZipWriter {
     );
   }
 
+  /// Copies an unchanged member without inflating and recompressing it.
+  void copyFile(ZipReader source, String name) {
+    final entry = source[name]!;
+    _writeLocalAndRecord(
+      fileName: name,
+      method: entry.compressionMethod,
+      crc: entry.crc32,
+      compressed: source.compressedPayload(entry),
+      uncompressedSize: entry.uncompressedSize,
+    );
+  }
+
   /// Compresses [stream] on the fly using a data descriptor (general-purpose
   /// bit 3) so sizes do not need to be known in advance.
   Future<void> addFileStream(

@@ -931,6 +931,7 @@ void main() {
     test('docx/xlsx/pptx/odt → office', () {
       expect(_svc.detectMode('report.docx'), ViewerMode.office);
       expect(_svc.detectMode('sheet.xlsx'), ViewerMode.office);
+      expect(_svc.detectMode('tools.xlam'), ViewerMode.office);
       expect(_svc.detectMode('slides.pptx'), ViewerMode.office);
       expect(_svc.detectMode('book.epub'), ViewerMode.office);
     });

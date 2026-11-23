@@ -11,6 +11,7 @@ import '../core/virtual_viewport.dart';
 import '../editor_word/caret_engine.dart';
 import '../editor_word/paint_run_text.dart';
 import '../embed/office_context_menu.dart';
+import '../embed/office_host_fonts.dart';
 import '../embed/office_theme.dart';
 import '../visual/paint_office_visual.dart';
 import 'paint_slide_motion.dart';
@@ -24,6 +25,7 @@ class SlideStage extends LeafRenderObjectWidget {
     super.key,
     required this.slide,
     this.master,
+    this.slideSize,
     this.selected,
     this.selectedShapes = const <PmlShape>[],
     this.config = const OfficeSurfaceConfig(),
@@ -62,6 +64,9 @@ class SlideStage extends LeafRenderObjectWidget {
   /// Optional master context for resolving direct background edits at paint
   /// time. Without it, the slide's resolved background snapshot is used.
   final PmlMaster? master;
+
+  /// Native presentation dimensions in points.
+  final Size? slideSize;
 
   /// selected API.
   final PmlShape? selected;
@@ -159,6 +164,7 @@ class SlideStage extends LeafRenderObjectWidget {
     return RenderSlideStage(
       slide: slide,
       master: master,
+      slideSize: slideSize,
       selected: selected,
       selectedShapes: selectedShapes,
       config: config,
@@ -198,6 +204,7 @@ class SlideStage extends LeafRenderObjectWidget {
     renderObject
       ..slide = slide
       ..master = master
+      ..slideSize = slideSize
       ..selected = selected
       ..selectedShapes = selectedShapes
       ..config = config
@@ -234,6 +241,33 @@ class SlideStage extends LeafRenderObjectWidget {
   }
 }
 
+class _SlideParagraph {
+  const _SlideParagraph({
+    required this.painter,
+    required this.offset,
+    required this.start,
+    required this.length,
+    required this.prefixLength,
+    this.bullet,
+    this.bulletOffset,
+  });
+
+  final TextPainter painter;
+  final Offset offset;
+  final int start;
+  final int length;
+  final int prefixLength;
+  final TextPainter? bullet;
+  final Offset? bulletOffset;
+
+  int get end => start + length;
+
+  void dispose() {
+    painter.dispose();
+    bullet?.dispose();
+  }
+}
+
 enum _SlideDrag { none, pan, move, resize, rotate, select }
 
 /// Class RenderSlideStage.
@@ -242,6 +276,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
   RenderSlideStage({
     required this.slide,
     this.master,
+    this.slideSize,
     this.selected,
     this.selectedShapes = const <PmlShape>[],
     required this.config,
@@ -407,7 +442,9 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
   OfficeTheme get _theme => config.theme;
 
   /// Size API.
-  static const Size _slideSize = Size(720, 405);
+  Size? slideSize;
+
+  Size get _slideSize => slideSize ?? const Size(720, 405);
 
   double get _fitScale {
     final double pad = preview || presenting ? 0 : 48;
@@ -1033,17 +1070,44 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
         target.text.length,
       );
     }
-    final TextPainter painter = _shapePainter(
-      shape,
-      shape.text,
-      r,
-      _textColor(shape),
-    )..layout(maxWidth: math.max(8, shape.textInsets.contentWidth(r.width)));
-    return PaintRunText.hitIndex(
-      painter,
-      local - _shapeTextOrigin(shape, r, painter),
-      shape.text.length,
-    );
+    final color = _textColor(shape);
+    final textRect = _shapeTextRect(shape, r);
+    final paragraphs = shape.resolvedRichText;
+    if (paragraphs.isNotEmpty) {
+      final layout = _layoutRichText(shape, paragraphs, textRect, color);
+      try {
+        final blockOrigin = _shapeTextOrigin(
+          shape,
+          textRect,
+          _richTextHeight(layout),
+        );
+        final hit = local - blockOrigin;
+        final paragraph = layout.lastWhere(
+          (entry) => entry.offset.dy <= hit.dy,
+          orElse: () => layout.first,
+        );
+        final position = paragraph.painter
+            .getPositionForOffset(hit - paragraph.offset)
+            .offset;
+        return (paragraph.start +
+                (position - paragraph.prefixLength).clamp(0, paragraph.length))
+            .clamp(0, shape.text.length);
+      } finally {
+        for (final paragraph in layout) {
+          paragraph.dispose();
+        }
+      }
+    }
+    final painter = _shapePainter(shape, shape.text, textRect, color);
+    try {
+      return PaintRunText.hitIndex(
+        painter,
+        local - _plainTextOrigin(shape, textRect, painter),
+        shape.text.length,
+      );
+    } finally {
+      painter.dispose();
+    }
   }
 
   Color _textColor(PmlShape shape, {Color? background}) {
@@ -1178,7 +1242,8 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
     }
     final int? fill = int.tryParse(hex, radix: 16);
     if (fill != null) {
-      final Paint paint = Paint()..color = Color(0xFF000000 | fill);
+      final Paint paint = Paint()
+        ..color = Color(0xFF000000 | fill).withValues(alpha: shape.fillOpacity);
       final PmlGradientFill? gradient = shape.gradient;
       if (gradient != null && gradient.stops.length >= 2) {
         final List<Color> colors = <Color>[
@@ -1209,58 +1274,22 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
           );
         }
       }
-      switch (shape.preset) {
-        case PmlShapePreset.rect:
-          canvas.drawRect(r, paint);
-        case PmlShapePreset.roundRect:
-          final double radius = math.min(8, r.shortestSide / 4);
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(r, Radius.circular(radius)),
-            paint,
-          );
-        case PmlShapePreset.ellipse:
-          canvas.drawOval(r, paint);
-        case PmlShapePreset.triangle:
-          canvas.drawPath(
-            Path()
-              ..moveTo(r.center.dx, r.top)
-              ..lineTo(r.right, r.bottom)
-              ..lineTo(r.left, r.bottom)
-              ..close(),
-            paint,
-          );
-        case PmlShapePreset.connector:
-          break;
-        case PmlShapePreset.freeform:
-          final Path path = Path();
-          if (shape.path.isNotEmpty) {
-            path.moveTo(
-              r.left + shape.path.first.x / 12700,
-              r.top + shape.path.first.y / 12700,
-            );
-            for (final PmlPathPoint point in shape.path.skip(1)) {
-              path.lineTo(r.left + point.x / 12700, r.top + point.y / 12700);
-            }
-            path.close();
-          } else {
-            path.addRect(r);
-          }
-          canvas.drawPath(path, paint);
-        case PmlShapePreset.downArrow:
-        case PmlShapePreset.upArrow:
-        case PmlShapePreset.leftArrow:
-        case PmlShapePreset.rightArrow:
-          canvas.drawPath(_arrowPath(r, shape.preset), paint);
-        case PmlShapePreset.diamond:
-        case PmlShapePreset.hexagon:
-        case PmlShapePreset.pentagon:
-        case PmlShapePreset.homePlate:
-        case PmlShapePreset.chevron:
-        case PmlShapePreset.parallelogram:
-        case PmlShapePreset.trapezoid:
-          canvas.drawPath(_shapePath(r, shape.preset), paint);
-      }
-    } else if (shape.placeholder &&
+      _paintShapeGeometry(canvas, shape, r, paint, transform: transform);
+    }
+    final int? stroke = int.tryParse(shape.strokeColor, radix: 16);
+    if (stroke != null) {
+      _paintShapeGeometry(
+        canvas,
+        shape,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = shape.strokeWidth
+          ..color = Color(0xFF000000 | stroke),
+        transform: transform,
+      );
+    } else if (fill == null &&
+        shape.placeholder &&
         shape.text.isEmpty &&
         !presenting &&
         config.allowsMutation) {
@@ -1272,6 +1301,129 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
           ..color = const Color(0x66808080),
       );
     }
+  }
+
+  void _paintShapeGeometry(
+    Canvas canvas,
+    PmlShape shape,
+    Rect r,
+    Paint paint, {
+    PmlTransform? transform,
+  }) {
+    switch (shape.preset) {
+      case PmlShapePreset.rect:
+        canvas.drawRect(r, paint);
+      case PmlShapePreset.roundRect:
+        final callout = shape.roundedCallout;
+        if (callout != null) {
+          final geometry = transform ?? shape.transform;
+          canvas.save();
+          if (geometry.flipH || geometry.flipV) {
+            canvas.translate(r.center.dx, r.center.dy);
+            canvas.scale(geometry.flipH ? -1 : 1, geometry.flipV ? -1 : 1);
+            canvas.translate(-r.center.dx, -r.center.dy);
+          }
+          canvas.drawPath(_roundedCalloutPath(r, callout), paint);
+          canvas.restore();
+          return;
+        }
+        final double radius = math.min(8, r.shortestSide / 4);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(r, Radius.circular(radius)),
+          paint,
+        );
+      case PmlShapePreset.ellipse:
+        canvas.drawOval(r, paint);
+      case PmlShapePreset.triangle:
+        canvas.drawPath(
+          Path()
+            ..moveTo(r.center.dx, r.top)
+            ..lineTo(r.right, r.bottom)
+            ..lineTo(r.left, r.bottom)
+            ..close(),
+          paint,
+        );
+      case PmlShapePreset.connector:
+        break;
+      case PmlShapePreset.freeform:
+        final Path path = Path();
+        if (shape.path.isNotEmpty) {
+          final w = shape.pathWidth;
+          final h = shape.pathHeight;
+          final sx = w != null && w > 0 ? r.width / w : 1 / 12700;
+          final sy = h != null && h > 0 ? r.height / h : 1 / 12700;
+          for (final (index, point) in shape.path.indexed) {
+            if (point.close) {
+              path.close();
+            } else if (index == 0 || point.move) {
+              path.moveTo(r.left + point.x * sx, r.top + point.y * sy);
+            } else {
+              path.lineTo(r.left + point.x * sx, r.top + point.y * sy);
+            }
+          }
+          if (w == null) path.close();
+        } else {
+          path.addRect(r);
+        }
+        canvas.drawPath(path, paint);
+      case PmlShapePreset.downArrow:
+      case PmlShapePreset.upArrow:
+      case PmlShapePreset.leftArrow:
+      case PmlShapePreset.rightArrow:
+        canvas.drawPath(_arrowPath(r, shape.preset), paint);
+      case PmlShapePreset.diamond:
+      case PmlShapePreset.hexagon:
+      case PmlShapePreset.pentagon:
+      case PmlShapePreset.homePlate:
+      case PmlShapePreset.chevron:
+      case PmlShapePreset.parallelogram:
+      case PmlShapePreset.trapezoid:
+        canvas.drawPath(_shapePath(r, shape.preset), paint);
+    }
+  }
+
+  Path _roundedCalloutPath(Rect r, PmlRoundedCallout callout) {
+    // DrawingML wedgeRoundRectCallout. The two tail base points sit on the
+    // chosen side, on one of two quarter-width / quarter-height segments.
+    final dx = callout.tipX.clamp(-2147483647, 2147483647) / 100000;
+    final dy = callout.tipY.clamp(-2147483647, 2147483647) / 100000;
+    final vertical = dy.abs() > dx.abs();
+    final x1 = r.left + r.width * (dx > 0 ? 7 : 2) / 12;
+    final x2 = x1 + r.width / 4;
+    final y1 = r.top + r.height * (dy > 0 ? 7 : 2) / 12;
+    final y2 = y1 + r.height / 4;
+    final tip = Offset(r.center.dx + r.width * dx, r.center.dy + r.height * dy);
+    final corner = _roundedCalloutRadius(r, callout);
+    final path = Path()..moveTo(r.left, r.top + corner);
+    void round(Offset center, double angle) {
+      if (corner == 0) {
+        path.lineTo(center.dx, center.dy);
+      } else {
+        path.arcTo(
+          Rect.fromCircle(center: center, radius: corner),
+          angle,
+          math.pi / 2,
+          false,
+        );
+      }
+    }
+
+    void tail(Offset from, Offset to) {
+      path
+        ..lineTo(from.dx, from.dy)
+        ..lineTo(tip.dx, tip.dy)
+        ..lineTo(to.dx, to.dy);
+    }
+
+    round(Offset(r.left + corner, r.top + corner), math.pi);
+    if (vertical && dy <= 0) tail(Offset(x1, r.top), Offset(x2, r.top));
+    round(Offset(r.right - corner, r.top + corner), -math.pi / 2);
+    if (!vertical && dx > 0) tail(Offset(r.right, y1), Offset(r.right, y2));
+    round(Offset(r.right - corner, r.bottom - corner), 0);
+    if (vertical && dy > 0) tail(Offset(x2, r.bottom), Offset(x1, r.bottom));
+    round(Offset(r.left + corner, r.bottom - corner), math.pi / 2);
+    if (!vertical && dx <= 0) tail(Offset(r.left, y2), Offset(r.left, y1));
+    return path..close();
   }
 
   Path _arrowPath(Rect r, PmlShapePreset preset) {
@@ -1418,17 +1570,25 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
     return path;
   }
 
-  TextPainter _shapePainter(
-    PmlShape shape,
-    String text,
-    Rect r,
-    Color color, {
-    Color? background,
-  }) {
+  static double _displayFontSize(PmlShape shape, double authoredSize) {
+    final fitted = authoredSize * shape.textScale;
+    // PowerPoint paints imported normal autofit at whole point sizes.
+    if (shape.textSource != null && shape.textScale < 1 && fitted >= 1) {
+      return fitted.roundToDouble();
+    }
+    return fitted;
+  }
+
+  TextPainter _shapePainter(PmlShape shape, String text, Rect r, Color color) {
     final double baseSize = shape.fontSizePt > 0 ? shape.fontSizePt : 16;
+    final double fontSize = _displayFontSize(shape, baseSize);
     final double lineHeight =
-        baseSize * shape.textScale * (1 - shape.lineSpacingReduction) * 1.2;
-    final int lines = _growsWithText(r) || lineHeight == 0
+        _normalLineHeight(shape, baseSize) * (1 - shape.lineSpacingReduction);
+    final int lines =
+        !shape.shouldClipTextVertically ||
+            shape.growsToFitText ||
+            _growsWithText(r) ||
+            lineHeight == 0
         ? 32
         : (r.height / lineHeight).ceil().clamp(1, 32);
     final bool rtl = shape.rightToLeft ?? PaintRunText.looksRtl(text);
@@ -1439,25 +1599,13 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       PmlTextAlign.left =>
         shape.rightToLeft == null && rtl ? TextAlign.right : TextAlign.left,
     };
-    final List<PmlTextParagraph> paragraphs = shape.resolvedRichText;
-    if (paragraphs.isNotEmpty && text == shape.text) {
-      return _richShapePainter(
-        shape,
-        paragraphs,
-        r,
-        color,
-        lines,
-        align,
-        rtl,
-        background: background,
-      );
-    }
+    final width = math.max(8.0, shape.textInsets.contentWidth(r.width));
     return TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
-          fontSize: baseSize * shape.textScale,
-          height: _flutterLineHeight(1 - shape.lineSpacingReduction),
+          fontSize: fontSize,
+          height: _flutterLineHeight(fontSize > 0 ? lineHeight / fontSize : 0),
           color: color,
           fontWeight: FontWeight.normal,
           fontFamily: PaintRunText.familyFor(
@@ -1476,121 +1624,446 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
               applyHeightToLastDescent: false,
             )
           : null,
+    )..layout(
+      minWidth: shape.wrapsText ? 0 : width,
+      maxWidth: shape.wrapsText ? width : double.infinity,
     );
   }
 
-  TextPainter _richShapePainter(
+  Offset _plainTextOrigin(PmlShape shape, Rect rect, TextPainter painter) =>
+      _shapeTextOrigin(shape, rect, painter.height) +
+      Offset(
+        shape.wrapsText
+            ? 0
+            : _overflowAlignment(
+                painter,
+                math.max(8.0, shape.textInsets.contentWidth(rect.width)),
+              ),
+        0,
+      );
+
+  static double _overflowAlignment(TextPainter painter, double width) {
+    final offset = math.min(0.0, width - painter.width);
+    final rtl = painter.textDirection == TextDirection.rtl;
+    return switch (painter.textAlign) {
+      TextAlign.center => offset / 2,
+      TextAlign.right => offset,
+      TextAlign.end => rtl ? 0 : offset,
+      TextAlign.start || TextAlign.justify => rtl ? offset : 0,
+      TextAlign.left => 0,
+    };
+  }
+
+  List<_SlideParagraph> _layoutRichText(
     PmlShape shape,
     List<PmlTextParagraph> paragraphs,
-    Rect r,
-    Color color,
-    int maxLines,
-    TextAlign align,
-    bool rtl, {
+    Rect rect,
+    Color color, {
     Color? background,
   }) {
-    final List<InlineSpan> spans = <InlineSpan>[];
-    for (final PmlTextParagraph paragraph in paragraphs) {
-      for (final PmlTextRun run in paragraph.runs) {
-        final String runText = run.text.replaceAll('\t', '    ');
-        if (runText.isEmpty) continue;
-        final double size =
-            (run.fontSizePt > 0
-                ? run.fontSizePt
-                : (paragraph.defaultFontSizePt > 0
-                      ? paragraph.defaultFontSizePt
-                      : (shape.fontSizePt > 0 ? shape.fontSizePt : 16))) *
-            shape.textScale;
-        final Color authoredColor = run.color.isEmpty
+    final layouts = <_SlideParagraph>[];
+    final fullWidth = shape.textInsets.contentWidth(rect.width);
+    var top = 0.0;
+    var start = 0;
+    for (final paragraph in paragraphs) {
+      final rtl =
+          paragraph.definedProperties.contains(PmlParagraphProperty.direction)
+          ? paragraph.rightToLeft
+          : shape.rightToLeft ??
+                PaintRunText.looksRtl(
+                  paragraph.runs.map((run) => run.text).join(),
+                );
+      final direction = rtl ? TextDirection.rtl : TextDirection.ltr;
+      final alignment = switch (paragraph.align) {
+        PmlTextAlign.center => TextAlign.center,
+        PmlTextAlign.right => TextAlign.right,
+        PmlTextAlign.justify => TextAlign.justify,
+        PmlTextAlign.left => rtl ? TextAlign.right : TextAlign.left,
+      };
+      var naturalLineHeight = 0.0;
+      final usesLineSpacingRatio =
+          paragraph.spaceBeforeLineRatio != 0 ||
+          paragraph.spaceAfterLineRatio != 0;
+      final fixed = paragraph.lineSpacingPt;
+      final percentage = math.max(
+        0,
+        paragraph.lineSpacing - shape.lineSpacingReduction,
+      );
+      TextSpan span(PmlTextRun run, String text) {
+        final base = run.fontSizePt > 0
+            ? run.fontSizePt
+            : paragraph.defaultFontSizePt > 0
+            ? paragraph.defaultFontSizePt
+            : shape.fontSizePt > 0
+            ? shape.fontSizePt
+            : 16.0;
+        final size = _displayFontSize(shape, base);
+        final lineHeight = _normalLineHeight(shape, base);
+        final authoredColor = run.color.isEmpty
             ? color
             : _hexColor(run.color, color);
-        final Color runColor = background == null
+        final runColor = background == null
             ? authoredColor
             : _theme.resolveDocumentColor(
                 authoredColor,
                 background: background,
               );
-        final String? family = run.fontFamily.isEmpty
-            ? _theme.fontFamily
-            : run.fontFamily;
-        spans.add(
-          TextSpan(
-            text: runText,
-            style: TextStyle(
-              fontSize: size,
-              height: _slideParagraphHeight(paragraph, shape, size),
-              color: runColor,
-              fontWeight:
-                  run.bold &&
-                      !run.fontFamily.toLowerCase().contains(
-                        'microsoft sans serif',
-                      )
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
-              decoration: run.underline || run.strike
-                  ? TextDecoration.combine(<TextDecoration>[
-                      if (run.underline) TextDecoration.underline,
-                      if (run.strike) TextDecoration.lineThrough,
-                    ])
-                  : null,
-              fontFamily: PaintRunText.familyFor(
-                text: runText,
-                runFamily: family,
-                themeFamily: _theme.fontFamily,
-              ),
-              fontFamilyFallback: PaintRunText.fallbacksFor(
-                runText,
-                runFamily: family,
+        final family = run.fontFamily.isNotEmpty
+            ? run.fontFamily
+            : paragraph.defaultFontFamily.isNotEmpty
+            ? paragraph.defaultFontFamily
+            : _theme.fontFamily;
+        final style = TextStyle(
+          fontSize: size,
+          // PowerPoint applies authored tracking after scaling the font.
+          letterSpacing:
+              run.letterSpacingPt ?? paragraph.defaultLetterSpacingPt,
+          color: runColor,
+          fontWeight:
+              run.bold &&
+                  !run.fontFamily.toLowerCase().contains('microsoft sans serif')
+              ? FontWeight.bold
+              : FontWeight.normal,
+          fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
+          decoration: run.underline || run.strike
+              ? TextDecoration.combine([
+                  if (run.underline) TextDecoration.underline,
+                  if (run.strike) TextDecoration.lineThrough,
+                ])
+              : null,
+          fontFamily: PaintRunText.familyFor(
+            text: text,
+            runFamily: family,
+            themeFamily: _theme.fontFamily,
+          ),
+          fontFamilyFallback: PaintRunText.fallbacksFor(
+            text,
+            runFamily: family,
+          ),
+        );
+        if (usesLineSpacingRatio) {
+          naturalLineHeight = math.max(naturalLineHeight, lineHeight);
+        }
+        if (fixed != null && fixed.isFinite) {
+          return TextSpan(
+            text: text,
+            style: style.copyWith(
+              height: _flutterLineHeight(
+                size > 0 ? math.max(0, fixed) / size : 0,
               ),
             ),
+          );
+        }
+        if (size <= 0) {
+          return TextSpan(text: text, style: style);
+        }
+        return TextSpan(
+          text: text,
+          style: style.copyWith(
+            height: _flutterLineHeight(lineHeight * percentage / size),
           ),
         );
       }
-      final double blankSize =
-          (paragraph.defaultFontSizePt > 0
-              ? paragraph.defaultFontSizePt
-              : (shape.fontSizePt > 0 ? shape.fontSizePt : 16)) *
-          shape.textScale;
-      spans.add(
-        TextSpan(
-          text: '\n',
-          style: TextStyle(
-            fontSize: blankSize,
-            height: _slideParagraphHeight(paragraph, shape, blankSize),
+
+      final runs = paragraph.runs;
+      final marker = paragraph.bullet;
+      final margin = rtl ? paragraph.marginRightPt : paragraph.marginLeftPt;
+      final firstIndent = paragraph.indentPt;
+      final inlineBullet =
+          marker != null && runs.isNotEmpty && firstIndent == 0;
+      final bulletSpan = marker == null || runs.isEmpty
+          ? null
+          : span(
+              PmlTextRun(
+                fontSizePt: runs.first.fontSizePt,
+                color: paragraph.bulletColor ?? runs.first.color,
+                fontFamily: paragraph.bulletFont ?? runs.first.fontFamily,
+                letterSpacingPt: 0,
+              ),
+              _slideBulletText(marker, paragraph.bulletFont),
+            );
+      final paragraphSpans = <TextSpan>[
+        if (inlineBullet) bulletSpan!,
+        for (final run in runs) span(run, _slideRunText(run)),
+        if (runs.isEmpty)
+          span(
+            PmlTextRun(
+              bold: paragraph.defaultBold,
+              italic: paragraph.defaultItalic,
+            ),
+            '\u200b',
           ),
+      ];
+      final spans =
+          alignment == TextAlign.justify &&
+              !rtl &&
+              marker == null &&
+              shape.wrapsText
+          ? paragraphSpans.expand(_quantizedSlideAdvances).toList()
+          : paragraphSpans;
+      final leadStyle = spans[inlineBullet ? 1 : 0].style!;
+      final uniformAdvance =
+          fixed == null &&
+              percentage > 0 &&
+              leadStyle.height != null &&
+              spans.every(
+                (item) =>
+                    item.style!.fontSize == leadStyle.fontSize &&
+                    item.style!.height == leadStyle.height,
+              )
+          ? leadStyle.fontSize! * leadStyle.height!
+          : null;
+      // A uniform point size defines one line box, even when runs mix font
+      // families or weights with different ascent and descent proportions.
+      final strut =
+          uniformAdvance != null &&
+              spans.any((item) {
+                final style = item.style!;
+                return style.fontFamily != leadStyle.fontFamily ||
+                    style.fontWeight != leadStyle.fontWeight ||
+                    style.fontStyle != leadStyle.fontStyle;
+              })
+          ? StrutStyle.fromTextStyle(leadStyle, forceStrutHeight: true)
+          : null;
+      if (layouts.isNotEmpty) {
+        top +=
+            paragraph.spaceBeforePt +
+            naturalLineHeight * paragraph.spaceBeforeLineRatio;
+      }
+      final layoutWidth = math.max(
+        8.0,
+        fullWidth - paragraph.marginLeftPt - paragraph.marginRightPt,
+      );
+      final left = paragraph.marginLeftPt;
+      TextPainter layout(List<TextSpan> content, double width, int maxLines) =>
+          TextPainter(
+            text: TextSpan(children: content),
+            textDirection: direction,
+            textAlign: alignment,
+            maxLines: maxLines,
+            strutStyle: strut,
+            textHeightBehavior: fixed != null || percentage == 0
+                ? const ui.TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
+                  )
+                : null,
+          )..layout(
+            minWidth: width,
+            maxWidth: shape.wrapsText ? width : double.infinity,
+          );
+
+      double advance(TextPainter painter) {
+        final lines = painter.computeLineMetrics();
+        if (lines.length == 1) {
+          if (fixed != null) return fixed;
+          if (percentage == 0) return 0;
+        }
+        if (fixed != null) return painter.height;
+        if (uniformAdvance != null) return uniformAdvance * lines.length;
+        // TextPainter.height is rounded separately for every paragraph.
+        return lines.fold(
+          0.0,
+          (height, line) => height + line.ascent + line.descent,
+        );
+      }
+
+      var remaining = runs.fold(0, (length, run) => length + run.text.length);
+      var lineStart = start;
+      var painterLeft = left;
+      var painterWidth = layoutWidth;
+      var lineCount = 32;
+      var bodySpans = spans;
+      TextPainter? firstLine;
+      if (marker == null &&
+          firstIndent != 0 &&
+          remaining > 0 &&
+          alignment != TextAlign.justify) {
+        final firstWidth = math.max(8.0, layoutWidth - firstIndent);
+        final firstLeft = rtl ? left : left + firstIndent;
+        final probe = layout(spans, firstWidth, 32);
+        final split = probe.getLineBoundary(const TextPosition(offset: 0)).end;
+        if (split == remaining) {
+          firstLine = probe;
+          painterLeft = firstLeft;
+          painterWidth = firstWidth;
+        } else {
+          probe.dispose();
+          if (split > 0 && split < remaining) {
+            final (head, tail) = _splitSlideSpans(spans, split);
+            final headPainter = layout(head, firstWidth, 1);
+            layouts.add(
+              _SlideParagraph(
+                painter: headPainter,
+                offset: Offset(
+                  firstLeft +
+                      (shape.wrapsText
+                          ? 0
+                          : _overflowAlignment(headPainter, firstWidth)),
+                  top,
+                ),
+                start: start,
+                length: split,
+                prefixLength: 0,
+              ),
+            );
+            top += advance(headPainter);
+            bodySpans = tail;
+            lineStart += split;
+            remaining -= split;
+            lineCount--;
+            // Flutter's line boundary excludes an explicit line break.
+            // Consume it so the continuation begins on the intended line.
+            if (bodySpans.first.text!.startsWith('\n')) {
+              bodySpans = _splitSlideSpans(bodySpans, 1).$2;
+              lineStart++;
+              remaining--;
+            }
+          }
+        }
+      }
+      if (remaining == 0 && lineStart != start) {
+        bodySpans = [span(PmlTextRun(), '\u200b')];
+      }
+      final painter = firstLine ?? layout(bodySpans, layoutWidth, lineCount);
+      final alignmentOffset = shape.wrapsText
+          ? 0.0
+          : _overflowAlignment(painter, painterWidth);
+      final offset = Offset(painterLeft + alignmentOffset, top);
+      final hangingBullet = bulletSpan != null && !inlineBullet
+          ? (TextPainter(text: bulletSpan, textDirection: direction)..layout())
+          : null;
+      final bulletOffset = hangingBullet == null
+          ? null
+          : Offset(
+              alignmentOffset +
+                  (rtl
+                      ? fullWidth - margin - firstIndent - hangingBullet.width
+                      : left + firstIndent),
+              top +
+                  painter.computeDistanceToActualBaseline(
+                    TextBaseline.alphabetic,
+                  ) -
+                  hangingBullet.computeDistanceToActualBaseline(
+                    TextBaseline.alphabetic,
+                  ),
+            );
+      layouts.add(
+        _SlideParagraph(
+          painter: painter,
+          offset: offset,
+          start: lineStart,
+          length: remaining,
+          prefixLength: inlineBullet ? marker.length : 0,
+          bullet: hangingBullet,
+          bulletOffset: bulletOffset,
         ),
       );
+      start = lineStart + remaining + 1;
+      top +=
+          advance(painter) +
+          paragraph.spaceAfterPt +
+          naturalLineHeight * paragraph.spaceAfterLineRatio;
     }
-    return TextPainter(
-      text: TextSpan(children: spans),
-      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-      textAlign: align,
-      maxLines: maxLines,
-      textHeightBehavior:
-          shape.lineSpacingReduction > 0 ||
-              paragraphs.any((paragraph) => paragraph.lineSpacingPt != null)
-          ? const ui.TextHeightBehavior(
-              applyHeightToFirstAscent: false,
-              applyHeightToLastDescent: false,
-            )
-          : null,
+    return layouts;
+  }
+
+  static (List<TextSpan>, List<TextSpan>) _splitSlideSpans(
+    List<TextSpan> spans,
+    int length,
+  ) {
+    final head = <TextSpan>[];
+    final tail = <TextSpan>[];
+    for (final span in spans) {
+      final text = span.text!;
+      if (length <= 0) {
+        tail.add(span);
+      } else if (length >= text.length) {
+        head.add(span);
+      } else {
+        head.add(TextSpan(text: text.substring(0, length), style: span.style));
+        tail.add(TextSpan(text: text.substring(length), style: span.style));
+      }
+      length -= text.length;
+    }
+    return (head, tail);
+  }
+
+  static final _simpleLatin = RegExp(
+    r'^[\u0020-\u007e\u00a0-\u00ff\u2010-\u201f]+$',
+  );
+  static final _wordSpacingRuns = RegExp(r'[^ ]+| +');
+
+  static Iterable<TextSpan> _quantizedSlideAdvances(TextSpan span) {
+    final text = span.text!;
+    final style = span.style!;
+    final family = style.fontFamily;
+    final size = style.fontSize!;
+    if (family == null ||
+        !size.isFinite ||
+        size <= 0 ||
+        (style.letterSpacing ?? 0) != 0 ||
+        !_simpleLatin.hasMatch(text)) {
+      return [span];
+    }
+    final metrics = OfficeHostFonts.paintMetrics(
+      family,
+      size,
+      codePoint: 0x20,
+      weight: style.fontWeight == FontWeight.bold ? 700 : 400,
+      italic: style.fontStyle == FontStyle.italic,
+    );
+    if (metrics == null) return [span];
+
+    // PowerPoint quantizes glyph advances to eighths of a point. Apply the
+    // resulting width per word while retaining Flutter's glyph shaping.
+    return _wordSpacingRuns.allMatches(text).map((match) {
+      final word = match[0]!;
+      var adjustment = 0.0;
+      for (final codePoint in word.codeUnits) {
+        if (metrics.font.glyphIdFor(codePoint) == 0) {
+          return TextSpan(text: word, style: style);
+        }
+        final advance = metrics.characterWidth(codePoint);
+        adjustment += (advance * 8).round() / 8 - advance;
+      }
+      return TextSpan(
+        text: word,
+        style: style.copyWith(letterSpacing: adjustment / word.length),
+      );
+    });
+  }
+
+  static String _slideBulletText(String text, String? family) {
+    final lower = family?.toLowerCase() ?? '';
+    if (!(lower.startsWith('wingdings') || lower == 'webdings') ||
+        text.length != 1 ||
+        text.codeUnitAt(0) > 0xff) {
+      return text;
+    }
+    return _slideSymbolText(
+      String.fromCharCode(text.codeUnitAt(0) + 0xf000),
+      family!,
     );
   }
 
-  double _slideParagraphHeight(
-    PmlTextParagraph paragraph,
-    PmlShape shape,
-    double size,
-  ) {
-    final double? fixed = paragraph.lineSpacingPt;
-    if (fixed != null && fixed.isFinite) {
-      return _flutterLineHeight(size > 0 ? math.max(0, fixed) / size : 0);
+  static String _slideRunText(PmlTextRun run) =>
+      _slideSymbolText(run.text.replaceAll('\t', '\u2003'), run.fontFamily);
+
+  static String _slideSymbolText(String text, String family) {
+    if (family.toLowerCase() != 'wingdings' ||
+        OfficeHostFonts.registeredFamily(family) != null) {
+      return text;
     }
-    return _flutterLineHeight(
-      math.max(0, paragraph.lineSpacing - shape.lineSpacingReduction),
-    );
+    return text.replaceAll('\uF0E8', '\u2794').replaceAll('\uF0F3', '\u21D4');
   }
+
+  static double _richTextHeight(List<_SlideParagraph> layouts) =>
+      layouts.last.offset.dy + layouts.last.painter.height;
+
+  // Native normal autofit rounds the fitted em before calculating leading.
+  static double _normalLineHeight(PmlShape shape, double points) =>
+      _displayFontSize(shape, points) * 1.2;
 
   // Flutter reserves a zero height multiplier for natural font metrics.
   // Keep a zero authored advance collapsed without changing its stored value.
@@ -1731,64 +2204,158 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       return;
     }
     canvas.save();
-    if (!_growsWithText(r)) {
-      canvas.clipRect(r);
+    if (shape.shouldClipTextVertically &&
+        !shape.growsToFitText &&
+        !_growsWithText(r)) {
+      final bounds = shape.wrapsText ? r : canvas.getLocalClipBounds();
+      canvas.clipRect(
+        Rect.fromLTRB(bounds.left, r.top, bounds.right, r.bottom),
+      );
     }
     final Color color = _textColor(shape, background: background);
-    final TextPainter painter = _shapePainter(
-      shape,
-      body,
-      r,
-      color,
-      background: background,
-    )..layout(maxWidth: math.max(8, shape.textInsets.contentWidth(r.width)));
-    final Offset origin = _shapeTextOrigin(shape, r, painter);
-    if (isEdit && editBase != editCaret) {
-      final int start = editBase < editCaret ? editBase : editCaret;
-      final int end = editBase > editCaret ? editBase : editCaret;
-      for (final ui.TextBox box in painter.getBoxesForSelection(
-        TextSelection(baseOffset: start, extentOffset: end),
-      )) {
-        canvas.drawRect(
-          Rect.fromLTRB(box.left, box.top, box.right, box.bottom).shift(origin),
-          Paint()..color = _theme.selectionFill,
+    final textRect = _shapeTextRect(shape, r);
+    final paragraphs = body == shape.text
+        ? shape.resolvedRichText
+        : const <PmlTextParagraph>[];
+    if (paragraphs.isNotEmpty) {
+      final layout = _layoutRichText(
+        shape,
+        paragraphs,
+        textRect,
+        color,
+        background: background,
+      );
+      try {
+        final origin = _shapeTextOrigin(
+          shape,
+          textRect,
+          _richTextHeight(layout),
         );
+        final caretParagraph = isEdit && config.showsCaret && hasFocus
+            ? layout.lastWhere(
+                (paragraph) => paragraph.start <= editCaret,
+                orElse: () => layout.first,
+              )
+            : null;
+        for (final paragraph in layout) {
+          if (paragraph.bullet case final bullet?) {
+            bullet.paint(canvas, origin + paragraph.bulletOffset!);
+          }
+          _paintTextPainter(
+            canvas,
+            paragraph.painter,
+            origin + paragraph.offset,
+            color,
+            shape.rightToLeft ?? PaintRunText.looksRtl(body),
+            selectionStart: isEdit
+                ? math.min(editBase, editCaret) - paragraph.start
+                : null,
+            selectionEnd: isEdit
+                ? math.max(editBase, editCaret) - paragraph.start
+                : null,
+            caret: identical(caretParagraph, paragraph)
+                ? editCaret - paragraph.start
+                : null,
+            length: paragraph.length,
+            prefix: paragraph.prefixLength,
+          );
+        }
+      } finally {
+        for (final paragraph in layout) {
+          paragraph.dispose();
+        }
+      }
+    } else {
+      final painter = _shapePainter(shape, body, textRect, color);
+      try {
+        _paintTextPainter(
+          canvas,
+          painter,
+          _plainTextOrigin(shape, textRect, painter),
+          color,
+          shape.rightToLeft ??
+              (PaintRunText.looksRtl(body) ||
+                  config.textDirection == TextDirection.rtl),
+          selectionStart: isEdit ? math.min(editBase, editCaret) : null,
+          selectionEnd: isEdit ? math.max(editBase, editCaret) : null,
+          caret: isEdit && config.showsCaret && hasFocus ? editCaret : null,
+          length: body.length,
+        );
+      } finally {
+        painter.dispose();
+      }
+    }
+    canvas.restore();
+  }
+
+  void _paintTextPainter(
+    Canvas canvas,
+    TextPainter painter,
+    Offset origin,
+    Color color,
+    bool rtl, {
+    required int length,
+    int? selectionStart,
+    int? selectionEnd,
+    int? caret,
+    int prefix = 0,
+  }) {
+    if (selectionStart != null && selectionEnd != null) {
+      final begin = selectionStart.clamp(0, length);
+      final end = selectionEnd.clamp(0, length);
+      if (end > begin) {
+        for (final box in painter.getBoxesForSelection(
+          TextSelection(baseOffset: begin + prefix, extentOffset: end + prefix),
+        )) {
+          canvas.drawRect(
+            Rect.fromLTRB(
+              box.left,
+              box.top,
+              box.right,
+              box.bottom,
+            ).shift(origin),
+            Paint()..color = _theme.selectionFill,
+          );
+        }
       }
     }
     painter.paint(canvas, origin);
-    if (isEdit && config.showsCaret && hasFocus) {
-      final Offset caret = painter.getOffsetForCaret(
-        TextPosition(offset: editCaret.clamp(0, shape.text.length)),
+    if (caret != null) {
+      final offset = painter.getOffsetForCaret(
+        TextPosition(offset: caret.clamp(0, length) + prefix),
         const Rect.fromLTWH(0, 0, 0, 16),
       );
       CaretEngine.paintFlagged(
         canvas,
         stem: Rect.fromLTWH(
-          origin.dx + caret.dx,
-          origin.dy + caret.dy,
-          1.0,
+          origin.dx + offset.dx,
+          origin.dy + offset.dy,
+          1,
           18,
         ),
         color: color,
-        rtl:
-            shape.rightToLeft ??
-            (PaintRunText.looksRtl(body) ||
-                config.textDirection == TextDirection.rtl),
+        rtl: rtl,
       );
     }
-    canvas.restore();
   }
 
-  Offset _shapeTextOrigin(PmlShape shape, Rect r, TextPainter painter) =>
-      Offset(
-        r.left + shape.textInsets.left,
-        r.top +
-            shape.textInsets.textTop(
-              r.height,
-              painter.height,
-              shape.textAnchor,
-            ),
-      );
+  Offset _shapeTextOrigin(PmlShape shape, Rect r, double textHeight) => Offset(
+    r.left + shape.textInsets.left,
+    r.top +
+        shape.textInsets.textTop(r.height, textHeight, shape.displayTextAnchor),
+  );
+
+  static double _roundedCalloutRadius(Rect rect, PmlRoundedCallout callout) =>
+      rect.shortestSide * callout.corner.clamp(0, 50000) / 100000;
+
+  static Rect _shapeTextRect(PmlShape shape, Rect rect) {
+    final callout = shape.roundedCallout;
+    // DrawingML's wedgeRoundRectCallout text rectangle is inset at the
+    // 45-degree point of each rounded corner, before the text body margins.
+    return callout == null
+        ? rect
+        : rect.deflate(_roundedCalloutRadius(rect, callout) * 0.29289);
+  }
 
   void _paintMorph(
     Canvas canvas,
@@ -1868,6 +2435,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
         fontFamily: _theme.fontFamily ?? PaintRunText.fontFallbacks.first,
         images: _images,
         onImageReady: markNeedsPaint,
+        shapeRotationDegrees: (transform ?? shape.transform).rotationDegrees,
       );
     } else {
       final String paintedFill = fillColor ?? shape.fillColor;
@@ -1969,6 +2537,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
           fontFamily: _theme.fontFamily ?? PaintRunText.fontFallbacks.first,
           images: _images,
           onImageReady: markNeedsPaint,
+          shapeRotationDegrees: shape.transform.rotationDegrees,
         );
       } else {
         _paintShapeFill(canvas, shape, r, shape.fillColor);

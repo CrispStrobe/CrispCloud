@@ -56,6 +56,12 @@ class _PageOrigin {
   final int bodyFrames;
 }
 
+typedef _AdjacentWordParagraph = ({
+  double after,
+  String styleId,
+  bool contextualSpacing,
+});
+
 /// Flow state immediately before a visible top-level block.
 class _Checkpoint {
   _Checkpoint({
@@ -66,7 +72,7 @@ class _Checkpoint {
     required this.columnTop,
     required this.lines,
     required this.frames,
-    required this.adjacentAfter,
+    required this.adjacentParagraph,
     required this.paragraphIndex,
     required this.wrapFrames,
     this.placedNotes = 0,
@@ -82,7 +88,7 @@ class _Checkpoint {
   /// Lines and frames already on the page being filled.
   final int lines;
   final int frames;
-  final double? adjacentAfter;
+  final _AdjacentWordParagraph? adjacentParagraph;
   final int paragraphIndex;
 
   /// A text-wrapping frame is on the page being filled.
@@ -119,7 +125,7 @@ class _Checkpoint {
       columnTop: columnTop,
       lines: onPage ? lines + lineDelta : lines,
       frames: onPage ? frames + frameDelta : frames,
-      adjacentAfter: adjacentAfter,
+      adjacentParagraph: adjacentParagraph,
       paragraphIndex: paragraphIndex + delta,
       wrapFrames: wrapFrames,
       placedNotes: placedNotes,
@@ -284,7 +290,7 @@ class _Recorder {
     WmlBlock block,
     _Flow flow,
     int paragraphIndex,
-    double? adjacentAfter, {
+    _AdjacentWordParagraph? adjacentParagraph, {
     int placedNotes = 0,
     Map<int, List<_NoteSlice>>? pendingNotes,
   }) {
@@ -300,7 +306,7 @@ class _Recorder {
         columnTop: flow.columnTop,
         lines: flow.current.length,
         frames: flow.currentFrames.length,
-        adjacentAfter: adjacentAfter,
+        adjacentParagraph: adjacentParagraph,
         paragraphIndex: paragraphIndex,
         wrapFrames: _hasWrapFrames(flow.currentFrames),
         placedNotes: placedNotes,
@@ -317,7 +323,7 @@ class _Recorder {
     int block,
     _Flow flow,
     int paragraphIndex,
-    double? adjacentAfter,
+    _AdjacentWordParagraph? adjacentParagraph,
     bool Function(_Checkpoint checkpoint, List<int> oldOrder) notesMatch,
   ) {
     final _Convergence? target = convergence;
@@ -341,7 +347,7 @@ class _Recorder {
         flow.columnIndex != cp.columnIndex ||
         flow.y != cp.y ||
         flow.columnTop != cp.columnTop ||
-        adjacentAfter != cp.adjacentAfter ||
+        adjacentParagraph != cp.adjacentParagraph ||
         flow.hasContent != cp.hasContent ||
         // Retained checkpoints address prefix slices on the partial page.
         // Equal vertical flow alone does not preserve those slice lengths
@@ -401,7 +407,7 @@ class _Recorder {
     int blockIndex,
     WmlParagraph block,
     _Flow flow,
-    double? adjacentAfter,
+    _AdjacentWordParagraph? adjacentParagraph,
   ) {
     final _Convergence? target = convergence;
     if (target == null ||
@@ -444,7 +450,7 @@ class _Recorder {
         flow.pageIndex != cp.pageIndex ||
         flow.columnIndex != cp.columnIndex ||
         flow.columnTop != cp.columnTop ||
-        adjacentAfter != cp.adjacentAfter ||
+        adjacentParagraph != cp.adjacentParagraph ||
         _hasWrapFrames(flow.currentFrames) ||
         cp.pagesLength >= target.oldPages.length) {
       return null;

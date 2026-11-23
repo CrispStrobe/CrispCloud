@@ -357,6 +357,7 @@ class WmlParagraphProps {
     this.lineSpacingRule = WmlLineSpacingRule.auto,
     this.spacingBefore = 0,
     this.spacingAfter = 8,
+    this.contextualSpacing = false,
     this.explicitLineSpacing = false,
     this.explicitSpacingBefore = false,
     this.explicitSpacingAfter = false,
@@ -365,6 +366,8 @@ class WmlParagraphProps {
     this.indent = const WmlIndent(),
     List<WmlTabStop>? tabs,
     this.keepTogether = false,
+    this.keepWithNext = false,
+    this.widowControl,
     this.pageBreakBefore = false,
     this.columnBreakBefore = false,
     this.numId,
@@ -375,6 +378,7 @@ class WmlParagraphProps {
     this.pageNumberField = false,
     this.headingLevel,
     this.styleId,
+    this.defaultStyleId,
     this.fieldInstruction,
     this.fieldBegin = false,
     this.fieldSeparate = false,
@@ -406,6 +410,9 @@ class WmlParagraphProps {
   /// spacingAfter API.
   double spacingAfter;
 
+  /// Suppresses this paragraph's own spacing beside the same style.
+  bool contextualSpacing;
+
   /// True when `w:spacing/@w:line` was set on this paragraph.
   bool explicitLineSpacing;
 
@@ -429,6 +436,13 @@ class WmlParagraphProps {
 
   /// keepTogether API.
   bool keepTogether;
+
+  /// Keeps this paragraph with the beginning of its following paragraph.
+  bool keepWithNext;
+
+  /// Whether the native document prevents isolated first or last lines.
+  /// A null value uses the Word default.
+  bool? widowControl;
 
   /// pageBreakBefore API.
   bool pageBreakBefore;
@@ -460,6 +474,11 @@ class WmlParagraphProps {
 
   /// styleId API.
   String? styleId;
+
+  /// Native default paragraph style when no direct style was authored.
+  String? defaultStyleId;
+
+  String get layoutStyleId => styleId ?? defaultStyleId ?? 'Normal';
 
   /// fieldInstruction API.
   String? fieldInstruction;
@@ -529,6 +548,7 @@ class WmlParagraphProps {
           lineSpacingRule: lineSpacingRule,
           spacingBefore: spacingBefore,
           spacingAfter: spacingAfter,
+          contextualSpacing: contextualSpacing,
           explicitLineSpacing: explicitLineSpacing,
           explicitSpacingBefore: explicitSpacingBefore,
           explicitSpacingAfter: explicitSpacingAfter,
@@ -537,6 +557,8 @@ class WmlParagraphProps {
           indent: indent,
           tabs: List<WmlTabStop>.from(tabs),
           keepTogether: keepTogether,
+          keepWithNext: keepWithNext,
+          widowControl: widowControl,
           pageBreakBefore: pageBreakBefore,
           columnBreakBefore: columnBreakBefore,
           numId: numId,
@@ -547,6 +569,7 @@ class WmlParagraphProps {
           pageNumberField: pageNumberField,
           headingLevel: headingLevel,
           styleId: styleId,
+          defaultStyleId: defaultStyleId,
           fieldInstruction: fieldInstruction,
           fieldBegin: fieldBegin,
           fieldSeparate: fieldSeparate,
@@ -791,11 +814,35 @@ class WmlRunProps {
             : Map.of(importedValues!);
 }
 
+/// Physical padding between a table cell border and its content, in points.
+class WmlTableCellInsets {
+  const WmlTableCellInsets({
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
+  });
+
+  const WmlTableCellInsets.uniform(double margin)
+    : this(left: margin, top: margin, right: margin, bottom: margin);
+
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  double get horizontal => left + right;
+  double get vertical => top + bottom;
+}
+
 /// Class WmlTableProps.
 class WmlTableProps {
   /// Original direct tblPr XML and effective import values, for sparse export.
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
+
+  /// Supported per-edge values from a direct DOCX margin declaration.
+  WmlTableCellInsets? importedCellInsets;
 
   /// WmlTableProps API.
   WmlTableProps({
@@ -817,6 +864,12 @@ class WmlTableProps {
 
   /// cellMargin API.
   double cellMargin;
+
+  WmlTableCellInsets get cellInsets =>
+      (importedValues?['tblCellMar'] == '$cellMargin'
+          ? importedCellInsets
+          : null) ??
+      WmlTableCellInsets.uniform(cellMargin);
 
   /// Word `w:bidiVisual` — first column is drawn on the right.
   bool rightToLeft;
@@ -847,6 +900,7 @@ class WmlTableProps {
           styleId: styleId,
         )
         ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedCellInsets = importedCellInsets
         ..importedValues = importedValues == null
             ? null
             : Map<String, String>.of(importedValues!);

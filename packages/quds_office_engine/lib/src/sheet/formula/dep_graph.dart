@@ -128,6 +128,16 @@ class FormulaDepGraph {
     final Set<String> out = <String>{};
     void walk(FormulaNode node, [Set<String> bindings = const {}]) {
       switch (node) {
+        case ExternalCellNode():
+          // A complete stored value is a constant. A missing one makes the
+          // dependency set incomplete, so the parent keeps its saved result.
+          node.eval(
+            FormulaContext(
+              workbook: workbook,
+              sheet: sheet,
+              origin: const SmlCellRef(0, 0),
+            ),
+          );
         case CellNode(:final SmlCellRef ref, :final String? sheetName):
           final SmlWorksheet? target = sheetName == null
               ? sheet

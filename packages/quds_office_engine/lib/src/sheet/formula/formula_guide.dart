@@ -640,7 +640,7 @@ abstract final class FormulaFunctionGuide {
     ),
     FormulaFnDoc(
       name: 'FIND',
-      syntax: 'FIND(find_text, within_text)',
+      syntax: 'FIND(find_text, within_text, [start_num])',
       category: FormulaFnCategory.text,
       en: 'Position of a case-sensitive match (1-based).',
       ar: 'موضع تطابق حساس لحالة الأحرف (من 1).',
@@ -648,9 +648,9 @@ abstract final class FormulaFunctionGuide {
     ),
     FormulaFnDoc(
       name: 'SEARCH',
-      syntax: 'SEARCH(find_text, within_text)',
+      syntax: 'SEARCH(find_text, within_text, [start_num])',
       category: FormulaFnCategory.text,
-      en: 'Position of a case-insensitive match (1-based).',
+      en: 'Position of a case-insensitive match with wildcards (1-based).',
       ar: 'موضع تطابق غير حساس لحالة الأحرف (من 1).',
       example: '=SEARCH("b", "Abc")',
     ),
@@ -664,9 +664,9 @@ abstract final class FormulaFunctionGuide {
     ),
     FormulaFnDoc(
       name: 'SUBSTITUTE',
-      syntax: 'SUBSTITUTE(text, old_text, new_text)',
+      syntax: 'SUBSTITUTE(text, old_text, new_text, [instance_num])',
       category: FormulaFnCategory.text,
-      en: 'Replaces matching text.',
+      en: 'Replaces all matches or only the specified occurrence.',
       ar: 'يستبدل النص المطابق.',
       example: '=SUBSTITUTE(A1, "-", "/")',
     ),
@@ -685,6 +685,14 @@ abstract final class FormulaFunctionGuide {
       en: 'Converts text that looks like a number.',
       ar: 'يحول نصاً يبدو كرقم إلى رقم.',
       example: '=VALUE("12.5")',
+    ),
+    FormulaFnDoc(
+      name: 'NUMBERVALUE',
+      syntax: 'NUMBERVALUE(text, [decimal_separator], [group_separator])',
+      category: FormulaFnCategory.text,
+      en: 'Converts text to a number using specified or locale separators.',
+      ar: 'يحول النص إلى رقم باستخدام الفواصل المحددة أو فواصل اللغة.',
+      example: '=NUMBERVALUE("2.500,27", ",", ".")',
     ),
     FormulaFnDoc(
       name: 'CHAR',
@@ -754,8 +762,7 @@ abstract final class FormulaFunctionGuide {
       name: 'CELL',
       syntax: 'CELL(info_type, [reference])',
       category: FormulaFnCategory.information,
-      en:
-          'Limited: address/col/row/contents/type for a cell. Other info → #N/A.',
+      en: 'Limited: address/col/row/contents/type for a cell. Other info → #N/A.',
       ar: 'محدود: عنوان/عمود/صف/محتوى/نوع. غير ذلك #N/A.',
       example: '=CELL("address",A1)',
     ),

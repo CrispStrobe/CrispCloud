@@ -140,17 +140,20 @@ class PmlTextRun {
     this.text = '',
     this.fontSizePt = 0,
     this.bold = false,
+    this.boldSpecified = true,
     this.italic = false,
     this.underline = false,
     this.strike = false,
     this.color = '',
     this.baseline = 0,
     this.fontFamily = '',
+    this.letterSpacingPt,
   });
 
   String text;
   double fontSizePt;
   bool bold;
+  bool boldSpecified;
   bool italic;
   bool underline;
   bool strike;
@@ -158,17 +161,37 @@ class PmlTextRun {
   double baseline;
   String fontFamily;
 
+  /// Signed character spacing in points. Null inherits the paragraph default.
+  double? letterSpacingPt;
+
   PmlTextRun copy() => PmlTextRun(
     text: text,
     fontSizePt: fontSizePt,
     bold: bold,
+    boldSpecified: boldSpecified,
     italic: italic,
     underline: underline,
     strike: strike,
     color: color,
     baseline: baseline,
     fontFamily: fontFamily,
+    letterSpacingPt: letterSpacingPt,
   );
+}
+
+/// Layout fields that can be inherited independently through a level style.
+enum PmlParagraphProperty {
+  alignment,
+  direction,
+  leftMargin,
+  rightMargin,
+  indent,
+  lineSpacing,
+  spaceBefore,
+  spaceAfter,
+  bullet,
+  bulletFont,
+  bulletColor,
 }
 
 /// One DrawingML paragraph with its runs and layout settings.
@@ -178,24 +201,35 @@ class PmlTextParagraph {
     this.align = PmlTextAlign.left,
     this.level = 0,
     this.marginLeftPt = 0,
+    this.marginRightPt = 0,
     this.indentPt = 0,
     this.lineSpacing = 1,
     this.lineSpacingPt,
     this.spaceBeforePt = 0,
     this.spaceAfterPt = 0,
+    this.spaceBeforeLineRatio = 0,
+    this.spaceAfterLineRatio = 0,
     this.rightToLeft = false,
     this.defaultTabPt = 72,
     this.defaultFontSizePt = 0,
+    this.defaultFontFamily = '',
+    this.defaultLetterSpacingPt,
     this.defaultColor = '',
     this.defaultBold = false,
     this.defaultItalic = false,
+    this.bullet,
+    this.bulletFont,
+    this.bulletColor,
     this.replacementRun,
-  }) : runs = runs ?? <PmlTextRun>[];
+    Iterable<PmlParagraphProperty> definedProperties = const [],
+  }) : runs = runs ?? <PmlTextRun>[],
+       definedProperties = {...definedProperties};
 
   List<PmlTextRun> runs;
   PmlTextAlign align;
   int level;
   double marginLeftPt;
+  double marginRightPt;
   double indentPt;
   double lineSpacing;
 
@@ -203,12 +237,56 @@ class PmlTextParagraph {
   double? lineSpacingPt;
   double spaceBeforePt;
   double spaceAfterPt;
+  double spaceBeforeLineRatio;
+  double spaceAfterLineRatio;
   bool rightToLeft;
   double defaultTabPt;
   double defaultFontSizePt;
+  String defaultFontFamily;
+  double? defaultLetterSpacingPt;
   String defaultColor;
   bool defaultBold;
   bool defaultItalic;
+  String? bullet;
+  String? bulletFont;
+  String? bulletColor;
+
+  /// Presence matters for explicit zero spacing and explicit bullet removal.
+  final Set<PmlParagraphProperty> definedProperties;
+
+  /// Fills individual properties that the nearer style left unspecified.
+  void inheritLayout(PmlTextParagraph source) {
+    for (final property in source.definedProperties) {
+      if (!definedProperties.add(property)) continue;
+      switch (property) {
+        case PmlParagraphProperty.alignment:
+          align = source.align;
+        case PmlParagraphProperty.direction:
+          rightToLeft = source.rightToLeft;
+        case PmlParagraphProperty.leftMargin:
+          marginLeftPt = source.marginLeftPt;
+        case PmlParagraphProperty.rightMargin:
+          marginRightPt = source.marginRightPt;
+        case PmlParagraphProperty.indent:
+          indentPt = source.indentPt;
+        case PmlParagraphProperty.lineSpacing:
+          lineSpacing = source.lineSpacing;
+          lineSpacingPt = source.lineSpacingPt;
+        case PmlParagraphProperty.spaceBefore:
+          spaceBeforePt = source.spaceBeforePt;
+          spaceBeforeLineRatio = source.spaceBeforeLineRatio;
+        case PmlParagraphProperty.spaceAfter:
+          spaceAfterPt = source.spaceAfterPt;
+          spaceAfterLineRatio = source.spaceAfterLineRatio;
+        case PmlParagraphProperty.bullet:
+          bullet = source.bullet;
+        case PmlParagraphProperty.bulletFont:
+          bulletFont = source.bulletFont;
+        case PmlParagraphProperty.bulletColor:
+          bulletColor = source.bulletColor;
+      }
+    }
+  }
 
   /// Imported ordinary-run formatting used when text is explicitly replaced.
   /// It can differ from the first visible run when a field or break precedes it.
@@ -219,17 +297,26 @@ class PmlTextParagraph {
     align: align,
     level: level,
     marginLeftPt: marginLeftPt,
+    marginRightPt: marginRightPt,
     indentPt: indentPt,
     lineSpacing: lineSpacing,
     lineSpacingPt: lineSpacingPt,
     spaceBeforePt: spaceBeforePt,
     spaceAfterPt: spaceAfterPt,
+    spaceBeforeLineRatio: spaceBeforeLineRatio,
+    spaceAfterLineRatio: spaceAfterLineRatio,
     rightToLeft: rightToLeft,
     defaultTabPt: defaultTabPt,
     defaultFontSizePt: defaultFontSizePt,
+    defaultFontFamily: defaultFontFamily,
+    defaultLetterSpacingPt: defaultLetterSpacingPt,
     defaultColor: defaultColor,
     defaultBold: defaultBold,
     defaultItalic: defaultItalic,
+    bullet: bullet,
+    bulletFont: bulletFont,
+    bulletColor: bulletColor,
+    definedProperties: definedProperties,
     replacementRun: replacementRun?.copy(),
   );
 }
@@ -397,6 +484,7 @@ class PmlTextSource {
     required this.textAlign,
     required this.rightToLeft,
     this.textInsets = const PmlTextInsets(),
+    this.definedInsetSides = const {},
     this.textScale = 1,
     this.lineSpacingReduction = 0,
   });
@@ -419,11 +507,34 @@ class PmlTextSource {
   /// Imported paragraph direction.
   final bool? rightToLeft;
 
-  /// Imported direct margins, before any explicit or scalar inset edits.
+  /// Effective imported margins, before any explicit or scalar inset edits.
   final PmlTextInsets textInsets;
+
+  /// Sides set on this native text body or inherited from a template.
+  final Set<PmlTextInsetSide> definedInsetSides;
 
   final double textScale;
   final double lineSpacingReduction;
+
+  /// Records resolved placeholder defaults as the imported scalar baseline.
+  /// The original body and authored formatting remain available for save.
+  PmlTextSource withInheritedFormatting({
+    required double fontSizePt,
+    required String textColor,
+    PmlTextInsets? textInsets,
+    Set<PmlTextInsetSide>? definedInsetSides,
+  }) => PmlTextSource(
+    xml: xml,
+    text: text,
+    fontSizePt: fontSizePt,
+    textColor: textColor,
+    textAlign: textAlign,
+    rightToLeft: rightToLeft,
+    textInsets: textInsets ?? this.textInsets,
+    definedInsetSides: definedInsetSides ?? this.definedInsetSides,
+    textScale: textScale,
+    lineSpacingReduction: lineSpacingReduction,
+  );
 }
 
 /// One DrawingML text-body inset. Each side has independent write ownership.
@@ -473,6 +584,17 @@ class PmlTextInsets {
       };
 }
 
+/// Native adjustments for a DrawingML rounded rectangular callout.
+class PmlRoundedCallout {
+  const PmlRoundedCallout({
+    this.tipX = -20833,
+    this.tipY = 62500,
+    this.corner = 16667,
+  });
+
+  final int tipX, tipY, corner;
+}
+
 /// Class PmlShape.
 class PmlShape {
   /// PmlShape API.
@@ -484,6 +606,7 @@ class PmlShape {
     this.text = '',
     this.fillColor = '4472C4',
     this.gradient,
+    this.fillOpacity = 1,
     this.textColor = '',
     this.fontSizePt = 0,
     this.textBold,
@@ -498,6 +621,9 @@ class PmlShape {
     this.textSource,
     this.embedRelId,
     List<PmlPathPoint>? path,
+    this.pathWidth,
+    this.pathHeight,
+    this.roundedCallout,
     this.visual,
     this.isBackgroundPicture = false,
     this.isBackgroundGradient = false,
@@ -506,6 +632,12 @@ class PmlShape {
     this.textAlign = PmlTextAlign.left,
     this.textAnchor = PmlTextAnchor.top,
     this.textAnchorOverride = false,
+    this.growsToFitText = false,
+    this.textAnchorSpecified = true,
+    this.inheritedTextAnchor,
+    this.textWrap,
+    this.inheritedTextWrap,
+    this.clipsTextVertically,
     this.textInsets = const PmlTextInsets(),
     Set<PmlTextInsetSide>? textInsetOverrides,
     double textScale = 1.0,
@@ -547,6 +679,9 @@ class PmlShape {
 
   /// fillColor API.
   String fillColor;
+
+  /// Resolved DrawingML solid-fill alpha.
+  double fillOpacity;
 
   /// Optional gradient fill; takes precedence over [fillColor] when present.
   PmlGradientFill? gradient;
@@ -593,6 +728,9 @@ class PmlShape {
 
   /// path API.
   List<PmlPathPoint> path;
+  int? pathWidth;
+  int? pathHeight;
+  PmlRoundedCallout? roundedCallout;
 
   /// visual API.
   OfficeVisual? visual;
@@ -625,7 +763,32 @@ class PmlShape {
   /// value matches an imported baseline/unsupported anchor's fallback.
   bool textAnchorOverride;
 
-  /// Resolved direct text-frame margins. Unedited native attributes stay opaque
+  /// PowerPoint permits shape text to extend past the authored height.
+  bool growsToFitText;
+
+  /// Imported placeholder text can inherit its body anchor without replacing
+  /// an omitted source attribute during save.
+  bool textAnchorSpecified;
+  PmlTextAnchor? inheritedTextAnchor;
+
+  /// Direct or inherited DrawingML wrapping of slide text.
+  bool? textWrap;
+  bool? inheritedTextWrap;
+  bool get wrapsText => textWrap ?? inheritedTextWrap ?? true;
+
+  /// Omitted DrawingML text overflow resolves to overflow after inheritance.
+  /// Constructed canvas shapes retain frame clipping until explicitly set.
+  bool? clipsTextVertically;
+  bool get shouldClipTextVertically =>
+      clipsTextVertically ?? (textSource == null);
+  PmlTextAnchor get displayTextAnchor =>
+      textAnchorSpecified ||
+          textAnchorOverride ||
+          textAnchor != PmlTextAnchor.top
+      ? textAnchor
+      : inheritedTextAnchor ?? textAnchor;
+
+  /// Resolved text-frame margins. Unedited native attributes stay opaque
   /// in [textSource]; explicit writes replace only their own unqualified inset.
   PmlTextInsets textInsets;
   final Set<PmlTextInsetSide> textInsetOverrides;
@@ -739,8 +902,14 @@ class PmlShape {
     final List<PmlTextParagraph> resolved = <PmlTextParagraph>[];
     for (final PmlTextParagraph original in originals) {
       final PmlTextParagraph paragraph = original.copy();
-      if (alignChanged) paragraph.align = textAlign;
-      if (directionChanged) paragraph.rightToLeft = rightToLeft ?? false;
+      if (alignChanged) {
+        paragraph.align = textAlign;
+        paragraph.definedProperties.add(PmlParagraphProperty.alignment);
+      }
+      if (directionChanged) {
+        paragraph.rightToLeft = rightToLeft ?? false;
+        paragraph.definedProperties.add(PmlParagraphProperty.direction);
+      }
       if (fontChanged) paragraph.defaultFontSizePt = fontSizePt;
       if (colorChanged) paragraph.defaultColor = textColor;
       if (textBold != null) paragraph.defaultBold = textBold!;
@@ -816,6 +985,7 @@ class PmlShape {
       text: text,
       fillColor: fillColor,
       gradient: gradient?.copy(),
+      fillOpacity: fillOpacity,
       textColor: textColor,
       fontSizePt: fontSizePt,
       textBold: textBold,
@@ -830,6 +1000,9 @@ class PmlShape {
       textSource: textSource,
       embedRelId: embedRelId,
       path: <PmlPathPoint>[...path],
+      pathWidth: pathWidth,
+      pathHeight: pathHeight,
+      roundedCallout: roundedCallout,
       visual: visual?.copy(),
       isBackgroundPicture: isBackgroundPicture,
       isBackgroundGradient: isBackgroundGradient,
@@ -838,6 +1011,12 @@ class PmlShape {
       textAlign: textAlign,
       textAnchor: textAnchor,
       textAnchorOverride: textAnchorOverride,
+      growsToFitText: growsToFitText,
+      textAnchorSpecified: textAnchorSpecified,
+      inheritedTextAnchor: inheritedTextAnchor,
+      textWrap: textWrap,
+      inheritedTextWrap: inheritedTextWrap,
+      clipsTextVertically: clipsTextVertically,
       textInsets: textInsets,
       textInsetOverrides: textInsetOverrides,
       textScale: textScale,
@@ -861,7 +1040,10 @@ class PmlShape {
 /// Class PmlPathPoint.
 class PmlPathPoint {
   /// PmlPathPoint API.
-  const PmlPathPoint(this.x, this.y);
+  const PmlPathPoint(this.x, this.y, {this.move = false, this.close = false});
+
+  final bool move;
+  final bool close;
 
   /// x API.
   final int x;
@@ -871,6 +1053,20 @@ class PmlPathPoint {
 }
 
 /// Class PmlSlide.
+class PmlSlideSource {
+  const PmlSlideSource({
+    required this.modeledXml,
+    required this.notes,
+    required this.visuals,
+    required this.shapeOrder,
+  });
+
+  final String modeledXml;
+  final String notes;
+  final Map<int, String> visuals;
+  final List<(int, int?)> shapeOrder;
+}
+
 class PmlSlide {
   /// PmlSlide API.
   PmlSlide({
@@ -1027,6 +1223,9 @@ class PmlSlide {
   /// Original owning part, retained when slides are reordered.
   String? sourcePartUri;
 
+  /// Modeled state when the native slide part was last read or written.
+  PmlSlideSource? sourceState;
+
   /// Imported layout provenance, retained by copies within the same package.
   /// It preserves native master-background inheritance when a copy gets a new
   /// slide part rather than flattening an inherited picture into a local fill.
@@ -1067,6 +1266,7 @@ class PmlSlide {
       ],
       shapes: <PmlShape>[for (final PmlShape shape in shapes) shape.copy()],
     ).._primaryMasterBackground = _primaryMasterBackground;
+    result.sourceState = id == null || id == this.id ? sourceState : null;
     result._sourceBackground = _sourceBackground?.copy();
     result._backgroundFromSource = _backgroundFromSource;
     if (_backgroundFill != null) {

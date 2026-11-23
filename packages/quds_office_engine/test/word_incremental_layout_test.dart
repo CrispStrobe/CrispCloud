@@ -92,6 +92,23 @@ void main() {
     expect(WordIncrementalLayoutStats.blocksLaidOut, lessThan(15));
   });
 
+  test(
+    'changing contextual spacing and style invalidates the adjacent gap',
+    () {
+      final first = document.sections.first.blocks[10] as WmlParagraph;
+      final second = document.sections.first.blocks[11] as WmlParagraph;
+      first.properties
+        ..contextualSpacing = true
+        ..spacingAfter = 12;
+      second.properties.spacingBefore = 10;
+      relayout([first, second]);
+      first.properties.styleId = 'BodyText';
+      relayout([first]);
+      second.properties.styleId = 'BodyText';
+      relayout([second]);
+    },
+  );
+
   test('growing and shrinking a paragraph shifts pages both ways', () {
     final WmlParagraph p = document.sections[0].blocks[5] as WmlParagraph;
     final String before = runOf(p).text;

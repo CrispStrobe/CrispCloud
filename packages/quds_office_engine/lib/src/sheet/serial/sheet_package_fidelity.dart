@@ -64,6 +64,74 @@ const _workbookOrder = [
 const _pivotType = '${OfficeNamespaces.r}/pivotTable';
 const _cacheType = '${OfficeNamespaces.r}/pivotCacheDefinition';
 
+void _readExternalCellValues(
+  XmlElement? workbook,
+  OpcPackage package,
+  RelationshipCollection relationships,
+  SmlWorkbook book,
+) {
+  const x = OfficeNamespaces.x;
+  final references = workbook
+      ?.firstChild('externalReferences', namespaceUri: x)
+      ?.childrenNamed('externalReference', namespaceUri: x);
+  if (references == null) return;
+  for (final (index, reference) in references.indexed) {
+    final id = reference.getAttribute('id', namespaceUri: OfficeNamespaces.r);
+    final link = id == null ? null : relationships.byId(id);
+    if (link == null ||
+        link.type != '${OfficeNamespaces.r}/externalLink' ||
+        link.targetMode != RelationshipTargetMode.internal) {
+      continue;
+    }
+    final part = package.getPart(relationships.resolve(link));
+    if (part == null) continue;
+    XmlElement? root;
+    try {
+      root = XmlDocument.parse(part.readText()).root;
+    } on FormatException {
+      continue;
+    }
+    if (root?.localName != 'externalLink' || root?.namespaceUri != x) continue;
+    // Only read the package cache. The externalBook target is never resolved.
+    final externalBook = root!.firstChild('externalBook', namespaceUri: x);
+    final names = externalBook
+        ?.firstChild('sheetNames', namespaceUri: x)
+        ?.childrenNamed('sheetName', namespaceUri: x);
+    final data = externalBook?.firstChild('sheetDataSet', namespaceUri: x);
+    if (names == null || data == null) continue;
+    for (final sheet in data.childrenNamed('sheetData', namespaceUri: x)) {
+      final sheetIndex = int.tryParse(sheet.getAttribute('sheetId') ?? '');
+      final refreshError = sheet.getAttribute('refreshError');
+      if (sheetIndex == null ||
+          sheetIndex < 0 ||
+          sheetIndex >= names.length ||
+          refreshError == '1' ||
+          refreshError == 'true') {
+        continue;
+      }
+      final name = names[sheetIndex].getAttribute('val')?.toLowerCase();
+      if (name == null || name.isEmpty) continue;
+      for (final row in sheet.childrenNamed('row', namespaceUri: x)) {
+        for (final cell in row.childrenNamed('cell', namespaceUri: x)) {
+          final address = cell.getAttribute('r')?.toUpperCase();
+          final raw = cell.firstChild('v', namespaceUri: x)?.text;
+          if (address == null || raw == null) continue;
+          final value = switch (cell.getAttribute('t')) {
+            null || 'n' => double.tryParse(raw),
+            'str' => raw,
+            'b' when raw == '1' || raw == '0' => raw == '1',
+            'e' when raw.isNotEmpty => FormulaErrorValue(raw),
+            _ => null,
+          };
+          if (value != null && (value is! double || value.isFinite)) {
+            book.externalCellValues[(index + 1, name, address)] = value;
+          }
+        }
+      }
+    }
+  }
+}
+
 String _preserveSheetParts(
   String? source,
   String generated,
@@ -73,26 +141,52 @@ String _preserveSheetParts(
   if (source == null || source.trim().isEmpty) return generated;
   final old = XmlDocument.parse(source);
   final current = XmlDocument.parse(generated);
+  final root = old.root!;
   for (final a in current.root!.attributes) {
-    old.root!.setAttribute(
+    root.setAttribute(
       a.localName,
       a.value,
       prefix: a.prefix,
       namespaceUri: a.namespaceUri,
     );
   }
-  old.root!.children.removeWhere(
-    (n) => n is XmlElement && modeled.contains(n.localName),
-  );
+  final replacements = <String, List<XmlElement>>{};
   for (final child in current.root!.childElements) {
-    old.root!.addChild(child.copy());
+    if (!modeled.contains(child.localName) &&
+        root.firstChild(child.localName, namespaceUri: child.namespaceUri) !=
+            null) {
+      continue;
+    }
+    (replacements[child.localName] ??= []).add(child.copy()..parent = root);
   }
-  int rank(XmlNode n) {
-    final i = n is XmlElement ? order.indexOf(n.localName) : -1;
-    return i < 0 ? order.length : i;
+  // Native extensions can be legal only at particular positions. Keep every
+  // retained element in its original order and replace modeled children in
+  // place. Only newly introduced elements need a schema-order insertion.
+  final sourceChildren = List<XmlNode>.of(root.children);
+  root.children.clear();
+  for (final child in sourceChildren) {
+    if (child is XmlElement &&
+        child.namespaceUri == OfficeNamespaces.x &&
+        modeled.contains(child.localName)) {
+      root.children.addAll(replacements.remove(child.localName) ?? const []);
+    } else {
+      root.children.add(child);
+    }
   }
-
-  old.root!.children.sort((a, b) => rank(a).compareTo(rank(b)));
+  for (final name in order) {
+    final elements = replacements.remove(name);
+    if (elements == null) continue;
+    final rank = order.indexOf(name);
+    final next = root.children.indexWhere((child) {
+      return child is XmlElement &&
+          child.namespaceUri == OfficeNamespaces.x &&
+          order.indexOf(child.localName) > rank;
+    });
+    root.children.insertAll(next < 0 ? root.children.length : next, elements);
+  }
+  for (final elements in replacements.values) {
+    root.children.addAll(elements);
+  }
   return old.toXmlString();
 }
 

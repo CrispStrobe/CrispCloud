@@ -25,6 +25,21 @@ class _MetaBrush {
   final bool none;
 }
 
+class _MetaFont {
+  const _MetaFont(
+    this.family,
+    this.height,
+    this.weight,
+    this.charSet, {
+    this.topAscent,
+  });
+  final String family;
+  final int height, weight, charSet;
+  final int? topAscent;
+}
+
+typedef _MetaRect = ({double left, double top, double right, double bottom});
+
 class _MetaState {
   _MetaState(double width, double height)
     : windowWidth = width,
@@ -47,8 +62,15 @@ class _MetaState {
       arcClockwise = other.arcClockwise,
       pen = other.pen,
       brush = other.brush,
+      font = other.font,
+      textAlign = other.textAlign,
+      textColor = other.textColor,
+      backgroundMode = other.backgroundMode,
       penHandle = other.penHandle,
       brushHandle = other.brushHandle,
+      fontHandle = other.fontHandle,
+      clipId = other.clipId,
+      clipRects = other.clipRects,
       world = other.world;
   double windowWidth, windowHeight, viewportWidth, viewportHeight;
   double windowX = 0, windowY = 0, viewportX = 0, viewportY = 0;
@@ -58,7 +80,10 @@ class _MetaState {
   bool arcClockwise = false;
   _MetaPen pen = const _MetaPen('000000', 1);
   _MetaBrush brush = const _MetaBrush('FFFFFF');
-  int? penHandle, brushHandle;
+  _MetaFont? font;
+  int textAlign = 0, backgroundMode = 2, textColor = 0;
+  int? penHandle, brushHandle, fontHandle, clipId;
+  List<_MetaRect>? clipRects;
   List<double> world = const [1, 0, 0, 1, 0, 0];
 }
 
@@ -81,6 +106,12 @@ class _MetafileRenderer {
   final _stack = <_MetaState>[];
   _MetaState state;
   var _characters = 0, _points = 0, _recordType = 0;
+  StringBuffer? _path;
+  String? _pathMatrix;
+  var _pathOpen = false, _figureOpen = false;
+  var _painted = false, _hasAlternateImage = false;
+  var _clipCount = 0;
+  var _plusHeader = false, _plusEnd = false;
 
   static const _emfSupported = {
     1,
@@ -95,14 +126,19 @@ class _MetafileRenderer {
     10,
     11,
     12,
+    13,
     14,
     17,
     18,
     19,
     20,
+    21,
+    22,
     24,
     25,
     27,
+    29,
+    30,
     33,
     34,
     35,
@@ -120,6 +156,18 @@ class _MetafileRenderer {
     54,
     55,
     57,
+    59,
+    60,
+    61,
+    62,
+    64,
+    67,
+    68,
+    70,
+    75,
+    81,
+    82,
+    84,
     85,
     86,
     87,
@@ -137,6 +185,7 @@ class _MetafileRenderer {
     0x0106,
     0x0127,
     0x012d,
+    0x012e,
     0x01f0,
     0x0201,
     0x0209,
@@ -149,6 +198,7 @@ class _MetafileRenderer {
     0x0213,
     0x0214,
     0x02fa,
+    0x02fb,
     0x02fc,
     0x0324,
     0x0325,
@@ -159,6 +209,7 @@ class _MetafileRenderer {
     0x0817,
     0x081a,
     0x0830,
+    0x0a32,
   };
 
   _MetafilePreview render() {
@@ -190,6 +241,11 @@ class _MetafileRenderer {
         } else {
           _wmf(record.type, bytes);
         }
+      }
+      if (_pathOpen) throw const _UnsupportedMetafilePreview(59);
+      if ((_hasAlternateImage || _plusHeader) && !_painted ||
+          _plusHeader && !_plusEnd) {
+        throw const _UnsupportedMetafilePreview(70);
       }
       _write('</svg>');
       return _MetafilePreview(_body.toString(), const []);
@@ -243,20 +299,334 @@ class _MetafileRenderer {
     ];
   }
 
-  void _emit(String element, String geometry, {bool filled = false}) {
+  void _emit(
+    String element,
+    String geometry, {
+    bool filled = false,
+    bool stroked = true,
+  }) {
+    if (state.clipRects?.isEmpty ?? false) return;
     final pen = state.pen, brush = state.brush;
+    final clipId = state.clipId;
+    if (clipId != null) _write('<g clip-path="url(#emfClip$clipId)">');
     _write(
       '<$element $geometry transform="matrix(${_matrix().map(_n).join(' ')})" '
       'fill="${filled && !brush.none ? '#${brush.color}' : 'none'}" '
-      'fill-rule="${state.fillRule}" stroke="${pen.none ? 'none' : '#${pen.color}'}" '
+      'fill-rule="${state.fillRule}" stroke="${!stroked || pen.none ? 'none' : '#${pen.color}'}" '
       'stroke-width="${_n(pen.width == 0 ? 1 : pen.width)}" '
       'stroke-linecap="round" stroke-linejoin="round"'
       '${pen.width == 0 ? ' vector-effect="non-scaling-stroke"' : ''}/>',
     );
+    if (clipId != null) _write('</g>');
+    _painted |= (filled && !brush.none) || (stroked && !pen.none);
+  }
+
+  String _matrixString() => _matrix().map(_n).join(' ');
+
+  void _appendPath(String commands) {
+    final path = _path!;
+    if (commands.length > limit - _characters - path.length) {
+      throw const FormatException('Metafile path exceeds its output limit.');
+    }
+    path.write(commands);
+  }
+
+  String _takePath() {
+    final path = _path;
+    if (path == null || _pathOpen || _pathMatrix != _matrixString()) {
+      _unsupported();
+    }
+    _path = null;
+    _pathMatrix = null;
+    return path.toString();
+  }
+
+  void _replaceClip() {
+    final path = _takePath();
+    final id = ++_clipCount;
+    _write(
+      '<defs><clipPath id="emfClip$id"><path d="$path" '
+      'clip-rule="${state.fillRule}" transform="matrix(${_matrixString()})"/>'
+      '</clipPath></defs>',
+    );
+    state.clipId = id;
+    state.clipRects = null;
+  }
+
+  _MetaRect? _intersectRect(_MetaRect a, _MetaRect b) {
+    final left = math.max(a.left, b.left), top = math.max(a.top, b.top);
+    final right = math.min(a.right, b.right),
+        bottom = math.min(a.bottom, b.bottom);
+    return right > left && bottom > top
+        ? (left: left, top: top, right: right, bottom: bottom)
+        : null;
+  }
+
+  void _clipRect(_MetaBytes data, {required bool exclude}) {
+    final matrix = _matrix();
+    final previous = state.clipRects;
+    if (data.length < 24 ||
+        matrix[1] != 0 ||
+        matrix[2] != 0 ||
+        (state.clipId != null && previous == null)) {
+      _unsupported();
+    }
+    // The rectangle becomes part of the clip in device space. Later mapping
+    // changes only transform drawing commands, not the saved clip.
+    final x1 = matrix[0] * data.i32(8) + matrix[4];
+    final x2 = matrix[0] * data.i32(16) + matrix[4];
+    final y1 = matrix[3] * data.i32(12) + matrix[5];
+    final y2 = matrix[3] * data.i32(20) + matrix[5];
+    final box = (
+      left: math.min(x1, x2),
+      top: math.min(y1, y2),
+      right: math.max(x1, x2),
+      bottom: math.max(y1, y2),
+    );
+    final current =
+        previous ??
+        [
+          (
+            left: bounds.left.toDouble(),
+            top: bounds.top.toDouble(),
+            right: bounds.right.toDouble(),
+            bottom: bounds.bottom.toDouble(),
+          ),
+        ];
+    final next = <_MetaRect>[];
+    for (final region in current) {
+      final overlap = _intersectRect(region, box);
+      if (!exclude) {
+        if (overlap != null) next.add(overlap);
+      } else if (overlap == null) {
+        next.add(region);
+      } else {
+        // Keep a disjoint rectangle for each strip around the removed area.
+        next.addAll([
+          if (region.top < overlap.top)
+            (
+              left: region.left,
+              top: region.top,
+              right: region.right,
+              bottom: overlap.top,
+            ),
+          if (overlap.bottom < region.bottom)
+            (
+              left: region.left,
+              top: overlap.bottom,
+              right: region.right,
+              bottom: region.bottom,
+            ),
+          if (region.left < overlap.left)
+            (
+              left: region.left,
+              top: overlap.top,
+              right: overlap.left,
+              bottom: overlap.bottom,
+            ),
+          if (overlap.right < region.right)
+            (
+              left: overlap.right,
+              top: overlap.top,
+              right: region.right,
+              bottom: overlap.bottom,
+            ),
+        ]);
+      }
+      if (next.length > 128) _unsupported();
+    }
+    state.clipRects = next;
+    if (next.isEmpty) {
+      state.clipId = null;
+      return;
+    }
+    final id = ++_clipCount;
+    _write('<defs><clipPath id="emfClip$id">');
+    for (final region in next) {
+      _write(
+        '<rect x="${_n(region.left)}" y="${_n(region.top)}" '
+        'width="${_n(region.right - region.left)}" '
+        'height="${_n(region.bottom - region.top)}"/>',
+      );
+    }
+    _write('</clipPath></defs>');
+    state.clipId = id;
+  }
+
+  void _stretchDibits(_MetaBytes record) {
+    // SRCCOPY of a bottom-up, uncompressed RGB bitmap. Preserve the smaller
+    // source width used by producers that include an unused padding column.
+    record.require(0, 80);
+    final info = record.u32(48);
+    final infoLength = record.u32(52);
+    final bits = record.u32(56);
+    final bitsLength = record.u32(60);
+    if (info < 80 ||
+        infoLength != 40 ||
+        bits < info + infoLength ||
+        record.u32(64) != 0 ||
+        record.u32(68) != 0x00cc0020) {
+      _unsupported();
+    }
+    record.require(info, infoLength);
+    record.require(bits, bitsLength);
+    final bitmapWidth = record.i32(info + 4);
+    final height = record.i32(info + 8);
+    final depth = record.u16(info + 14);
+    final x = record.i32(32);
+    final requestedWidth = record.i32(40);
+    final signedDestWidth = record.i32(72);
+    final signedDestHeight = record.i32(76);
+    if (record.u32(info) != 40 ||
+        record.u16(info + 12) != 1 ||
+        record.u32(info + 16) != 0 ||
+        (depth != 24 && depth != 32) ||
+        x < 0 ||
+        record.i32(36) != 0 ||
+        requestedWidth <= 0 ||
+        height <= 0 ||
+        record.i32(44) != height ||
+        x >= bitmapWidth ||
+        x + requestedWidth > bitmapWidth + 3 ||
+        bitmapWidth * height > 4 * 1024 * 1024 ||
+        signedDestWidth <= 0 ||
+        signedDestHeight <= 0) {
+      _unsupported();
+    }
+    // Some exporters put a four-pixel-aligned extent in the record while
+    // the DIB header gives the exact visible width.
+    final width = math.min(requestedWidth, bitmapWidth - x);
+    final bytesPerPixel = depth ~/ 8;
+    final stride = (bitmapWidth * bytesPerPixel + 3) & ~3;
+    if (stride * height != bitsLength) _unsupported();
+    if (state.clipRects?.isEmpty ?? false) return;
+    final scan = Uint8List((width * 3 + 1) * height);
+    for (var row = 0; row < height; row++) {
+      var input = bits + (height - 1 - row) * stride + x * bytesPerPixel;
+      var output = row * (width * 3 + 1) + 1;
+      for (var column = 0; column < width; column++) {
+        scan[output++] = record.bytes[input + 2];
+        scan[output++] = record.bytes[input + 1];
+        scan[output++] = record.bytes[input];
+        input += bytesPerPixel;
+      }
+    }
+    final png = BytesBuilder(copy: false)
+      ..add(const [137, 80, 78, 71, 13, 10, 26, 10]);
+    void chunk(String kind, List<int> payload) {
+      final type = kind.codeUnits;
+      png
+        ..add((ByteData(4)..setUint32(0, payload.length)).buffer.asUint8List())
+        ..add(type)
+        ..add(payload)
+        ..add(
+          (ByteData(4)..setUint32(0, getCrc32(payload, getCrc32(type)))).buffer
+              .asUint8List(),
+        );
+    }
+
+    final header = ByteData(13)
+      ..setUint32(0, width)
+      ..setUint32(4, height)
+      ..setUint8(8, 8)
+      ..setUint8(9, 2);
+    chunk('IHDR', header.buffer.asUint8List());
+    chunk('IDAT', const ZLibEncoder().encode(scan, level: 3));
+    chunk('IEND', const []);
+    final clip = state.clipId;
+    if (clip != null) _write('<g clip-path="url(#emfClip$clip)">');
+    if ((png.length + 2) ~/ 3 * 4 > limit - _characters) _unsupported();
+    _write(
+      '<image x="${record.i32(24)}" y="${record.i32(28)}" '
+      'width="$signedDestWidth" height="$signedDestHeight" '
+      'preserveAspectRatio="none" transform="matrix(${_matrixString()})" '
+      'href="data:image/png;base64,${base64Encode(png.takeBytes())}"/>',
+    );
+    if (clip != null) _write('</g>');
+    _painted = true;
+  }
+
+  void _alternateImageComment(_MetaBytes data) {
+    // MS-EMF 2.3.3.4.3. Render only the classical fallback drawing, leaving
+    // the alternative format bytes (such as PostScript or PDF) opaque.
+    final size = data.u32(8);
+    if (size < 28 ||
+        size > data.length - 12 ||
+        data.u32(12) != 0x43494447 ||
+        data.u32(16) != 0x40000004) {
+      _unsupported();
+    }
+    final count = data.u32(36);
+    if (count == 0 || count > (size - 28) ~/ 16) _unsupported();
+    final formatsEnd = 28 + count * 16;
+    for (var index = 0; index < count; index++) {
+      final entry = 40 + index * 16;
+      final length = data.u32(entry + 8);
+      final offset = data.u32(entry + 12);
+      if (offset % 4 != 0 ||
+          offset < formatsEnd ||
+          offset > size ||
+          length > size - offset) {
+        _unsupported();
+      }
+    }
+    _hasAlternateImage = true;
+  }
+
+  void _emfComment(_MetaBytes data) {
+    final size = data.u32(8);
+    if (size < 4 || size > data.length - 12) _unsupported();
+    final identifier = data.u32(12);
+    if (identifier == 0x43494447) {
+      _alternateImageComment(data);
+    } else if (identifier == 0x2b464d45) {
+      // This dual stream may contain EMF+ state changes, while all its
+      // drawing comes from the classical sibling records. A stream with an
+      // EMF+ drawing or unrecognized operation needs its own renderer.
+      final end = 12 + size;
+      if (size < 16) _unsupported();
+      for (var pos = 16; pos < end;) {
+        if (end - pos < 12 || _plusEnd) _unsupported();
+        final type = data.u16(pos);
+        final flags = data.u16(pos + 2);
+        final length = data.u32(pos + 4);
+        final expected = switch (type) {
+          0x4001 => 16, // Header
+          0x4002 || 0x4004 || 0x401e || 0x4021 || 0x4022 || 0x4024 => 0,
+          0x402a => 24, // SetWorldTransform
+          0x4030 => 4, // SetPageTransform
+          _ => -1,
+        };
+        if (expected < 0 ||
+            length != 12 + expected ||
+            length > end - pos ||
+            data.u32(pos + 8) != expected) {
+          _unsupported();
+        }
+        if (type == 0x4001) {
+          if (_plusHeader || flags != 1) _unsupported();
+          _plusHeader = true;
+        } else {
+          if (!_plusHeader) _unsupported();
+          if (type == 0x4002) _plusEnd = true;
+        }
+        pos += length;
+      }
+    } else if (identifier != 0x5247534d || !_plusHeader || _plusEnd) {
+      _unsupported();
+    }
+    // MSGR is opaque private data. The validated dual stream above and the
+    // drawing records supply the classical preview without reading it.
   }
 
   void _move(double x, double y, {bool draw = false}) {
-    if (draw) {
+    if (_pathOpen) {
+      if (draw && !_figureOpen) {
+        _appendPath('M${_n(state.x)} ${_n(state.y)}');
+      }
+      _appendPath('${draw ? 'L' : 'M'}${_n(x)} ${_n(y)}');
+      _figureOpen = true;
+    } else if (draw) {
       _emit('path', 'd="M${_n(state.x)} ${_n(state.y)}L${_n(x)} ${_n(y)}"');
     }
     state.x = x;
@@ -299,7 +669,9 @@ class _MetafileRenderer {
     final path = StringBuffer();
     var index = 0;
     if (to) {
-      path.write('M${_n(state.x)} ${_n(state.y)}');
+      if (!_pathOpen || !_figureOpen) {
+        path.write('M${_n(state.x)} ${_n(state.y)}');
+      }
     } else {
       path.write('M${_n(points.first.$1)} ${_n(points.first.$2)}');
       index = 1;
@@ -318,7 +690,12 @@ class _MetafileRenderer {
       }
     }
     if (closed) path.write('Z');
-    _emit('path', 'd="$path"', filled: closed);
+    if (_pathOpen) {
+      _appendPath(path.toString());
+      _figureOpen = !closed;
+    } else {
+      _emit('path', 'd="$path"', filled: closed);
+    }
     if (to && index > 0) {
       state.x = points[index - 1].$1;
       state.y = points[index - 1].$2;
@@ -475,7 +852,12 @@ class _MetafileRenderer {
     if (counts.isNotEmpty) {
       // One compound path is essential: alternate/winding fill applies to
       // all figures together, including holes and overlapping polygons.
-      _emit('path', 'd="$path"', filled: closed);
+      if (_pathOpen) {
+        _appendPath(path.toString());
+        _figureOpen = !closed;
+      } else {
+        _emit('path', 'd="$path"', filled: closed);
+      }
     }
   }
 
@@ -547,6 +929,13 @@ class _MetafileRenderer {
   }
 
   void _select(int id, {bool stock = false}) {
+    if (stock && id == 13) {
+      // SYSTEM_FONT is used to deselect an explicit logical font. Its
+      // device-dependent contents are unavailable to the SVG renderer.
+      state.font = null;
+      state.fontHandle = null;
+      return;
+    }
     final Object? object;
     if (stock) {
       object = switch (id) {
@@ -573,13 +962,21 @@ class _MetafileRenderer {
       state.brush = object;
       state.brushHandle = stock ? null : id;
     }
+    if (object is _MetaFont) {
+      state.font = object;
+      state.fontHandle = id;
+    }
   }
 
   void _delete(int id) {
     if (state.penHandle == id ||
         state.brushHandle == id ||
+        state.fontHandle == id ||
         _stack.any(
-          (saved) => saved.penHandle == id || saved.brushHandle == id,
+          (saved) =>
+              saved.penHandle == id ||
+              saved.brushHandle == id ||
+              saved.fontHandle == id,
         )) {
       throw const FormatException('Cannot delete a selected metafile object.');
     }
@@ -626,6 +1023,31 @@ class _MetafileRenderer {
   ];
 
   void _emf(int type, _MetaBytes data) {
+    if (_pathOpen &&
+        !const {
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          14,
+          27,
+          54,
+          60,
+          61,
+          68,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+        }.contains(type)) {
+      _unsupported();
+    }
     switch (type) {
       case 1:
       case 14:
@@ -644,17 +1066,26 @@ class _MetafileRenderer {
           data.i32(12).toDouble(),
           viewport: type == 12,
         );
+      case 13:
+        data.require(8, 8); // Only solid and null brushes are supported.
       case 17:
         _mapMode(data.i32(8));
       case 18:
-        if (!const {1, 2}.contains(data.u32(8))) _unsupported();
+        final mode = data.u32(8);
+        if (!const {1, 2}.contains(mode)) _unsupported();
+        state.backgroundMode = mode;
       case 19:
         _fillRule(data.u32(8));
       case 20:
         if (data.u32(8) != 13) _unsupported();
+      case 21:
+        data.require(8, 4);
+      case 22:
+        state.textAlign = data.u32(8);
       case 24:
+        state.textColor = data.u32(8);
       case 25:
-        data.require(8, 4); // No text or patterned/dashed pens emitted.
+        data.require(8, 4); // No text background fills or dashed pens.
       case 27:
       case 54:
         _move(
@@ -662,6 +1093,9 @@ class _MetafileRenderer {
           data.i32(12).toDouble(),
           draw: type == 54,
         );
+      case 29:
+      case 30:
+        _clipRect(data, exclude: type == 29);
       case 33:
         _save();
       case 34:
@@ -726,6 +1160,44 @@ class _MetafileRenderer {
           throw const FormatException('Invalid metafile arc direction.');
         }
         state.arcClockwise = direction == 2;
+      case 59:
+        _pathOpen = true;
+        _figureOpen = false;
+        _pathMatrix = _matrixString();
+        _path = StringBuffer();
+      case 60:
+        if (!_pathOpen) _unsupported();
+        _pathOpen = false;
+      case 61:
+        if (!_pathOpen || !_figureOpen) _unsupported();
+        _appendPath('Z');
+        _figureOpen = false;
+      case 62:
+      case 64:
+        data.require(8, 16);
+        final path = _takePath();
+        if (path.isNotEmpty) {
+          _emit('path', 'd="$path"', filled: type != 64, stroked: type != 62);
+        }
+      case 67:
+        if (data.u32(8) != 5) _unsupported();
+        _replaceClip();
+      case 68:
+        _path = null;
+        _pathOpen = false;
+        _pathMatrix = null;
+      case 70:
+        _emfComment(data);
+      case 75:
+        if (data.u32(8) != 0 || data.u32(12) != 5) _unsupported();
+        state.clipId = null;
+        state.clipRects = null;
+      case 81:
+        _stretchDibits(data);
+      case 82:
+        _emfFont(data);
+      case 84:
+        _emfText(data);
       case 2:
       case 3:
       case 4:
@@ -761,6 +1233,201 @@ class _MetafileRenderer {
     }
   }
 
+  void _emfFont(_MetaBytes data) {
+    const nameStart = 40, nameEnd = 104;
+    data.require(0, nameEnd);
+    final fontName = <int>[];
+    for (var offset = nameStart; offset < nameEnd; offset += 2) {
+      final code = data.u16(offset);
+      if (code == 0) break;
+      fontName.add(code);
+    }
+    final name = String.fromCharCodes(fontName);
+    final height = -data.i32(12);
+    final weight = data.i32(28);
+    final charSet = data.u8(35);
+    final supported =
+        fontName.length < 32 &&
+        RegExp(r'^[A-Za-z0-9 ._-]+$').hasMatch(name) &&
+        height > 0 &&
+        height <= 1000000 &&
+        weight >= 0 &&
+        weight <= 900 &&
+        weight % 100 == 0 &&
+        data.i32(16) == 0 &&
+        data.i32(20) == 0 &&
+        data.i32(24) == 0 &&
+        data.u8(32) == 0 &&
+        data.u8(33) == 0 &&
+        data.u8(34) == 0 &&
+        (charSet == 0 || charSet == 1);
+    // Match the Windows ascent for the chart fonts known to this renderer.
+    // SVG text uses a baseline and the vector renderer cannot query a GDI DC.
+    final topAscent = switch (name.toLowerCase()) {
+      'arial' => (height * 1854 / 2048).round(),
+      'calibri' => (height * 1950 / 2048).round(),
+      _ => null,
+    };
+    _object(
+      data.u32(8),
+      _MetaFont(
+        name,
+        supported ? height : 0,
+        weight,
+        charSet,
+        topAscent: topAscent,
+      ),
+    );
+  }
+
+  void _emfText(_MetaBytes data) {
+    if (data.length < 76) _unsupported();
+    final font = state.font;
+    final count = data.u32(44);
+    final stringStart = data.u32(48), advanceStart = data.u32(72);
+    // Transparent, unrotated TA_LEFT text positioned by authored advances.
+    final ascent = switch (state.textAlign) {
+      0 => font?.topAscent,
+      24 => 0,
+      _ => null,
+    };
+    if (font == null ||
+        font.height == 0 ||
+        ascent == null ||
+        state.backgroundMode != 1 ||
+        data.u32(52) != 0 ||
+        !const {1, 2}.contains(data.u32(24)) ||
+        count > 4096) {
+      _unsupported();
+    }
+    if (count == 0) return;
+    if (stringStart < 76 ||
+        stringStart.isOdd ||
+        advanceStart < 76 ||
+        advanceStart % 4 != 0 ||
+        (stringStart < advanceStart + 4 * count &&
+            advanceStart < stringStart + 2 * count)) {
+      _unsupported();
+    }
+    data.require(stringStart, count * 2);
+    data.require(advanceStart, count * 4);
+    if (state.clipRects?.isEmpty ?? false) return;
+    final clip = state.clipId;
+    if (clip != null) _write('<g clip-path="url(#emfClip$clip)">');
+    final color = _color(
+      state.textColor >> 24 == 2 ? state.textColor & 0xffffff : state.textColor,
+    );
+    _write(
+      '<g transform="matrix(${_matrixString()})" '
+      'font-family="${font.family}" font-size="${font.height}" '
+      'font-weight="${font.weight == 0 ? 400 : font.weight}" fill="#$color">',
+    );
+    var x = data.i32(36);
+    final y = data.i32(40) + ascent;
+    for (var index = 0; index < count; index++) {
+      final code = data.u16(stringStart + index * 2);
+      // These are independently positionable Latin characters. Other
+      // scripts and surrogate pairs require shaping across code units.
+      if (!(code >= 32 && code <= 126 || code >= 160 && code <= 0x024f)) {
+        _unsupported();
+      }
+      if (code != 32 && code != 160) {
+        final glyph = const HtmlEscape().convert(String.fromCharCode(code));
+        _write('<text x="$x" y="$y">$glyph</text>');
+        _painted = true;
+      }
+      x += data.i32(advanceStart + index * 4);
+    }
+    _write('</g>');
+    if (clip != null) _write('</g>');
+  }
+
+  void _wmfFont(_MetaBytes data) {
+    data.require(6, 18);
+    final nameStart = 24;
+    final nameLimit = math.min(data.length, nameStart + 32);
+    var end = nameStart;
+    while (end < nameLimit && data.bytes[end] != 0) {
+      end++;
+    }
+    final name = String.fromCharCodes(data.bytes, nameStart, end);
+    final height = -data.i16(6);
+    final weight = data.i16(14);
+    final charSet = data.u8(19);
+    final supported =
+        end < nameLimit &&
+        RegExp(r'^[A-Za-z0-9 ._-]+$').hasMatch(name) &&
+        height > 0 &&
+        weight >= 0 &&
+        weight <= 900 &&
+        weight % 100 == 0 &&
+        data.i16(8) == 0 &&
+        data.i16(10) == 0 &&
+        data.i16(12) == 0 &&
+        data.u8(16) == 0 &&
+        data.u8(17) == 0 &&
+        data.u8(18) == 0 &&
+        (charSet == 0 || charSet == 238);
+    _object(
+      _freeObject(),
+      _MetaFont(name, supported ? height : 0, weight, charSet),
+    );
+  }
+
+  void _wmfText(_MetaBytes data) {
+    final font = state.font;
+    final count = data.i16(10), flags = data.u16(12);
+    // TA_LEFT | TA_BASELINE | TA_NOUPDATECP, with an explicit clip rectangle.
+    if (font == null ||
+        font.height == 0 ||
+        state.textAlign != 24 ||
+        state.backgroundMode != 1 ||
+        flags != 4 ||
+        count < 0 ||
+        count > 4096) {
+      _unsupported();
+    }
+    const textStart = 22;
+    final advanceStart = textStart + ((count + 1) & ~1);
+    if (data.length != advanceStart + count * 2) _unsupported();
+    final left = data.i16(14), top = data.i16(16);
+    final width = data.i16(18) - left, height = data.i16(20) - top;
+    if (width <= 0 || height <= 0 || count == 0) return;
+    final id = ++_clipCount;
+    // PALETTERGB carries RGB channels directly when played into true color.
+    final color = _color(
+      state.textColor >> 24 == 2 ? state.textColor & 0xffffff : state.textColor,
+    );
+    _write(
+      '<g transform="matrix(${_matrixString()})">'
+      '<defs><clipPath id="wmfTextClip$id">'
+      '<rect x="$left" y="$top" width="$width" height="$height"/>'
+      '</clipPath></defs><g clip-path="url(#wmfTextClip$id)" '
+      'font-family="${font.family}" font-size="${font.height}" '
+      'font-weight="${font.weight == 0 ? 400 : font.weight}" fill="#$color">',
+    );
+    var x = data.i16(8);
+    final y = data.i16(6);
+    for (var index = 0; index < count; index++) {
+      final byte = data.u8(textStart + index);
+      // The printable Latin-1 letters in CP1252 can be represented directly.
+      // Reject ambiguous C1 and Central European bytes until their tables
+      // are available, rather than substituting different letters.
+      if (byte < 32 ||
+          (byte >= 127 && byte < 160) ||
+          (font.charSet == 238 && byte >= 127)) {
+        _unsupported();
+      }
+      if (byte != 32) {
+        final glyph = const HtmlEscape().convert(String.fromCharCode(byte));
+        _write('<text x="$x" y="$y">$glyph</text>');
+      }
+      x += data.i16(advanceStart + index * 2);
+    }
+    _write('</g></g>');
+    _painted = true;
+  }
+
   void _wmf(int type, _MetaBytes data) {
     switch (type) {
       case 0:
@@ -770,7 +1437,9 @@ class _MetafileRenderer {
       case 0x0127:
         _restore(data.i16(6));
       case 0x0102:
-        if (!const {1, 2}.contains(data.u16(6))) _unsupported();
+        final mode = data.u16(6);
+        if (!const {1, 2}.contains(mode)) _unsupported();
+        state.backgroundMode = mode;
       case 0x0103:
         _mapMode(data.i16(6));
       case 0x0104:
@@ -778,8 +1447,9 @@ class _MetafileRenderer {
       case 0x0106:
         _fillRule(data.u16(6));
       case 0x0201:
-      case 0x0209:
         data.require(6, 4);
+      case 0x0209:
+        state.textColor = data.u32(6);
       case 0x020b:
       case 0x020d:
       case 0x020f:
@@ -809,11 +1479,15 @@ class _MetafileRenderer {
       case 0x02fc:
         data.require(6, 8);
         _object(_freeObject(), _brush(data.u16(6), data.u32(8)));
+      case 0x02fb:
+        _wmfFont(data);
       case 0x012d:
         // Unlike EMF, MS-WMF specifies only an object-table index here.
         // Reinterpreting its high bit as a stock-object flag invents a brush
         // or pen that the source never defined.
         _select(data.u16(6));
+      case 0x012e:
+        state.textAlign = data.u16(6);
       case 0x01f0:
         _delete(data.u16(6));
       case 0x0324:
@@ -856,6 +1530,8 @@ class _MetafileRenderer {
           chord: type == 0x0830,
           pie: type == 0x081a,
         );
+      case 0x0a32:
+        _wmfText(data);
       default:
         _unsupported();
     }

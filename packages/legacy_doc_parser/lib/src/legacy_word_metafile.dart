@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -229,13 +230,26 @@ LegacyWordMetafileInfo _parseLegacyWordMetafile(
   if (maxPreviewCharacters < 0 || maxPreviewCharacters > 8 * 1024 * 1024) {
     throw ArgumentError.value(maxPreviewCharacters, 'maxPreviewCharacters');
   }
-  final selectedBounds = bounds ?? scan.bounds;
+  final embedded = format == LegacyWordImageFormat.wmf
+      ? _readWmfEnhancedMetafile(input, scan.records)
+      : null;
+  final playbackInput = embedded?.input ?? input;
+  final playbackScan = embedded?.scan ?? scan;
+  final playbackFormat = embedded == null ? format : LegacyWordImageFormat.emf;
+  final selectedBounds =
+      bounds ??
+      (playbackFormat == LegacyWordImageFormat.emf
+          ? _declaredDualFrame(playbackInput, playbackScan)
+          : null) ??
+      playbackScan.bounds;
   final preview =
-      scan.boundsKnown && selectedBounds.width > 0 && selectedBounds.height > 0
+      (scan.boundsKnown || embedded != null) &&
+          selectedBounds.width > 0 &&
+          selectedBounds.height > 0
       ? _MetafileRenderer(
-          input,
-          scan,
-          format,
+          playbackInput,
+          playbackScan,
+          playbackFormat,
           selectedBounds,
           maxPreviewCharacters,
         ).render()
@@ -250,6 +264,132 @@ LegacyWordMetafileInfo _parseLegacyWordMetafile(
     previewSvg: preview.svg,
     unsupportedPreviewRecords: preview.unsupported,
   );
+}
+
+LegacyWordVectorBounds? _declaredDualFrame(
+  _MetaBytes input,
+  _MetafileScan scan,
+) {
+  if (scan.records.first.size != 108) {
+    return null;
+  }
+  final comment = scan.records[1];
+  final start = comment.offset;
+  if (comment.type != 70 ||
+      comment.size < 44 ||
+      input.u32(start + 12) != 0x2b464d45 ||
+      input.u16(start + 16) != 0x4001 ||
+      input.u16(start + 18) != 1) {
+    return null;
+  }
+  // MS-EMF 2.2.9 and 2.2.11. A dual Office chart's Bounds describe
+  // visible ink inside the Frame. PlayEnhMetaFile scales the Frame onto the
+  // target drawing rectangle. Preserve that canvas and its outer margins.
+  final deviceX = input.i32(72), deviceY = input.i32(76);
+  final micrometersX = input.i32(100), micrometersY = input.i32(104);
+  if (deviceX <= 0 || deviceY <= 0 || micrometersX <= 0 || micrometersY <= 0) {
+    return null;
+  }
+  int coordinate(int offset, int device, int micrometers) =>
+      (input.i32(offset) * 10.0 * device / micrometers).round();
+  final frame = LegacyWordVectorBounds(
+    coordinate(24, deviceX, micrometersX),
+    coordinate(28, deviceY, micrometersY),
+    coordinate(32, deviceX, micrometersX),
+    coordinate(36, deviceY, micrometersY),
+  );
+  return frame.width > 0 &&
+          frame.height > 0 &&
+          frame.width <= 1000000 &&
+          frame.height <= 1000000 &&
+          frame.left.abs() <= 1000000 &&
+          frame.top.abs() <= 1000000
+      ? frame
+      : null;
+}
+
+/// MS-WMF 2.3.6.25. Read only the leading sequence of enhanced-metafile
+/// comments. The outer fallback drawing and the original WMF stay untouched.
+({_MetaBytes input, _MetafileScan scan})? _readWmfEnhancedMetafile(
+  _MetaBytes input,
+  List<_MetafileRecord> records,
+) {
+  const escape = 0x0626, headerSize = 44, maxChunk = 8192;
+  final head = records.first;
+  if (head.type != escape || head.size < headerSize) return null;
+  final first = head.offset;
+  final count = input.u32(first + 28);
+  final total = input.u32(first + 40);
+  if (count == 0 ||
+      count >= records.length ||
+      total < 88 ||
+      total % 4 != 0 ||
+      total > legacyWordMetafileByteLimit ||
+      total > input.length ||
+      total > count * maxChunk ||
+      records.skip(count).any((record) => record.type == escape)) {
+    return null;
+  }
+  final checksum = input.u16(first + 22);
+  var repeatedChecksum = true, continuedWindowsChecksum = true;
+  final chunks = BytesBuilder(copy: false);
+  for (var index = 0; index < count; index++) {
+    final record = records[index];
+    if (record.type != escape || record.size < headerSize) return null;
+    final offset = record.offset;
+    final size = input.u32(offset + 32);
+    if (size == 0 ||
+        size > maxChunk ||
+        size > total - chunks.length ||
+        record.size != headerSize + ((size + 1) & ~1) ||
+        input.u16(offset + 6) != 0x000f ||
+        input.u16(offset + 8) != 34 + size ||
+        input.u32(offset + 10) != 0x43464d57 ||
+        input.u32(offset + 14) != 1 ||
+        input.u32(offset + 18) != 0x00010000 ||
+        input.u32(offset + 24) != 0 ||
+        input.u32(offset + 28) != count ||
+        input.u32(offset + 36) != total - chunks.length - size ||
+        input.u32(offset + 40) != total) {
+      return null;
+    }
+    final expected = input.u16(offset + 22);
+    repeatedChecksum = repeatedChecksum && expected == checksum;
+    continuedWindowsChecksum =
+        continuedWindowsChecksum && (index == 0 || expected == 0);
+    chunks.add(
+      Uint8List.sublistView(
+        input.bytes,
+        offset + headerSize,
+        offset + headerSize + size,
+      ),
+    );
+  }
+  if (chunks.length != total) return null;
+  final enhanced = _MetaBytes(chunks.takeBytes());
+  var xor = 0;
+  if (repeatedChecksum) {
+    for (var offset = 0; offset < enhanced.length; offset += 2) {
+      xor ^= enhanced.data.getUint16(offset, Endian.little);
+    }
+  }
+  if (!repeatedChecksum || (xor ^ 0xffff) != checksum) {
+    // Windows-generated WMFC carries a checksum on its first comment
+    // that balances the sum of the whole WMF stream (without its optional
+    // placeable prefix). Its continuation comments leave that field zero.
+    if (!continuedWindowsChecksum) return null;
+    var sum = 0;
+    for (var offset = first - 18; offset < input.length; offset += 2) {
+      sum = (sum + input.data.getUint16(offset, Endian.little)) & 0xffff;
+    }
+    if (sum != 0) return null;
+  }
+  try {
+    return (input: enhanced, scan: _scanEmf(enhanced));
+  } on FormatException {
+    // Keep the fallback's ordinary WMF classification for a corrupt payload.
+    return null;
+  }
 }
 
 class _MetafileRecord {

@@ -192,6 +192,14 @@ class OpcPackage {
   /// Byte length of the original ZIP, or `0` when the package is in-memory only.
   int get sourceLength => _source?.byteLength ?? 0;
 
+  /// Total declared decompressed bytes of the original archive.
+  int get sourceInflatedLength =>
+      _source?.entries.fold<int>(
+        0,
+        (sum, entry) => sum + entry.uncompressedSize,
+      ) ??
+      0;
+
   /// packageRelationships API.
   RelationshipCollection get packageRelationships => _packageRelationships;
 
@@ -344,7 +352,11 @@ class OpcPackage {
   ///
   /// When [password] is set, the ZIP is wrapped in MS-OFFCRYPTO Agile
   /// encryption so Word/Excel/PowerPoint prompt before opening.
-  Uint8List save({int deflateLevel = 6, String? password}) {
+  Uint8List save({
+    int deflateLevel = 6,
+    String? password,
+    bool reuseCompressedParts = false,
+  }) {
     final ZipWriter writer = ZipWriter(deflateLevel: deflateLevel);
     writer.addFile('[Content_Types].xml', utf8.encode(contentTypes.toXml()));
     writer.addFile('_rels/.rels', utf8.encode(_packageRelationships.toXml()));
@@ -360,8 +372,17 @@ class OpcPackage {
       );
     }
     for (final PackagePart part in _parts.values) {
-      _materialize(part);
-      writer.addFile(OpcUris.toZipName(part.uri), part.bytesView);
+      final name = OpcUris.toZipName(part.uri);
+      final source = _source;
+      if (reuseCompressedParts &&
+          !part.isModified &&
+          source != null &&
+          source.contains(name)) {
+        writer.copyFile(source, name);
+      } else {
+        _materialize(part);
+        writer.addFile(name, part.bytesView);
+      }
     }
     final Uint8List zip = writer.close();
     if (password == null || password.isEmpty) {
@@ -382,7 +403,7 @@ class OpcPackage {
     if (!zip.contains(zipName)) {
       return;
     }
-    part.writeBytes(zip.read(zipName));
+    part.loadSourceBytes(zip.read(zipName));
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart' show BoundedCfbReader, CfbfDirectoryEntry;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show BoundedCfbReader, CfbfWriter;
 
 enum LegacyPowerPointErrorCode {
   malformed,
@@ -29,8 +30,91 @@ class LegacyPowerPointDocument {
   String get plainText => slides.map((slide) => slide.text).join('\n\n');
 }
 
-const kLegacyPowerPointInputLimit = 64 * 1024 * 1024;
+const kLegacyPowerPointInputLimit = 128 * 1024 * 1024;
 const kLegacyPowerPointTextLimit = 4 * 1024 * 1024;
+
+/// Upper bound for the Current User stream, including producer padding.
+const kPowerPointCurrentUserLimit = 4096;
+
+/// Reads the current edit pointer without exposing author names.
+int readPowerPointCurrentEditOffset(Uint8List current) {
+  const malformed = LegacyPowerPointException(
+    LegacyPowerPointErrorCode.malformed,
+  );
+  const unsupported = LegacyPowerPointException(
+    LegacyPowerPointErrorCode.unsupportedVersion,
+  );
+  if (current.length < 32 || current.length > kPowerPointCurrentUserLimit) {
+    throw malformed;
+  }
+  final user = ByteData.sublistView(current);
+  int user32(int offset) => user.getUint32(offset, Endian.little);
+  if (user.getUint16(0, Endian.little) != 0 ||
+      user.getUint16(2, Endian.little) != 0x0ff6 ||
+      user32(8) != 20 ||
+      user.getUint16(22, Endian.little) != 0x03f4 ||
+      current[24] != 3 ||
+      current[25] != 0) {
+    throw unsupported;
+  }
+  final token = user32(12);
+  if (token == 0xf3d1c4df) {
+    throw const LegacyPowerPointException(LegacyPowerPointErrorCode.encrypted);
+  }
+  if (token != 0xe391c05f) throw malformed;
+
+  // Microsoft producers may exclude the optional Unicode name from recLen
+  // or pad Current User to a regular sector boundary. Some empty-name
+  // streams also declare four extra bytes that are absent or zero-filled.
+  final nameLength = user.getUint16(20, Endian.little);
+  final ansiEnd = 32 + nameLength;
+  final unicodeEnd = ansiEnd + 2 * nameLength;
+  final declaredEnd = 8 + user32(4);
+  if (nameLength > 255 ||
+      current.length < ansiEnd ||
+      (declaredEnd != ansiEnd &&
+          declaredEnd != unicodeEnd &&
+          !(nameLength == 0 && declaredEnd == 36)) ||
+      (declaredEnd == unicodeEnd && current.length < unicodeEnd) ||
+      (current.length != ansiEnd &&
+          (current.length < unicodeEnd ||
+              current.skip(unicodeEnd).any((byte) => byte != 0))) ||
+      !const {8, 9}.contains(user32(28 + nameLength))) {
+    throw malformed;
+  }
+  return user32(16);
+}
+
+/// Adapts the empty-user-name record length used by some legacy templates for
+/// the graphical worker. The original compound file remains the source for
+/// native text, raw bytes, and export.
+Uint8List legacyPowerPointGraphicalInput(Uint8List bytes) {
+  try {
+    final compound = BoundedCfbReader(bytes);
+    final user = compound.readPath('Current User');
+    if (user == null ||
+        user.length != 32 ||
+        ByteData.sublistView(user).getUint32(4, Endian.little) != 28) {
+      return bytes;
+    }
+    final editOffset = readPowerPointCurrentEditOffset(user);
+    final document = compound.readPath('PowerPoint Document');
+    if (document == null || editOffset > document.length - 8) return bytes;
+
+    ByteData.sublistView(user).setUint32(4, user.length - 8, Endian.little);
+    final preview = CfbfWriter()
+      ..addStream('Current User', user)
+      ..addStream('PowerPoint Document', document);
+    final pictures = compound.readPath('Pictures');
+    if (pictures != null) preview.addStream('Pictures', pictures);
+    final result = preview.build();
+    return result.length <= bytes.length ? result : bytes;
+  } on FormatException {
+    return bytes;
+  } on LegacyPowerPointException {
+    return bytes;
+  }
+}
 
 /// Reads PowerPoint 97–2003 text from the current persist-object directory and
 /// current slide drawing references, following [MS-PPT] and [MS-ODRAW]. It never
@@ -45,6 +129,7 @@ LegacyPowerPointDocument extractLegacyPowerPoint(Uint8List bytes) {
   try {
     final cfb = BoundedCfbReader(
       bytes,
+      maxFileBytes: kLegacyPowerPointInputLimit,
       maxStreamBytes: kLegacyPowerPointInputLimit,
       maxTotalReadBytes: kLegacyPowerPointInputLimit,
     );
@@ -135,35 +220,7 @@ class _PowerPointParser {
   }
 
   LegacyPowerPointDocument parse(Uint8List current) {
-    // Current User contains one CurrentUserAtom, whose fixed portion is 20
-    // bytes. The optional Unicode user name is never needed for rendering.
-    if (current.length < 32 || current.length > 1024) fail();
-    final user = ByteData.sublistView(current);
-    int user32(int offset) => user.getUint32(offset, Endian.little);
-    if (user.getUint16(0, Endian.little) != 0 ||
-        user.getUint16(2, Endian.little) != 0x0ff6 ||
-        user32(8) != 20) {
-      fail(LegacyPowerPointErrorCode.unsupportedVersion);
-    }
-    final token = user32(12);
-    if (token == 0xf3d1c4df) fail(LegacyPowerPointErrorCode.encrypted);
-    if (token != 0xe391c05f) fail();
-    if (user.getUint16(22, Endian.little) != 0x03f4 ||
-        current[24] != 3 ||
-        current[25] != 0) {
-      fail(LegacyPowerPointErrorCode.unsupportedVersion);
-    }
-    final userLength = user.getUint16(20, Endian.little);
-    final minimum = 32 + userLength;
-    if (userLength > 255 ||
-        (current.length != minimum &&
-            current.length != minimum + userLength * 2) ||
-        user32(4) + 8 != current.length ||
-        (user32(28 + userLength) != 8 && user32(28 + userLength) != 9)) {
-      fail();
-    }
-
-    var editOffset = user32(16);
+    var editOffset = readPowerPointCurrentEditOffset(current);
     var editCount = 0;
     var documentId = 0;
     while (true) {

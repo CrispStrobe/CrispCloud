@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show Intl;
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../core/command_pipeline.dart';
@@ -11841,10 +11842,13 @@ class SheetEditorController extends OfficeController {
   /// SheetEditorController API.
   SheetEditorController({
     SmlWorkbook? workbook,
+    String? formulaLocale,
     super.config,
     this._activeSheet = 0,
     this.columnMetricsResolver = SheetFontMetrics.measure,
   }) : workbook = workbook ?? SmlWorkbook() {
+    this.workbook.formulaLocale =
+        formulaLocale ?? this.workbook.formulaLocale ?? Intl.getCurrentLocale();
     cellEditor = InlineCellEditor(
       onCommit: _commitFormula,
       onChanged: _onCellEditorChanged,
@@ -11869,12 +11873,14 @@ class SheetEditorController extends OfficeController {
   factory SheetEditorController.fromBytes(
     Uint8List bytes, {
     String? password,
+    String? formulaLocale,
     OfficeSurfaceConfig? config,
     SmlColumnMetricsResolver columnMetricsResolver = SheetFontMetrics.measure,
   }) {
     final SheetEditorController controller = SheetEditorController(
       config: config,
       columnMetricsResolver: columnMetricsResolver,
+      formulaLocale: formulaLocale,
     );
     controller.loadBytes(bytes, password: password);
     return controller;
@@ -12109,6 +12115,7 @@ class SheetEditorController extends OfficeController {
     final SmlWorkbook opened = await OfficeIsolateOpen.workbook(
       bytes,
       password: password,
+      formulaLocale: workbook.formulaLocale,
       onProgress: onProgress,
     );
     _acceptOpenedWorkbook(opened, recalculate: false);
@@ -12117,6 +12124,7 @@ class SheetEditorController extends OfficeController {
   void _acceptOpenedWorkbook(SmlWorkbook opened, {required bool recalculate}) {
     _cancelResize();
     cancelCellEdit();
+    opened.formulaLocale ??= workbook.formulaLocale;
     workbook = opened;
     workbook.resolveColumnMetrics(columnMetricsResolver);
     _activeSheet = workbook.sheets.indexWhere((sheet) => !sheet.hidden);

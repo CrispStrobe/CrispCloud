@@ -8,6 +8,7 @@ import '../fonts/font_metrics.dart';
 import '../fonts/font_subsetter.dart';
 import '../fonts/gpos_mark_to_base.dart';
 import '../fonts/office_font_set.dart';
+import '../fonts/office_typeface.dart';
 import '../fonts/sfnt_parser.dart';
 import '../opc/opc_archive.dart';
 import '../opc/repair/office_repair.dart';
@@ -22,8 +23,10 @@ import '../visual/office_visual.dart';
 import '../word/layout/word_layout.dart';
 import '../word/math/omml_layout.dart';
 import '../word/model/wml_document.dart';
+import '../word/model/wml_run_edit.dart';
 import '../word/model/word_link.dart';
 import '../word/model/word_toc.dart';
+import '../word/model/word_tree.dart';
 import '../word/properties/wml_properties.dart';
 import '../word/serial/word_deserializer.dart';
 import 'file/text/pdf_std14.dart';
@@ -156,9 +159,7 @@ abstract final class OfficePdfExport {
       for (final LaidOutBox frame in page.frames) {
         _paintFrame(sink, frame);
       }
-      for (final LaidOutLine line in page.lines) {
-        _paintWordLine(sink, line);
-      }
+      _paintWordBodyLines(sink, page);
       for (final LaidOutLine line in page.header) {
         _paintWordLine(sink, line);
       }
@@ -909,6 +910,48 @@ abstract final class OfficePdfExport {
     }
   }
 
+  static void _paintWordBodyLines(_PageSink sink, LaidOutPage page) {
+    final fixedCells = page.frames.where((box) {
+      final table = box.table;
+      final row = box.tableRow;
+      return box.kind == LaidOutBoxKind.tableCell &&
+          box.paragraphIndex != null &&
+          box.height > 0 &&
+          table != null &&
+          row != null &&
+          row >= 0 &&
+          row < table.rows.length &&
+          table.rows[row].exactHeight != null;
+    }).toList();
+    final frameOwners = <WmlParagraph, WmlFrame>{
+      if (fixedCells.isNotEmpty)
+        for (final box in page.frames)
+          if (box.frame case final frame?)
+            for (final paragraph in WordTree.paragraphs(frame.blocks))
+              paragraph: frame,
+    };
+    for (final line in page.lines) {
+      final owner = frameOwners[line.sourceParagraph];
+      final clips = fixedCells.where((cell) {
+        final start = cell.paragraphIndex!;
+        final end = cell.paragraphEnd ?? start;
+        return line.paragraphIndex >= start &&
+            line.paragraphIndex <= end &&
+            (owner == null ||
+                WordTree.descendants(owner.blocks).contains(cell.table));
+      });
+      final clipped = clips.isNotEmpty;
+      if (clipped) {
+        sink.canvas.save();
+        for (final cell in clips) {
+          sink.canvas.clipRect(cell.x, cell.y, cell.width, cell.height);
+        }
+      }
+      _paintWordLine(sink, line);
+      if (clipped) sink.canvas.restore();
+    }
+  }
+
   static void _paintWordLine(_PageSink sink, LaidOutLine line) {
     if (line.listLabel != null && line.isParagraphStart) {
       final double markerX = line.listMarkerX != 0
@@ -925,7 +968,24 @@ abstract final class OfficePdfExport {
     if (line.overlayText != null &&
         line.overlayText!.isNotEmpty &&
         line.glyphs.isEmpty) {
-      sink.drawText(line.overlayText!, line.x, line.y + 11, 10, '333333');
+      final text = line.overlayText!;
+      final baseline = line.overlayBaseline;
+      final paragraph = line.sourceParagraph;
+      final run = baseline != null && paragraph != null
+          ? WmlRunEdit.propsAt(paragraph, 0)
+          : null;
+      sink.drawText(
+        text,
+        line.x,
+        line.y + (baseline ?? 11),
+        baseline == null ? 10 : line.overlaySize,
+        baseline == null ? '333333' : line.overlayColor ?? '000000',
+        bold: baseline != null && line.overlayBold,
+        italic: run?.italic ?? false,
+        family: run == null
+            ? null
+            : OfficeTypeface.familyForRun(run, text.runes.first),
+      );
       return;
     }
     for (final LaidOutGlyph g in line.glyphs) {

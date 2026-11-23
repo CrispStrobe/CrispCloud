@@ -7,6 +7,7 @@ Future<Object?> officeTrySpawnOpen({
   required Uint8List bytes,
   required String? password,
   required String kind,
+  String? formulaLocale,
 
   /// Function API.
   void Function(OfficeOpenProgress progress)? onProgress,

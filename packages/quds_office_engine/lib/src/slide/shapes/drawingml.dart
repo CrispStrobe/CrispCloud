@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../visual/drawingml_visual_io.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/namespaces.dart';
@@ -71,7 +73,8 @@ List<PmlShape> parseSlideShapes(
   PmlTableCell? currentCell;
   var paragraphCount = 0;
   var cellParagraphCount = 0;
-  int? currentGroupId;
+  final groups = <int>[];
+  int? getGroup() => groups.lastOrNull;
   var nextGroupId = 1;
   var inXfrm = false;
   var inStyle = false;
@@ -166,7 +169,7 @@ List<PmlShape> parseSlideShapes(
         currentCell = null;
         inTcPr = false;
       } else if (reader.localName == 'grpSp') {
-        currentGroupId = null;
+        if (groups.isNotEmpty) groups.removeLast();
       } else if (reader.localName == 'sp' ||
           reader.localName == 'cxnSp' ||
           reader.localName == 'pic' ||
@@ -198,7 +201,8 @@ List<PmlShape> parseSlideShapes(
       continue;
     }
     if (reader.localName == 'grpSp') {
-      currentGroupId = nextGroupId++;
+      if (!reader.isEmptyElement)
+        groups.add(groups.firstOrNull ?? nextGroupId++);
     } else if (reader.localName == 'sp' ||
         reader.localName == 'cxnSp' ||
         reader.localName == 'pic' ||
@@ -207,8 +211,11 @@ List<PmlShape> parseSlideShapes(
         id: shapes.length + 2,
         name: 'Shape',
         fillColor: '',
-        groupId: currentGroupId,
+        groupId: getGroup(),
       );
+      if (reader.localName == 'cxnSp') {
+        current.preset = PmlShapePreset.connector;
+      }
       if (reader.localName == 'pic') {
         current.visual = OfficeVisual(kind: OfficeVisualKind.picture);
       }
@@ -301,8 +308,12 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'alphaModFix' && current?.visual != null) {
       current!.visual!.picture.transparency =
           DrawingmlVisualIo.alphaToTransparency(reader.getAttribute('amt'));
-    } else if (reader.localName == 'outerShdw' && current?.visual != null) {
-      current!.visual!.picture.shadow = true;
+    } else if (reader.localName == 'outerShdw' &&
+        reader.namespaceUri == OfficeNamespaces.a &&
+        current?.visual?.isPicture == true) {
+      current!.visual!.picture
+        ..shadow = true
+        ..outerShadow = _readPictureShadow(reader, colors);
     } else if (reader.localName == 'xfrm' && current != null && !inXfrm) {
       inXfrm = !reader.isEmptyElement;
       final int rot = int.tryParse(reader.getAttribute('rot') ?? '0') ?? 0;
@@ -323,7 +334,11 @@ List<PmlShape> parseSlideShapes(
       );
       final OfficeVisual? visual = current.visual;
       if (visual != null) {
-        DrawingmlVisualIo.applyXfrm(visual.picture, reader);
+        // The slide frame owns its native rotation. Keep picture adjustments
+        // independent so the visual painter does not apply that angle twice.
+        visual.picture
+          ..flipH = current.transform.flipH
+          ..flipV = current.transform.flipV;
       }
     } else if (reader.localName == 'off' && inXfrm && current != null) {
       current.transform = PmlTransform(
@@ -350,9 +365,9 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'prstGeom' && current != null) {
       current.preset = switch (reader.getAttribute('prst')) {
         'ellipse' => PmlShapePreset.ellipse,
-        'roundRect' => PmlShapePreset.roundRect,
+        'roundRect' || 'wedgeRoundRectCallout' => PmlShapePreset.roundRect,
         'triangle' => PmlShapePreset.triangle,
-        'straightConnector1' || 'line' => PmlShapePreset.connector,
+        'straightConnector1' || 'line' || 'lineInv' => PmlShapePreset.connector,
         'downArrow' => PmlShapePreset.downArrow,
         'upArrow' => PmlShapePreset.upArrow,
         'leftArrow' => PmlShapePreset.leftArrow,
@@ -385,6 +400,7 @@ List<PmlShape> parseSlideShapes(
         !inLn &&
         current != null) {
       current.fillColor = '';
+      current.fillOpacity = 1;
       explicitFill = true;
       fillPending = false;
     } else if (reader.localName == 'gradFill' &&
@@ -475,7 +491,12 @@ List<PmlShape> parseSlideShapes(
           gradientStopDepth != null &&
           reader.depth == gradientStopDepth + 1 &&
           reader.namespaceUri == OfficeNamespaces.a;
-      final String? val = resolveDrawingmlColor(reader, colors);
+      double opacity = 1;
+      final String? val = resolveDrawingmlColor(
+        reader,
+        colors,
+        onOpacity: (value) => opacity = value,
+      );
       if (val != null && val.isNotEmpty) {
         if (isGradientStopColor) {
           gradientStops.add(
@@ -490,6 +511,7 @@ List<PmlShape> parseSlideShapes(
           current.strokeColor = val;
         } else if (fillPending) {
           current.fillColor = val;
+          current.fillOpacity = opacity;
         } else if (textFillPending) {
           if (currentCell != null) {
             if (currentCell.textColor.isEmpty) currentCell.textColor = val;
@@ -498,6 +520,7 @@ List<PmlShape> parseSlideShapes(
           }
         } else if (styleRef == 'fill') {
           current.fillColor = val;
+          current.fillOpacity = opacity;
         } else if (styleRef == 'line') {
           current.strokeColor = val;
         } else if (styleRef == 'font') {
@@ -560,7 +583,141 @@ List<PmlShape> parseSlideShapes(
     }
   }
   _captureTextSources(xml, shapes, colors);
+  _resolveGroupGeometry(xml, shapes);
   return shapes;
+}
+
+typedef _SlidePointMap = (double, double) Function(double x, double y);
+
+void _resolveGroupGeometry(String xml, List<PmlShape> shapes) {
+  if (!xml.contains('grpSp>') &&
+      !xml.contains('custGeom>') &&
+      !xml.contains('wedgeRoundRectCallout')) {
+    return;
+  }
+  final root = XmlDocument.parse(xml).root;
+  final tree = root?.firstChild('cSld')?.firstChild('spTree');
+  if (tree == null) return;
+  final byId = {for (final shape in shapes) shape.id: shape};
+  XmlElement? a(XmlElement? e, String name) =>
+      e?.firstChild(name, namespaceUri: OfficeNamespaces.a);
+  double number(XmlElement? e, String attr, [double fallback = 0]) =>
+      double.tryParse(e?.getAttribute(attr) ?? '') ?? fallback;
+  bool flag(XmlElement? e, String attr) =>
+      const {'true', '1'}.contains(e?.getAttribute(attr));
+  void visit(XmlElement group, _SlidePointMap? parent) {
+    final xfrm = a(group.firstChild('grpSpPr'), 'xfrm');
+    final off = a(xfrm, 'off');
+    final ext = a(xfrm, 'ext');
+    final childOff = a(xfrm, 'chOff');
+    final childExt = a(xfrm, 'chExt');
+    final width = number(ext, 'cx');
+    final height = number(ext, 'cy');
+    final childWidth = number(childExt, 'cx');
+    final childHeight = number(childExt, 'cy');
+    _SlidePointMap? mapping = parent;
+    if (width > 0 && height > 0 && childWidth > 0 && childHeight > 0) {
+      final angle = number(xfrm, 'rot') * math.pi / 10800000;
+      final cos = math.cos(angle);
+      final sin = math.sin(angle);
+      final sx = width / childWidth * (flag(xfrm, 'flipH') ? -1 : 1);
+      final sy = height / childHeight * (flag(xfrm, 'flipV') ? -1 : 1);
+      final ox = number(off, 'x') + width / 2;
+      final oy = number(off, 'y') + height / 2;
+      final cx = number(childOff, 'x') + childWidth / 2;
+      final cy = number(childOff, 'y') + childHeight / 2;
+      mapping = (double x, double y) {
+        final dx = (x - cx) * sx;
+        final dy = (y - cy) * sy;
+        final px = ox + dx * cos - dy * sin;
+        final py = oy + dx * sin + dy * cos;
+        return parent == null ? (px, py) : parent(px, py);
+      };
+    }
+    for (final child in group.childElements) {
+      if (child.localName == 'grpSp') {
+        visit(child, mapping);
+        continue;
+      }
+      final idNode = child.childElements.firstOrNull?.firstChild('cNvPr');
+      final shape = byId[int.tryParse(idNode?.getAttribute('id') ?? '')];
+      if (shape == null) continue;
+      final properties = child.firstChild('spPr');
+      final preset = a(properties, 'prstGeom');
+      if (preset?.getAttribute('prst') == 'wedgeRoundRectCallout') {
+        final guides = <String, int>{};
+        for (final guide in a(preset, 'avLst')?.childElements ?? const []) {
+          final name = guide.getAttribute('name');
+          final formula = guide.getAttribute('fmla')?.trim();
+          if (guide.localName != 'gd' ||
+              !const {'adj1', 'adj2', 'adj3'}.contains(name) ||
+              formula == null ||
+              !formula.startsWith('val ')) {
+            continue;
+          }
+          final value = int.tryParse(formula.substring(4).trim());
+          if (value != null) guides[name!] = value;
+        }
+        const defaults = PmlRoundedCallout();
+        shape.roundedCallout = PmlRoundedCallout(
+          tipX: guides['adj1'] ?? defaults.tipX,
+          tipY: guides['adj2'] ?? defaults.tipY,
+          corner: guides['adj3'] ?? defaults.corner,
+        );
+      }
+      final nativePath = a(a(a(properties, 'custGeom'), 'pathLst'), 'path');
+      if (nativePath != null) {
+        final points = <PmlPathPoint>[];
+        for (final cmd in nativePath.childElements) {
+          if (cmd.localName == 'close') {
+            points.add(const PmlPathPoint(0, 0, close: true));
+          } else if (cmd.localName == 'moveTo' || cmd.localName == 'lnTo') {
+            final pt = a(cmd, 'pt');
+            points.add(
+              PmlPathPoint(
+                number(pt, 'x').round(),
+                number(pt, 'y').round(),
+                move: cmd.localName == 'moveTo',
+              ),
+            );
+          }
+        }
+        if (points.length >= 2) {
+          shape.preset = PmlShapePreset.freeform;
+          shape.path = points;
+          shape.pathWidth = int.tryParse(nativePath.getAttribute('w') ?? '');
+          shape.pathHeight = int.tryParse(nativePath.getAttribute('h') ?? '');
+        }
+      }
+      if (mapping == null) continue;
+      final transform = shape.transform;
+      final cx = transform.x + transform.cx / 2;
+      final cy = transform.y + transform.cy / 2;
+      final angle = transform.rotationDegrees * math.pi / 180;
+      final cos = math.cos(angle);
+      final sin = math.sin(angle);
+      final center = mapping(cx, cy);
+      final u = mapping(cx + cos, cy + sin);
+      final v = mapping(cx - sin, cy + cos);
+      final ux = u.$1 - center.$1;
+      final uy = u.$2 - center.$2;
+      final vx = v.$1 - center.$1;
+      final vy = v.$2 - center.$2;
+      final w = (transform.cx * math.sqrt(ux * ux + uy * uy)).round();
+      final h = (transform.cy * math.sqrt(vx * vx + vy * vy)).round();
+      shape.transform = PmlTransform(
+        x: (center.$1 - w / 2).round(),
+        y: (center.$2 - h / 2).round(),
+        cx: w,
+        cy: h,
+        rot: (math.atan2(uy, ux) * 10800000 / math.pi).round(),
+        flipH: transform.flipH,
+        flipV: transform.flipV != (ux * vy - uy * vx < 0),
+      );
+    }
+  }
+
+  visit(tree, null);
 }
 
 void _captureTextSources(
@@ -586,7 +743,19 @@ void _captureTextSources(
         'bodyPr',
         namespaceUri: OfficeNamespaces.a,
       );
-      current.textInsets = _readTextInsets(properties);
+      final (textInsets, insetSides) = _readTextInsets(properties);
+      current.textInsets = textInsets;
+      current.textWrap = _bodyTextWrap(properties);
+      current.clipsTextVertically = switch (properties?.getAttribute(
+        'vertOverflow',
+        namespaceUri: '',
+      )) {
+        'clip' || 'ellipsis' => true,
+        'overflow' => false,
+        _ => null,
+      };
+      current.textAnchorSpecified =
+          properties?.getAttribute('anchor', namespaceUri: '') != null;
       current.textAnchor = switch (properties?.getAttribute(
         'anchor',
         namespaceUri: '',
@@ -595,6 +764,12 @@ void _captureTextSources(
         'b' => PmlTextAnchor.bottom,
         _ => PmlTextAnchor.top,
       };
+      current.growsToFitText =
+          properties?.firstChild(
+            'spAutoFit',
+            namespaceUri: OfficeNamespaces.a,
+          ) !=
+          null;
       final XmlElement? autofit = properties?.firstChild(
         'normAutofit',
         namespaceUri: OfficeNamespaces.a,
@@ -618,6 +793,7 @@ void _captureTextSources(
         textAlign: current.textAlign,
         rightToLeft: current.rightToLeft,
         textInsets: current.textInsets,
+        definedInsetSides: insetSides,
         textScale: current.textScale,
         lineSpacingReduction: current.lineSpacingReduction,
       );
@@ -659,12 +835,61 @@ const Set<String> _colorElements = <String>{
   'prstClr',
 };
 
+PictureOuterShadow _readPictureShadow(
+  XmlPullReader reader,
+  Map<String, String> colors,
+) {
+  double points(String attribute) =>
+      ((int.tryParse(reader.getAttribute(attribute) ?? '') ?? 0) / 12700).clamp(
+        0,
+        100000,
+      );
+  final blurRadius = points('blurRad');
+  final distance = points('dist');
+  final directionDegrees =
+      ((int.tryParse(reader.getAttribute('dir') ?? '') ?? 0) % 21600000) /
+      60000;
+  final rotatesWithShape = switch (reader.getAttribute('rotWithShape')) {
+    '0' || 'false' => false,
+    _ => true,
+  };
+  final depth = reader.depth;
+  var color = '000000';
+  var alpha = 1.0;
+  if (!reader.isEmptyElement) {
+    while (reader.next() && reader.depth > depth) {
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.depth == depth + 1 &&
+          reader.namespaceUri == OfficeNamespaces.a &&
+          _colorElements.contains(reader.localName)) {
+        color =
+            resolveDrawingmlColor(
+              reader,
+              colors,
+              onOpacity: (value) => alpha = value,
+            ) ??
+            color;
+        if (reader.depth <= depth) break;
+      }
+    }
+  }
+  return PictureOuterShadow(
+    blurRadius: blurRadius,
+    distance: distance,
+    directionDegrees: directionDegrees,
+    color: color,
+    opacity: alpha,
+    rotatesWithShape: rotatesWithShape,
+  );
+}
+
 /// Reads a DrawingML color element (consuming it) as `RRGGBB`, applying the
 /// `lumMod` / `lumOff` / `shade` / `tint` modifiers PowerPoint themes use.
 String? resolveDrawingmlColor(
   XmlPullReader reader,
-  Map<String, String> colors,
-) {
+  Map<String, String> colors, {
+  void Function(double)? onOpacity,
+}) {
   final String name = reader.localName;
   final String val = reader.getAttribute('val') ?? '';
   String? hex = switch (name) {
@@ -679,6 +904,7 @@ String? resolveDrawingmlColor(
   }
   double lumMod = 1;
   double lumOff = 0;
+  double opacity = 1;
   final int depth = reader.depth;
   while (reader.next() && reader.depth >= depth) {
     if (reader.eventType != XmlEventType.startElement) {
@@ -688,6 +914,12 @@ String? resolveDrawingmlColor(
         (int.tryParse(reader.getAttribute('val') ?? '') ?? 100000) / 100000;
     hex = _normalHex(hex);
     switch (reader.localName) {
+      case 'alpha':
+        opacity = amount;
+      case 'alphaMod':
+        opacity *= amount;
+      case 'alphaOff':
+        opacity += amount;
       case 'lumMod':
         lumMod = amount;
       case 'lumOff':
@@ -698,6 +930,7 @@ String? resolveDrawingmlColor(
         hex = _mapChannels(hex, (int c) => c + (255 - c) * (1 - amount));
     }
   }
+  onOpacity?.call(opacity.clamp(0.0, 1.0));
   hex = _normalHex(hex);
   if (hex == null || (lumMod == 1 && lumOff == 0)) {
     return hex;
@@ -1158,41 +1391,93 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
   w.writeEndElement();
 
   /// writeEmptyElement API.
-  w.writeEmptyElement(
-    'prstGeom',
-    prefix: 'a',
-    attributes: <String, String>{
-      'prst': switch (shape.preset) {
-        PmlShapePreset.roundRect => 'roundRect',
-        PmlShapePreset.ellipse => 'ellipse',
-        PmlShapePreset.triangle => 'triangle',
-        PmlShapePreset.connector => 'straightConnector1',
-        PmlShapePreset.freeform => 'rect',
-        PmlShapePreset.downArrow => 'downArrow',
-        PmlShapePreset.upArrow => 'upArrow',
-        PmlShapePreset.leftArrow => 'leftArrow',
-        PmlShapePreset.rightArrow => 'rightArrow',
-        PmlShapePreset.diamond => 'diamond',
-        PmlShapePreset.hexagon => 'hexagon',
-        PmlShapePreset.pentagon => 'pentagon',
-        PmlShapePreset.homePlate => 'homePlate',
-        PmlShapePreset.chevron => 'chevron',
-        PmlShapePreset.parallelogram => 'parallelogram',
-        PmlShapePreset.trapezoid => 'trapezoid',
-        PmlShapePreset.rect => 'rect',
+  final callout = shape.roundedCallout;
+  if (shape.preset == PmlShapePreset.roundRect && callout != null) {
+    w.writeStartElement('prstGeom', prefix: 'a');
+    w.writeAttribute('prst', 'wedgeRoundRectCallout');
+    w.writeStartElement('avLst', prefix: 'a');
+    for (final (name, value) in [
+      ('adj1', callout.tipX),
+      ('adj2', callout.tipY),
+      ('adj3', callout.corner),
+    ]) {
+      w.writeEmptyElement(
+        'gd',
+        prefix: 'a',
+        attributes: {'name': name, 'fmla': 'val $value'},
+      );
+    }
+    w.writeEndElement();
+    w.writeEndElement();
+  } else if (shape.preset == PmlShapePreset.freeform && shape.path.isNotEmpty) {
+    w.writeStartElement('custGeom', prefix: 'a');
+    w.writeStartElement('pathLst', prefix: 'a');
+    w.writeStartElement('path', prefix: 'a');
+    w.writeAttribute('w', '${shape.pathWidth ?? shape.transform.cx}');
+    w.writeAttribute('h', '${shape.pathHeight ?? shape.transform.cy}');
+    for (final (index, point) in shape.path.indexed) {
+      if (point.close) {
+        w.writeEmptyElement('close', prefix: 'a');
+        continue;
+      }
+      w.writeStartElement(
+        index == 0 || point.move ? 'moveTo' : 'lnTo',
+        prefix: 'a',
+      );
+      w.writeEmptyElement(
+        'pt',
+        prefix: 'a',
+        attributes: {'x': '${point.x}', 'y': '${point.y}'},
+      );
+      w.writeEndElement();
+    }
+    w.writeEndElement();
+    w.writeEndElement();
+    w.writeEndElement();
+  } else {
+    w.writeEmptyElement(
+      'prstGeom',
+      prefix: 'a',
+      attributes: <String, String>{
+        'prst': switch (shape.preset) {
+          PmlShapePreset.roundRect => 'roundRect',
+          PmlShapePreset.ellipse => 'ellipse',
+          PmlShapePreset.triangle => 'triangle',
+          PmlShapePreset.connector => 'straightConnector1',
+          PmlShapePreset.freeform => 'rect',
+          PmlShapePreset.downArrow => 'downArrow',
+          PmlShapePreset.upArrow => 'upArrow',
+          PmlShapePreset.leftArrow => 'leftArrow',
+          PmlShapePreset.rightArrow => 'rightArrow',
+          PmlShapePreset.diamond => 'diamond',
+          PmlShapePreset.hexagon => 'hexagon',
+          PmlShapePreset.pentagon => 'pentagon',
+          PmlShapePreset.homePlate => 'homePlate',
+          PmlShapePreset.chevron => 'chevron',
+          PmlShapePreset.parallelogram => 'parallelogram',
+          PmlShapePreset.trapezoid => 'trapezoid',
+          PmlShapePreset.rect => 'rect',
+        },
       },
-    },
-  );
+    );
+  }
   final PmlGradientFill? gradient = shape.gradient;
   if (gradient != null && gradient.stops.length >= 2) {
     _writeGradientFill(w, gradient);
   } else if (shape.fillColor.isNotEmpty) {
     w.writeStartElement('solidFill', prefix: 'a');
-    w.writeEmptyElement(
-      'srgbClr',
-      prefix: 'a',
-      attributes: <String, String>{'val': shape.fillColor},
-    );
+    w.writeStartElement('srgbClr', prefix: 'a');
+    w.writeAttribute('val', shape.fillColor);
+    if (shape.fillOpacity < 1) {
+      w.writeEmptyElement(
+        'alpha',
+        prefix: 'a',
+        attributes: {
+          'val': '${(shape.fillOpacity.clamp(0.0, 1.0) * 100000).round()}',
+        },
+      );
+    }
+    w.writeEndElement();
     w.writeEndElement();
   }
   if (shape.strokeColor.isNotEmpty) {
@@ -1215,6 +1500,7 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
       shape.hasExplicitTextFormatting ||
       shape.textAnchorOverride ||
       shape.hasTextInsetChanges ||
+      shape.textWrap != null ||
       shape.textAnchor != PmlTextAnchor.top ||
       shape.textReplacementRequested) {
     _writeShapeText(w, shape);
@@ -1234,22 +1520,24 @@ String _insetAttribute(PmlTextInsetSide side) => switch (side) {
   PmlTextInsetSide.bottom => 'bIns',
 };
 
-PmlTextInsets _readTextInsets(XmlElement? properties) {
+(PmlTextInsets, Set<PmlTextInsetSide>) _readTextInsets(XmlElement? properties) {
   var result = const PmlTextInsets();
+  final defined = <PmlTextInsetSide>{};
   for (final side in PmlTextInsetSide.values) {
     final emu = int.tryParse(
       properties?.getAttribute(_insetAttribute(side), namespaceUri: '') ?? '',
     );
     if (emu != null && emu >= -2147483648 && emu <= 2147483647) {
       result = result.withSide(side, emu / 12700);
+      defined.add(side);
     }
   }
-  return result;
+  return (result, Set.unmodifiable(defined));
 }
 
 void _writeTextInsets(XmlElement body, PmlShape shape) {
   var properties = body.firstChild('bodyPr', namespaceUri: OfficeNamespaces.a);
-  final imported = _readTextInsets(properties);
+  final imported = shape.textSource?.textInsets ?? const PmlTextInsets();
   for (final side in PmlTextInsetSide.values) {
     final points = shape.textInsets[side];
     if (!shape.textInsetOverrides.contains(side) && imported[side] == points) {
@@ -1467,6 +1755,13 @@ XmlElement _replacementTextParagraph(XmlElement? template, String text) {
   return paragraph;
 }
 
+bool? _bodyTextWrap(XmlElement? bodyProperties) =>
+    switch (bodyProperties?.getAttribute('wrap', namespaceUri: '')) {
+      'none' => false,
+      'square' => true,
+      _ => null,
+    };
+
 void _writeShapeText(XmlWriter writer, PmlShape shape) {
   final PmlTextSource? source = shape.textSource;
   final XmlElement body = source == null
@@ -1480,10 +1775,7 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
     body.addChild(_textElement('bodyPr'));
     body.addChild(_textElement('lstStyle'));
   }
-  final properties = body.firstChild(
-    'bodyPr',
-    namespaceUri: OfficeNamespaces.a,
-  );
+  var properties = body.firstChild('bodyPr', namespaceUri: OfficeNamespaces.a);
   final importedAnchor = switch (properties?.getAttribute(
     'anchor',
     namespaceUri: '',
@@ -1497,6 +1789,7 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
     if (properties == null) {
       anchorProperties.parent = body;
       body.children.insert(0, anchorProperties);
+      properties = anchorProperties;
     }
     anchorProperties.removeAttribute('anchor', namespaceUri: '');
     anchorProperties.attributes.add(
@@ -1509,6 +1802,16 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
         },
       ),
     );
+  }
+  if (shape.textWrap != _bodyTextWrap(properties)) {
+    if (properties == null) {
+      properties = _textElement('bodyPr')..parent = body;
+      body.children.insert(0, properties);
+    }
+    properties.removeAttribute('wrap', namespaceUri: '');
+    if (shape.textWrap case final wrap?) {
+      properties.setAttribute('wrap', wrap ? 'square' : 'none');
+    }
   }
   _writeTextInsets(body, shape);
   _writeAutofit(body, shape);
@@ -1767,6 +2070,8 @@ void _writeSlidePicture(
     adj: adj,
     offX: shape.transform.x,
     offY: shape.transform.y,
+    rotation:
+        (shape.transform.rot + (adj.rotationDeg * 60000).round()) % 21600000,
   );
 
   /// writeStartElement API.

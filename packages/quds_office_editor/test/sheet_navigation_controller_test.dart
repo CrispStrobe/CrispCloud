@@ -69,6 +69,35 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'formula locale follows the controller across worker save and open',
+    () async {
+      final source = SmlWorkbook();
+      source.firstSheet.cellA1('A1').formula = '=TEXT(1234.5,"#.##0,00")';
+      source.firstSheet.cellA1('A2').formula =
+          '=NUMBERVALUE("01.02.2025",",",";")';
+      final bytes = SheetSerializer().writeBytes(source, recalculate: false);
+      final controller = SheetEditorController.fromBytes(
+        bytes,
+        formulaLocale: 'de-DE',
+      );
+      addTearDown(controller.dispose);
+      expect(controller.sheet.cellA1('A1').value, '1.234,50');
+      expect(controller.sheet.cellA1('A2').value, 45689);
+
+      final saved = SheetDeserializer().readBytes(
+        await controller.saveBytesAsync(),
+      );
+      expect(saved.firstSheet.cellA1('A1').value, '1.234,50');
+      expect(saved.firstSheet.cellA1('A2').value, 45689);
+      expect(saved.formulaLocale, isNull);
+
+      await controller.loadBytesAsync(bytes);
+      expect(controller.sheet.cellA1('A1').value, '1.234,50');
+      expect(controller.sheet.cellA1('A2').value, 45689);
+    },
+  );
+
+  test(
     'switch commits a valid draft to its owner and preserves owner history',
     () {
       final controller = _controller();

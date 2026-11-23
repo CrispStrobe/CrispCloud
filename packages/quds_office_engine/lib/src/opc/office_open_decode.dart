@@ -21,8 +21,9 @@ Future<Object> decodeOfficeOpen(
   String kind,
 
   /// Function API.
-  void Function(OfficeOpenProgress progress) emit,
-) async {
+  void Function(OfficeOpenProgress progress) emit, {
+  String? formulaLocale,
+}) async {
   /// emit API.
   emit(const OfficeOpenProgress(value: 0.16, stage: 'archive'));
   if (kind == 'pdf') {
@@ -63,7 +64,8 @@ Future<Object> decodeOfficeOpen(
       emit(const OfficeOpenProgress(value: 0.92, stage: 'apply'));
       return WordOpenPayload(document: document, laidOut: laidOut);
     case 'sheet':
-      final SmlWorkbook workbook = SheetDeserializer().read(package);
+      final SmlWorkbook workbook = SheetDeserializer().read(package)
+        ..formulaLocale = formulaLocale;
       emit(const OfficeOpenProgress(value: 0.72, stage: 'formulas'));
       FormulaEvaluator.recalculate(workbook);
       SheetChartData.refreshWorkbook(workbook);

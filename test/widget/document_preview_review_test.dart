@@ -80,6 +80,41 @@ void _recordClipboard(ValueChanged<String> changed) {
 }
 
 void main() {
+  testWidgets('XLAM opens in the read-only worksheet viewer', (tester) async {
+    const spreadsheet =
+        'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    const officeRel =
+        'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const packageRel =
+        'http://schemas.openxmlformats.org/package/2006/relationships';
+    final archive = Archive();
+    final parts = {
+      'xl/workbook.xml':
+          '<workbook xmlns="$spreadsheet" xmlns:r="$officeRel"><sheets>'
+          '<sheet name="Data" sheetId="1" r:id="sheet"/></sheets></workbook>',
+      'xl/_rels/workbook.xml.rels':
+          '<Relationships xmlns="$packageRel"><Relationship Id="sheet"'
+          ' Type="$officeRel/worksheet" Target="worksheets/sheet1.xml"/>'
+          '</Relationships>',
+      'xl/worksheets/sheet1.xml':
+          '<worksheet xmlns="$spreadsheet"><sheetData><row r="1">'
+          '<c r="A1" t="inlineStr"><is><t>Saved value</t></is></c>'
+          '</row></sheetData></worksheet>',
+    };
+    for (final part in parts.entries) {
+      archive.addFile(ArchiveFile.bytes(part.key, _bytes(part.value)));
+    }
+    await _open(
+      tester,
+      'toolkit.xlam',
+      Uint8List.fromList(ZipEncoder().encode(archive)),
+    );
+    expect(find.text('Table'), findsOneWidget);
+    expect(find.text('Pages'), findsNothing);
+    expect(find.textContaining('Saved value'), findsOneWidget);
+    expect(find.textContaining('The add-in is inactive.'), findsOneWidget);
+  });
+
   testWidgets('MBOX Copy all follows decoded selected message only', (
     tester,
   ) async {
@@ -182,6 +217,12 @@ void main() {
         const GZipDecoder().decodeBytes(compressed),
       );
       await _open(tester, 'presentation.ppt.gz', compressed);
+      // The widget test host has no native document browser.
+      if (find.byType(DocumentPreview).evaluate().isEmpty) {
+        await tester.ensureVisible(find.text('Preview'));
+        await tester.tap(find.text('Preview'));
+        await tester.pumpAndSettle();
+      }
       var preview = tester.widget<DocumentPreview>(
         find.byType(DocumentPreview),
       );
@@ -212,6 +253,30 @@ void main() {
         find.textContaining('Select text inside the document'),
         findsOneWidget,
       );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'failed legacy slide preview automatically shows extracted text',
+    (tester) async {
+      final z = File('test/fixtures/legacy_powerpoint/current-slides.ppt.gz')
+          .readAsBytesSync();
+      final bytes = Uint8List.fromList(const GZipDecoder().decodeBytes(z));
+      await _open(tester, 'example.ppt', bytes);
+      if (find.byType(DocumentPreview).evaluate().isNotEmpty) {
+        final preview = tester.widget<DocumentPreview>(
+          find.byType(DocumentPreview),
+        );
+        preview.onError!('The graphical viewer failed.');
+        await tester.pumpAndSettle();
+      }
+      expect(find.byType(DocumentPreview), findsNothing);
+      expect(find.textContaining('Showing extracted text.'), findsWidgets);
+      String? copied;
+      _recordClipboard((text) => copied = text);
+      await _copyAll(tester);
+      expect(copied, contains('Current title 世界'));
       expect(tester.takeException(), isNull);
     },
   );

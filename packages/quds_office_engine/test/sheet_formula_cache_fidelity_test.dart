@@ -37,6 +37,12 @@ void main() {
     r"SUM('Data'!$1:$3)": r"SUM('Next'!$1:$3)",
     'SUM(A:A)': 'SUM(A:A)',
     '2+3 unparsed': '2+3 unparsed',
+    'MID(CELL("filename",A2),FIND("]",CELL("filename",A2))+1,31)':
+        'MID(CELL("filename",A2),FIND("]",CELL("filename",A2))+1,31)',
+    'MID(CELL("Dateiname",A2),FIND("]",CELL("Dateiname",A2))+1,31)':
+        'MID(CELL("Dateiname",A2),FIND("]",CELL("Dateiname",A2))+1,31)',
+    'LIST_MODELS()': 'LIST_MODELS()',
+    'PROMPT("Synthetic prompt")': 'PROMPT("Synthetic prompt")',
   };
   for (final entry in unsupported.entries) {
     test(

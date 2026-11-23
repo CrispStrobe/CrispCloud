@@ -1,6 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:isolate';
+import 'dart:typed_data' show Endian;
+
 import 'package:flutter/services.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show LegacyWordImageFormat, parseLegacyWordMetafile;
 import 'package:quds_office_editor/quds_office_editor.dart'
-    show OfficeHostFonts, OfficeSystemFonts, OfficeSystemFontFace;
+    show
+        OfficeHostFonts,
+        OfficeSystemFonts,
+        OfficeSystemFontFace,
+        VisualImageCache;
 
 import 'document_font_catalog.dart';
 import 'office_font_packs.dart';
@@ -40,7 +51,31 @@ abstract final class DocumentFonts {
         .whenComplete(() => _registration = null);
   }
 
+  static FutureOr<Uint8List?> _metafilePreview(Uint8List bytes) {
+    if (bytes.length < 18) return null;
+    final data = ByteData.sublistView(bytes);
+    final signature = data.getUint32(0, Endian.little);
+    final format = switch (signature) {
+      1
+          when bytes.length >= 44 &&
+              data.getUint32(40, Endian.little) == 0x464d4520 =>
+        LegacyWordImageFormat.emf,
+      0x9ac6cdd7 || 0x00090001 || 0x00090002 => LegacyWordImageFormat.wmf,
+      _ => null,
+    };
+    if (format == null) return null;
+    Uint8List? render() {
+      final svg = parseLegacyWordMetafile(bytes, format: format).previewSvg;
+      return svg == null ? null : Uint8List.fromList(utf8.encode(svg));
+    }
+
+    return const bool.fromEnvironment('dart.library.io')
+        ? Isolate.run(render)
+        : render();
+  }
+
   static Future<void> _register() async {
+    VisualImageCache.metafileAsSvg = _metafilePreview;
     await OfficeHostFonts.ensureRegistered();
     // The editor owns Liberation and Noto. These two additional families reuse
     // bytes already bundled by CrispCloud and the PDF editor asset package.

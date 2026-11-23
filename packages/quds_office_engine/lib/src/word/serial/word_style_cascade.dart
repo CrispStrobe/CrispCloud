@@ -853,8 +853,15 @@ class _StyleCascade {
           if (old == null) result.addChild(effective);
           continue;
         }
-        if (name == 'rPr' &&
-            const {'noProof', 'rtl', 'cs'}.contains(child.localName)) {
+        if ((name == 'rPr' &&
+                const {'noProof', 'rtl', 'cs'}.contains(child.localName)) ||
+            (name == 'pPr' &&
+                const {
+                  'keepLines',
+                  'keepNext',
+                  'widowControl',
+                  'contextualSpacing',
+                }.contains(child.localName))) {
           // An omitted on/off value enables these properties. Do not retain
           // a lower layer's explicit false for a direct empty marker.
           final effective = old ?? child.copy();
@@ -1058,6 +1065,7 @@ class _StyleCascade {
       spacingAfter: 0,
       lineSpacing: 1,
       styleId: old.styleId,
+      defaultStyleId: defaultParagraph,
       fieldInstruction: old.fieldInstruction,
       fieldBegin: old.fieldBegin,
       fieldSeparate: old.fieldSeparate,
@@ -1085,12 +1093,20 @@ class _StyleCascade {
       }
     }
     p.properties.sourcePropertiesXml = source ?? '';
-    final markerStyles = [for (final s in paragraphChain) _wordChild(s, 'rPr')];
+    final markerProperties = _wordChild(pp, 'rPr');
+    final markerStyleId = _wordChild(
+      markerProperties,
+      'rStyle',
+    )?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    final markerStyles = [
+      for (final s in paragraphChain) _wordChild(s, 'rPr'),
+      for (final s in chain(markerStyleId)) _wordChild(s, 'rPr'),
+    ];
     final markerXml = merged('rPr', [
       _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
       for (final t in tableLayers) _wordChild(t, 'rPr'),
       ...markerStyles,
-      pp.firstChild('rPr'),
+      markerProperties,
     ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
     if (markerXml.childElements.isNotEmpty) {
       final marker = WmlRunProps(kerningHalfPoints: _missingStyles ? 1 : null);

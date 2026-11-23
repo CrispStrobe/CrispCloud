@@ -222,6 +222,33 @@ void main() {
     );
   });
 
+  test('new body pages clear the inline picture in their own header', () {
+    WmlParagraph pictureLine(double height) => WmlParagraph(
+      inlines: [
+        WmlRun(
+          text: '\uFFFC',
+          inlineVisual: _picture('Page logo', height: height),
+        ),
+      ],
+    );
+    final section =
+        _section(
+            header: [pictureLine(100)],
+            blocks: [
+              _paragraph('First page'),
+              WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+              _paragraph('Even page'),
+              for (var n = 0; n < 32; n++) _paragraph('Line $n'),
+            ],
+          )
+          ..differentOddEven = true
+          ..evenHeader = [pictureLine(65)];
+    final pages = _layout([section]).pages;
+    expect(pages, hasLength(3));
+    expect(pages[1].lines.first.y, _margins.header + 65);
+    expect(pages[2].lines.first.y, _margins.header + 100);
+  });
+
   test(
     'body pictures and chrome remain equivalent after a local text edit',
     () {

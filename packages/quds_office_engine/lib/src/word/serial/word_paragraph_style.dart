@@ -695,6 +695,8 @@ void _styleCheckProperties(XmlElement? node, {bool style = false}) {
           'bidi',
           'keepLines',
           'keepNext',
+          'widowControl',
+          'contextualSpacing',
           'pageBreakBefore',
           'suppressAutoHyphens',
         }.contains(child.localName) &&

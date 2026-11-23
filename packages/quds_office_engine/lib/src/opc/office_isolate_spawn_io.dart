@@ -10,6 +10,7 @@ Future<Object?> officeTrySpawnOpen({
   required Uint8List bytes,
   required String? password,
   required String kind,
+  String? formulaLocale,
 
   /// Function API.
   void Function(OfficeOpenProgress progress)? onProgress,
@@ -22,6 +23,7 @@ Future<Object?> officeTrySpawnOpen({
       bytes,
       password,
       kind,
+      formulaLocale,
     ]);
   } on IsolateSpawnException {
     return null;
@@ -101,11 +103,14 @@ void _openIsolateWorker(List<Object?> args) async {
   /// kind API.
   final String kind = args[3] as String;
   try {
-    final Object result = await decodeOfficeOpen(bytes, password, kind, (
-      OfficeOpenProgress p,
-    ) {
-      port.send(<Object>['progress', p.value, p.stage]);
-    });
+    final Object result = await decodeOfficeOpen(
+      bytes,
+      password,
+      kind,
+      (OfficeOpenProgress p) =>
+          port.send(<Object>['progress', p.value, p.stage]),
+      formulaLocale: args[4] as String?,
+    );
     try {
       port.send(<Object>['done', result]);
     } catch (error) {

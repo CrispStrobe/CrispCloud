@@ -11,7 +11,7 @@ void main() {
     final cached = sheet.cellA1('B1')
       ..formula =
           '=NUMBERVALUE(SUBSTITUTE(SUBSTITUTE(A1," ",""),"EUR",""),",",".")'
-      ..value = 8880
+      ..value = 8700
       ..type = SmlCellType.formula;
     expect(cached.formula, isNotNull);
 
@@ -22,7 +22,7 @@ void main() {
     final reopened = SheetDeserializer().readBytes(preserved);
     final cell = reopened.firstSheet.cellA1('B1');
     expect(cell.formula, contains('NUMBERVALUE'));
-    expect(cell.value, 8880);
+    expect(cell.value, 8700);
 
     // Recalculation remains available for edited workbooks, and it is the
     // caller's explicit choice rather than a side effect of saving.
@@ -34,7 +34,7 @@ void main() {
         .readBytes(recalculated)
         .firstSheet
         .cellA1('B1');
-    expect(recalculatedCell.value, isNot(8880));
+    expect(recalculatedCell.value, 8880);
   });
 
   test('a frozen pane is anchored by topLeftCell, not xSplit', () async {
@@ -68,6 +68,26 @@ void main() {
       again,
     ).getPart('/xl/worksheets/sheet1.xml')!.readText();
     expect(reparsed, contains('topLeftCell="AK2"'));
+  });
+
+  test('absent, empty and space-only formula caches stay distinct', () {
+    final book = SmlWorkbook();
+    book.firstSheet.cellA1('A1')
+      ..formula = '1+2'
+      ..type = SmlCellType.formula;
+    book.firstSheet.cellA1('A2')
+      ..formula = 'IF(TRUE,"","value")'
+      ..type = SmlCellType.string
+      ..value = '';
+    book.firstSheet.cellA1('A3')
+      ..formula = 'IF(TRUE," ","value")'
+      ..type = SmlCellType.string
+      ..value = ' ';
+    final saved = SheetSerializer().writeBytes(book, recalculate: false);
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.firstSheet.cellA1('A1').value, isNull);
+    expect(reopened.firstSheet.cellA1('A2').value, isEmpty);
+    expect(reopened.firstSheet.cellA1('A3').value, ' ');
   });
 
   test('page setup and print options round-trip', () async {
