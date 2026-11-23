@@ -37,6 +37,7 @@ Future<void> showKeePassEditorDialog(
   PanelFileOrigin? origin,
 }) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   barrierDismissible: false,
   builder: (_) => Dialog.fullscreen(
     child: KeePassEditorDialog(

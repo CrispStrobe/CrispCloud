@@ -174,6 +174,7 @@ class FileToolbar extends ConsumerWidget {
         ),
 
       PopupMenuButton<String>(
+        popUpAnimationStyle: AnimationStyle.noAnimation,
         icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
         tooltip: l.sort,
         onSelected: (value) => _handleSortMenuAction(panel, value),

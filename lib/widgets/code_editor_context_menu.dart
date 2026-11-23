@@ -27,6 +27,7 @@ class CodeEditorSelectionToolbarController
     final hasSelection = !selection.isCollapsed;
     final hasText = controller.selectedText.isNotEmpty;
     showMenu<void>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromRect(
         Rect.fromPoints(

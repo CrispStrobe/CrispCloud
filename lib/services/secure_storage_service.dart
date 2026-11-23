@@ -15,6 +15,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/async_lock.dart';
 import 'log_service.dart';
 import 'credential_storage_diagnostics.dart';
+import 'windows_credential_store_lock_stub.dart'
+    if (dart.library.io) 'windows_credential_store_lock_io.dart';
 
 const _secureLog = Log('SecureStorage');
 
@@ -93,7 +95,9 @@ class PlatformSecureStorage extends SecureStorage
       'This backend does not expose a selected file path.';
 
   /// A unique, non-secret sentinel avoids races between app instances.
-  Future<void> verifyAvailable() async {
+  Future<void> verifyAvailable() => withWindowsCredentialStoreLock(_probe);
+
+  Future<void> _probe() async {
     final random = Random.secure();
     final nonce = List.generate(
       4,
@@ -104,8 +108,21 @@ class PlatformSecureStorage extends SecureStorage
     Object? failure;
     StackTrace? failureStack;
     try {
-      await _storage.write(key: key, value: 'ok');
-      if (await _storage.read(key: key) != 'ok') {
+      var matches = false;
+      final attempts =
+          !kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 3 : 1;
+      for (var attempt = 0; attempt < attempts; attempt++) {
+        if (attempt > 0) {
+          // A running older build may still use the file without our lock.
+          await Future<void>.delayed(Duration(milliseconds: 100 * attempt));
+        }
+        await _storage.write(key: key, value: 'ok');
+        if (await _storage.read(key: key) == 'ok') {
+          matches = true;
+          break;
+        }
+      }
+      if (!matches) {
         throw StateError(
           'Credential store probe read-back did not match its write.',
         );
@@ -176,20 +193,26 @@ class PlatformSecureStorage extends SecureStorage
   }
 
   @override
-  Future<String?> read(String key) => _storage.read(key: key);
+  Future<String?> read(String key) =>
+      withWindowsCredentialStoreLock(() => _storage.read(key: key));
 
   @override
   Future<void> write(String key, String value) =>
-      _storage.write(key: key, value: value);
+      withWindowsCredentialStoreLock(
+        () => _storage.write(key: key, value: value),
+      );
 
   @override
-  Future<void> delete(String key) => _storage.delete(key: key);
+  Future<void> delete(String key) =>
+      withWindowsCredentialStoreLock(() => _storage.delete(key: key));
 
   @override
-  Future<bool> containsKey(String key) => _storage.containsKey(key: key);
+  Future<bool> containsKey(String key) =>
+      withWindowsCredentialStoreLock(() => _storage.containsKey(key: key));
 
   @override
-  Future<void> deleteAll() => _storage.deleteAll();
+  Future<void> deleteAll() =>
+      withWindowsCredentialStoreLock(_storage.deleteAll);
 }
 
 /// Ephemeral storage for session-only mode and tests. No legacy credentials

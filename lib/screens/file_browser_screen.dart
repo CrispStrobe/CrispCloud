@@ -2541,6 +2541,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Future<void> _showNativeToolbarPopup(PopupMenuButton<String> menu) async {
     final width = MediaQuery.sizeOf(context).width;
     final selected = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromLTRB(width, 0, 0, 0),
       items: menu.itemBuilder(context),
@@ -2930,6 +2931,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final l = AppLocalizations.of(context)!;
     return PopupMenuButton<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       icon: const Icon(Icons.more_vert, size: 20),
       tooltip: l.moreActions,
       onSelected: (value) => _runOverflowAction(context, value),
@@ -3412,6 +3414,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: PopupMenuButton<String>(
+        popUpAnimationStyle: AnimationStyle.noAnimation,
         onSelected: (value) {
           if (value == 'logout') {
             confirmLogoutRiverpod(context, ref);

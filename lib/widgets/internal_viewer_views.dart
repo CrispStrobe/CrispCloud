@@ -8,6 +8,7 @@ import 'dart:typed_data';
 
 import '../services/pdf_zoom_transform.dart';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../l10n/page_navigation_strings.dart';
@@ -573,6 +574,8 @@ class PdfPagePanelState extends State<PdfPagePanel> {
     document: widget.controller.document,
   );
   Size _viewport = Size.zero;
+  static bool get _usesSimpleViewer =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
   void _scale(double scale, {Offset? sceneCenter}) {
     controller.value = pdfZoomTransform(
       controller.value,
@@ -582,8 +585,12 @@ class PdfPagePanelState extends State<PdfPagePanel> {
     );
   }
 
-  void zoomBy(double factor) =>
+  void zoomBy(double factor) {
+    if (!_usesSimpleViewer) {
       _scale(controller.value.getMaxScaleOnAxis() * factor);
+    }
+  }
+
   void _fit(bool width) {
     if (controller.pagesCount == null) return;
     final rect = controller.getPageRect(controller.page);
@@ -596,7 +603,8 @@ class PdfPagePanelState extends State<PdfPagePanel> {
   @override
   void didUpdateWidget(PdfPagePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.controller, widget.controller)) {
+    if (!_usesSimpleViewer &&
+        !identical(oldWidget.controller, widget.controller)) {
       final old = controller;
       controller = PdfControllerPinch(document: widget.controller.document);
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -607,19 +615,46 @@ class PdfPagePanelState extends State<PdfPagePanel> {
 
   @override
   void dispose() {
-    controller.dispose();
+    if (!_usesSimpleViewer) controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final BasePdfController pages = _usesSimpleViewer
+        ? widget.controller
+        : controller;
+    void jumpToPage(int target) {
+      if (_usesSimpleViewer) {
+        final count = widget.controller.pagesCount ?? 0;
+        if (target >= 1 && target <= count) {
+          widget.controller.jumpToPage(target);
+        }
+      } else {
+        controller.jumpToPage(target);
+      }
+    }
+
     return Column(
       children: [
         Expanded(
           child: LayoutBuilder(
             builder: (context, box) {
               _viewport = Size(box.maxWidth, box.maxHeight);
+              // The Windows pdfx implementation renders images, not textures.
+              if (_usesSimpleViewer) {
+                return PdfView(
+                  key: ObjectKey(widget.controller),
+                  controller: widget.controller,
+                  scrollDirection: Axis.vertical,
+                  builders: const PdfViewBuilders<DefaultBuilderOptions>(
+                    options: DefaultBuilderOptions(
+                      loaderSwitchDuration: Duration.zero,
+                    ),
+                  ),
+                );
+              }
               return PdfViewPinch(
                 controller: controller,
                 minScale: .25,
@@ -642,45 +677,47 @@ class PdfPagePanelState extends State<PdfPagePanel> {
               IconButton(
                 tooltip: PageNavigationStrings(context).text('first'),
                 icon: const Icon(Icons.first_page, size: 20),
-                onPressed: () => controller.jumpToPage(1),
+                onPressed: () => jumpToPage(1),
               ),
               IconButton(
                 tooltip: PageNavigationStrings(context).text('previous'),
                 icon: const Icon(Icons.chevron_left, size: 20),
                 onPressed: () {
-                  final current = controller.page;
+                  final current = pages.page;
                   if (current > 1) {
-                    controller.jumpToPage(current - 1);
+                    jumpToPage(current - 1);
                   }
                 },
               ),
-              IconButton(
-                tooltip: context.commanderTr('Zoom out'),
-                onPressed: () => zoomBy(1 / 1.2),
-                icon: const Icon(Icons.zoom_out),
-              ),
-              ValueListenableBuilder<Matrix4>(
-                valueListenable: controller,
-                builder: (context, value, _) =>
-                    Text('${(value.getMaxScaleOnAxis() * 100).round()}%'),
-              ),
-              IconButton(
-                tooltip: context.commanderTr('Zoom in'),
-                onPressed: () => zoomBy(1.2),
-                icon: const Icon(Icons.zoom_in),
-              ),
-              TextButton(
-                onPressed: () {
-                  _fit(true);
-                },
-                child: Text(context.commanderTr('Fit width')),
-              ),
-              TextButton(
-                onPressed: () => _fit(false),
-                child: Text(context.commanderTr('Fit page')),
-              ),
+              if (!_usesSimpleViewer) ...[
+                IconButton(
+                  tooltip: context.commanderTr('Zoom out'),
+                  onPressed: () => zoomBy(1 / 1.2),
+                  icon: const Icon(Icons.zoom_out),
+                ),
+                ValueListenableBuilder<Matrix4>(
+                  valueListenable: controller,
+                  builder: (context, value, _) =>
+                      Text('${(value.getMaxScaleOnAxis() * 100).round()}%'),
+                ),
+                IconButton(
+                  tooltip: context.commanderTr('Zoom in'),
+                  onPressed: () => zoomBy(1.2),
+                  icon: const Icon(Icons.zoom_in),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _fit(true);
+                  },
+                  child: Text(context.commanderTr('Fit width')),
+                ),
+                TextButton(
+                  onPressed: () => _fit(false),
+                  child: Text(context.commanderTr('Fit page')),
+                ),
+              ],
               PdfPageNumber(
-                controller: controller,
+                controller: pages,
                 builder: (_, __, page, total) => Text(
                   '$page / $total',
                   style: const TextStyle(fontSize: 12),
@@ -690,19 +727,17 @@ class PdfPagePanelState extends State<PdfPagePanel> {
                 tooltip: PageNavigationStrings(context).text('next'),
                 icon: const Icon(Icons.chevron_right, size: 20),
                 onPressed: () {
-                  final current = controller.page;
-                  final pages = controller.pagesCount;
-                  if (pages == null || current < pages) {
-                    controller.jumpToPage(current + 1);
-                  }
+                  final current = pages.page;
+                  final count = pages.pagesCount;
+                  if (count == null || current < count) jumpToPage(current + 1);
                 },
               ),
               IconButton(
                 tooltip: PageNavigationStrings(context).text('last'),
                 icon: const Icon(Icons.last_page, size: 20),
                 onPressed: () {
-                  final pages = controller.pagesCount;
-                  if (pages != null && pages > 0) controller.jumpToPage(pages);
+                  final count = pages.pagesCount;
+                  if (count != null && count > 0) jumpToPage(count);
                 },
               ),
             ],

@@ -58,6 +58,7 @@ Future<void> showMediaEditorDialog(
   PanelSide side,
 ) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   barrierDismissible: false,
   builder: (_) => Dialog.fullscreen(
     child: MediaEditorDialog(file: file, side: side),

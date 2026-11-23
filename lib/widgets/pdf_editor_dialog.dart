@@ -54,6 +54,7 @@ Future<void> showPdfEditorDialog(
   PdfEditorBackend backend = PdfEditorBackend.pdfEditor,
 }) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   barrierDismissible: false,
   builder: (_) => Dialog.fullscreen(
     child: PdfEditorDialog(file: file, side: side, backend: backend),

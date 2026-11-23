@@ -188,6 +188,7 @@ final class PdfDrawText extends PdfPaintOp {
     required this.size,
     required this.color,
     required this.text,
+    this.embeddedGlyph,
     this.italic = false,
     this.bold = false,
     this.fontFamily = 'Helvetica',
@@ -209,6 +210,9 @@ final class PdfDrawText extends PdfPaintOp {
 
   /// text API.
   final String text;
+
+  /// Glyph alias in the adapted embedded face, separate from logical text.
+  final String? embeddedGlyph;
 
   /// italic API.
   final bool italic;

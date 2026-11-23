@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -285,8 +286,11 @@ void main() {
     final PdfFile file = PdfFile.open(_winAnsiPdf());
     final List<PdfDrawText> texts =
         file.displayList(0).ops.whereType<PdfDrawText>().toList();
-    expect(texts.map((PdfDrawText t) => t.text).join(), contains('A'));
-    expect(texts.map((PdfDrawText t) => t.text).join(), contains('\u20AC'));
+    expect(texts.map((PdfDrawText t) => t.text).join(), 'A€währendwährend');
+    final accents = texts.where((glyph) => glyph.text == 'ä').toList();
+    final nextGlyphs = texts.where((glyph) => glyph.text == 'h').toList();
+    expect(nextGlyphs.first.x - accents.first.x,
+        closeTo(nextGlyphs.last.x - accents.last.x, 0.001));
     expect(texts.first.size, closeTo(10, 0.3));
     final PdfTextRun run = file.displayList(0).runs.first;
     expect(run.width, closeTo(6.67, 0.2));
@@ -392,6 +396,77 @@ void main() {
     expect(texts, isNotEmpty);
     expect(texts.first.fontBytes, isNotNull);
     expect(texts.first.fontBytes!.sublist(0, 4), <int>[0x4F, 0x54, 0x54, 0x4F]);
+  });
+
+  test(
+    'Macintosh byte cmaps preserve glyphs with duplicate ToUnicode',
+    () async {
+      final library = (await Isolate.resolvePackageUri(
+        Uri.parse('package:quds_office_engine/quds_office_engine.dart'),
+      ))!;
+      final source = SfntFont.parse(
+        File.fromUri(
+          library.resolve(
+            '../../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+          ),
+        ).readAsBytesSync(),
+      );
+      final glyphA = source.glyphIdFor(0x41);
+      final glyphB = source.glyphIdFor(0x42);
+      final subset = Uint8List(source.bytes.length + 26)
+        ..setAll(0, source.bytes);
+      final data = ByteData.sublistView(subset);
+      data.setUint32(0, 0x74727565); // Legacy Macintosh TrueType scaler.
+      final cmapOffset = source.bytes.length;
+      for (var i = 0; i < data.getUint16(4); i++) {
+        final row = 12 + i * 16;
+        if (data.getUint32(row) == 0x636D6170) {
+          data.setUint32(row + 8, cmapOffset);
+          data.setUint32(row + 12, 26);
+          break;
+        }
+      }
+      data
+        ..setUint16(cmapOffset + 2, 1)
+        ..setUint16(cmapOffset + 4, 1)
+        ..setUint32(cmapOffset + 8, 12)
+        ..setUint16(cmapOffset + 12, 6)
+        ..setUint16(cmapOffset + 14, 14)
+        ..setUint16(cmapOffset + 18, 0x21)
+        ..setUint16(cmapOffset + 20, 2)
+        ..setUint16(cmapOffset + 22, glyphA)
+        ..setUint16(cmapOffset + 24, glyphB);
+      final repaired = PdfCffHost.repairMacByteCmap(
+        subset,
+        PdfToUnicode({0x21: 'F', 0x22: 'F'}),
+      )!;
+      final face = SfntFont.parse(repaired.bytes);
+      expect(repaired.codes, {0x21, 0x22});
+      expect(face.glyphIdFor(PdfCffHost.macByteGlyphBase + 0x21), glyphA);
+      expect(face.glyphIdFor(PdfCffHost.macByteGlyphBase + 0x22), glyphB);
+      expect(face.glyphIdFor(0x46), glyphA);
+    },
+  );
+
+  test('Q restores text spacing after a nested graphics state', () {
+    const stream =
+        'BT /F1 12 Tf 10 600 Td (AA) Tj ET '
+        'q BT /F1 12 Tf 9 Tc 10 580 Td (AA) Tj ET Q '
+        'BT /F1 12 Tf 10 560 Td (AA) Tj ET';
+    final bytes = _pdfObjects([
+      '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n',
+      '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n',
+      '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+          '/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n',
+      '4 0 obj << /Length ${stream.length} >> stream\n$stream\nendstream\nendobj\n',
+      '5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n',
+    ]);
+    final glyphs = PdfFile.open(
+      bytes,
+    ).displayList(0).ops.whereType<PdfDrawText>().toList();
+    final regular = glyphs[1].x - glyphs[0].x;
+    expect(glyphs[3].x - glyphs[2].x, closeTo(regular + 9, 0.001));
+    expect(glyphs[5].x - glyphs[4].x, closeTo(regular, 0.001));
   });
 
   test('TrueType subsets without cmap get ToUnicode cmap for the host', () {
@@ -501,7 +576,7 @@ void main() {
     expect(logo.hasAlpha, isTrue);
   });
 
-  test('Identity-H CID literals decode two bytes; ToUnicode skips UTF-32 pad', () {
+  test('Identity-H CID strings decode two bytes; ToUnicode skips UTF-32 pad', () {
     final PdfToUnicode padded = PdfToUnicode.parse(
       Uint8List.fromList(utf8.encode(
         '1 beginbfchar\n<0041> <00000041>\nendbfchar\n',
@@ -509,12 +584,11 @@ void main() {
     );
     expect(padded.mapCid(0x41), 'A');
 
-    final PdfFile file = PdfFile.open(_identityHLiteralPdf());
-    final List<PdfDrawText> texts =
-        file.displayList(0).ops.whereType<PdfDrawText>().toList();
-    expect(texts, isNotEmpty);
-    expect(texts.map((PdfDrawText t) => t.text).join(), 'AL');
-    expect(texts.map((PdfDrawText t) => t.text).join().codeUnits, <int>[0x41, 0x4C]);
+    for (final hex in [false, true]) {
+      final PdfFile file = PdfFile.open(_identityHTextPdf(hex: hex));
+      final texts = file.displayList(0).ops.whereType<PdfDrawText>();
+      expect(texts.map((glyph) => glyph.text), ['A', 'L']);
+    }
   });
 
   test('transparency group Form composites with parent ca', () {
@@ -653,7 +727,9 @@ Uint8List _clipScalePdf() {
 }
 
 Uint8List _winAnsiPdf() {
-  const String content = 'BT /F1 10 Tf 72 400 Td <41> Tj 0 -12 Td <80> Tj ET\n';
+  const String content = 'BT /F1 10 Tf 72 400 Td <41> Tj 0 -12 Td <80> Tj '
+      '0 -12 Td [(w) <E468> (rend)] TJ '
+      '0 -12 Td [(w) (\\344h) (rend)] TJ ET\n';
   return _pdfObjects(<String>[
     '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n',
     '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n',
@@ -1135,15 +1211,17 @@ Uint8List _oneBitGrayPdf() {
   ]);
 }
 
-Uint8List _identityHLiteralPdf() {
-  final Uint8List content = Uint8List.fromList(<int>[
-    ...utf8.encode('BT /F1 24 Tf 72 720 Td ('),
-    0x00,
-    0x41,
-    0x00,
-    0x4C,
-    ...utf8.encode(') Tj ET\n'),
-  ]);
+Uint8List _identityHTextPdf({required bool hex}) {
+  final List<int> content = hex
+      ? utf8.encode('BT /F1 24 Tf 72 720 Td <0041004C> Tj ET\n')
+      : <int>[
+          ...utf8.encode('BT /F1 24 Tf 72 720 Td ('),
+          0x00,
+          0x41,
+          0x00,
+          0x4C,
+          ...utf8.encode(') Tj ET\n'),
+        ];
   const String toUnicode =
       '/CIDInit /ProcSet findresource begin\n'
       '12 dict begin\nbegincmap\n'

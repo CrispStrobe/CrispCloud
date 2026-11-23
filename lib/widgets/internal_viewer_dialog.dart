@@ -192,6 +192,7 @@ Future<InternalViewerAction> showInternalViewer(
   if (!context.mounted) return InternalViewerAction.close;
   final result = await showDialog<InternalViewerAction>(
     context: context,
+    animationStyle: AnimationStyle.noAnimation,
     barrierDismissible: false,
     builder: (_) => Dialog.fullscreen(
       child: _ViewerSessionHost(
@@ -1938,7 +1939,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final candidate = VideoPlayerController.file(File(path));
     var retained = false;
     try {
-      await candidate.initialize();
+      await initializePreviewVideo(candidate);
       if (!mounted || token != _prepareToken) return;
       _videoController = candidate;
       _mediaStreamAccess = local != null;
@@ -1946,7 +1947,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       retained = true;
     } finally {
       if (!retained) {
-        await candidate.dispose();
+        await disposeFailedPreviewVideo(candidate);
         await local?.endStreamAccess();
       }
     }
@@ -1990,16 +1991,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       }
       final candidate = VideoPlayerController.file(File(path));
       try {
-        await candidate.initialize();
+        await initializePreviewVideo(candidate);
         controller = candidate;
         break;
       } catch (e) {
         lastError = e;
-        try {
-          await candidate.dispose();
-        } catch (_) {
-          // Best effort.
-        }
+        await disposeFailedPreviewVideo(candidate);
       }
     }
 
@@ -3494,6 +3491,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                         ),
                         if (_canChangeEncoding)
                           PopupMenuButton<String>(
+                            popUpAnimationStyle: AnimationStyle.noAnimation,
                             tooltip: InternalViewerStrings(
                               context,
                             ).text('encoding'),
@@ -3542,6 +3540,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                             ],
                           ),
                         PopupMenuButton<String>(
+                          popUpAnimationStyle: AnimationStyle.noAnimation,
                           tooltip: InternalViewerStrings(context).text('more'),
                           icon: const Icon(Icons.more_vert),
                           onSelected: _onMenuSelected,
@@ -3853,23 +3852,35 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          DropdownButton<PdfViewerBackend>(
+          PopupMenuButton<PdfViewerBackend>(
             key: const ValueKey('pdf-viewer-backend'),
-            value: _pdfBackend,
-            items: [
+            popUpAnimationStyle: AnimationStyle.noAnimation,
+            initialValue: _pdfBackend,
+            itemBuilder: (_) => [
               for (final backend in PdfViewerBackend.values)
-                DropdownMenuItem(
+                PopupMenuItem(
                   value: backend,
                   child: Text(
                     context.commanderTr(pdfViewerBackendLabel(backend)),
                   ),
                 ),
             ],
-            onChanged: (backend) {
-              if (backend == null) return;
+            onSelected: (backend) {
               _pdfBackend = backend;
               _selectMode(ViewerMode.pdf);
             },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(context.commanderTr(pdfViewerBackendLabel(
+                    _pdfBackend ?? PdfViewerBackend.pdfEditor,
+                  ))),
+                  const Icon(Icons.arrow_drop_down),
+                ],
+              ),
+            ),
           ),
           IconButton(
             tooltip: context.commanderTr('Open secondary PDF viewer'),

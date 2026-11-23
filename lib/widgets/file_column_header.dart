@@ -251,6 +251,7 @@ class _FileColumnHeaderState extends ConsumerState<FileColumnHeader> {
     FileViewConfiguration view,
   ) async {
     final selection = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromLTRB(
         MediaQuery.sizeOf(context).width / 2,

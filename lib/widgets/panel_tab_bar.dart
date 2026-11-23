@@ -199,6 +199,7 @@ class PanelTabBar extends StatelessWidget {
     final index = tabs.indexWhere((value) => value.id == tab.id);
     final strings = PanelTabStrings(context);
     final action = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromLTRB(
         position.dx,

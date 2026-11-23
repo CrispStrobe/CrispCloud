@@ -229,9 +229,11 @@ Future<void> showTextHexEditorSession(
       final openedFile = currentFile;
       final openedEditor = editor;
       final next = await navigator.push<EditorKind>(
-        MaterialPageRoute(
+        PageRouteBuilder<EditorKind>(
           fullscreenDialog: true,
-          builder: (_) => openedEditor == EditorKind.hex
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (_, _, _) => openedEditor == EditorKind.hex
               ? HexFileEditorPage(
                   file: openedFile,
                   backend: backend,
@@ -527,6 +529,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (!_isModified) return true;
     final choice = await showDialog<_SwitchChoice>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (ctx) => AlertDialog(
         title: const Text('Save changes before switching editors?'),
         content: const Text(
@@ -886,6 +889,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (!await _confirmDiscard() || !mounted) return;
     final encoding = await showDialog<EditorEncoding>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (ctx) => SimpleDialog(
         title: const Text('Reopen saved bytes using encoding'),
         children: [
@@ -929,6 +933,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     var input = '';
     final line = await showDialog<int>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (ctx) => AlertDialog(
         title: Text(CodeDocumentUiStrings(context).text('goLine')),
         content: TextField(
@@ -972,6 +977,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (!_isModified) return true;
     final result = await showDialog<bool>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.unsavedChanges),
         content: Text(FileEditorStrings(context).text('unsaved')),
@@ -1139,6 +1145,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                         : null,
                   ),
             PopupMenuButton<_EditorMenuAction>(
+              popUpAnimationStyle: AnimationStyle.noAnimation,
               enabled: !_closing,
               tooltip: CodeDocumentUiStrings(context).text('options'),
               onSelected: _handleMenuAction,

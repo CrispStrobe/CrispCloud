@@ -56,6 +56,7 @@ Future<void> showEbookEditorDialog(
 }) async {
   await showDialog<void>(
     context: context,
+    animationStyle: AnimationStyle.noAnimation,
     barrierDismissible: false,
     builder: (_) => Dialog.fullscreen(
       child: EbookEditorDialog(

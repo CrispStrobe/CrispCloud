@@ -80,6 +80,7 @@ abstract final class PaintPdfDisplayList {
           :final double size,
           :final int color,
           :final String text,
+          :final String? embeddedGlyph,
           :final bool italic,
           :final bool bold,
           :final String fontFamily,
@@ -101,7 +102,9 @@ abstract final class PaintPdfDisplayList {
               : (italic ? FontStyle.italic : FontStyle.normal);
           final TextPainter painter = TextPainter(
             text: TextSpan(
-              text: text,
+              text: PdfFontFaces.isEmbedded(family)
+                  ? embeddedGlyph ?? text
+                  : text,
               style: TextStyle(
                 inherit: false,
                 color: Color(color),
@@ -140,7 +143,14 @@ abstract final class PaintPdfDisplayList {
             painter.paint(canvas, Offset.zero);
             canvas.restore();
           } else {
-            painter.paint(canvas, Offset(x, y));
+            final baselineY = embeddedGlyph == null
+                ? y
+                : y +
+                      size -
+                      painter.computeDistanceToActualBaseline(
+                        TextBaseline.alphabetic,
+                      );
+            painter.paint(canvas, Offset(x, baselineY));
           }
         case PdfDrawImage(
           :final double x,

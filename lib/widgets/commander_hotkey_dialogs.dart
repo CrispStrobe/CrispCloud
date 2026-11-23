@@ -35,6 +35,7 @@ Future<void> showDirectoryHistoryMenu(
   final active = panel.navigationHistoryIndex;
   final tabId = panel.activeTabId;
   final index = await showMenu<int>(
+    popUpAnimationStyle: AnimationStyle.noAnimation,
     context: context,
     position: _centeredMenuPosition(context),
     constraints: const BoxConstraints(minWidth: 320, maxWidth: 520),
@@ -87,6 +88,7 @@ Future<void> showOpenTabsMenu(BuildContext context, PanelNotifier panel) async {
   final tabs = List<PanelTab>.of(panel.tabs);
   final active = panel.activeTabId;
   final id = await showMenu<String>(
+    popUpAnimationStyle: AnimationStyle.noAnimation,
     context: context,
     position: _centeredMenuPosition(context),
     constraints: const BoxConstraints(minWidth: 320, maxWidth: 520),

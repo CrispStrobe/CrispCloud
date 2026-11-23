@@ -88,6 +88,7 @@ Future<void> showGalleryViewer(
   try {
     result = await showDialog<GalleryViewerResult>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       barrierDismissible: false,
       builder: (_) => Consumer(
         builder: (context, viewerRef, _) {

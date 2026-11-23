@@ -1043,14 +1043,19 @@ class PdfInterpreter {
     final bool bold = flags & 262144 != 0 || family.contains('Bold');
     final String subtype = pdfCosName(font['Subtype']) ?? '';
     final bool cid = subtype == 'Type0' || kids is PdfCosArray;
+    final macByteFont =
+        !cid && fileBytes != null && cmap != null && font['Encoding'] == null
+        ? PdfCffHost.repairMacByteCmap(fileBytes, cmap)
+        : null;
     final Uint8List? hostBytes = fileBytes == null
         ? null
-        : PdfCffHost.forFlutter(
-            fileBytes,
-            toUnicode: cmap,
-            cid: cid,
-            family: family.isEmpty ? 'CFF' : family,
-          );
+        : macByteFont?.bytes ??
+              PdfCffHost.forFlutter(
+                fileBytes,
+                toUnicode: cmap,
+                cid: cid,
+                family: family.isEmpty ? 'CFF' : family,
+              );
     PdfCosDict simpleOrCid = font;
     if (cid && kids is PdfCosArray && kids.items.isNotEmpty) {
       simpleOrCid = store.asDict(kids.items.first) ?? font;
@@ -1069,6 +1074,7 @@ class PdfInterpreter {
       bold: bold,
       italic: italic,
       bytes: hostBytes,
+      macByteGlyphCodes: macByteFont?.codes,
       sfnt: sfnt,
       encoding: encoding,
       widths: widths,
@@ -1447,10 +1453,12 @@ class PdfInterpreter {
           size: op.size,
           color: _mulColorAlpha(op.color, opacity),
           text: op.text,
+          embeddedGlyph: op.embeddedGlyph,
           italic: op.italic,
           bold: op.bold,
           fontFamily: op.fontFamily,
           fontBytes: op.fontBytes,
+          angle: op.angle,
         );
       } else if (op is PdfDrawImage) {
         ops[i] = PdfDrawImage(
@@ -1531,6 +1539,7 @@ class _FontRes {
     this.bold = false,
     this.italic = false,
     this.bytes,
+    this.macByteGlyphCodes,
     this.sfnt,
     this.encoding = 'WinAnsiEncoding',
     this.widths = const <int, int>{},
@@ -1544,6 +1553,7 @@ class _FontRes {
   final bool bold;
   final bool italic;
   final Uint8List? bytes;
+  final Set<int>? macByteGlyphCodes;
   final SfntFont? sfnt;
   final String encoding;
   final Map<int, int> widths;
@@ -1793,6 +1803,11 @@ class _Frame {
         dashPhase: dashPhase,
         blend: blend,
         textRender: textRender,
+        charSpace: charSpace,
+        wordSpace: wordSpace,
+        horizScale: horizScale,
+        leading: leading,
+        rise: rise,
       ),
     );
   }
@@ -1815,6 +1830,11 @@ class _Frame {
     dashPhase = s.dashPhase;
     blend = s.blend;
     textRender = s.textRender;
+    charSpace = s.charSpace;
+    wordSpace = s.wordSpace;
+    horizScale = s.horizScale;
+    leading = s.leading;
+    rise = s.rise;
   }
 
   (double, double) map(double x, double y) {
@@ -2066,6 +2086,12 @@ class _Frame {
                 size: draw.size,
                 color: textRender == 1 ? stroke : fill,
                 text: g,
+                embeddedGlyph:
+                    font?.macByteGlyphCodes?.contains(paintCodes[i]) == true
+                    ? String.fromCharCode(
+                        PdfCffHost.macByteGlyphBase + paintCodes[i],
+                      )
+                    : null,
                 italic: font?.italic ?? false,
                 bold: font?.bold ?? false,
                 fontFamily: font?.family ?? 'Helvetica',
@@ -2225,62 +2251,34 @@ class _Frame {
   }
 
   ({String text, List<int> codes, List<String> glyphs}) _decode(Object value) {
-    if (value is _Hex) {
+    // Literal and hexadecimal strings encode the same bytes. The selected
+    // font, rather than the string syntax or length, determines code width.
+    final bytes = switch (value) {
+      _Hex(:final bytes) || _Lit(:final bytes) => bytes,
+      _ => null,
+    };
+    if (bytes != null) {
       final PdfToUnicode? cmap = font?.cmap;
       final StringBuffer buf = StringBuffer();
       final List<int> codes = <int>[];
       final List<String> glyphs = <String>[];
-      final bool wide =
-          font?.cid == true ||
-          (value.bytes.length >= 2 && value.bytes.length.isEven);
-      if (wide && value.bytes.length >= 2) {
-        for (int i = 0; i + 1 < value.bytes.length; i += 2) {
-          final int cid = (value.bytes[i] << 8) | value.bytes[i + 1];
-          codes.add(cid);
-          final String g = _mapCid(cmap, cid);
-          glyphs.add(g);
-          buf.write(g);
-        }
-        if (value.bytes.length.isOdd) {
-          final int cid = value.bytes.last;
-          codes.add(cid);
-          final String g = _mapCid(cmap, cid);
-          glyphs.add(g);
-          buf.write(g);
-        }
-      } else {
-        for (final int b in value.bytes) {
-          codes.add(b);
-          final String g = _mapCid(cmap, b, encoding: font?.encoding);
-          glyphs.add(g);
-          buf.write(g);
-        }
-      }
-      return (text: buf.toString(), codes: codes, glyphs: glyphs);
-    }
-    if (value is _Lit) {
-      final PdfToUnicode? cmap = font?.cmap;
-      final StringBuffer buf = StringBuffer();
-      final List<int> codes = <int>[];
-      final List<String> glyphs = <String>[];
-      final List<int> units = value.bytes;
       if (font?.cid == true) {
-        for (int i = 0; i + 1 < units.length; i += 2) {
-          final int cid = (units[i] << 8) | units[i + 1];
+        for (int i = 0; i + 1 < bytes.length; i += 2) {
+          final int cid = (bytes[i] << 8) | bytes[i + 1];
           codes.add(cid);
           final String g = _mapCid(cmap, cid);
           glyphs.add(g);
           buf.write(g);
         }
-        if (units.length.isOdd) {
-          final int cid = units.last;
+        if (bytes.length.isOdd) {
+          final int cid = bytes.last;
           codes.add(cid);
           final String g = _mapCid(cmap, cid);
           glyphs.add(g);
           buf.write(g);
         }
       } else {
-        for (final int b in units) {
+        for (final int b in bytes) {
           codes.add(b);
           final String g = _mapCid(cmap, b, encoding: font?.encoding);
           glyphs.add(g);
@@ -2332,6 +2330,11 @@ class _Snap {
     required this.dashPhase,
     required this.blend,
     required this.textRender,
+    required this.charSpace,
+    required this.wordSpace,
+    required this.horizScale,
+    required this.leading,
+    required this.rise,
   });
   final _Matrix ctm;
   final int fill;
@@ -2346,6 +2349,11 @@ class _Snap {
   final double dashPhase;
   final PdfBlendMode blend;
   final int textRender;
+  final double charSpace;
+  final double wordSpace;
+  final double horizScale;
+  final double leading;
+  final double rise;
 }
 
 class _Dict {

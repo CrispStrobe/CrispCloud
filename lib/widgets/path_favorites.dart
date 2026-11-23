@@ -119,6 +119,7 @@ Future<void> showPathFavoritesMenu(
     final width = (overlay.size.width - 24).clamp(0.0, 400.0);
     selected = await showMenu<Object>(
       context: context,
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       position: RelativeRect.fromRect(
         Rect.fromLTWH(origin.dx, origin.dy, button.size.width, 0),
         Offset.zero & overlay.size,
@@ -203,6 +204,7 @@ Future<void> showPathFavoritesMenu(
     if (!context.mounted || !isCurrent()) return;
     selected = await showDialog<Object>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (_) =>
           _PathFavoritesPicker(side: side, canAdd: captured != null),
     );
@@ -214,6 +216,7 @@ Future<void> showPathFavoritesMenu(
   } else if (selected == _FavoriteAction.add && captured != null) {
     await showDialog<void>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (_) => _FavoriteForm(
         initial: captured,
         editing: false,
@@ -441,23 +444,37 @@ class _GroupFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = PathFavoritesStrings(context);
     final values = <String>['', ...groups];
-    return DropdownButtonFormField<String>(
+    final selected = value != null && values.contains(value) ? value : null;
+    return PopupMenuButton<(String?,)>(
       key: ValueKey(
         'path-favorites-group-filter-${value ?? 'all'}-${groups.join('|')}',
       ),
-      initialValue: value != null && values.contains(value) ? value : null,
-      isExpanded: true,
-      decoration: InputDecoration(labelText: strings.text('group')),
-      hint: Text(strings.text('allGroups')),
-      items: [
-        DropdownMenuItem(value: null, child: Text(strings.text('allGroups'))),
+      popUpAnimationStyle: AnimationStyle.noAnimation,
+      initialValue: (selected,),
+      itemBuilder: (_) => [
+        PopupMenuItem(value: (null,), child: Text(strings.text('allGroups'))),
         for (final group in values)
-          DropdownMenuItem(
-            value: group,
+          PopupMenuItem(
+            value: (group,),
             child: Text(group.isEmpty ? strings.text('ungrouped') : group),
           ),
       ],
-      onChanged: onChanged,
+      onSelected: (selection) => onChanged(selection.$1),
+      child: InputDecorator(
+        decoration: InputDecoration(labelText: strings.text('group')),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(switch (selected) {
+                null => strings.text('allGroups'),
+                '' => strings.text('ungrouped'),
+                _ => selected,
+              }, overflow: TextOverflow.ellipsis),
+            ),
+            const Icon(Icons.arrow_drop_down),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -465,6 +482,7 @@ class _GroupFilter extends StatelessWidget {
 Future<void> showPathFavoritesEditor(BuildContext context, PanelSide side) =>
     showDialog<void>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (_) => PathFavoritesDialog(side: side),
     );
 
@@ -493,6 +511,7 @@ class _PathFavoritesDialogState extends ConsumerState<PathFavoritesDialog> {
     final strings = PathFavoritesStrings(context);
     final text = await showDialog<String>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (_) => RenameTextDialog(
         title: strings.text(importing ? 'import' : 'export'),
         instructions: strings.text(importing ? 'importNotice' : 'exportNotice'),
@@ -524,6 +543,7 @@ class _PathFavoritesDialogState extends ConsumerState<PathFavoritesDialog> {
     if (original == null || original.isEmpty || _busy) return;
     final next = await showDialog<String>(
       context: context,
+      animationStyle: AnimationStyle.noAnimation,
       builder: (_) => _FavoriteGroupNameDialog(initial: original),
     );
     if (next == null || !mounted) return;
@@ -878,6 +898,7 @@ Future<void> showPathFavoritesImportPreview(
   String text,
 ) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   barrierDismissible: false,
   builder: (_) => _FavoriteImportPreview(side: side, text: text),
 );
@@ -1062,6 +1083,7 @@ Future<void> _showFavoriteForm(
   bool editing = false,
 }) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   builder: (_) => _FavoriteForm(
     initial: initial,
     editing: editing,
@@ -1240,6 +1262,7 @@ class _FavoriteFormState extends ConsumerState<_FavoriteForm> {
                     labelText: strings.text('group'),
                     helperText: strings.text('groupHint'),
                     suffixIcon: PopupMenuButton<String>(
+                      popUpAnimationStyle: AnimationStyle.noAnimation,
                       tooltip: strings.text('group'),
                       enabled: !_busy,
                       onSelected: (value) => _group.text = value,

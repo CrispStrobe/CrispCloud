@@ -29,6 +29,7 @@ Future<void> showEditorChooser(
   final canUseSystem = !kIsWeb && file.path != null;
   final choice = await showDialog<Object>(
     context: context,
+    animationStyle: AnimationStyle.noAnimation,
     builder: (dialogContext) => SimpleDialog(
       title: const Text('Open with…'),
       children: <Widget>[

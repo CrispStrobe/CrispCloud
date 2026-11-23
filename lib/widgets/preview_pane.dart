@@ -534,7 +534,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       }
       if (!_sameRequest(file, token)) return;
       controller = VideoPlayerController.file(File(path));
-      await controller.initialize();
+      await initializePreviewVideo(controller);
       if (!_sameRequest(file, token)) return;
       if (!origin.isCurrent) {
         throw const FileBytesLoadException(
@@ -559,9 +559,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       });
     } finally {
       if (!retained) {
-        try {
-          await controller?.dispose();
-        } catch (_) {}
+        if (controller != null) await disposeFailedPreviewVideo(controller);
         try {
           await local?.endStreamAccess();
         } catch (_) {}

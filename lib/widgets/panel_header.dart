@@ -799,6 +799,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         : _sourceLocations(panel, _captureLocation(panel));
 
     return PopupMenuButton<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       tooltip: context.commanderTr("More commands"),
       padding: EdgeInsets.zero,
       icon: Icon(
@@ -1069,6 +1070,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final anchor = overlay.globalToLocal(position);
     final strings = PanelHeaderStrings(context);
     final action = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromRect(
         Rect.fromLTWH(anchor.dx, anchor.dy, 0, 0),

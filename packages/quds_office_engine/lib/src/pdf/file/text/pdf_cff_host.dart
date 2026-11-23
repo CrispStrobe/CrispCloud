@@ -5,6 +5,8 @@ import 'pdf_tounicode.dart';
 /// Wraps raw CFF `/FontFile3` (Type 1C / CID CFF) in a minimal OTTO so a
 /// host `FontLoader` can paint it. The engine does **not** rasterize CFF.
 abstract final class PdfCffHost {
+  static const int macByteGlyphBase = 0xE000;
+
   /// True when [bytes] are already an OpenType / TrueType / TTC face.
   static bool isSfnt(Uint8List bytes) {
     if (bytes.length < 4) {
@@ -112,6 +114,74 @@ abstract final class PdfCffHost {
     }
   }
 
+  /// Some PDF producers subset a simple TrueType font using a Macintosh
+  /// byte cmap. The PDF's ToUnicode maps those same byte codes to Unicode.
+  /// Resolve byte -> glyph and byte -> Unicode separately before passing the
+  /// font to a host renderer that looks up glyphs by Unicode.
+  static ({Uint8List bytes, Set<int> codes})? repairMacByteCmap(
+    Uint8List bytes,
+    PdfToUnicode toUnicode,
+  ) {
+    if (!isSfnt(bytes) || !_sfntHasNamedTable(bytes, 'glyf')) return null;
+    final table = _sfntTableBytes(bytes, 'cmap');
+    final maxp = _sfntTableBytes(bytes, 'maxp');
+    if (table == null || table.length < 4 || maxp == null || maxp.length < 6) {
+      return null;
+    }
+    final data = ByteData.sublistView(table);
+    final glyphCount = ByteData.sublistView(maxp).getUint16(4);
+    final count = data.getUint16(2);
+    int? macOffset;
+    for (var index = 0; index < count; index++) {
+      final entry = 4 + index * 8;
+      if (entry + 8 > table.length) return null;
+      final platform = data.getUint16(entry);
+      final encoding = data.getUint16(entry + 2);
+      if (platform == 0 ||
+          (platform == 3 && (encoding == 1 || encoding == 10))) {
+        return null;
+      }
+      if (platform == 1 && encoding == 0) {
+        macOffset = data.getUint32(entry + 4);
+      }
+    }
+    if (macOffset == null || macOffset + 6 > table.length) return null;
+    final format = data.getUint16(macOffset);
+    final end = macOffset + data.getUint16(macOffset + 2);
+    if (end > table.length) return null;
+    final result = <int, int>{};
+    final codes = <int>{};
+    void add(int code, int glyph) {
+      if (glyph == 0 || glyph >= glyphCount) return;
+      codes.add(code);
+      final unicode = toUnicode.mapCid(code);
+      if (unicode.length == 1) {
+        result.putIfAbsent(unicode.codeUnitAt(0), () => glyph);
+      }
+      // ToUnicode can map distinct glyphs to one character. Use a private
+      // alias of each original byte to preserve the shown glyph exactly.
+      result[macByteGlyphBase + code] = glyph;
+    }
+
+    if (format == 0 && macOffset + 262 <= end) {
+      for (var code = 0; code < 256; code++) {
+        add(code, data.getUint8(macOffset + 6 + code));
+      }
+    } else if (format == 6 && macOffset + 10 <= end) {
+      final first = data.getUint16(macOffset + 6);
+      final entries = data.getUint16(macOffset + 8);
+      if (macOffset + 10 + entries * 2 > end) return null;
+      for (var index = 0; index < entries && first + index < 256; index++) {
+        add(first + index, data.getUint16(macOffset + 10 + index * 2));
+      }
+    }
+    if (codes.isEmpty) return null;
+    return (
+      bytes: _sfntReplaceOrAdd(bytes, 'cmap', _cmapTable(result)),
+      codes: codes,
+    );
+  }
+
   static Uint8List? _sfntTableBytes(Uint8List bytes, String tag) {
     if (bytes.length < 12) {
       return null;
@@ -184,9 +254,8 @@ abstract final class PdfCffHost {
       tables.add(_Tbl(t, bytes.sublist(off, off + len)));
     }
     tables.add(_Tbl(tag, data));
-    // Keep the original scaler bytes (`\0\1\0\0` or OTTO), not Apple `true`.
-    final String head = scaler.length >= 4 ? scaler.substring(0, 4) : 'OTTO';
-    return _sfnt(head, tables);
+    // Use the OpenType TrueType scaler for rebuilt legacy Macintosh fonts.
+    return _sfnt(scaler == 'true' ? '\x00\x01\x00\x00' : scaler, tables);
   }
 
   static Uint8List _wrap(
@@ -744,6 +813,7 @@ Uint8List _sfnt(String scaler, List<_Tbl> tables) {
     final int pad = (4 - (t.data.length & 3)) & 3;
     final Uint8List block = Uint8List(t.data.length + pad);
     block.setAll(0, t.data);
+    if (t.tag == 'head' && t.data.length >= 12) block.fillRange(8, 12, 0);
     padded.add(block);
     offset += block.length;
   }
@@ -772,7 +842,7 @@ Uint8List _sfnt(String scaler, List<_Tbl> tables) {
   final Uint8List font = out.take();
   var headAt = -1;
   for (int i = 0; i < n; i++) {
-    if (tables[i].tag == 'head') {
+    if (tables[i].tag == 'head' && tables[i].data.length >= 12) {
       headAt = offs[i];
     }
   }

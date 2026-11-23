@@ -175,6 +175,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
     }
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final action = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromRect(
         Rect.fromLTWH(position.dx, position.dy, 0, 0),
@@ -808,6 +809,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
             child: Row(
               children: [
                 PopupMenuButton<GallerySort>(
+                  popUpAnimationStyle: AnimationStyle.noAnimation,
                   tooltip: t('Sort by'),
                   icon: const Icon(Icons.sort, size: 20),
                   initialValue: query.sort,
@@ -884,6 +886,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
                   _targets(imagesOnly: true).isEmpty ? null : _showAnnotations,
                 ),
                 PopupMenuButton<String>(
+                  popUpAnimationStyle: AnimationStyle.noAnimation,
                   tooltip: t('More actions'),
                   icon: const Icon(Icons.more_horiz),
                   onSelected: _action,

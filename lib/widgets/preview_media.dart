@@ -19,6 +19,18 @@ import 'package:video_player/video_player.dart';
 import '../l10n/preview_media_strings.dart';
 import '../services/archive_viewer_service.dart';
 
+Future<void> initializePreviewVideo(VideoPlayerController controller) =>
+    controller.initialize().timeout(const Duration(seconds: 20));
+
+Future<void> disposeFailedPreviewVideo(VideoPlayerController controller) async {
+  try {
+    // Failed player creation can leave video_player waiting for a player ID.
+    await controller.dispose().timeout(const Duration(seconds: 1));
+  } catch (_) {
+    // Preserve the initialization error and let the caller release its file.
+  }
+}
+
 /// RFC 4180-style delimited parser: supports quoted cells, embedded commas,
 /// quotes and newlines. Used for CSV/TSV previews and spreadsheets.
 List<List<String>> _parseDelimited(String content, String separator) {

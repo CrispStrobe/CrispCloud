@@ -119,6 +119,7 @@ Future<void> showOfficeEditorDialog(
 }) {
   return showDialog<void>(
     context: context,
+    animationStyle: AnimationStyle.noAnimation,
     barrierDismissible: false,
     builder: (_) => Dialog.fullscreen(
       child: OfficeEditorDialog(

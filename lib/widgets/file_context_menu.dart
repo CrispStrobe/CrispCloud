@@ -254,6 +254,7 @@ void _showResultListContextMenu(
     }),
   );
   showMenu<void>(
+    popUpAnimationStyle: AnimationStyle.noAnimation,
     context: context,
     position: RelativeRect.fromRect(
       Rect.fromLTWH(position.dx, position.dy, 0, 0),
@@ -434,6 +435,7 @@ Future<void> _showArchiveMemberTransferMenu(
         destinationStorage?.persistent == true &&
         sourceStorage == destinationStorage;
     final action = await showMenu<String>(
+      popUpAnimationStyle: AnimationStyle.noAnimation,
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, 0, 0),
       items: [
@@ -2000,6 +2002,7 @@ void showFileContextMenu(
   items.addAll(buildCommandExtensionMenuItems(context, ref, side, files));
 
   showMenu(
+    popUpAnimationStyle: AnimationStyle.noAnimation,
     context: context,
     position: RelativeRect.fromLTRB(
       position.dx,

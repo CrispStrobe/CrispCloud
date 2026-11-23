@@ -42,6 +42,7 @@ Future<void> showInstalledOfficePreviewDialog(
   InstalledOfficeConversion? convert,
 }) => showDialog<void>(
   context: context,
+  animationStyle: AnimationStyle.noAnimation,
   barrierDismissible: false,
   builder: (_) => InstalledOfficePreviewDialog(
     sourceName: sourceName,
