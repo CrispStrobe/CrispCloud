@@ -1,4 +1,8 @@
+import 'dart:io' show FileSystemException;
+
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
@@ -16,10 +20,17 @@ Future<void> showFileDeleteDialog(
   List<FileItem> files, {
   bool permanent = false,
 }) async {
-  if (files.isEmpty) return;
+  if (files.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(FileDeleteStrings(context).text('noFiles'))),
+    );
+    return;
+  }
   final panel = ref.read(panelProvider(side));
+  late final bool networkTarget;
   try {
     files = await panel.prepareOperationFiles(files);
+    networkTarget = await panel.hasNetworkTrashTarget(files);
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,12 +40,13 @@ Future<void> showFileDeleteDialog(
     return;
   }
   if (!context.mounted) return;
-  final canTrash = panel.canTrashFiles(files);
-  // Shift+F8 / Shift+Delete start with the trash bypass already chosen.
-  permanent = permanent || !canTrash;
+  final canTrash = !networkTarget && panel.canTrashFiles(files);
+  final focusConfirm = permanent || canTrash;
   var busy = false;
   var deletedCount = 0;
   String? deletionId;
+  Object? deleteError;
+  var deletedPermanently = false;
   await showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -53,33 +65,53 @@ Future<void> showFileDeleteDialog(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(strings.count('selected', files.length)),
-              const SizedBox(height: 12),
-              if (canTrash)
-                CheckboxListTile(
-                  value: permanent,
-                  onChanged: busy
-                      ? null
-                      : (value) => setState(() => permanent = value ?? false),
-                  title: Text(strings.text('permanent')),
-                  subtitle: Text(strings.text('skipTrash')),
-                  contentPadding: EdgeInsets.zero,
+              if (files.length == 1)
+                Text(
+                  files.single.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              Text(strings.text(permanent ? 'permanentHelp' : 'trashHelp')),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                value: permanent,
+                onChanged: busy
+                    ? null
+                    : (value) => setState(() => permanent = value ?? false),
+                title: Text(strings.text('permanent')),
+                subtitle: Text(strings.text('skipTrash')),
+                contentPadding: EdgeInsets.zero,
+              ),
+              Text(
+                strings.text(
+                  permanent
+                      ? 'permanentHelp'
+                      : canTrash
+                      ? 'trashHelp'
+                      : networkTarget
+                      ? 'trashNetwork'
+                      : 'trashUnavailable',
+                ),
+              ),
             ],
           ),
           actions: [
             TextButton(
+              autofocus: !focusConfirm,
               onPressed: busy ? null : () => Navigator.pop(context),
               child: Text(l.cancel),
             ),
             FilledButton(
-              onPressed: busy
+              key: const ValueKey('file-delete-confirm'),
+              autofocus: focusConfirm,
+              onPressed: busy || (!canTrash && !permanent)
                   ? null
                   : () async {
                       setState(() => busy = true);
+                      deletedPermanently = permanent;
                       deletedCount = await panel.deleteFiles(
                         files,
                         permanently: permanent,
+                        onError: (error) => deleteError = error,
                       );
                       if (deletedCount > 0) {
                         deletionId = ref
@@ -94,7 +126,7 @@ Future<void> showFileDeleteDialog(
                 busy
                     ? strings.text('working')
                     : permanent
-                    ? l.delete
+                    ? strings.text('permanent')
                     : strings.text('trashTitle'),
               ),
             ),
@@ -104,6 +136,19 @@ Future<void> showFileDeleteDialog(
     ),
   );
   if (!context.mounted) return;
+  final strings = FileDeleteStrings(context);
+  if (deleteError case final error?) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_deleteErrorMessage(context, error))),
+    );
+  }
+  if (deletedCount > 0 && deletedPermanently) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(strings.count('permanentlyDeleted', deletedCount)),
+      ),
+    );
+  }
   final history = ref.read(actionHistoryProvider);
   final action = history.lastAction;
   if (deletedCount > 0 &&
@@ -131,4 +176,32 @@ Future<void> showFileDeleteDialog(
       ),
     );
   }
+}
+
+String _deleteErrorMessage(BuildContext context, Object error) {
+  final strings = FileDeleteStrings(context);
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+    final code = switch (error) {
+      FileSystemException(:final osError) => osError?.errorCode,
+      PlatformException(code: 'trash_failed', details: final int status)
+          when status & 0xffff0000 == 0x80070000 =>
+        status & 0xffff,
+      _ => null,
+    };
+    switch (code) {
+      case 32 || 33:
+        return strings.text('fileInUse');
+      case 5:
+        return strings.text('accessDenied');
+      case 2 || 3:
+        return strings.text('fileMissing');
+    }
+  }
+  return switch (error) {
+    PlatformException(code: 'trash_failed') => strings.text('trashFailed'),
+    PlatformException(code: 'trash_unsupported') => strings.text(
+      'trashUnavailable',
+    ),
+    _ => localizedProviderError(context, error),
+  };
 }

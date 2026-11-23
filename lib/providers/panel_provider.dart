@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import 'show_hidden_files_provider.dart';
+import 'folder_sort_provider.dart';
 import '../models/file_item.dart';
 import '../services/macos_application_launcher.dart';
 import '../models/folder_size_measurement.dart';
@@ -546,6 +547,12 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
     });
     _ref.listen(columnWidthsProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(sortFoldersLikeFilesProvider, (_, _) {
+      final cursor = cursorItem;
+      _sortFiles();
+      _resetCursor(preserveItem: cursor);
+      notifyListeners();
+    });
     _ref.listen(fileColumnsProvider(side), (_, _) => _rememberTabView());
     _ref.listen(panelViewModeProvider(side), (_, _) => _rememberTabView());
     _ref.listen(
@@ -4120,6 +4127,7 @@ class PanelNotifier extends ChangeNotifier {
     final sortOrder = _sortOrder;
     final secondarySortBy = _secondarySortBy;
     final secondarySortOrder = _secondarySortOrder;
+    final sortFoldersLikeFiles = _ref.read(sortFoldersLikeFilesProvider);
     return (a, b) {
       // ".." always stays at the top
       if (a.name == '..') return -1;
@@ -4127,6 +4135,9 @@ class PanelNotifier extends ChangeNotifier {
 
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
+      if (a.isFolder && !sortFoldersLikeFiles) {
+        return compareSortKey(a, b, SortBy.name);
+      }
 
       int comparison =
           primaryColumn?.compare(a, b) ?? compareSortKey(a, b, sortBy);
@@ -6227,6 +6238,12 @@ class PanelNotifier extends ChangeNotifier {
       final parent = _trimTrailingSeparator(paths, currentPath);
       if (child != parent && paths.dirname(child) == parent) {
         _placeCursorOnPath(child, paths.basename(child), notify: false);
+      } else if (paths.isWithin(child, parent)) {
+        final index = _files?.indexWhere((item) => item.name == '..') ?? -1;
+        if (index >= 0) {
+          _cursorIndex = index;
+          _itemToScrollTo = _files![index];
+        }
       }
     }
 
@@ -6414,6 +6431,17 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  Future<bool> hasNetworkTrashTarget(List<FileItem> files) {
+    if (!_windowsDesktop) return Future.value(false);
+    final groups = captureOperationGroups(files);
+    return _ref.read(nativeFileOperationsProvider).hasNetworkTrashTarget([
+      for (final group in groups.entries)
+        if (group.key.source is LocalPanelSource)
+          for (final file in group.value)
+            if (file.path case final path?) path,
+    ]);
+  }
+
   Future<void> restoreTrashRecord(String id) async {
     final store = _ref.read(trashHistoryProvider);
     await store.ready;
@@ -6494,8 +6522,10 @@ class PanelNotifier extends ChangeNotifier {
   Future<int> deleteFiles(
     List<FileItem> files, {
     bool permanently = false,
+    void Function(Object error)? onError,
   }) async {
     var deleted = 0;
+    Object? failure;
     try {
       final groups = captureOperationGroups(files);
       if (!permanently && !canTrashFiles(files)) {
@@ -6510,13 +6540,29 @@ class PanelNotifier extends ChangeNotifier {
           group.key,
           permanently: permanently,
           onDeleted: rememberSelection,
+          onError: (error) => failure ??= error,
         );
       }
     } catch (error) {
-      _ref.read(errorProvider).addError('Delete failed: $error');
-    } finally {
-      await refresh();
-      clearSelection();
+      failure ??= error;
+    }
+    if (!_isDisposed) {
+      try {
+        // The fresh listing rebinds surviving marks and drops removed rows.
+        await refresh();
+      } catch (error) {
+        _log.warn('Refresh after deletion failed', error);
+        if (!_isDisposed) {
+          _ref.read(errorProvider).addError('Refresh failed: $error');
+        }
+      }
+    }
+    if (failure case final error?) {
+      if (onError != null) {
+        onError(error);
+      } else if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Delete failed: $error');
+      }
     }
     return deleted;
   }
@@ -6526,6 +6572,7 @@ class PanelNotifier extends ChangeNotifier {
     PanelFileOrigin origin, {
     required bool permanently,
     VoidCallback? onDeleted,
+    void Function(Object error)? onError,
   }) async {
     final audit = _ref.read(auditServiceProvider);
     final history = _ref.read(actionHistoryProvider.notifier);
@@ -6685,7 +6732,11 @@ class PanelNotifier extends ChangeNotifier {
       }
     } catch (error) {
       _log.warn('Delete failed', error);
-      _ref.read(errorProvider).addError('Delete failed: $error');
+      if (onError != null) {
+        onError(error);
+      } else {
+        _ref.read(errorProvider).addError('Delete failed: $error');
+      }
     } finally {
       await applyFileListChanges(
         removed,

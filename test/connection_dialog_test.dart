@@ -60,6 +60,11 @@ Future<void> _openSettingsDialog(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _settingsPage(WidgetTester tester, String name) async {
+  await tester.tap(find.byKey(ValueKey('settings-page-$name')));
+  await tester.pumpAndSettle();
+}
+
 // ---------------------------------------------------------------------------
 // AzureConnectionDialog tests
 // ---------------------------------------------------------------------------
@@ -412,9 +417,11 @@ void main() {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
 
-      expect(find.text('General'), findsOneWidget);
+      expect(find.byKey(const ValueKey('settings-page-general')), findsOneWidget);
+      await _settingsPage(tester, 'privacy');
       expect(find.text('Accessibility'), findsOneWidget);
       expect(find.text('Privacy'), findsOneWidget);
+      await _settingsPage(tester, 'storage');
       expect(find.text('Advanced'), findsOneWidget);
     });
 
@@ -428,6 +435,7 @@ void main() {
     testWidgets('renders high contrast toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       expect(
           find.byKey(const Key('settings_high_contrast_toggle')),
@@ -437,6 +445,7 @@ void main() {
     testWidgets('renders reduced motion toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       expect(
           find.byKey(const Key('settings_reduced_motion_toggle')),
@@ -446,6 +455,7 @@ void main() {
     testWidgets('renders analytics toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       expect(
           find.byKey(const Key('settings_analytics_toggle')), findsOneWidget);
@@ -454,6 +464,7 @@ void main() {
     testWidgets('renders delta sync toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'storage');
 
       expect(
           find.byKey(const Key('settings_delta_sync_toggle')), findsOneWidget);
@@ -509,6 +520,7 @@ void main() {
     testWidgets('high contrast is off by default', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_high_contrast_toggle')),
@@ -519,6 +531,7 @@ void main() {
     testWidgets('tapping high contrast toggle changes value', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       final tileFinder =
           find.byKey(const Key('settings_high_contrast_toggle'));
@@ -535,6 +548,7 @@ void main() {
     testWidgets('analytics is off by default', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_analytics_toggle')),
@@ -545,6 +559,7 @@ void main() {
     testWidgets('tapping analytics toggle turns it on', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       final tileFinder = find.byKey(const Key('settings_analytics_toggle'));
 
@@ -559,6 +574,7 @@ void main() {
         'enabling analytics shows informational banner', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'privacy');
 
       // Enable analytics
       await tester.tap(find.byKey(const Key('settings_analytics_toggle')));
@@ -570,48 +586,16 @@ void main() {
   });
 
   group('SettingsDialog – delta sync toggle', () {
-    testWidgets('delta sync is on by default', (tester) async {
+    testWidgets('automatic delta sync is shown as unavailable', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
       await _openSettingsDialog(tester);
+      await _settingsPage(tester, 'storage');
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_delta_sync_toggle')),
       );
-      expect(tile.value, isTrue);
-    });
-
-    testWidgets('tapping delta sync toggle turns it off', (tester) async {
-      await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openSettingsDialog(tester);
-
-      final tileFinder = find.byKey(const Key('settings_delta_sync_toggle'));
-
-      await tester.tap(tileFinder);
-      await tester.pumpAndSettle();
-
-      final updated = tester.widget<SwitchListTile>(tileFinder);
-      expect(updated.value, isFalse);
-    });
-
-    testWidgets('enabling delta sync shows block size selector',
-        (tester) async {
-      await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openSettingsDialog(tester);
-
-      // Delta sync is on by default — block size selector should be visible
-      expect(
-          find.byKey(const Key('settings_delta_block_size')), findsOneWidget);
-    });
-
-    testWidgets('disabling delta sync hides block size selector',
-        (tester) async {
-      await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openSettingsDialog(tester);
-
-      // Turn off delta sync
-      await tester.tap(find.byKey(const Key('settings_delta_sync_toggle')));
-      await tester.pumpAndSettle();
-
+      expect(tile.value, isFalse);
+      expect(tile.onChanged, isNull);
       expect(find.byKey(const Key('settings_delta_block_size')), findsNothing);
     });
   });

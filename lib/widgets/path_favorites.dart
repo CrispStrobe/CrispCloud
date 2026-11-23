@@ -1223,8 +1223,9 @@ class _FavoriteFormState extends ConsumerState<_FavoriteForm> {
                 TextFormField(
                   key: const ValueKey('path-favorite-name'),
                   controller: _name,
-                  autofocus: true,
+                  autofocus: widget.editing,
                   enabled: !_busy,
+                  onFieldSubmitted: (_) => _save(),
                   decoration: InputDecoration(
                     labelText: context.commanderTr('Name'),
                   ),
@@ -1258,6 +1259,7 @@ class _FavoriteFormState extends ConsumerState<_FavoriteForm> {
                   key: const ValueKey('path-favorite-group'),
                   controller: _group,
                   enabled: !_busy,
+                  onFieldSubmitted: (_) => _save(),
                   decoration: InputDecoration(
                     labelText: strings.text('group'),
                     helperText: strings.text('groupHint'),
@@ -1315,6 +1317,8 @@ class _FavoriteFormState extends ConsumerState<_FavoriteForm> {
             child: Text(context.commanderTr('Cancel')),
           ),
           FilledButton(
+            key: const ValueKey('path-favorite-save'),
+            autofocus: !widget.editing,
             onPressed: _busy ? null : _save,
             child: Text(context.commanderTr('Save')),
           ),

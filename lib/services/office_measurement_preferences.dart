@@ -4,12 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// A display preference shared by Word and spreadsheet physical measurements.
 abstract final class OfficeMeasurementPreferences {
   static const key = 'office_length_unit_v1';
+  static const defaultUnit = OfficeLengthUnit.millimeters;
   static Future<OfficeLengthUnit> read() async {
     final name = (await SharedPreferences.getInstance()).getString(key);
     return OfficeLengthUnit.values
             .where((unit) => unit.name == name)
             .firstOrNull ??
-        OfficeLengthUnit.inches;
+        defaultUnit;
   }
 
   static Future<void> write(OfficeLengthUnit unit) async {

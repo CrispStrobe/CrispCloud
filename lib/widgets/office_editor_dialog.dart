@@ -202,6 +202,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     mode: OfficeInteractionMode.editing,
     autofocus: true,
     adaptiveChrome: true,
+    lengthUnit: OfficeMeasurementPreferences.defaultUnit,
   );
 
   @override
@@ -410,6 +411,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       _activity?.opened();
       _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _registerMenu();
+      _focusDocument();
     } catch (e, st) {
       _log.warn('office editor load failed', e, st);
       if (!mounted) return;
@@ -978,6 +980,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   }
 
   void _onConfigChanged(OfficeSurfaceConfig next) {
+    final modeChanged = next.mode != _config.mode;
     if (next.lengthUnit != _config.lengthUnit) {
       _unitRevision++;
       unawaited(
@@ -989,6 +992,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
     setState(() => _config = next);
     _controller?.syncConfig(next);
+    if (modeChanged) _focusDocument();
+  }
+
+  void _focusDocument() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && (ModalRoute.of(context)?.isCurrent ?? true)) {
+        _focusNode.requestFocus();
+      }
+    });
   }
 
   void _requestFind() {

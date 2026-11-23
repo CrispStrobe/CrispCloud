@@ -35,6 +35,7 @@ import 'biometric_vault_settings_tile.dart';
 import '../services/biometric_vault_unlock.dart';
 import '../services/secure_storage_web.dart';
 import '../providers/quick_search_provider.dart';
+import '../providers/folder_sort_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
 import 'proxy_settings_dialog.dart';
@@ -50,6 +51,7 @@ import 'external_terminal_dialog.dart';
 import 'transfer_bandwidth_dialog.dart';
 import 'office_font_downloads.dart';
 import 'office_spacy_settings.dart';
+import 'settings_backup_panel.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -67,53 +69,130 @@ Future<void> showSettingsDialog(BuildContext context) {
 // Dialog widget
 // ---------------------------------------------------------------------------
 
-class SettingsDialog extends ConsumerWidget {
+enum _SettingsPage {
+  general,
+  appearance,
+  documents,
+  connections,
+  storage,
+  privacy,
+  backups,
+}
+
+class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<SettingsDialog> createState() => _SettingsDialogState();
+}
+
+class _SettingsDialogState extends State<SettingsDialog> {
+  _SettingsPage _page = _SettingsPage.general;
+
+  @override
+  Widget build(BuildContext context) {
     final s = SettingsStrings(context);
-    return AlertDialog(
-      title: Text(s.text('Settings')),
-      scrollable: true,
-      contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-      content: SizedBox(
-        width: 560,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final labels = {
+      _SettingsPage.general: s.text('General'),
+      _SettingsPage.appearance: s.text('Appearance'),
+      _SettingsPage.documents: s.text('Documents and language'),
+      _SettingsPage.connections: s.text('Connections'),
+      _SettingsPage.storage: s.text('Storage'),
+      _SettingsPage.privacy: s.text('Privacy and accessibility'),
+      _SettingsPage.backups: s.text('Settings backups'),
+    };
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+    final content = SingleChildScrollView(
+      key: ValueKey(_page),
+      primary: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: switch (_page) {
+          _SettingsPage.general => [
             _GeneralSection(),
+            _QuickSearchSection(),
             const NotificationSettingsPanel(),
-            const PdfOpenSettings(),
-            const Divider(height: 1),
+          ],
+          _SettingsPage.appearance => [
+            _AppearanceSection(),
+            _FileColorsSection(),
+          ],
+          _SettingsPage.documents => [
             _LanguageSection(),
+            const PdfOpenSettings(),
             const OfficeSpacySettings(),
             const OfficeFontDownloadsSettings(),
-            const Divider(height: 1),
-            _AppearanceSection(),
-            const Divider(height: 1),
-            _QuickSearchSection(),
-            const Divider(height: 1),
-            _CacheSection(),
-            const Divider(height: 1),
+          ],
+          _SettingsPage.connections => [
             _NetworkSection(),
-            const Divider(height: 1),
             const CredentialStorageSettingsSection(),
-            const Divider(height: 1),
-            _AccessibilitySection(),
-            const Divider(height: 1),
-            _PrivacySection(),
-            const Divider(height: 1),
-            _FileColorsSection(),
-            const Divider(height: 1),
+          ],
+          _SettingsPage.storage => [
+            _CacheSection(),
             _AdvancedSection(),
             const StorageToolsSettings(),
           ],
-        ),
+          _SettingsPage.privacy => [_PrivacySection(), _AccessibilitySection()],
+          _SettingsPage.backups => const [SettingsBackupPanel()],
+        },
+      ),
+    );
+    return AlertDialog(
+      title: Text(s.text('Settings')),
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        width: 800,
+        height: MediaQuery.sizeOf(context).height * .68,
+        child: wide
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 200,
+                    child: ListView(
+                      primary: false,
+                      children: [
+                        for (final entry in labels.entries)
+                          ListTile(
+                            dense: true,
+                            key: ValueKey('settings-page-${entry.key.name}'),
+                            selected: _page == entry.key,
+                            title: Text(entry.value),
+                            onTap: () => setState(() => _page = entry.key),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: content),
+                ],
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: DropdownButton<_SettingsPage>(
+                      key: const ValueKey('settings-page-selector'),
+                      value: _page,
+                      isExpanded: true,
+                      items: [
+                        for (final entry in labels.entries)
+                          DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                      ],
+                      onChanged: (page) {
+                        if (page != null) setState(() => _page = page);
+                      },
+                    ),
+                  ),
+                  Expanded(child: content),
+                ],
+              ),
       ),
       actions: [
         ElevatedButton(
+          autofocus: true,
           onPressed: () => Navigator.pop(context),
           child: Text(s.text('Done')),
         ),
@@ -179,6 +258,16 @@ class _GeneralSection extends ConsumerWidget {
             vertical: 4,
           ),
         ),
+        SwitchListTile(
+          value: ref.watch(sortFoldersLikeFilesProvider),
+          onChanged: ref.read(sortFoldersLikeFilesProvider.notifier).set,
+          secondary: const Icon(Icons.sort),
+          title: Text(s.text('Sort folders like files')),
+          subtitle: Text(
+            s.text('When off, folders stay in alphabetical order.'),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
         ListTile(
           key: const Key('settings_toolbar_customize'),
           leading: const Icon(Icons.view_column_outlined),
@@ -235,13 +324,6 @@ class _AppearanceSection extends ConsumerWidget {
       title: s.text('Appearance'),
       icon: Icons.text_fields,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
-          child: Text(
-            s.text('Theme and accent'),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
         ThemeSettingsPanel(themeService: themeService),
         const Divider(height: 16),
         Padding(
@@ -259,7 +341,7 @@ class _AppearanceSection extends ConsumerWidget {
             s.text('Used for names, sizes and dates in the panels'),
           ),
           trailing: SizedBox(
-            width: 190,
+            width: MediaQuery.sizeOf(context).width < 480 ? 112 : 190,
             child: DropdownButton<String>(
               value: families.containsKey(family) ? family : 'system',
               isExpanded: true,
@@ -290,7 +372,7 @@ class _AppearanceSection extends ConsumerWidget {
           title: Text(s.text('File list font size')),
           subtitle: Text('${fontSize.toStringAsFixed(0)} pt'),
           trailing: SizedBox(
-            width: 190,
+            width: MediaQuery.sizeOf(context).width < 480 ? 112 : 190,
             child: Slider(
               value: fontSize,
               min: 10,
@@ -490,7 +572,7 @@ class _LanguageSection extends ConsumerWidget {
                 : s.text('Applies immediately and is saved'),
           ),
           trailing: SizedBox(
-            width: 190,
+            width: MediaQuery.sizeOf(context).width < 480 ? 112 : 190,
             child: DropdownButton<String>(
               value: locales.contains(currentCode) ? currentCode : 'system',
               isExpanded: true,

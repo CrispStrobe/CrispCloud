@@ -76,6 +76,10 @@ void main() {
 
   testWidgets('file-list font family and size are configurable', (tester) async {
     await pumpSettings(tester);
+    await tester.tap(find.byKey(const ValueKey('settings-page-appearance')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-theme')), findsOneWidget);
+    expect(find.byKey(const ValueKey('settings-accent')), findsOneWidget);
 
     await tester.ensureVisible(find.byKey(const Key('settings_font_family')));
     await tester.pumpAndSettle();
@@ -100,6 +104,8 @@ void main() {
 
   testWidgets('language setting changes locale and persists', (tester) async {
     await pumpSettings(tester);
+    await tester.tap(find.byKey(const ValueKey('settings-page-documents')));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.byKey(const Key('settings_language')));
     await tester.pumpAndSettle();
@@ -120,8 +126,9 @@ void main() {
 
   testWidgets('theme can be changed from Appearance', (tester) async {
     await pumpSettings(tester);
-
-    await tester.ensureVisible(find.text('Nord'));
+    await tester.tap(find.byKey(const ValueKey('settings-page-appearance')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('settings-theme')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nord'));
     await tester.pumpAndSettle();
@@ -133,6 +140,8 @@ void main() {
     tester,
   ) async {
     await pumpSettings(tester);
+    await tester.tap(find.byKey(const ValueKey('settings-page-storage')));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('100 MB'));
     await tester.pumpAndSettle();

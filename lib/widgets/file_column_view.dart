@@ -526,6 +526,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     _DirectoryColumn column,
     FileItem? item, {
     bool open = false,
+    bool fromEnter = false,
     bool shift = false,
     bool toggle = false,
     Offset? contextPosition,
@@ -545,6 +546,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         panel.toggleSelection(file, shiftKey: shift, ctrlKey: toggle);
       } else {
         panel.setCursorOnly(file);
+        if (fromEnter &&
+            openLocalFileOnEnter(context, ref, widget.side, file)) {
+          return;
+        }
         if ((file.isFolder && (open || !panel.canLaunchApplication(file))) ||
             (open && isDefaultArchiveFilename(file.name))) {
           await panel.navigateInto(file);
@@ -616,13 +621,16 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.arrowRight ||
-        key == LogicalKeyboardKey.enter) {
+    final enter =
+        (key == LogicalKeyboardKey.enter ||
+            key == LogicalKeyboardKey.numpadEnter) &&
+        !keyboard.isShiftPressed;
+    if (key == LogicalKeyboardKey.arrowRight || enter) {
+      if (enter && event is KeyRepeatEvent) return KeyEventResult.handled;
       final file = panel.cursorItem;
       if (file != null &&
-          (key == LogicalKeyboardKey.enter ||
-              (file.isFolder && !panel.canLaunchApplication(file)))) {
-        unawaited(_perform(_columns.last, file, open: true));
+          (enter || (file.isFolder && !panel.canLaunchApplication(file)))) {
+        unawaited(_perform(_columns.last, file, open: true, fromEnter: enter));
       }
       return KeyEventResult.handled;
     }

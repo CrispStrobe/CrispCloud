@@ -5,6 +5,7 @@
 // kept for callers that still need a standalone picker.
 
 import 'package:flutter/material.dart';
+
 import '../l10n/theme_update_strings.dart';
 import '../services/theme_service.dart';
 
@@ -40,132 +41,110 @@ class ThemeSettingsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ...AppThemeMode.values.map((mode) {
-          final isSelected = themeService.currentMode == mode;
-          final label = ThemeUpdateStrings(context).text(switch (mode) {
-            AppThemeMode.system => 'system',
-            AppThemeMode.light => 'light',
-            AppThemeMode.dark => 'dark',
-            AppThemeMode.oledBlack => 'oled',
-            AppThemeMode.nord => 'nord',
-            AppThemeMode.dracula => 'dracula',
-            AppThemeMode.materialYou => 'materialYou',
-          });
-          final swatch = _swatchColor(mode);
-
-          return ListTile(
+    final strings = ThemeUpdateStrings(context);
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
             dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-            leading: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: swatch,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey.withValues(alpha: 0.3),
-                  width: isSelected ? 2 : 1,
-                ),
+            title: Text(strings.text('choose')),
+            trailing: SizedBox(
+              width: MediaQuery.sizeOf(context).width < 480 ? 112 : 190,
+              child: DropdownButton<AppThemeMode>(
+                key: const ValueKey('settings-theme'),
+                value: themeService.currentMode,
+                isExpanded: true,
+                items: [
+                  for (final mode in AppThemeMode.values)
+                    DropdownMenuItem(
+                      value: mode,
+                      child: _label(
+                        _swatchColor(mode),
+                        strings.text(switch (mode) {
+                          AppThemeMode.system => 'system',
+                          AppThemeMode.light => 'light',
+                          AppThemeMode.dark => 'dark',
+                          AppThemeMode.oledBlack => 'oled',
+                          AppThemeMode.nord => 'nord',
+                          AppThemeMode.dracula => 'dracula',
+                          AppThemeMode.materialYou => 'materialYou',
+                        }),
+                      ),
+                    ),
+                ],
+                onChanged: (mode) {
+                  if (mode != null) themeService.setTheme(mode);
+                },
               ),
             ),
-            title: Text(label),
-            trailing: isSelected
-                ? Icon(
-                    Icons.check,
-                    color: Theme.of(context).colorScheme.primary,
-                  )
-                : null,
-            onTap: () => themeService.setTheme(mode),
-          );
-        }),
-
-        const Divider(height: 24),
-
-        // Accent color picker
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              ThemeUpdateStrings(context).text('accent'),
-              style: Theme.of(context).textTheme.titleSmall,
+          ),
+          ListTile(
+            dense: true,
+            title: Text(strings.text('accent')),
+            trailing: SizedBox(
+              width: MediaQuery.sizeOf(context).width < 480 ? 112 : 190,
+              child: DropdownButton<int>(
+                key: const ValueKey('settings-accent'),
+                value: themeService.customAccent?.toARGB32() ?? -1,
+                isExpanded: true,
+                items: [
+                  for (final (color, name) in _accents)
+                    DropdownMenuItem(
+                      value: color?.toARGB32() ?? -1,
+                      child: _label(
+                        color ?? Theme.of(context).colorScheme.primary,
+                        strings.text(name),
+                      ),
+                    ),
+                  if (themeService.customAccent case final color?
+                      when !_accents.any(
+                        (entry) => entry.$1?.toARGB32() == color.toARGB32(),
+                      ))
+                    DropdownMenuItem(
+                      value: color.toARGB32(),
+                      child: _label(
+                        color,
+                        '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    themeService.setAccentColor(
+                      value == -1 ? null : Color(value),
+                    );
+                  }
+                },
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _colorDot(
-                context,
-                null,
-                ThemeUpdateStrings(context).text('default'),
-              ),
-              _colorDot(
-                context,
-                Colors.blue,
-                ThemeUpdateStrings(context).text('blue'),
-              ),
-              _colorDot(
-                context,
-                Colors.indigo,
-                ThemeUpdateStrings(context).text('indigo'),
-              ),
-              _colorDot(
-                context,
-                Colors.purple,
-                ThemeUpdateStrings(context).text('purple'),
-              ),
-              _colorDot(
-                context,
-                Colors.pink,
-                ThemeUpdateStrings(context).text('pink'),
-              ),
-              _colorDot(
-                context,
-                Colors.red,
-                ThemeUpdateStrings(context).text('red'),
-              ),
-              _colorDot(
-                context,
-                Colors.orange,
-                ThemeUpdateStrings(context).text('orange'),
-              ),
-              _colorDot(
-                context,
-                Colors.amber,
-                ThemeUpdateStrings(context).text('amber'),
-              ),
-              _colorDot(
-                context,
-                Colors.green,
-                ThemeUpdateStrings(context).text('green'),
-              ),
-              _colorDot(
-                context,
-                Colors.teal,
-                ThemeUpdateStrings(context).text('teal'),
-              ),
-              _colorDot(
-                context,
-                Colors.cyan,
-                ThemeUpdateStrings(context).text('cyan'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
+        ],
+      ),
     );
   }
+
+  static const _accents = <(Color?, String)>[
+    (null, 'default'),
+    (Colors.blue, 'blue'),
+    (Colors.indigo, 'indigo'),
+    (Colors.purple, 'purple'),
+    (Colors.pink, 'pink'),
+    (Colors.red, 'red'),
+    (Colors.orange, 'orange'),
+    (Colors.green, 'green'),
+    (Colors.teal, 'teal'),
+    (Colors.cyan, 'cyan'),
+  ];
+
+  Widget _label(Color color, String text) => Row(
+    children: [
+      Container(width: 16, height: 16, color: color),
+      const SizedBox(width: 8),
+      Expanded(child: Text(text, overflow: TextOverflow.ellipsis)),
+    ],
+  );
 
   Color _swatchColor(AppThemeMode mode) {
     switch (mode) {
@@ -184,38 +163,5 @@ class ThemeSettingsPanel extends StatelessWidget {
       case AppThemeMode.materialYou:
         return Colors.blueGrey;
     }
-  }
-
-  Widget _colorDot(BuildContext context, Color? color, String label) {
-    final isSelected =
-        themeService.customAccent == color ||
-        (color == null && themeService.customAccent == null);
-
-    return Tooltip(
-      message: label,
-      child: InkWell(
-        onTap: () => themeService.setAccentColor(color),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color ?? Colors.blue,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-              width: 3,
-            ),
-          ),
-          child: color == null
-              ? const Icon(Icons.auto_awesome, size: 14, color: Colors.white)
-              : isSelected
-              ? const Icon(Icons.check, size: 14, color: Colors.white)
-              : null,
-        ),
-      ),
-    );
   }
 }

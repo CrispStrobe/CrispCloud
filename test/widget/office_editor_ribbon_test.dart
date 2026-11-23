@@ -83,6 +83,49 @@ Future<void> _settleRoute(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'Windows Word uses selectable ribbon icons and a narrow dropdown',
+    (tester) async {
+      _widen(tester);
+      final controller = WordEditorController(
+        document: WmlDocument.empty(text: 'Text'),
+        config: _config(),
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _host(controller, OfficeEditorKind.word, locale: const Locale('de')),
+      );
+      Finder icon(String tab) => find.byKey(ValueKey('office-ribbon-tab-$tab'));
+      final review = icon('Review');
+      expect(tester.widget<IconButton>(icon('Home')).isSelected, isTrue);
+      expect(find.text('Menüband'), findsNothing);
+      await tester.tap(review);
+      await tester.pump();
+      expect(tester.widget<IconButton>(review).isSelected, isTrue);
+
+      tester.view.physicalSize = const Size(620, 700);
+      await tester.pump();
+      expect(review, findsNothing);
+      await tester.tap(find.text('Menüband'));
+      await tester.pump();
+      expect(find.byIcon(Icons.check), findsOneWidget);
+      final insert = find.descendant(
+        of: find.byType(MenuItemButton),
+        matching: find.text('Einfügen'),
+      );
+      await tester.tap(insert);
+      await tester.pump();
+      expect(find.text('Menüband'), findsOneWidget);
+
+      tester.view.physicalSize = const Size(1200, 700);
+      await tester.pump();
+      expect(tester.widget<IconButton>(icon('Insert')).isSelected, isTrue);
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({TargetPlatform.windows}),
+  );
+
   testWidgets('note commands cancel without edits and respect viewing mode', (
     WidgetTester tester,
   ) async {

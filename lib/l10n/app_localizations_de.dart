@@ -37,7 +37,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get download => 'Herunterladen';
 
   @override
-  String get delete => 'Loeschen';
+  String get delete => 'Löschen';
 
   @override
   String get rename => 'Umbenennen';
@@ -58,7 +58,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get create => 'Erstellen';
 
   @override
-  String get close => 'Schliessen';
+  String get close => 'Schließen';
 
   @override
   String get done => 'Fertig';
@@ -106,16 +106,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get emptyFolder => 'Leerer Ordner';
 
   @override
-  String get noFolderSelected => 'Kein Ordner ausgewaehlt';
+  String get noFolderSelected => 'Kein Ordner ausgewählt';
 
   @override
-  String get openLocalFolder => 'Lokalen Ordner oeffnen';
+  String get openLocalFolder => 'Lokalen Ordner öffnen';
 
   @override
   String get sortByName => 'Nach Name sortieren';
 
   @override
-  String get sortBySize => 'Nach Groesse sortieren';
+  String get sortBySize => 'Nach Größe sortieren';
 
   @override
   String get sortByDate => 'Nach Datum sortieren';
@@ -130,14 +130,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get descending => 'Absteigend';
 
   @override
-  String get selectAll => 'Alle auswaehlen';
+  String get selectAll => 'Alle auswählen';
 
   @override
   String get clearSelection => 'Auswahl aufheben';
 
   @override
   String nSelected(int count) {
-    return '$count ausgewaehlt';
+    return '$count ausgewählt';
   }
 
   @override
@@ -150,13 +150,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get filterFilesShortcut => 'Dateien filtern (Strg+F)';
 
   @override
-  String get clearFilter => 'Filter loeschen';
+  String get clearFilter => 'Filter löschen';
 
   @override
   String get browseTooltip => 'Durchsuchen...';
 
   @override
-  String get upTooltip => 'Nach oben (Ruecktaste)';
+  String get upTooltip => 'Nach oben (Rücktaste)';
 
   @override
   String get refreshTooltip => 'Aktualisieren (F5)';
@@ -216,7 +216,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get serverUrl => 'Server-URL';
 
   @override
-  String get appKey => 'App-Schluessel';
+  String get appKey => 'App-Schlüssel';
 
   @override
   String get clientId => 'Client-ID';
@@ -225,10 +225,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get clientSecret => 'Client-Geheimnis';
 
   @override
-  String get accessKey => 'Zugriffsschluessel';
+  String get accessKey => 'Zugriffsschlüssel';
 
   @override
-  String get secretKey => 'Geheimer Schluessel';
+  String get secretKey => 'Geheimer Schlüssel';
 
   @override
   String get endpoint => 'Endpunkt';
@@ -267,7 +267,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get syncNow => 'Jetzt synchronisieren';
 
   @override
-  String get addPair => 'Paar hinzufuegen';
+  String get addPair => 'Paar hinzufügen';
 
   @override
   String get syncPairName => 'Paarname';
@@ -321,22 +321,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get excludePatterns => 'Ausschlussmuster';
 
   @override
-  String get encryption => 'Verschluesselung';
+  String get encryption => 'Verschlüsselung';
 
   @override
-  String get encryptionEnabled => 'Verschluesselung aktiviert';
+  String get encryptionEnabled => 'Verschlüsselung aktiviert';
 
   @override
   String get passphrase => 'Passphrase';
 
   @override
-  String get keyManagement => 'Schluesselverwaltung';
+  String get keyManagement => 'Schlüsselverwaltung';
 
   @override
-  String get exportKey => 'Schluessel exportieren';
+  String get exportKey => 'Schlüssel exportieren';
 
   @override
-  String get importKey => 'Schluessel importieren';
+  String get importKey => 'Schlüssel importieren';
 
   @override
   String get mnemonic => 'Mnemonic';
@@ -351,7 +351,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get setupLock => 'Sperre einrichten';
 
   @override
-  String get changeLock => 'Sperre aendern';
+  String get changeLock => 'Sperre ändern';
 
   @override
   String get disableLock => 'Sperre deaktivieren';
@@ -393,10 +393,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get permissions => 'Berechtigungen';
 
   @override
-  String get checksum => 'Pruefsumme';
+  String get checksum => 'Prüfsumme';
 
   @override
-  String get calculateSize => 'Groesse berechnen';
+  String get calculateSize => 'Größe berechnen';
 
   @override
   String get batchRename => 'Stapelumbenennung';
@@ -450,25 +450,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newTab => 'Neuer Tab';
 
   @override
-  String get closeTab => 'Tab schliessen';
+  String get closeTab => 'Tab schließen';
 
   @override
   String get pinTab => 'Tab anheften';
 
   @override
-  String get unpinTab => 'Tab loesen';
+  String get unpinTab => 'Tab lösen';
 
   @override
   String get duplicateTab => 'Tab duplizieren';
 
   @override
-  String get closeOtherTabs => 'Andere Tabs schliessen';
+  String get closeOtherTabs => 'Andere Tabs schließen';
 
   @override
   String get bookmarks => 'Lesezeichen';
 
   @override
-  String get addBookmark => 'Lesezeichen hinzufuegen';
+  String get addBookmark => 'Lesezeichen hinzufügen';
 
   @override
   String get removeBookmark => 'Lesezeichen entfernen';
@@ -478,11 +478,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sandboxedPathWarning =>
-      'Sandbox-Pfad - Verwenden Sie die Durchsuchen-Schaltflaeche';
+      'Sandbox-Pfad - Verwenden Sie die Durchsuchen-Schaltfläche';
 
   @override
   String get permissionDenied =>
-      'Zugriff verweigert. Verwenden Sie die Durchsuchen-Schaltflaeche.';
+      'Zugriff verweigert. Verwenden Sie die Durchsuchen-Schaltfläche.';
 
   @override
   String get accessCancelled =>
@@ -490,7 +490,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String deleteFailed(String error) {
-    return 'Loeschen fehlgeschlagen: $error';
+    return 'Löschen fehlgeschlagen: $error';
   }
 
   @override
@@ -507,18 +507,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dropFilesToUpload => 'Dateien hier ablegen zum Hochladen';
 
   @override
-  String get confirmDeleteTitle => 'Loeschen bestaetigen';
+  String get confirmDeleteTitle => 'Löschen bestätigen';
 
   @override
   String confirmDeleteMessage(int count) {
-    return '$count Element(e) loeschen?';
+    return '$count Element(e) löschen?';
   }
 
   @override
   String get multiCloudManager => 'Multi-Cloud-Manager';
 
   @override
-  String get addConnection => 'Verbindung hinzufuegen';
+  String get addConnection => 'Verbindung hinzufügen';
 
   @override
   String get cloudToCloudTransfer => 'Cloud-zu-Cloud-Transfer';
@@ -542,10 +542,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get detailsList => 'Detailliste';
 
   @override
-  String get largeItems => 'Grosse Eintraege';
+  String get largeItems => 'Große Einträge';
 
   @override
-  String get compactItems => 'Kompakte Eintraege';
+  String get compactItems => 'Kompakte Einträge';
 
   @override
   String get showPreview => 'Vorschau anzeigen';
@@ -575,7 +575,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cacheSettings => 'Cache-Einstellungen';
 
   @override
-  String get keyboardShortcuts => 'Tastaturkuerzel';
+  String get keyboardShortcuts => 'Tastaturkürzel';
 
   @override
   String get swapPanels => 'Fenster tauschen';
@@ -614,11 +614,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noFolders => 'Keine Ordner';
 
   @override
-  String get selectFileToPreview => 'Datei zur Vorschau auswaehlen';
+  String get selectFileToPreview => 'Datei zur Vorschau auswählen';
 
   @override
   String fileTooLarge(String size) {
-    return 'Datei zu gross fuer Vorschau ($size)';
+    return 'Datei zu groß für Vorschau ($size)';
   }
 
   @override
@@ -649,7 +649,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String systemLogTitle(int count) {
-    return 'Systemprotokoll ($count Eintraege)';
+    return 'Systemprotokoll ($count Einträge)';
   }
 
   @override
@@ -677,7 +677,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get allLogsCopied => 'Alle Protokolle kopiert';
 
   @override
-  String get open => 'Oeffnen';
+  String get open => 'Öffnen';
 
   @override
   String get editSystemEditor => 'Bearbeiten (Systemeditor)';
@@ -686,7 +686,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editBuiltIn => 'Bearbeiten (integriert)';
 
   @override
-  String get openWithSystemApp => 'Mit System-App oeffnen';
+  String get openWithSystemApp => 'Mit System-App öffnen';
 
   @override
   String get verifyAgainstRemote => 'Mit Remote vergleichen';
@@ -704,7 +704,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get showInExplorer => 'Im Explorer anzeigen';
 
   @override
-  String get openContainingFolder => 'Enthaltenden Ordner oeffnen';
+  String get openContainingFolder => 'Enthaltenden Ordner öffnen';
 
   @override
   String get properties => 'Eigenschaften';
@@ -719,23 +719,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createMd5 => '.md5-Datei erstellen';
 
   @override
-  String get verifyChecksumFile => 'Pruefsummen-Datei ueberpruefen';
+  String get verifyChecksumFile => 'Prüfsummen-Datei überprüfen';
 
   @override
   String get splitFile => 'Datei aufteilen';
 
   @override
-  String get combineParts => 'Teile zusammenfuegen';
+  String get combineParts => 'Teile zusammenfügen';
 
   @override
   String get createLink => 'Verknuepfung erstellen...';
 
   @override
-  String get secureWipe => 'Sicher loeschen';
+  String get secureWipe => 'Sicher löschen';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Sind Sie sicher, dass Sie $count Element(e) loeschen moechten?';
+    return 'Sind Sie sicher, dass Sie $count Element(e) löschen möchten?';
   }
 
   @override
@@ -745,7 +745,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cannotBeUndone =>
-      'Diese Aktion kann nicht rueckgaengig gemacht werden.';
+      'Diese Aktion kann nicht rückgängig gemacht werden.';
 
   @override
   String nItems(int count) {
@@ -783,7 +783,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Ein inoffizieller, quelloffener Client fuer Filen.io, SFTP & WebDAV.';
+      'Ein inoffizieller, quelloffener Client für Filen.io, SFTP & WebDAV.';
 
   @override
   String get serviceProvider => 'Dienstanbieter';
@@ -838,7 +838,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get byName => 'nach Name';
 
   @override
-  String get bySize => 'nach Groesse';
+  String get bySize => 'nach Größe';
 
   @override
   String get byDate => 'nach Datum';
@@ -881,11 +881,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get unsavedChanges => 'Ungespeicherte Aenderungen';
+  String get unsavedChanges => 'Ungespeicherte Änderungen';
 
   @override
   String get discardChanges =>
-      'Sie haben ungespeicherte Aenderungen. Verwerfen?';
+      'Sie haben ungespeicherte Änderungen. Verwerfen?';
 
   @override
   String get discard => 'Verwerfen';
@@ -895,7 +895,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileModifiedOnServer =>
-      'Diese Datei wurde auf dem Server geaendert, seit Sie sie geoeffnet haben.';
+      'Diese Datei wurde auf dem Server geändert, seit Sie sie geöffnet haben.';
 
   @override
   String get saveAnyway => 'Trotzdem speichern';
@@ -927,20 +927,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loadProfile => 'Gespeichertes Profil laden...';
 
   @override
-  String get deleteProfile => 'Profil loeschen';
+  String get deleteProfile => 'Profil löschen';
 
   @override
   String get saveAsProfile => 'Als Profil speichern';
 
   @override
-  String get enableEncryption => 'Client-seitige Verschluesselung aktivieren';
+  String get enableEncryption => 'Client-seitige Verschlüsselung aktivieren';
 
   @override
   String get encryptBeforeUpload =>
-      'Dateien vor dem Hochladen verschluesseln (AES-256-GCM)';
+      'Dateien vor dem Hochladen verschlüsseln (AES-256-GCM)';
 
   @override
-  String get encryptionPassphrase => 'Verschluesselungs-Passphrase';
+  String get encryptionPassphrase => 'Verschlüsselungs-Passphrase';
 
   @override
   String get appLocked => 'CrispCloud ist gesperrt';
@@ -967,7 +967,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appLockSetup => 'App-Sperre einrichten';
 
   @override
-  String get changeAppLockCode => 'App-Sperre aendern';
+  String get changeAppLockCode => 'App-Sperre ändern';
 
   @override
   String get currentPin => 'Aktuelle PIN / Passwort';
@@ -976,13 +976,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newPin => 'Neue PIN / Passwort';
 
   @override
-  String get confirmPin => 'PIN / Passwort bestaetigen';
+  String get confirmPin => 'PIN / Passwort bestätigen';
 
   @override
   String get minFourChars => 'Mindestens 4 Zeichen';
 
   @override
-  String get codesDoNotMatch => 'Codes stimmen nicht ueberein';
+  String get codesDoNotMatch => 'Codes stimmen nicht überein';
 
   @override
   String get autoLockAfter => 'Automatisch sperren nach';
@@ -1075,7 +1075,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fuseDesktopOnly =>
-      'FUSE-Laufwerke sind nur auf macOS, Linux und Windows verfuegbar.';
+      'FUSE-Laufwerke sind nur auf macOS, Linux und Windows verfügbar.';
 
   @override
   String get multiCloud => 'Multi-Cloud';
@@ -1108,7 +1108,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noSyncPairs => 'Keine Sync-Paare konfiguriert';
 
   @override
-  String get replayOffline => 'Offline-Aenderungen anwenden';
+  String get replayOffline => 'Offline-Änderungen anwenden';
 
   @override
   String get newSyncPair => 'Neues Sync-Paar';
@@ -1117,7 +1117,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cacheUsage => 'Cache-Nutzung';
 
   @override
-  String get maximumCacheSize => 'Maximale Cache-Groesse';
+  String get maximumCacheSize => 'Maximale Cache-Größe';
 
   @override
   String get clearCacheConfirm =>
@@ -1147,7 +1147,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noDuplicatesFound => 'Keine Duplikate gefunden!';
 
   @override
-  String get chooseTheme => 'Design waehlen';
+  String get chooseTheme => 'Design wählen';
 
   @override
   String get checkForUpdates => 'Nach Updates suchen';
@@ -1156,13 +1156,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get youAreUpToDate => 'Sie sind auf dem neuesten Stand';
 
   @override
-  String get updateAvailable => 'Update verfuegbar';
+  String get updateAvailable => 'Update verfügbar';
 
   @override
   String get releaseNotes => 'Versionshinweise';
 
   @override
-  String get checkNow => 'Jetzt pruefen';
+  String get checkNow => 'Jetzt prüfen';
 
   @override
   String get general => 'Allgemein';
@@ -1178,11 +1178,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get showFKeyButtons =>
-      'F3-F8 Tastenkuerzel am unteren Bildschirmrand anzeigen';
+      'F3-F8 Tastenkürzel am unteren Bildschirmrand anzeigen';
 
   @override
-  String get exportKeys =>
-      'Verschluesselungsschluessel exportieren/importieren';
+  String get exportKeys => 'Verschlüsselungsschlüssel exportieren/importieren';
 
   @override
   String get backupRecovery => 'BIP39-Mnemonic Sicherung und Wiederherstellung';
@@ -1220,7 +1219,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noResultsFound => 'Keine Ergebnisse gefunden';
 
   @override
-  String get size => 'Groesse';
+  String get size => 'Größe';
 
   @override
   String get date => 'Datum';

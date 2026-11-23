@@ -342,10 +342,16 @@ class FileListView extends ConsumerWidget {
               p.spaceSelectAndAdvance();
               return KeyEventResult.handled;
             }
-            if (event.logicalKey == LogicalKeyboardKey.enter) {
+            if ((event.logicalKey == LogicalKeyboardKey.enter ||
+                    event.logicalKey == LogicalKeyboardKey.numpadEnter) &&
+                !isShift) {
+              if (event is KeyRepeatEvent) return KeyEventResult.handled;
               final item = p.cursorItem;
               if (p.isTypeahead) p.clearTypeahead();
-              if (item != null) p.navigateInto(item);
+              if (item != null &&
+                  !openLocalFileOnEnter(context, ref, side, item)) {
+                p.navigateInto(item);
+              }
               return KeyEventResult.handled;
             }
             if (event.logicalKey == LogicalKeyboardKey.home) {
@@ -528,7 +534,8 @@ class FileListTile extends ConsumerWidget {
       child: Focus(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.enter &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.numpadEnter) &&
               !HardwareKeyboard.instance.isControlPressed &&
               !HardwareKeyboard.instance.isMetaPressed &&
               !HardwareKeyboard.instance.isAltPressed &&
@@ -543,7 +550,7 @@ class FileListTile extends ConsumerWidget {
                         isMeta: false,
                       ) ==
                   null) {
-            onDoubleTap();
+            if (!openLocalFileOnEnter(context, ref, side, file)) onDoubleTap();
             return KeyEventResult.handled;
           }
           return KeyEventResult.ignored;
@@ -561,10 +568,11 @@ class FileListTile extends ConsumerWidget {
           focused: isCursor,
           button: true,
           child: Container(
-            decoration: isCursor
+            color: isCursor
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.16)
+                : null,
+            foregroundDecoration: isCursor
                 ? BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary
-                        .withValues(alpha: 0.16),
                     border: Border(
                       left: BorderSide(
                         color: Theme.of(context).colorScheme.primary,
@@ -573,8 +581,6 @@ class FileListTile extends ConsumerWidget {
                     ),
                   )
                 : null,
-            // Keep selection and ink above the cursor decoration, on the same
-            // local Material, while the outer border retains its own inset.
             child: Material(
               type: MaterialType.transparency,
               child: ListTile(
@@ -795,17 +801,17 @@ class CompactFileTile extends ConsumerWidget {
             onDoubleTap: onDoubleTap,
             onSecondaryTapDown: onSecondaryTap,
             child: Container(
-              decoration: BoxDecoration(
-                color: bgColor,
-                border: isCursor
-                    ? Border(
+              color: bgColor,
+              foregroundDecoration: isCursor
+                  ? BoxDecoration(
+                      border: Border(
                         left: BorderSide(
                           color: theme.colorScheme.primary,
                           width: 3,
                         ),
-                      )
-                    : null,
-              ),
+                      ),
+                    )
+                  : null,
               padding: const EdgeInsets.symmetric(horizontal: 4),
               alignment: Alignment.centerLeft,
               child: Row(

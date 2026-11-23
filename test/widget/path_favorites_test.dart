@@ -4,6 +4,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/widgets/path_favorites.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -170,6 +171,23 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Enter immediately saves the current path as a favorite', (
+    tester,
+  ) async {
+    await prepare(tester);
+    await harness.container
+        .read(panelProvider(PanelSide.remote))
+        .navigateToPath('/one');
+    await mount(tester);
+    await menu(tester, PanelSide.remote);
+    await tester.tap(find.text('Add current path…'));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(bookmarks.bookmarks.single.path, '/one');
+    expect(find.byKey(const ValueKey('path-favorite-save')), findsNothing);
+  });
 
   testWidgets(
     'editor validates paths and never overwrites a duplicate on retry',

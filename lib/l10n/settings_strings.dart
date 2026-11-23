@@ -8,7 +8,10 @@ class SettingsStrings {
 
   @visibleForTesting
   static Map<String, Map<String, String>> get translations => _translations;
-  String text(String english) => _translations[_language]?[english] ?? english;
+  String text(String english) =>
+      _translations[_language]?[english] ??
+      (_language == 'de' ? _additionalGerman[english] : null) ??
+      english;
   String inactivity(int count) =>
       text('{count} second(s) of inactivity').replaceAll('{count}', '$count');
   String seconds(int count) =>
@@ -16,6 +19,67 @@ class SettingsStrings {
   String current(String size) =>
       text('Current: {size}').replaceAll('{size}', size);
 }
+
+const _additionalGerman = {
+  'Documents and language': 'Dokumente und Sprache',
+  'Connections': 'Verbindungen',
+  'Storage': 'Speicher',
+  'Privacy and accessibility': 'Datenschutz und Barrierefreiheit',
+  'Settings backups': 'Einstellungen sichern',
+  'Sort folders like files': 'Ordner wie Dateien sortieren',
+  'When off, folders stay in alphabetical order.':
+      'Bei deaktivierter Option bleiben Ordner alphabetisch sortiert.',
+  'Save portable settings to a file or restore them from a backup.': 'Übertragbare Einstellungen in einer Datei sichern oder aus einer Sicherung wiederherstellen.',
+  'Include cloud provider settings':
+      'Einstellungen der Cloud-Anbieter einbeziehen',
+  'Connection profiles and provider request options':
+      'Verbindungsprofile und Anfrageoptionen der Anbieter',
+  'Include cloud credentials': 'Cloud-Zugangsdaten einbeziehen',
+  'Saved logins, secret profile fields, and custom headers':
+      'Gespeicherte Anmeldedaten, geheime Profilfelder und eigene Header',
+  'Encrypt settings file with a password':
+      'Einstellungsdatei mit einem Passwort verschlüsseln',
+  'Anyone who can read this file can use the exported credentials.': 'Wer diese Datei lesen kann, kann die exportierten Zugangsdaten verwenden.',
+  'Save settings file': 'Einstellungsdatei speichern',
+  'Load settings file': 'Einstellungsdatei laden',
+  'Restore settings': 'Einstellungen wiederherstellen',
+  'Matching settings and profiles will be updated. Other settings stay in place.': 'Übereinstimmende Einstellungen und Profile werden aktualisiert. Die übrigen Einstellungen bleiben erhalten.',
+  'Settings file saved.': 'Einstellungsdatei gespeichert.',
+  'Could not save the settings file.':
+      'Die Einstellungsdatei konnte nicht gespeichert werden.',
+  'Could not load the settings file. Check the file and password.': 'Die Einstellungsdatei konnte nicht geladen werden. Prüfen Sie die Datei und das Passwort.',
+  'Settings restored. Restart CrispCloud to apply them.': 'Einstellungen wiederhergestellt. Starten Sie CrispCloud neu, um sie anzuwenden.',
+  'Settings restored. Credentials are saved for this session only.': 'Einstellungen wiederhergestellt. Die Zugangsdaten sind nur für diese Sitzung gespeichert.',
+  'Restore failed and some changes could not be undone.': 'Die Wiederherstellung ist fehlgeschlagen. Einige Änderungen konnten nicht rückgängig gemacht werden.',
+  'Unlock settings file': 'Einstellungsdatei entsperren',
+  'Cancel': 'Abbrechen',
+  'Password': 'Passwort',
+  'Confirm password': 'Passwort bestätigen',
+  'Enter a password.': 'Geben Sie ein Passwort ein.',
+  'Passwords do not match.': 'Die Passwörter stimmen nicht überein.',
+  'Continue': 'Weiter',
+  'Office font downloads': 'Office-Schriften herunterladen',
+  'Optional open fonts for Calibri, Arial, Times New Roman and other families when Microsoft Office fonts are not installed.': 'Optionale freie Ersatzschriften für Calibri, Arial, Times New Roman und weitere Familien, wenn Microsoft-Office-Schriften fehlen.',
+  'Optional open font packs are stored in the application-support folder. Exact fonts installed by Microsoft Office are preferred and are never redistributed.': 'Optionale freie Schriftpakete werden im Anwendungsdatenordner gespeichert. Installierte Microsoft-Office-Schriften haben Vorrang und werden nicht weitergegeben.',
+  'Downloads start only when you choose Install. Every file is verified by SHA-256 before it is registered. Microsoft fonts are never downloaded.': 'Der Download beginnt erst mit „Installieren“. Jede Datei wird vor der Registrierung mit SHA-256 geprüft. Microsoft-Schriften werden nicht heruntergeladen.',
+  'Office metric fonts': 'Metrisch kompatible Office-Schriften',
+  'Metric-compatible faces for Calibri, Arial, Times New Roman, Courier New and Cambria.': 'Metrisch kompatible Schriften für Calibri, Arial, Times New Roman, Courier New und Cambria.',
+  'Visual substitutes': 'Optisch ähnliche Ersatzschriften',
+  'Source': 'Quelle',
+  'Licence': 'Lizenz',
+  'Download size': 'Downloadgröße',
+  'Files': 'Dateien',
+  'Italic': 'Kursiv',
+  'Open licence': 'Lizenz öffnen',
+  'Repair': 'Reparieren',
+  'Install': 'Installieren',
+  'Close': 'Schließen',
+  'Needs repair': 'Reparatur erforderlich',
+  'Installed': 'Installiert',
+  'Not installed': 'Nicht installiert',
+  'Review / install': 'Prüfen und installieren',
+  'Remove downloaded data': 'Heruntergeladene Dateien entfernen',
+};
 
 const _translations = <String, Map<String, String>>{
   "de": {

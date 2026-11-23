@@ -7,7 +7,10 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/storage_trash.dart';
 import 'package:crisp_cloud/services/trash_history_store.dart';
+import 'package:crisp_cloud/widgets/file_delete_dialog.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,8 +32,10 @@ class _Cloud extends Fake
   final trashed = <String, String>{};
   int trashCalls = 0;
   int restoreCalls = 0;
+  int permanentCalls = 0;
   int listCalls = 0;
   bool failRestore = false;
+  bool failTrash = false;
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
@@ -48,6 +53,7 @@ class _Cloud extends Fake
   @override
   Future<TrashReceipt> trashPath(String path) async {
     trashCalls++;
+    if (failTrash) throw PlatformException(code: 'trash_failed');
     final id = files.remove(path);
     if (id == null) throw StateError('Missing');
     trashed[id] = path;
@@ -67,6 +73,7 @@ class _Cloud extends Fake
 
   @override
   Future<void> deletePermanently(String path) async {
+    permanentCalls++;
     files.remove(path);
   }
 }
@@ -135,6 +142,59 @@ void main() {
     }
     containers.clear();
   });
+
+  testWidgets(
+    'Enter recycles and a refusal never turns into permanent delete',
+    (tester) async {
+      final container = open(cloud);
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      panel.toggleSelection(panel.files!.single);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () => showFileDeleteDialog(
+                    context,
+                    ref,
+                    PanelSide.remote,
+                    panel.files!.toList(),
+                  ),
+                  child: const Text('Confirm delete'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      cloud.failTrash = true;
+      await tester.tap(find.text('Confirm delete'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(cloud.trashCalls, 1);
+      expect(cloud.permanentCalls, 0);
+      expect(cloud.files, contains('/original.txt'));
+      expect(panel.selection.single, same(panel.files!.single));
+      expect(
+        find.textContaining('Check whether this drive supports recycling'),
+        findsOneWidget,
+      );
+      cloud.failTrash = false;
+      await tester.tap(find.text('Confirm delete'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(cloud.trashCalls, 2);
+      expect(cloud.permanentCalls, 0);
+      expect(cloud.files, isEmpty);
+      expect(panel.files, isEmpty);
+      expect(panel.selection, isEmpty);
+    },
+  );
 
   test(
     'trash receipt survives restart and restores through its original account',

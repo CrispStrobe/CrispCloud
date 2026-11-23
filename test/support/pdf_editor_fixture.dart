@@ -7,18 +7,30 @@ import 'dart:typed_data';
 Uint8List buildPdfEditorFixture({
   bool xfa = false,
   bool signed = false,
+  bool faxScan = false,
   int rotation = 0,
 }) {
   assert(!xfa || !signed);
+  assert(!faxScan || (!xfa && !signed));
+  const faxPage = 'q\n300 0 0 400 0 0 cm\n/Scan Do\nQ';
   final objects = <String>[
     '<< /Type /Catalog /Pages 2 0 R${xfa || signed ? ' /AcroForm 7 0 R' : ''} >>',
     '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] '
-        '/Rotate $rotation /Resources << >> /Contents 5 0 R >>',
+        '/Rotate $rotation /Resources << ${faxScan ? '/XObject << /Scan 7 0 R >>' : ''} >> '
+        '/Contents 5 0 R >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] '
         '/Resources << >> /Contents 6 0 R >>',
+    if (faxScan)
+      '<< /Length ${faxPage.length} >>\nstream\n$faxPage\nendstream'
+    else
+      '<< /Length 0 >>\nstream\n\nendstream',
     '<< /Length 0 >>\nstream\n\nendstream',
-    '<< /Length 0 >>\nstream\n\nendstream',
+    if (faxScan)
+      '<< /Type /XObject /Subtype /Image /Width 8 /Height 1 '
+          '/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode '
+          '/DecodeParms << /Columns 8 /Rows 1 >> /Length 2 >>\n'
+          'stream\n\x35\x14\nendstream',
     if (xfa) ...[
       '<< /Fields [] /XFA 8 0 R >>',
       '<< /Length 6 >>\nstream\n<xfa/>\nendstream',

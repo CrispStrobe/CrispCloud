@@ -89,7 +89,239 @@ Future<void> _choose(WidgetTester tester, String label) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
+({File file, CapturedFileTarget target}) _localEditingFixture(
+  String name,
+  String fixture,
+) {
+  final folder = Directory.systemTemp.createTempSync('crisp-office-save-');
+  final file = File.fromUri(folder.uri.resolve(name))
+    ..writeAsBytesSync(
+      File('packages/quds_office_engine/test/fixtures/fidelity/$fixture')
+          .readAsBytesSync(),
+    );
+  addTearDown(() {
+    file.deleteSync();
+    folder.deleteSync();
+  });
+  return (
+    file: file,
+    target: CapturedFileTarget.local(
+      reference: FileReference(
+        storage: const StorageReference(
+          kind: 'local',
+          provider: 'local',
+          accountKey: 'local',
+        ),
+        path: file.path,
+      ),
+      service: LocalFileService(),
+      file: FileItem(name: name, path: file.path, isFolder: false),
+      isCurrent: () => true,
+    ),
+  );
+}
+
+void _expectPlatformTextInputView(WidgetTester tester) {
+  final clients = tester.testTextInput.log.where(
+    (call) => call.method == 'TextInput.setClient',
+  );
+  expect(clients, isNotEmpty);
+  for (final client in clients) {
+    expect(client.arguments[1]['viewId'], tester.view.viewId);
+  }
+}
+
 void main() {
+  testWidgets(
+    'the spreadsheet formula bar commits, cancels and saves cell drafts',
+    (tester) async {
+      final source = _localEditingFixture('report.xlsx', 'native.xlsx');
+      final host = (await tester.runAsync(
+        () => OfficeTestHarness.open(
+          tester,
+          name: 'report.xlsx',
+          fixture: 'native.xlsx',
+          targetOverride: source.target,
+        ),
+      ))!;
+      final sheet = host.controller as SheetEditorController;
+      final formulaBar = find.byKey(const ValueKey('sheet-formula-input'));
+      EditableText field() => tester.widget<EditableText>(formulaBar);
+      final firstCell = sheet.activeCell;
+      expect(field().controller.text, sheet.formulaBarText);
+      await tester.tap(formulaBar);
+      await tester.pump();
+      expect(field().focusNode.hasPrimaryFocus, isTrue);
+      tester.testTextInput.enterText('=2+3');
+      await tester.pump();
+      expect(sheet.formulaBarText, '=2+3');
+      expect(sheet.sheet.cell(firstCell).formula, isNot('=2+3'));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(sheet.sheet.cell(firstCell).formula, '=2+3');
+      expect(field().controller.text, sheet.formulaBarText);
+
+      final secondCell = sheet.activeCell;
+      final original = sheet.formulaBarText;
+      await tester.tap(formulaBar);
+      await tester.pump();
+      tester.testTextInput.enterText('discard this');
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      expect(find.byType(OfficeEditorDialog), findsOneWidget);
+      expect(sheet.activeCell.a1, secondCell.a1);
+      expect(field().controller.text, original);
+
+      await tester.tap(formulaBar);
+      await tester.pump();
+      tester.testTextInput.enterText('written from the bar');
+      await tester.pump();
+      await tester.runAsync(host.save);
+      final reopened = SheetEditorController.fromBytes(
+        source.file.readAsBytesSync(),
+      );
+      try {
+        expect(reopened.sheet.cell(firstCell).formula, '2+3');
+        reopened.selection.selectCell(firstCell);
+        expect(reopened.formulaBarText, '=2+3');
+        reopened.beginCellEdit();
+        reopened.commitCellEdit();
+        expect(reopened.isDirty, isFalse);
+        expect(
+          reopened.sheet.cell(secondCell).asString,
+          'written from the bar',
+        );
+      } finally {
+        reopened.dispose();
+      }
+      await host.dispose();
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({TargetPlatform.windows}),
+  );
+
+  testWidgets(
+    'Windows Excel types in the focused cell and saves the workbook',
+    (tester) async {
+      final source = _localEditingFixture('report.xlsx', 'native.xlsx');
+      final host = (await tester.runAsync(
+        () => OfficeTestHarness.open(
+          tester,
+          name: 'report.xlsx',
+          fixture: 'native.xlsx',
+          targetOverride: source.target,
+        ),
+      ))!;
+      final sheet = host.controller as SheetEditorController;
+      expect(sheet.config.lengthUnit, OfficeLengthUnit.millimeters);
+      expect(
+        tester
+            .widget<QudsSheetEditor>(find.byType(QudsSheetEditor))
+            .focusNode!
+            .hasPrimaryFocus,
+        isTrue,
+      );
+      final cell = sheet.activeCell;
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit3, character: '3');
+      await tester.pump();
+      expect(sheet.cellEditor.editing, isTrue);
+      _expectPlatformTextInputView(tester);
+      tester.testTextInput.enterText('31415926');
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      await tester.runAsync(host.save);
+      final reopened = SheetEditorController.fromBytes(
+        source.file.readAsBytesSync(),
+      );
+      try {
+        expect(reopened.sheet.cell(cell).value, 31415926);
+      } finally {
+        reopened.dispose();
+      }
+      await host.dispose();
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({TargetPlatform.windows}),
+  );
+
+  testWidgets(
+    'Windows Word accepts typing on open and after returning to editing',
+    (tester) async {
+      final source = _localEditingFixture('report.docx', 'word.docx');
+      final host = (await tester.runAsync(
+        () => OfficeTestHarness.open(
+          tester,
+          locale: const Locale('de'),
+          targetOverride: source.target,
+        ),
+      ))!;
+      final word = host.controller as WordEditorController;
+      final editor = tester.widget<QudsWordEditor>(find.byType(QudsWordEditor));
+      expect(word.mode, OfficeInteractionMode.editing);
+      expect(word.config.lengthUnit, OfficeLengthUnit.millimeters);
+      expect(editor.focusNode!.hasPrimaryFocus, isTrue);
+      expect(word.input.isAttached, isTrue);
+      _expectPlatformTextInputView(tester);
+
+      void type(String text) {
+        final value = word.input.value;
+        final caret = value.selection.extentOffset;
+        tester.testTextInput.updateEditingValue(
+          TextEditingValue(
+            text: value.text.replaceRange(caret, caret, text),
+            selection: TextSelection.collapsed(offset: caret + text.length),
+          ),
+        );
+      }
+
+      type('Erste Eingabe. ');
+      await tester.pump();
+      expect(_text(word.saveBytes()), contains('Erste Eingabe.'));
+      expect(find.text('Ansicht'), findsOneWidget);
+      final initialZoom = word.viewport.scale;
+      await tester.tap(find.text('Ansicht'));
+      await tester.pump();
+      await tester.tap(find.text('Vergrößern'));
+      await tester.pump();
+      expect(word.viewport.scale, greaterThan(initialZoom));
+      await tester.tap(find.text('Ansicht'));
+      await tester.pump();
+      await tester.tap(find.text('Zoom zurücksetzen'));
+      await tester.pump();
+      expect(word.viewport.scale, 1);
+
+      Future<void> setMode(String label) async {
+        await tester.tap(find.text('Ansicht'));
+        await tester.pump();
+        await tester.tap(find.text('Dokumentmodus'));
+        await tester.pump();
+        await tester.tap(find.text(label));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+      }
+
+      await setMode('Lesen und kopieren');
+      expect(word.mode, OfficeInteractionMode.selecting);
+      expect(word.config.allowsSelection, isTrue);
+      expect(word.input.isAttached, isFalse);
+      await setMode('Nur Vorschau');
+      expect(word.mode, OfficeInteractionMode.viewing);
+      expect(word.config.allowsSelection, isFalse);
+      await setMode('Dokument bearbeiten');
+      expect(editor.focusNode!.hasPrimaryFocus, isTrue);
+      expect(word.input.isAttached, isTrue);
+      type('Zweite Eingabe. ');
+      await tester.pump();
+      await tester.runAsync(host.save);
+      expect(_text(source.file.readAsBytesSync()), contains('Zweite Eingabe.'));
+      await host.dispose();
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({TargetPlatform.windows}),
+  );
+
   testWidgets('standard Word shortcuts align, redo and insert a page break', (
     tester,
   ) async {
@@ -891,7 +1123,13 @@ void main() {
       word.insertText('Recover after disconnect ');
       host.cloud.current = false;
       await host.save();
-      expect(find.textContaining('Save failed'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(OfficeEditorDialog),
+          matching: find.textContaining('Save failed'),
+        ),
+        findsOneWidget,
+      );
       expect(host.cloud.uploadAttempts, 0);
       await host.copy();
       expect(_text(copied!), contains('Recover after disconnect '));

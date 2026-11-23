@@ -39,6 +39,17 @@ std::string StringArg(const EncodableMap* args, const char* key) {
   return value ? *value : "";
 }
 
+bool IsNetworkPath(std::wstring path) {
+  if (path.rfind(LR"(\\?\)", 0) == 0) {
+    path.erase(0, 4);
+    if (_wcsnicmp(path.c_str(), LR"(UNC\)", 4) == 0) return true;
+  }
+  if (path.rfind(LR"(\\)", 0) == 0) return true;
+  if (path.size() < 3 || path[1] != L':') return false;
+  const std::wstring root = path.substr(0, 2) + L"\\";
+  return GetDriveTypeW(root.c_str()) == DRIVE_REMOTE;
+}
+
 // The sink records the actual recycle-bin item. It refuses a permanent-delete
 // fallback, and refuses overwrite/merge decisions during restore.
 class TrashSink final : public IFileOperationProgressSink {
@@ -101,12 +112,22 @@ class TrashSink final : public IFileOperationProgressSink {
 };
 
 HRESULT Trash(const std::wstring& path, std::wstring* receipt) {
+  // Shell deletion on a mapped or UNC share can prompt to destroy the item.
+  if (IsNetworkPath(path)) return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+  wchar_t volume[MAX_PATH];
+  if (!GetVolumePathNameW(path.c_str(), volume, ARRAYSIZE(volume))) {
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+  if (GetDriveTypeW(volume) == DRIVE_REMOTE) {
+    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+  }
   ComPtr<IFileOperation> operation;
   HRESULT hr = CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL,
                                 IID_PPV_ARGS(&operation));
   if (FAILED(hr)) return hr;
-  hr = operation->SetOperationFlags(FOF_ALLOWUNDO | FOF_SILENT | FOF_NOERRORUI |
-                                    FOFX_EARLYFAILURE | FOFX_ADDUNDORECORD);
+  hr = operation->SetOperationFlags(
+      FOF_ALLOWUNDO | FOF_SILENT | FOF_NOERRORUI | FOFX_RECYCLEONDELETE |
+      FOFX_EARLYFAILURE | FOFX_ADDUNDORECORD);
   if (FAILED(hr)) return hr;
   ComPtr<IShellItem> item;
   hr = SHCreateItemFromParsingName(path.c_str(), nullptr, IID_PPV_ARGS(&item));
@@ -117,7 +138,9 @@ HRESULT Trash(const std::wstring& path, std::wstring* receipt) {
   if (SUCCEEDED(hr)) hr = operation->PerformOperations();
   BOOL aborted = FALSE;
   operation->GetAnyOperationsAborted(&aborted);
-  if (FAILED(hr) || aborted || FAILED(sink->outcome)) return FAILED(hr) ? hr : E_ABORT;
+  if (FAILED(hr)) return hr;
+  if (FAILED(sink->outcome) && sink->outcome != E_PENDING) return sink->outcome;
+  if (aborted || sink->outcome == E_PENDING) return E_ABORT;
   *receipt = sink->recycled;
   return receipt->empty() ? E_FAIL : S_OK;
 }
@@ -283,12 +306,37 @@ void RegisterFileOperations(flutter::BinaryMessenger* messenger) {
       if (WriteClipboard(args)) result->Success(); else result->Error("clipboard_failed", "The system file clipboard is unavailable.");
       return;
     }
+    if (call.method_name() == "hasNetworkTrashTarget") {
+      const EncodableList* paths = nullptr;
+      if (args) {
+        const auto entry = args->find(EncodableValue("paths"));
+        if (entry != args->end()) {
+          paths = std::get_if<EncodableList>(&entry->second);
+        }
+      }
+      if (paths) {
+        for (const auto& value : *paths) {
+          const auto* path = std::get_if<std::string>(&value);
+          if (path && IsNetworkPath(Wide(*path))) {
+            result->Success(EncodableValue(true));
+            return;
+          }
+        }
+      }
+      result->Success(EncodableValue(false));
+      return;
+    }
     const std::string path = StringArg(args, call.method_name() == "trash" ? "path" : "originalPath");
     if (path.empty()) { result->Error("invalid_path", "A file path is required."); return; }
     if (call.method_name() == "trash") {
       std::wstring receipt;
       const HRESULT hr = Trash(Wide(path), &receipt);
-      if (FAILED(hr)) result->Error("trash_failed", "Windows could not recycle this item. No permanent-delete fallback was requested.");
+      if (hr == HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)) {
+        result->Error("trash_unsupported", "The Recycle Bin is unavailable here.");
+      } else if (FAILED(hr)) {
+        result->Error("trash_failed", "Windows could not recycle this item.",
+                      EncodableValue(static_cast<int32_t>(hr)));
+      }
       else result->Success(EncodableValue(EncodableMap{{EncodableValue("originalPath"), EncodableValue(path)}, {EncodableValue("trashId"), EncodableValue(Utf8FromUtf16(receipt.c_str()))}}));
     } else if (call.method_name() == "restoreTrash") {
       const HRESULT hr = Restore(Wide(StringArg(args, "trashId")), Wide(path));

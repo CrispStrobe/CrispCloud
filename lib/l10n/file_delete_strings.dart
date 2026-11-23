@@ -4,13 +4,22 @@ class FileDeleteStrings {
   FileDeleteStrings(BuildContext context)
     : language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final String language;
-  String text(String key) => (_values[language] ?? _values['en']!)[key]!;
+  String text(String key) => _values[language]?[key] ?? _values['en']![key]!;
   String count(String key, int value) =>
       text(key).replaceAll('{count}', '$value');
   static const _values = <String, Map<String, String>>{
     "en": {
       "permanentTitle": "Delete without restore",
       "trashTitle": "Move to trash",
+      "trashUnavailable": "The selected storage has no Recycle Bin operation.",
+      "trashNetwork": "The Windows Recycle Bin is unavailable on network drives. The files will stay in place unless you choose permanent deletion.",
+      "noFiles": "Select a file or folder to delete.",
+      "fileInUse": "Windows could not delete the item because it is in use. Close the file in the app that opened it and try again.",
+      "accessDenied": "Windows denied access. Check your permissions and whether the item is read-only.",
+      "fileMissing":
+          "Windows could no longer find the item at its original location.",
+      "permanentlyDeleted": "{count} item(s) permanently deleted.",
+      "trashFailed": "Windows could not move the item to the Recycle Bin. Check whether this drive supports recycling.",
       "selected": "{count} selected item(s)",
       "permanent": "Delete permanently",
       "skipTrash": "Bypass trash and disable Undo.",
@@ -23,6 +32,15 @@ class FileDeleteStrings {
     "de": {
       "permanentTitle": "Ohne Wiederherstellung löschen",
       "trashTitle": "In den Papierkorb verschieben",
+      "trashUnavailable":
+          "Für den ausgewählten Speicher steht kein Papierkorb zur Verfügung.",
+      "trashFailed": "Windows konnte das Element nicht in den Papierkorb verschieben. Prüfen Sie, ob das Laufwerk den Papierkorb unterstützt.",
+      "trashNetwork": "Der Windows-Papierkorb ist auf Netzlaufwerken nicht verfügbar. Die Dateien bleiben erhalten, bis Sie die endgültige Löschung auswählen.",
+      "noFiles": "Wählen Sie eine Datei oder einen Ordner zum Löschen aus.",
+      "fileInUse": "Windows konnte das Element nicht löschen, weil es gerade verwendet wird. Schließen Sie die Datei im betreffenden Programm und versuchen Sie es erneut.",
+      "accessDenied": "Windows hat den Zugriff verweigert. Prüfen Sie Ihre Berechtigungen und ob das Element schreibgeschützt ist.",
+      "fileMissing": "Windows konnte das Element am ursprünglichen Speicherort nicht mehr finden.",
+      "permanentlyDeleted": "{count} Element(e) endgültig gelöscht.",
       "selected": "{count} ausgewählte(s) Element(e)",
       "permanent": "Endgültig löschen",
       "skipTrash": "Papierkorb umgehen und Rückgängig deaktivieren.",

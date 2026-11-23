@@ -108,9 +108,14 @@ class PdfRendererViewState extends State<PdfRendererView> {
     while (mounted && epoch == _openEpoch) {
       try {
         if (widget.backend == PdfViewerBackend.crispOffice) {
-          _office = office.PdfViewerController.fromBytes(
-            widget.bytes,
-            password: password,
+          final file = office.PdfFile.open(widget.bytes, password: password);
+          _office = office.PdfViewerController(
+            file: file,
+            lists: List.generate(
+              file.pageCount,
+              (index) => _DeferredOfficePdfPage(file, index),
+              growable: false,
+            ),
           )..addListener(_changed);
         } else {
           _document = editor.PdfDocument.open(widget.bytes, password: password);
@@ -306,4 +311,24 @@ class PdfRendererViewState extends State<PdfRendererView> {
       ],
     );
   }
+}
+
+/// Layout can read all page sizes without interpreting their contents. The
+/// canvas requests paint operations only for pages near the viewport.
+class _DeferredOfficePdfPage extends office.PdfDisplayList {
+  _DeferredOfficePdfPage(this._file, this._index)
+    : super(page: _file.pageAt(_index));
+
+  final office.PdfFile _file;
+  final int _index;
+  late final office.PdfDisplayList _content = _file.displayList(_index);
+
+  @override
+  List<office.PdfPaintOp> get ops => _content.ops;
+
+  @override
+  List<office.PdfTextRun> get runs => _content.runs;
+
+  @override
+  List<office.PdfHotspot> get hotspots => _content.hotspots;
 }

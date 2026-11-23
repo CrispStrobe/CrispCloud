@@ -45,6 +45,18 @@ class NativeFileOperations {
     return TrashReceipt.fromJson(result);
   }
 
+  Future<bool> hasNetworkTrashTarget(List<String> paths) async {
+    if (kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.windows ||
+        paths.isEmpty) {
+      return false;
+    }
+    return await channel.invokeMethod<bool>('hasNetworkTrashTarget', {
+          'paths': paths,
+        }) ??
+        false;
+  }
+
   Future<void> restore(TrashReceipt receipt) =>
       channel.invokeMethod<void>('restoreTrash', receipt.toJson());
 

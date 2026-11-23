@@ -110,6 +110,10 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   bool get _wordProtected => _word.document.restrictEditing;
   bool get _canChangeProtection =>
       !_protectionPending && _word.canChangeProtection;
+  bool get _singleWordMenuRow =>
+      widget.kind == OfficeEditorKind.word &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.windows;
   SheetEditorController get _sheet => _c as SheetEditorController;
   SlideEditorController get _slides => _c as SlideEditorController;
 
@@ -143,10 +147,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          ListenableBuilder(
-            listenable: _c,
-            builder: (BuildContext context, Widget? child) => _menuBar(theme),
-          ),
+          if (!_singleWordMenuRow)
+            ListenableBuilder(
+              listenable: _c,
+              builder: (BuildContext context, Widget? child) => _menuBar(theme),
+            ),
           _tabStrip(theme),
           if (!_collapsed)
             ListenableBuilder(
@@ -173,20 +178,20 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       color: theme.colorScheme.surfaceContainer,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children: <Widget>[
-            _MenuButton(label: context.tr('File'), items: _fileMenu(theme)),
-            _MenuButton(label: context.tr('Edit'), items: _editMenu(theme)),
-            _MenuButton(label: context.tr('View'), items: _viewMenu(theme)),
-            _MenuButton(label: context.tr('Insert'), items: _insertMenu(theme)),
-            _MenuButton(label: context.tr('Format'), items: _formatMenu(theme)),
-            _MenuButton(label: context.tr('Tools'), items: _toolsMenu(theme)),
-            _MenuButton(label: context.tr('Help'), items: _helpMenu(theme)),
-          ],
-        ),
+        child: Row(children: _menus(theme)),
       ),
     );
   }
+
+  List<_MenuButton> _menus(ThemeData theme) => <_MenuButton>[
+    _MenuButton(label: context.tr('File'), items: _fileMenu(theme)),
+    _MenuButton(label: context.tr('Edit'), items: _editMenu(theme)),
+    _MenuButton(label: context.tr('View'), items: _viewMenu(theme)),
+    _MenuButton(label: context.tr('Insert'), items: _insertMenu(theme)),
+    _MenuButton(label: context.tr('Format'), items: _formatMenu(theme)),
+    _MenuButton(label: context.tr('Tools'), items: _toolsMenu(theme)),
+    _MenuButton(label: context.tr('Help'), items: _helpMenu(theme)),
+  ];
 
   List<Widget> _fileMenu(ThemeData theme) => <Widget>[
     _menuItem(
@@ -487,13 +492,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     }
     items.addAll(<Widget>[
       const Divider(height: 1),
-      _menuItem(
-        _c.mode == OfficeInteractionMode.editing
-            ? 'Reading view'
-            : 'Return to editing',
-        _toggleReadingMode,
-        icon: Icons.chrome_reader_mode_outlined,
+      SubmenuButton(
+        menuChildren: _documentModeItems(),
+        child: Text(context.tr('Document mode')),
       ),
+      _menuItem('Zoom out', () => _zoomBy(-0.1), icon: Icons.zoom_out),
+      _menuItem('Zoom reset', () => _setZoom(1), icon: Icons.search),
+      _menuItem('Zoom in', () => _zoomBy(0.1), icon: Icons.zoom_in),
       _menuItem(
         'Collapse ribbon',
         () => setState(() => _collapsed = true),
@@ -501,6 +506,54 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       ),
     ]);
     return items;
+  }
+
+  static const _documentModes = {
+    OfficeInteractionMode.editing: 'Edit document',
+    OfficeInteractionMode.selecting: 'Read and copy',
+    OfficeInteractionMode.viewing: 'Preview only',
+  };
+
+  List<Widget> _documentModeItems() => [
+    for (final entry in _documentModes.entries)
+      _menuItem(
+        entry.value,
+        () => _setDocumentMode(entry.key),
+        icon: _c.mode == entry.key ? Icons.check : Icons.circle_outlined,
+      ),
+  ];
+
+  Widget _documentModeGroup() => _group('Document mode', [
+    MenuAnchor(
+      menuChildren: _documentModeItems(),
+      builder: (context, menu, _) => _bigButton(
+        Icons.edit_document,
+        _documentModes[_c.mode]!,
+        () => menu.isOpen ? menu.close() : menu.open(),
+      ),
+    ),
+  ]);
+
+  Widget _zoomGroup() => _group('Zoom', [
+    _bigButton(Icons.zoom_out, 'Zoom out', () => _zoomBy(-0.1)),
+    _bigButton(
+      Icons.search,
+      '${(_c.viewport.scale * 100).round()}%',
+      () => _setZoom(1),
+    ),
+    _bigButton(Icons.zoom_in, 'Zoom in', () => _zoomBy(0.1)),
+  ]);
+
+  void _zoomBy(double step) => _setZoom(_c.viewport.scale + step);
+
+  void _setZoom(double scale) {
+    final controller = _c;
+    if (controller is WordEditorController) {
+      controller.setZoomPreservingPage(scale);
+    } else {
+      controller.viewport.setScale(scale);
+      controller.refresh();
+    }
   }
 
   List<Widget> _toolsMenu(ThemeData theme) {
@@ -591,6 +644,94 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     );
   }
 
+  void _selectTab(int index) {
+    setState(() {
+      _tab = index;
+      _collapsed = false;
+    });
+  }
+
+  Widget _windowsWordMenuRow(ThemeData theme) {
+    const icons = [
+      Icons.home_outlined,
+      Icons.add_box_outlined,
+      Icons.space_dashboard_outlined,
+      Icons.rate_review_outlined,
+      Icons.visibility_outlined,
+    ];
+    const buttonWidth = 32.0;
+    const groupGap = 8.0;
+    return ListenableBuilder(
+      listenable: _c,
+      builder: (context, _) => LayoutBuilder(
+        builder: (context, constraints) {
+          final menus = _menus(theme);
+          final painter = TextPainter(
+            textDirection: Directionality.of(context),
+            textScaler: MediaQuery.textScalerOf(context),
+          );
+          final menuTextStyle = DefaultTextStyle.of(context).style
+              .copyWith(fontSize: _MenuButton.fontSize);
+          var menuWidth = 0.0;
+          for (final menu in menus) {
+            painter
+              ..text = TextSpan(text: menu.label, style: menuTextStyle)
+              ..layout();
+            menuWidth += painter.width.ceil() + 2 * _MenuButton.horizontalPad;
+          }
+          painter.dispose();
+          final showTabs =
+              constraints.maxWidth >=
+              menuWidth + groupGap + icons.length * buttonWidth;
+          return Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: menus),
+                ),
+              ),
+              const SizedBox(width: groupGap),
+              if (showTabs)
+                for (var i = 0; i < icons.length; i++)
+                  SizedBox.square(
+                    dimension: buttonWidth,
+                    child: IconButton(
+                      key: ValueKey('office-ribbon-tab-${_tabs[i]}'),
+                      tooltip: context.tr(_tabs[i]),
+                      isSelected: i == _tab,
+                      iconSize: 17,
+                      style: IconButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: i == _tab
+                            ? theme.colorScheme.secondaryContainer
+                            : null,
+                      ),
+                      onPressed: () => _selectTab(i),
+                      icon: Icon(icons[i]),
+                    ),
+                  )
+              else
+                _MenuButton(
+                  label: context.tr('Ribbon tabs'),
+                  dropdown: true,
+                  items: [
+                    for (var i = 0; i < _tabs.length; i++)
+                      _menuItem(
+                        _tabs[i],
+                        () => _selectTab(i),
+                        icon: i == _tab ? Icons.check : icons[i],
+                      ),
+                  ],
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _tabStrip(ThemeData theme) {
     return Container(
       height: 32,
@@ -625,47 +766,49 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               ),
             ),
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: <Widget>[
-                  for (int i = 0; i < _tabs.length; i++)
-                    InkWell(
-                      onTap: () => setState(() {
-                        _tab = i;
-                        _collapsed = false;
-                      }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        height: 32,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: _tab == i
-                                  ? theme.colorScheme.primary
-                                  : Colors.transparent,
-                              width: 2,
+            flex: _singleWordMenuRow ? 4 : 1,
+            child: _singleWordMenuRow
+                ? _windowsWordMenuRow(theme)
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: <Widget>[
+                        for (int i = 0; i < _tabs.length; i++)
+                          InkWell(
+                            onTap: () => _selectTab(i),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _tab == i
+                                        ? theme.colorScheme.primary
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                context.tr(_tabs[i]),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: _tab == i
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: _tab == i
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        child: Text(
-                          context.tr(_tabs[i]),
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: _tab == i
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: _tab == i
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
-                ],
-              ),
-            ),
+                  ),
           ),
           IconButton(
             tooltip: OfficeRibbonControlStrings(context)
@@ -1228,15 +1371,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ]),
           _group('Measurements', <Widget>[_unitControl()]),
+          _zoomGroup(),
+          _documentModeGroup(),
           _group('Workspace', <Widget>[
-            _bigButton(
-              Icons.chrome_reader_mode_outlined,
-              _c.mode == OfficeInteractionMode.editing
-                  ? 'Reading view'
-                  : 'Edit',
-              _toggleReadingMode,
-              active: _c.mode != OfficeInteractionMode.editing,
-            ),
             _bigButton(
               Icons.keyboard_arrow_up,
               _collapsed ? 'Expand' : 'Collapse',
@@ -1582,15 +1719,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ]),
           _group('Measurements', <Widget>[_unitControl()]),
+          _zoomGroup(),
+          _documentModeGroup(),
           _group('Workspace', <Widget>[
-            _bigButton(
-              Icons.chrome_reader_mode_outlined,
-              _c.mode == OfficeInteractionMode.editing
-                  ? 'Reading view'
-                  : 'Edit',
-              _toggleReadingMode,
-              active: _c.mode != OfficeInteractionMode.editing,
-            ),
             _bigButton(
               Icons.keyboard_arrow_up,
               _collapsed ? 'Expand' : 'Collapse',
@@ -2846,7 +2977,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final OfficeInteractionMode next = _c.mode == OfficeInteractionMode.editing
         ? OfficeInteractionMode.viewing
         : OfficeInteractionMode.editing;
-    widget.onConfigChanged(widget.config.copyWith(mode: next));
+    _setDocumentMode(next);
+  }
+
+  void _setDocumentMode(OfficeInteractionMode mode) {
+    widget.onConfigChanged(widget.config.copyWith(mode: mode));
   }
 
   void _aboutEditor() {
@@ -3951,10 +4086,18 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 // -----------------------------------------------------------------------------
 
 class _MenuButton extends StatelessWidget {
-  const _MenuButton({required this.label, required this.items});
+  const _MenuButton({
+    required this.label,
+    required this.items,
+    this.dropdown = false,
+  });
 
   final String label;
   final List<Widget> items;
+  final bool dropdown;
+
+  static const fontSize = 12.0;
+  static const horizontalPad = 8.0;
 
   @override
   Widget build(BuildContext context) {
@@ -3966,13 +4109,22 @@ class _MenuButton extends StatelessWidget {
               onTap: () =>
                   controller.isOpen ? controller.close() : controller.open(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: horizontalPad,
+                  vertical: 5,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    if (dropdown) const Icon(Icons.arrow_drop_down, size: 16),
+                  ],
                 ),
               ),
             );

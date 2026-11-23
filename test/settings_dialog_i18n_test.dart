@@ -62,6 +62,22 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text(entry.value), findsOneWidget);
+      if (entry.key == 'de') {
+        expect(find.text('Schnellsuche'), findsOneWidget);
+        expect(find.text('Groß-/Kleinschreibung beachten'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('settings-page-documents')));
+        await tester.pumpAndSettle();
+        expect(find.text('Office-Schriften herunterladen'), findsOneWidget);
+      }
+      if (entry.key == 'ar') {
+        expect(find.text('البحث السريع'), findsOneWidget);
+        expect(
+          Directionality.of(tester.element(find.text(entry.value))),
+          TextDirection.rtl,
+        );
+      }
+      await tester.tap(find.byKey(const ValueKey('settings-page-storage')));
+      await tester.pumpAndSettle();
       final delta = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_delta_sync_toggle')),
       );
@@ -80,17 +96,6 @@ void main() {
         (await SharedPreferences.getInstance()).getBool('delta_sync_enabled'),
         isTrue,
       );
-      if (entry.key == 'de') {
-        expect(find.text('Schnellsuche'), findsOneWidget);
-        expect(find.text('Groß-/Kleinschreibung beachten'), findsOneWidget);
-      }
-      if (entry.key == 'ar') {
-        expect(find.text('البحث السريع'), findsOneWidget);
-        expect(
-          Directionality.of(tester.element(find.text(entry.value))),
-          TextDirection.rtl,
-        );
-      }
     });
   }
 }

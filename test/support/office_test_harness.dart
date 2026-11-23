@@ -103,6 +103,7 @@ class OfficeTestHarness {
     addTearDown(container.dispose);
     final panel = container.read(panelProvider(PanelSide.remote));
     await panel.refresh();
+    await officePumpUntil(tester, () => panel.files?.isNotEmpty ?? false);
     final file = panel.files!.single;
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -112,24 +113,22 @@ class OfficeTestHarness {
           theme: theme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
               body: ElevatedButton(
-                onPressed: () => Navigator.of(context).push<void>(
-                  MaterialPageRoute<void>(
-                    builder: (_) => OfficeEditorDialog(
-                      file: file,
-                      side: PanelSide.remote,
-                      bytesOverride: bytesOverride,
-                      targetOverride:
-                          targetOverride ??
-                          (bytesOverride == null
-                              ? null
-                              : panel.captureFileTarget(file)),
-                      copyExporter: copyExporter,
-                      saveAsExporter: saveAsExporter,
-                    ),
-                  ),
+                onPressed: () => showOfficeEditorDialog(
+                  context,
+                  ref,
+                  file,
+                  PanelSide.remote,
+                  bytesOverride: bytesOverride,
+                  targetOverride:
+                      targetOverride ??
+                      (bytesOverride == null
+                          ? null
+                          : panel.captureFileTarget(file)),
+                  copyExporter: copyExporter,
+                  saveAsExporter: saveAsExporter,
                 ),
                 child: const Text('Open fixture'),
               ),

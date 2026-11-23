@@ -51,7 +51,11 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show showPropertiesDialog, showFileContextMenu, showCreateLinkDialog;
+    show
+        openLocalFileOnEnter,
+        showPropertiesDialog,
+        showFileContextMenu,
+        showCreateLinkDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -275,9 +279,15 @@ KeyEventResult handleKeyEvent(
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.enter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       final item = panel.cursorItem;
-      if (item != null) panel.navigateInto(item);
+      if (item != null) {
+        if (panel.isTypeahead) panel.clearTypeahead();
+        if (!openLocalFileOnEnter(context, ref, activePanel, item)) {
+          unawaited(panel.navigateInto(item));
+        }
+      }
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.numpad5) {

@@ -534,8 +534,13 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       return KeyEventResult.handled;
     }
     final current = _visible[index];
-    if (key == LogicalKeyboardKey.enter) {
-      _open(current);
+    if ((key == LogicalKeyboardKey.enter ||
+            key == LogicalKeyboardKey.numpadEnter) &&
+        !keyboard.isShiftPressed) {
+      if (event is KeyDownEvent &&
+          !openLocalFileOnEnter(context, ref, widget.side, current)) {
+        unawaited(_open(current));
+      }
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.insert) {

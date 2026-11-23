@@ -92,10 +92,11 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
 
   Future<void> _review(OfficeFontPackStatus status) async {
     final pack = status.pack;
+    final s = SettingsStrings(context);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(pack.title),
+        title: Text(s.text(pack.title)),
         scrollable: true,
         content: SizedBox(
           width: 540,
@@ -103,20 +104,25 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(pack.description),
+              Text(s.text(pack.description)),
               const SizedBox(height: 12),
-              Text('Source: ${pack.source}'),
-              Text('Licence: ${pack.licence}'),
-              Text('Download size: ${_size(pack.bytes)}'),
+              Text('${s.text('Source')}: ${pack.source}'),
+              Text('${s.text('Licence')}: ${pack.licence}'),
+              Text('${s.text('Download size')}: ${_size(pack.bytes)}'),
               const SizedBox(height: 8),
-              const Text(
-                'Downloads start only when you choose Install. Every file is verified by SHA-256 before it is registered. Microsoft fonts are never downloaded.',
+              Text(
+                s.text(
+                  'Downloads start only when you choose Install. Every file is verified by SHA-256 before it is registered. Microsoft fonts are never downloaded.',
+                ),
               ),
               const SizedBox(height: 12),
-              Text('Files', style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                s.text('Files'),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
               for (final file in pack.files)
                 Text(
-                  '${file.family}${file.italic ? ' Italic' : ''} · '
+                  '${file.family}${file.italic ? ' ${s.text('Italic')}' : ''} · '
                   '${file.fileName}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -129,7 +135,7 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
               Uri.parse(pack.licenceUrl),
               mode: LaunchMode.externalApplication,
             ),
-            child: const Text('Open licence'),
+            child: Text(s.text('Open licence')),
           ),
           TextButton(
             onPressed: _busy
@@ -138,11 +144,11 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
                     await _install(pack);
                     if (dialogContext.mounted) Navigator.pop(dialogContext);
                   },
-            child: Text(status.installed ? 'Repair' : 'Install'),
+            child: Text(s.text(status.installed ? 'Repair' : 'Install')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
+            child: Text(s.text('Close')),
           ),
         ],
       ),
@@ -151,8 +157,9 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final s = SettingsStrings(context);
     return AlertDialog(
-      title: const Text('Office font downloads'),
+      title: Text(s.text('Office font downloads')),
       scrollable: true,
       content: SizedBox(
         width: 680,
@@ -160,8 +167,10 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Text(
-              'Optional open font packs are stored in the application-support folder. Exact fonts installed by Microsoft Office are preferred and are never redistributed.',
+            Text(
+              s.text(
+                'Optional open font packs are stored in the application-support folder. Exact fonts installed by Microsoft Office are preferred and are never redistributed.',
+              ),
             ),
             const SizedBox(height: 8),
             if (_busy) const LinearProgressIndicator(),
@@ -178,18 +187,20 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        status.pack.title,
+                        s.text(status.pack.title),
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       Text(
-                        status.problem != null
-                            ? 'Needs repair'
-                            : status.installed
-                            ? 'Installed'
-                            : 'Not installed',
+                        s.text(
+                          status.problem != null
+                              ? 'Needs repair'
+                              : status.installed
+                              ? 'Installed'
+                              : 'Not installed',
+                        ),
                       ),
                       Text(
-                        '${status.pack.description} · '
+                        '${s.text(status.pack.description)} · '
                         '${_size(status.pack.bytes)} · '
                         '${status.pack.licence}',
                       ),
@@ -205,14 +216,14 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
                         children: <Widget>[
                           TextButton(
                             onPressed: _busy ? null : () => _review(status),
-                            child: const Text('Review / install'),
+                            child: Text(s.text('Review / install')),
                           ),
                           if (status.installed || status.problem != null)
                             TextButton(
                               onPressed: _busy
                                   ? null
                                   : () => _remove(status.pack),
-                              child: const Text('Remove downloaded data'),
+                              child: Text(s.text('Remove downloaded data')),
                             ),
                         ],
                       ),
@@ -226,7 +237,8 @@ class _OfficeFontDownloadsDialogState extends State<OfficeFontDownloadsDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          autofocus: true,
+          child: Text(s.text('Close')),
         ),
       ],
     );

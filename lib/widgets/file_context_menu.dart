@@ -89,16 +89,37 @@ import 'storage_analyzer_dialog.dart' show showFolderSizeDialog;
 
 const _log = Log('FileContextMenu');
 
-/// Text/code files are editable via the built-in F4 editor.
+/// Opens an actual local file on Enter. The caller handles folders and
+/// virtual files using the navigation behavior of its view.
+bool openLocalFileOnEnter(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  FileItem file,
+) {
+  final panel = ref.read(panelProvider(side));
+  if (kIsWeb || file.isFolder || panel.isInArchive) return false;
+  final origin = panel.originForOperation(file);
+  if (origin == null || origin.source is! LocalPanelSource) return false;
+  unawaited(
+    openListedFileWithSystemEditor(context, ref, file, sourceOrigin: origin),
+  );
+  return true;
+}
 
 Future<void> openListedFileWithSystemEditor(
   BuildContext context,
   WidgetRef ref,
-  FileItem file,
-) async {
+  FileItem file, {
+  PanelFileOrigin? sourceOrigin,
+}) async {
   try {
     if (kIsWeb) throw UnsupportedError('System editor not available');
-    final origin = captureFileActionOrigin(ref, file);
+    final origin = captureFileActionOrigin(
+      ref,
+      file,
+      sourceOrigin: sourceOrigin,
+    );
     await withNativeFileAction(ref, origin, [requireFilePath(file)], () async {
       if (context.mounted) await openWithSystemEditor(context, file.path!);
     });
@@ -114,9 +135,7 @@ Future<void> openListedFileWithSystemEditor(
 Future<void> openWithSystemEditor(BuildContext context, String path) async {
   try {
     final uri = Uri.file(path);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       _log.warn('Cannot launch file URI: $uri');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

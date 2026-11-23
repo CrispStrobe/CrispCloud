@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/widgets/pdf_renderer_view.dart';
@@ -66,6 +69,90 @@ void main() {
       },
     );
   }
+  testWidgets('CrispOffice only interprets page contents when needed', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 400,
+            height: 260,
+            child: PdfRendererView(
+              bytes: buildPdfEditorFixture(),
+              backend: PdfViewerBackend.crispOffice,
+              onCompatibility: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final controller = tester
+        .widget<office.QudsPdfViewer>(find.byType(office.QudsPdfViewer))
+        .controller;
+    expect(controller.pageCount, 2);
+    expect(controller.lists[1].page.height, 400);
+    final content = Uint8List.fromList('1 0 0 rg 10 10 40 20 re f'.codeUnits);
+    controller.file!.pageDict(1)['Contents'] = office.PdfCosStream(
+      office.PdfCosDict(),
+      content,
+    );
+    await tester.tap(find.byTooltip('Next page'));
+    await tester.pumpAndSettle();
+    expect(
+      controller.lists[1].ops.whereType<office.PdfFillPath>(),
+      hasLength(1),
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('CrispOffice paints a fax scan without a text layer', (
+    tester,
+  ) async {
+    final boundaryKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RepaintBoundary(
+          key: boundaryKey,
+          child: PdfRendererView(
+            bytes: buildPdfEditorFixture(faxScan: true),
+            backend: PdfViewerBackend.crispOffice,
+            onCompatibility: () =>
+                fail('The scan should render in CrispOffice'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final viewer = tester.widget<office.QudsPdfViewer>(
+      find.byType(office.QudsPdfViewer),
+    );
+    expect(viewer.controller.lists.first.runs, isEmpty);
+    final boundary =
+        boundaryKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+    var darkest = 255;
+    for (var attempt = 0; attempt < 20 && darkest > 20; attempt++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final level = await tester.runAsync(() async {
+        if (boundary.debugNeedsPaint) return null;
+        final image = await boundary.toImage();
+        try {
+          final pixels = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          return pixels.getUint8((250 * image.width + 400) * 4);
+        } finally {
+          image.dispose();
+        }
+      });
+      if (level != null && level < darkest) darkest = level;
+    }
+    expect(darkest, lessThan(20));
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('fit width accounts for page rotation', (tester) async {
     final key = GlobalKey<PdfRendererViewState>();
     await tester.pumpWidget(

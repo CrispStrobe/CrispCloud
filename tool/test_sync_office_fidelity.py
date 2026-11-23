@@ -82,6 +82,32 @@ class SyncOfficeFidelityTest(unittest.TestCase):
             sync.plan(self.source, self.host, 'HEAD')
         self.assertEqual((self.host/self.name).read_text(), 'host customization')
 
+    def test_declared_patch_is_kept_until_upstream_absorbs_it(self):
+        path = self.host/'tool/office_fidelity_manifest.json'
+        manifest = json.loads(path.read_text())
+        manifest['local_patch_bases'] = {self.name: manifest['files'][self.name]}
+        manifest['files'][self.name] = sync.digest(b'patched')
+        path.write_text(json.dumps(manifest))
+        (self.host/self.name).write_bytes(b'patched')
+
+        self.write_source('packages/quds_office_engine/lib/another.dart', 'new')
+        self.commit()
+        change = sync.plan(self.source, self.host, 'HEAD')
+        self.assertNotIn(self.name, change['writes'])
+        self.assertEqual(change['manifest']['local_patch_bases'],
+                         manifest['local_patch_bases'])
+
+        self.write_source(self.name, 'a different upstream change')
+        self.commit()
+        with self.assertRaisesRegex(sync.SyncError, 'Upstream changed a locally patched file'):
+            sync.plan(self.source, self.host, 'HEAD')
+
+        self.write_source(self.name, 'patched')
+        self.commit()
+        change = sync.plan(self.source, self.host, 'HEAD')
+        self.assertNotIn(self.name, change['writes'])
+        self.assertNotIn('local_patch_bases', change['manifest'])
+
     def test_apply_without_source_modes_keeps_existing_permission_behavior(self):
         target = self.host/self.name
         target.chmod(0o755)

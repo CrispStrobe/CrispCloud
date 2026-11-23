@@ -309,7 +309,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final scaffold = Scaffold(
       // Windows keeps its application menus even when the optional toolbar is
       // hidden. They share the same row as the primary window actions.
-      appBar: isWindowsDesktop || (showTopToolbar && !_nativeToolbarReady)
+      appBar: (isWindowsDesktop && officeEditor == null) ||
+              (!isWindowsDesktop && showTopToolbar && !_nativeToolbarReady)
           ? AppBar(
               toolbarHeight: isWindowsDesktop ? 48 : null,
               titleSpacing: isWindowsDesktop ? 8 : 12,

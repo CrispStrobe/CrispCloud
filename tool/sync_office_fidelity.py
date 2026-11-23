@@ -85,6 +85,21 @@ def standalone_path(name, sources):
     return any(name.startswith(prefix + '/') for prefix in sources)
 
 
+def local_patch_bases(manifest, independent):
+    """Check explicit host overlays without relaxing the hash checks."""
+    patches = manifest.get('local_patch_bases', {})
+    if not isinstance(patches, dict):
+        raise SyncError('Invalid Office local patch bases')
+    for name, upstream_hash in patches.items():
+        if (not shared(name) or standalone_path(name, independent)
+                or name not in manifest['files']
+                or not isinstance(upstream_hash, str)
+                or not re.fullmatch(r'[0-9a-f]{64}', upstream_hash)
+                or manifest['files'][name] == upstream_hash):
+            raise SyncError(f'Invalid Office local patch base: {name}')
+    return patches
+
+
 def shared(name):
     path = safe_path(name)
     parts = path.parts
@@ -138,6 +153,7 @@ def plan(source, target_root, ref, branch=None):
     target = git(source, 'rev-parse', '--verify', '--end-of-options', ref+'^{commit}').decode().strip()
     git(source, 'cat-file', '-e', base+'^{commit}')
     expected = manifest['files']
+    patches = local_patch_bases(manifest, independent)
     tree = git(source, 'diff', '--name-only', '--no-renames', base, target).decode().splitlines()
     tree += git(source, 'ls-tree', '-r', '--name-only', target, '--',
                 'packages/quds_proofing_spacy', MACRO_EXAMPLES).decode().splitlines()
@@ -152,9 +168,10 @@ def plan(source, target_root, ref, branch=None):
             raise SyncError(f'Vendor drift: {name}; reconcile the host change first')
         if not standalone_path(name, independent):
             original = originals[name]
-            if digest(original) != sha:
+            if original is None or digest(original) != patches.get(name, sha):
                 raise SyncError(f'Manifest does not match its source commit: {name}')
     writes, deletes = {}, []
+    retained_patches = {}
     hashes = {name: sha for name, sha in expected.items() if standalone_path(name, independent)}
     for name in names:
         safe_path(name)
@@ -165,6 +182,12 @@ def plan(source, target_root, ref, branch=None):
         before = originals[name]
         after = incoming[name]
         current = path.read_bytes() if path.is_file() else None
+        if name in patches and current != after:
+            if after != before:
+                raise SyncError(f'Upstream changed a locally patched file: {name}; reconcile it first')
+            retained_patches[name] = patches[name]
+            hashes[name] = expected[name]
+            continue
         if path.is_symlink() or (current not in (before, after)
                                  and not (current is None and name not in expected)):
             raise SyncError(f'Unsynced host customization: {name}')
@@ -176,6 +199,10 @@ def plan(source, target_root, ref, branch=None):
         if current != after:
             writes[name] = after
     result = dict(manifest, source_commit=target, files=hashes)
+    if retained_patches:
+        result['local_patch_bases'] = retained_patches
+    else:
+        result.pop('local_patch_bases', None)
     if branch:
         result['source_branch'] = branch
     return {'before': base, 'after': target, 'writes': writes, 'deletes': deletes,

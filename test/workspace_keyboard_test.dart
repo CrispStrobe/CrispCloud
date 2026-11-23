@@ -4,6 +4,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/providers/focus_area_provider.dart';
+import 'package:crisp_cloud/providers/folder_sort_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/keyboard_shortcuts.dart';
 import 'package:crisp_cloud/providers/toolbar_provider.dart'
@@ -23,6 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/workflow_fake_client.dart';
 
 class _Local extends Fake implements LocalFileService {
+  List<FileSystemEntity> entries = [];
+  String? lockedFile;
   @override
   String currentPath = '/landing';
   @override
@@ -32,7 +35,22 @@ class _Local extends Fake implements LocalFileService {
   @override
   Future<String> getSafeFallbackDirectory() async => currentPath;
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
+  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
+      entries.where((entry) => entry.existsSync()).toList();
+  @override
+  Future<bool> ensureAccess(String path) async {
+    if (path == lockedFile) {
+      throw FileSystemException(
+        'Sharing violation',
+        path,
+        const OSError('', 32),
+      );
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> hasAccessToPath(String path) async => true;
   @override
   Future<void> refresh() async {}
 }
@@ -102,6 +120,175 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
   }
+
+  testWidgets('Enter and keypad Enter launch the local DOCX association', (
+    tester,
+  ) async {
+    const channel = MethodChannel('plugins.flutter.io/url_launcher');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    final launches = <String>[];
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'launch');
+      expect(call.arguments['useWebView'], isFalse);
+      launches.add(call.arguments['url'] as String);
+      return true;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    final temp = Directory.systemTemp.createTempSync('crisp-enter-');
+    final document = File.fromUri(
+      temp.uri.resolve('Bericht f%C3%BCr Word.docx'),
+    )..writeAsBytesSync([1]);
+    addTearDown(() {
+      document.deleteSync();
+      temp.deleteSync();
+    });
+    final local = container.read(localFileServiceProvider) as _Local;
+    local.entries = [document];
+    await mount(tester);
+    final panel = container.read(panelProvider(PanelSide.local));
+    await tester.runAsync(() => panel.navigateToPath(temp.path));
+    await tester.pumpAndSettle();
+    panel.setCursorToItem(panel.files!.singleWhere((file) => !file.isFolder));
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
+    await tester.pump();
+    expect(launches, [document.uri.toString(), document.uri.toString()]);
+    expect(find.byType(Dialog), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the row cursor does not move the filename in either list', (
+    tester,
+  ) async {
+    final file = FileItem(name: 'stationary.txt', isFolder: false);
+    final name = find.text(file.name);
+    for (final brief in [false, true]) {
+      Future<void> show(bool cursor) => tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: brief
+                  ? CompactFileTile(
+                      file: file,
+                      side: PanelSide.local,
+                      isCursor: cursor,
+                      isSelected: false,
+                      onTap: (_, _) {},
+                      onDoubleTap: () {},
+                    )
+                  : FileListTile(
+                      file: file,
+                      side: PanelSide.local,
+                      isCursor: cursor,
+                      isSelected: false,
+                      onTap: (_, _) {},
+                      onDoubleTap: () {},
+                    ),
+            ),
+          ),
+        ),
+      );
+      await show(false);
+      final before = tester.getTopLeft(name);
+      await show(true);
+      expect(tester.getTopLeft(name), before);
+    }
+  });
+
+  testWidgets(
+    'F8 on a Windows network drive explains trash and Shift+F8 refreshes',
+    (tester) async {
+      const channel = MethodChannel('crispcloud/files');
+      final messenger = tester.binding.defaultBinaryMessenger;
+      final temp = Directory.systemTemp.createTempSync('crisp-delete-');
+      final file = File.fromUri(temp.uri.resolve('%7E%24draft.docx'))
+        ..writeAsBytesSync([1]);
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(channel, null);
+        if (file.existsSync()) file.deleteSync();
+        temp.deleteSync();
+      });
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        expect(call.method, 'hasNetworkTrashTarget');
+        expect(call.arguments['paths'], [file.path]);
+        return true;
+      });
+      final local = container.read(localFileServiceProvider) as _Local;
+      local.currentPath = temp.path;
+      local.entries = [file];
+      await mount(tester);
+      final panel = container.read(panelProvider(PanelSide.local));
+      await tester.runAsync(() async {
+        for (
+          var i = 0;
+          i < 200 && (panel.isLoading || panel.files == null);
+          i++
+        ) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, temp.path);
+      final row = panel.files!.singleWhere((row) => !row.isFolder);
+      expect(panel.originForOperation(row), isNotNull);
+      panel.toggleSelection(row);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.f8);
+      await tester.pump();
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.f8);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('unavailable on network drives'),
+        findsOneWidget,
+        reason: tester
+            .widgetList<Text>(find.byType(Text))
+            .map((text) => text.data)
+            .join(' / '),
+      );
+      final confirm = find.byKey(const ValueKey('file-delete-confirm'));
+      expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(file.existsSync(), isTrue);
+
+      Future<void> confirmPermanentDelete() async {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.f8);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+        expect(find.text('Delete without restore'), findsOneWidget);
+        expect(find.text(file.uri.pathSegments.last), findsOneWidget);
+        await tester.runAsync(() async {
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          for (var i = 0; i < 200 && confirm.evaluate().isNotEmpty; i++) {
+            await tester.pump(const Duration(milliseconds: 30));
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+        });
+        await tester.pumpAndSettle();
+        expect(confirm, findsNothing);
+      }
+
+      local.lockedFile = file.path;
+      await confirmPermanentDelete();
+      expect(find.textContaining('because it is in use'), findsOneWidget);
+      expect(file.existsSync(), isTrue);
+      expect(panel.selection.single.path, file.path);
+
+      local.lockedFile = null;
+      await confirmPermanentDelete();
+      expect(file.existsSync(), isFalse);
+      expect(panel.files!.where((row) => !row.isFolder), isEmpty);
+      expect(panel.selection, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({TargetPlatform.windows}),
+  );
 
   testWidgets('modified function keys sort without opening file operations', (
     tester,
@@ -489,6 +676,37 @@ void main() {
 
     FileItem row(PanelNotifier panel, String name) =>
         panel.files!.singleWhere((file) => file.name == name);
+
+    testWidgets('folders can keep alphabetical order and entering selects ..', (
+      tester,
+    ) async {
+      final panel = await remote(tester, {
+        '/a/one.txt': [1],
+        '/z/two.txt': [2],
+        '/zfile.txt': [3],
+        '/afile.txt': [4],
+      });
+      panel.setSortBy(SortBy.name);
+      panel.toggleSortOrder();
+      expect(panel.files!.map((file) => file.name), [
+        'z',
+        'a',
+        'zfile.txt',
+        'afile.txt',
+      ]);
+      await container.read(sortFoldersLikeFilesProvider.notifier).set(false);
+      expect(panel.files!.map((file) => file.name), [
+        'a',
+        'z',
+        'zfile.txt',
+        'afile.txt',
+      ]);
+      panel.setCursorToItem(row(panel, 'z'));
+      await panel.navigateInto(row(panel, 'z'));
+      expect(panel.cursorItem?.name, '..');
+      await panel.navigateUp();
+      expect(panel.cursorItem?.name, 'z');
+    });
 
     testWidgets('Shift+F5 copies the cursor file in its folder under a new '
         'name', (tester) async {

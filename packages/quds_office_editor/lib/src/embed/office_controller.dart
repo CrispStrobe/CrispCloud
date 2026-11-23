@@ -12262,8 +12262,13 @@ class SheetEditorController extends OfficeController {
     if (cellEditor.editing) {
       return cellEditor.formulaBar;
     }
-    final SmlCell cell = sheet.cell(activeCell);
-    return cell.formula ?? cell.asString;
+    return _editableCellText(sheet.cell(activeCell));
+  }
+
+  static String _editableCellText(SmlCell cell) {
+    final formula = cell.formula;
+    if (formula == null || formula.isEmpty) return cell.asString;
+    return formula.startsWith('=') ? formula : '=$formula';
   }
 
   /// cellDisplayText API.
@@ -13876,7 +13881,7 @@ class SheetEditorController extends OfficeController {
     final SmlCell cell = sheet.cell(activeCell);
     _cellEditSheet = sheet;
     _cellEditCell = cell;
-    _cellTextBeforeEdit = cell.formula ?? cell.asString;
+    _cellTextBeforeEdit = _editableCellText(cell);
     _cellTextLastObserved = _cellTextBeforeEdit;
     final String seed = initial ?? (replace ? '' : _cellTextBeforeEdit!);
     cellEditor.begin(seed, caret: caret);
@@ -14119,7 +14124,7 @@ class SheetEditorController extends OfficeController {
     final bool discardedDraft =
         _cellTextBeforeEdit != null && text != _cellTextBeforeEdit;
     _clearCellEditTracking();
-    if (text == (cell.formula ?? cell.asString)) {
+    if (text == _editableCellText(cell)) {
       lastValidationError = null;
       notifyListeners();
       return;

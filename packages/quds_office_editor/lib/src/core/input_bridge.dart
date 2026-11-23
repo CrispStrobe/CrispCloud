@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/services.dart';
 
 /// Raw [TextInputClient] used by Word runs and sheet cells.
@@ -17,7 +19,12 @@ class OfficeInputBridge with TextInputClient {
   /// Set by a mounted editor to reject stale IME traffic while a dialog or
   /// another input owns focus. Headless controller use keeps its prior policy.
   bool Function()? inputAllowed;
+
+  /// The Flutter view that owns this editor. Windows requires a non-null
+  /// view ID when registering a platform text-input client.
+  int? viewId;
   TextInputConnection? _connection;
+  int? _connectedViewId;
 
   /// empty API.
   TextEditingValue _value = TextEditingValue.empty;
@@ -41,7 +48,9 @@ class OfficeInputBridge with TextInputClient {
       detach();
       return;
     }
-    if (isAttached) {
+    final inputViewId =
+        viewId ?? PlatformDispatcher.instance.implicitView?.viewId;
+    if (isAttached && _connectedViewId == inputViewId) {
       _connection!
         ..show()
         ..setEditingState(_value);
@@ -51,6 +60,7 @@ class OfficeInputBridge with TextInputClient {
     final TextInputConnection connection = TextInput.attach(
       this,
       TextInputConfiguration(
+        viewId: inputViewId,
         inputType: multiline ? TextInputType.multiline : TextInputType.text,
         inputAction: action,
         autocorrect: autocorrect,
@@ -58,6 +68,7 @@ class OfficeInputBridge with TextInputClient {
       ),
     );
     _connection = connection;
+    _connectedViewId = inputViewId;
     if (connection.attached) {
       connection
         ..show()

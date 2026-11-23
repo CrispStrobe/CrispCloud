@@ -198,6 +198,13 @@ class InlineCellEditor {
     onChanged?.call();
   }
 
+  /// Keeps an external field and the inline editor on the same cell draft.
+  void updateDraft(TextEditingValue value) {
+    if (!editing) return;
+    bridge.setValue(value);
+    _onValue(value);
+  }
+
   void _onAction(TextInputAction action) {
     if (action == TextInputAction.done ||
         action == TextInputAction.next ||

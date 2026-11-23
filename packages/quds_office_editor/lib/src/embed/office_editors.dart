@@ -353,6 +353,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _c.input.viewId = View.of(context).viewId;
     final route = ModalRoute.of(context);
     final isCurrent = route?.isCurrent ?? true;
     final routeChanged =
@@ -386,6 +387,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
         oldWidget.controller.onThesaurusRequested = null;
       }
       oldWidget.controller.onRequestFocus = null;
+      _c.input.viewId = View.of(context).viewId;
       _c.input.inputAllowed = _inputGuard;
       _c.detachInput();
       _c.addListener(_onCtrl);
@@ -1603,6 +1605,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _c.cellEditor.bridge.viewId = View.of(context).viewId;
     _inputRoute = ModalRoute.of(context);
   }
 
@@ -1613,6 +1616,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
     if (!identical(oldWidget.controller, _c)) {
       oldWidget.controller.cellEditor.bridge.inputAllowed = () => false;
       oldWidget.controller.cellEditor.bridge.detach();
+      _c.cellEditor.bridge.viewId = View.of(context).viewId;
       _c.cellEditor.bridge.inputAllowed = _inputGuard;
       _c.cellEditor.bridge.detach();
       oldWidget.controller.removeListener(_rebuild);
@@ -1639,6 +1643,27 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
     } else if (_c.cellEditor.editing) {
       _c.cellEditor.bridge.attach();
     }
+  }
+
+  Widget _withFormulaBar(OfficeSurfaceConfig config, Widget grid) {
+    if (!config.showFormulaBar) return grid;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        grid,
+        Positioned(
+          left: 0,
+          top: 0,
+          right: 0,
+          height: 28,
+          child: _SheetFormulaBar(
+            controller: _c,
+            config: config,
+            focusGrid: _focus.requestFocus,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -2019,198 +2044,199 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
               (config.showFindChrome || _c.findSession.active))
             widget.findBarBuilder!(context, _c),
           Expanded(
-            child: Focus(
-              focusNode: _focus,
-              onKeyEvent: _onKey,
-              child: Shortcuts(
-                shortcuts: const <ShortcutActivator, Intent>{
-                  SingleActivator(LogicalKeyboardKey.keyF, control: true):
-                      OfficeFindIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyH, control: true):
-                      OfficeReplaceIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyP, control: true):
-                      OfficePrintIntent(),
-                  SingleActivator(LogicalKeyboardKey.f7):
-                      OfficeSpellCheckIntent(),
-                  SingleActivator(LogicalKeyboardKey.f3):
-                      OfficeFindNextIntent(),
-                  SingleActivator(LogicalKeyboardKey.f3, shift: true):
-                      OfficeFindNextIntent(forward: false),
-                  SingleActivator(LogicalKeyboardKey.keyZ, control: true):
-                      OfficeUndoIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyY, control: true):
-                      OfficeRedoIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyY, meta: true):
-                      OfficeRedoIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyA, control: true):
-                      OfficeSelectAllIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyA, meta: true):
-                      OfficeSelectAllIntent(),
-                  SingleActivator(LogicalKeyboardKey.arrowLeft):
-                      _SheetMoveIntent(-1, 0),
-                  SingleActivator(LogicalKeyboardKey.arrowRight):
-                      _SheetMoveIntent(1, 0),
-                  SingleActivator(LogicalKeyboardKey.arrowUp): _SheetMoveIntent(
-                    0,
-                    -1,
-                  ),
-                  SingleActivator(LogicalKeyboardKey.arrowDown):
-                      _SheetMoveIntent(0, 1),
-                  SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
-                      _SheetMoveIntent(-1, 0, extend: true),
-                  SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
-                      _SheetMoveIntent(1, 0, extend: true),
-                  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
-                      _SheetMoveIntent(0, -1, extend: true),
-                  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
-                      _SheetMoveIntent(0, 1, extend: true),
-                  SingleActivator(LogicalKeyboardKey.tab): _SheetMoveIntent(
-                    1,
-                    0,
-                    leaveEdit: true,
-                  ),
-                  SingleActivator(LogicalKeyboardKey.tab, shift: true):
-                      _SheetMoveIntent(-1, 0, leaveEdit: true),
-                  SingleActivator(LogicalKeyboardKey.backspace):
-                      _SheetClearIntent(),
-                  SingleActivator(LogicalKeyboardKey.delete):
-                      _SheetClearIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyC, control: true):
-                      OfficeCopyIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyX, control: true):
-                      OfficeCutIntent(),
-                  SingleActivator(LogicalKeyboardKey.keyV, control: true):
-                      OfficePasteIntent(),
-                  SingleActivator(
-                    LogicalKeyboardKey.keyV,
-                    control: true,
-                    shift: true,
-                  ): OfficePasteIntent(
-                    OfficePasteMode.keepTextOnly,
-                  ),
-                },
-                child: Actions(
-                  actions: <Type, Action<Intent>>{
-                    ..._documentActions(_c),
-                    OfficeUndoIntent: CallbackAction<OfficeUndoIntent>(
-                      onInvoke: (_) {
-                        _c.undo();
-                        return null;
-                      },
+            child: _withFormulaBar(
+              config,
+              Focus(
+                focusNode: _focus,
+                onKeyEvent: _onKey,
+                child: Shortcuts(
+                  shortcuts: const <ShortcutActivator, Intent>{
+                    SingleActivator(LogicalKeyboardKey.keyF, control: true):
+                        OfficeFindIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyH, control: true):
+                        OfficeReplaceIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyP, control: true):
+                        OfficePrintIntent(),
+                    SingleActivator(LogicalKeyboardKey.f7):
+                        OfficeSpellCheckIntent(),
+                    SingleActivator(LogicalKeyboardKey.f3):
+                        OfficeFindNextIntent(),
+                    SingleActivator(LogicalKeyboardKey.f3, shift: true):
+                        OfficeFindNextIntent(forward: false),
+                    SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+                        OfficeUndoIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyY, control: true):
+                        OfficeRedoIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyY, meta: true):
+                        OfficeRedoIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyA, control: true):
+                        OfficeSelectAllIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyA, meta: true):
+                        OfficeSelectAllIntent(),
+                    SingleActivator(LogicalKeyboardKey.arrowLeft):
+                        _SheetMoveIntent(-1, 0),
+                    SingleActivator(LogicalKeyboardKey.arrowRight):
+                        _SheetMoveIntent(1, 0),
+                    SingleActivator(LogicalKeyboardKey.arrowUp):
+                        _SheetMoveIntent(0, -1),
+                    SingleActivator(LogicalKeyboardKey.arrowDown):
+                        _SheetMoveIntent(0, 1),
+                    SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+                        _SheetMoveIntent(-1, 0, extend: true),
+                    SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+                        _SheetMoveIntent(1, 0, extend: true),
+                    SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+                        _SheetMoveIntent(0, -1, extend: true),
+                    SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+                        _SheetMoveIntent(0, 1, extend: true),
+                    SingleActivator(LogicalKeyboardKey.tab): _SheetMoveIntent(
+                      1,
+                      0,
+                      leaveEdit: true,
                     ),
-                    OfficeRedoIntent: CallbackAction<OfficeRedoIntent>(
-                      onInvoke: (_) {
-                        _c.redo();
-                        return null;
-                      },
-                    ),
-                    OfficeSelectAllIntent:
-                        CallbackAction<OfficeSelectAllIntent>(
-                          onInvoke: (_) {
-                            _c.selectAll();
-                            return null;
-                          },
-                        ),
-                    _SheetMoveIntent: CallbackAction<_SheetMoveIntent>(
-                      onInvoke: (_SheetMoveIntent i) {
-                        _moveSheet(
-                          i.dc,
-                          i.dr,
-                          extend: i.extend,
-                          leaveEdit: i.leaveEdit,
-                        );
-                        return null;
-                      },
-                    ),
-                    _SheetClearIntent: CallbackAction<_SheetClearIntent>(
-                      onInvoke: (_) {
-                        _c.clearSelectedCells();
-                        return null;
-                      },
-                    ),
-                    OfficeCopyIntent: CallbackAction<OfficeCopyIntent>(
-                      onInvoke: (_) {
-                        _c.copyToClipboard();
-                        return null;
-                      },
-                    ),
-                    OfficeCutIntent: CallbackAction<OfficeCutIntent>(
-                      onInvoke: (_) {
-                        _c.cutToClipboard();
-                        return null;
-                      },
-                    ),
-                    OfficePasteIntent: CallbackAction<OfficePasteIntent>(
-                      onInvoke: (OfficePasteIntent i) {
-                        _c.pasteFromClipboard(mode: i.mode);
-                        return null;
-                      },
+                    SingleActivator(LogicalKeyboardKey.tab, shift: true):
+                        _SheetMoveIntent(-1, 0, leaveEdit: true),
+                    SingleActivator(LogicalKeyboardKey.backspace):
+                        _SheetClearIntent(),
+                    SingleActivator(LogicalKeyboardKey.delete):
+                        _SheetClearIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyC, control: true):
+                        OfficeCopyIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyX, control: true):
+                        OfficeCutIntent(),
+                    SingleActivator(LogicalKeyboardKey.keyV, control: true):
+                        OfficePasteIntent(),
+                    SingleActivator(
+                      LogicalKeyboardKey.keyV,
+                      control: true,
+                      shift: true,
+                    ): OfficePasteIntent(
+                      OfficePasteMode.keepTextOnly,
                     ),
                   },
-                  child: Semantics(
-                    container: true,
-                    label: _c.semanticsLabel,
-                    value: _c.semanticsValue,
-                    readOnly: !config.allowsMutation,
-                    child: SheetGrid(
-                      sheet: _c.sheet,
-                      workbook: _c.workbook,
-                      selection: _c.selection,
-                      findHits: _c.findSession.hits,
-                      activeFindIndex: _c.findSession.index,
-                      formulaBar: _c.formulaBarText,
-                      nameBox: _c.nameBoxText,
-                      frozenRows: widget.frozenRows > 0
-                          ? widget.frozenRows
-                          : _c.sheet.freezeRows,
-                      frozenCols: widget.frozenCols > 0
-                          ? widget.frozenCols
-                          : _c.sheet.freezeCols,
-                      config: config,
-                      hasFocus: _focus.hasFocus,
-                      semanticsLabel: _c.semanticsLabel,
-                      semanticsValue: _c.semanticsValue,
-                      viewport: _c.viewport,
-                      selectedDrawingIndex: _c.selectedDrawingIndex,
-                      editing: _c.cellEditor.editing,
-                      editText: _c.cellEditor.formulaBar,
-                      editCaret: _c.cellEditor.caretIndex,
-                      editBase: _c.cellEditor.selectionBase,
-                      cellLabel: _c.cellDisplayText,
-                      onSelectDrawing: _c.selectDrawing,
-                      onActivateDrawing: _c.cycleSelectedDrawingKind,
-                      onPlaceEditCaret: _c.placeEditCaret,
-                      onCommitEdit: _c.commitCellEdit,
-                      onPointRef: _c.pointEditRef,
-                      functionSuggestions: _c.functionSuggestions,
-                      functionSuggestionIndex: _c.functionSuggestionIndex,
-                      functionTooltipArabic: identical(
-                        config.strings,
-                        OfficeStrings.arabic,
+                  child: Actions(
+                    actions: <Type, Action<Intent>>{
+                      ..._documentActions(_c),
+                      OfficeUndoIntent: CallbackAction<OfficeUndoIntent>(
+                        onInvoke: (_) {
+                          _c.undo();
+                          return null;
+                        },
                       ),
-                      onHighlightFunction: _c.highlightFunctionSuggestion,
-                      onApplyFunction: (int index) {
-                        _c.applyFunctionSuggestion(index);
-                      },
-                      onResizeColumn: _c.previewColumnWidth,
-                      onResizeRow: _c.previewRowHeight,
-                      onCommitResize: _c.commitResize,
-                      onBeginDrawingTransform: _c.beginDrawingTransform,
-                      onMoveDrawing: _c.previewDrawingMove,
-                      onResizeDrawing: _c.previewDrawingResize,
-                      onCommitDrawingTransform: _c.commitDrawingTransform,
-                      onChanged: () {
-                        _focus.requestFocus();
-                        _c.refresh();
-                      },
-                      onActivate: _c.beginCellEdit,
-                      onContextMenu: _showSheetContext,
-                      onInsertRowAt: (int index) {
-                        _c.insertSheetRows(after: false, index: index);
-                      },
-                      onInsertColAt: (int index) {
-                        _c.insertSheetCols(after: false, index: index);
-                      },
+                      OfficeRedoIntent: CallbackAction<OfficeRedoIntent>(
+                        onInvoke: (_) {
+                          _c.redo();
+                          return null;
+                        },
+                      ),
+                      OfficeSelectAllIntent:
+                          CallbackAction<OfficeSelectAllIntent>(
+                            onInvoke: (_) {
+                              _c.selectAll();
+                              return null;
+                            },
+                          ),
+                      _SheetMoveIntent: CallbackAction<_SheetMoveIntent>(
+                        onInvoke: (_SheetMoveIntent i) {
+                          _moveSheet(
+                            i.dc,
+                            i.dr,
+                            extend: i.extend,
+                            leaveEdit: i.leaveEdit,
+                          );
+                          return null;
+                        },
+                      ),
+                      _SheetClearIntent: CallbackAction<_SheetClearIntent>(
+                        onInvoke: (_) {
+                          _c.clearSelectedCells();
+                          return null;
+                        },
+                      ),
+                      OfficeCopyIntent: CallbackAction<OfficeCopyIntent>(
+                        onInvoke: (_) {
+                          _c.copyToClipboard();
+                          return null;
+                        },
+                      ),
+                      OfficeCutIntent: CallbackAction<OfficeCutIntent>(
+                        onInvoke: (_) {
+                          _c.cutToClipboard();
+                          return null;
+                        },
+                      ),
+                      OfficePasteIntent: CallbackAction<OfficePasteIntent>(
+                        onInvoke: (OfficePasteIntent i) {
+                          _c.pasteFromClipboard(mode: i.mode);
+                          return null;
+                        },
+                      ),
+                    },
+                    child: Semantics(
+                      container: true,
+                      label: _c.semanticsLabel,
+                      value: _c.semanticsValue,
+                      readOnly: !config.allowsMutation,
+                      child: SheetGrid(
+                        sheet: _c.sheet,
+                        workbook: _c.workbook,
+                        selection: _c.selection,
+                        findHits: _c.findSession.hits,
+                        activeFindIndex: _c.findSession.index,
+                        formulaBar: _c.formulaBarText,
+                        nameBox: _c.nameBoxText,
+                        frozenRows: widget.frozenRows > 0
+                            ? widget.frozenRows
+                            : _c.sheet.freezeRows,
+                        frozenCols: widget.frozenCols > 0
+                            ? widget.frozenCols
+                            : _c.sheet.freezeCols,
+                        config: config,
+                        hasFocus: _focus.hasFocus,
+                        semanticsLabel: _c.semanticsLabel,
+                        semanticsValue: _c.semanticsValue,
+                        viewport: _c.viewport,
+                        selectedDrawingIndex: _c.selectedDrawingIndex,
+                        editing: _c.cellEditor.editing,
+                        editText: _c.cellEditor.formulaBar,
+                        editCaret: _c.cellEditor.caretIndex,
+                        editBase: _c.cellEditor.selectionBase,
+                        cellLabel: _c.cellDisplayText,
+                        onSelectDrawing: _c.selectDrawing,
+                        onActivateDrawing: _c.cycleSelectedDrawingKind,
+                        onPlaceEditCaret: _c.placeEditCaret,
+                        onCommitEdit: _c.commitCellEdit,
+                        onPointRef: _c.pointEditRef,
+                        functionSuggestions: _c.functionSuggestions,
+                        functionSuggestionIndex: _c.functionSuggestionIndex,
+                        functionTooltipArabic: identical(
+                          config.strings,
+                          OfficeStrings.arabic,
+                        ),
+                        onHighlightFunction: _c.highlightFunctionSuggestion,
+                        onApplyFunction: (int index) {
+                          _c.applyFunctionSuggestion(index);
+                        },
+                        onResizeColumn: _c.previewColumnWidth,
+                        onResizeRow: _c.previewRowHeight,
+                        onCommitResize: _c.commitResize,
+                        onBeginDrawingTransform: _c.beginDrawingTransform,
+                        onMoveDrawing: _c.previewDrawingMove,
+                        onResizeDrawing: _c.previewDrawingResize,
+                        onCommitDrawingTransform: _c.commitDrawingTransform,
+                        onChanged: () {
+                          _focus.requestFocus();
+                          _c.refresh();
+                        },
+                        onActivate: _c.beginCellEdit,
+                        onContextMenu: _showSheetContext,
+                        onInsertRowAt: (int index) {
+                          _c.insertSheetRows(after: false, index: index);
+                        },
+                        onInsertColAt: (int index) {
+                          _c.insertSheetCols(after: false, index: index);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -2224,6 +2250,168 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
         ],
       ),
     );
+  }
+}
+
+class _SheetFormulaBar extends StatefulWidget {
+  const _SheetFormulaBar({
+    required this.controller,
+    required this.config,
+    required this.focusGrid,
+  });
+
+  final SheetEditorController controller;
+  final OfficeSurfaceConfig config;
+  final VoidCallback focusGrid;
+
+  @override
+  State<_SheetFormulaBar> createState() => _SheetFormulaBarState();
+}
+
+class _SheetFormulaBarState extends State<_SheetFormulaBar> {
+  final _focus = FocusNode(debugLabel: 'Spreadsheet formula bar');
+  late final _text = TextEditingController(
+    text: widget.controller.formulaBarText,
+  );
+  bool _ownsDraft = false;
+
+  bool get _canEdit {
+    final c = widget.controller;
+    return widget.config.allowsMutation &&
+        !(c.sheet.protection?.enabled == true &&
+            c.sheet.cell(c.activeCell).locked);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocus);
+  }
+
+  @override
+  void didUpdateWidget(_SheetFormulaBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final c = widget.controller;
+    if (!identical(oldWidget.controller, c) || !c.cellEditor.editing) {
+      _ownsDraft = false;
+    }
+    final value = c.formulaBarText;
+    if (_text.text != value) {
+      _text.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+    }
+  }
+
+  void _onFocus() {
+    if (!_focus.hasFocus && _ownsDraft) {
+      _ownsDraft = false;
+      widget.controller.commitCellEdit();
+    }
+  }
+
+  void _change(String text) {
+    if (!_canEdit) return;
+    final c = widget.controller;
+    if (!c.cellEditor.editing) c.beginCellEdit(initial: text);
+    _ownsDraft = c.cellEditor.editing;
+    c.cellEditor.updateDraft(_text.value);
+  }
+
+  void _finish({required bool commit}) {
+    _ownsDraft = false;
+    final c = widget.controller;
+    if (commit) {
+      c.commitCellEdit();
+      if (c.lastValidationError == null) c.moveSelection(0, 1);
+    } else {
+      c.cancelCellEdit();
+    }
+    widget.focusGrid();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final config = widget.config;
+    final theme = config.theme;
+    final style = TextStyle(color: theme.chromeText, fontSize: 12);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.chromeFill,
+        border: Border(bottom: BorderSide(color: theme.gridLine)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 3, 4, 4),
+        child: Row(
+          children: [
+            Container(
+              width: 88,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              alignment: AlignmentDirectional.centerStart,
+              decoration: BoxDecoration(
+                color: theme.pageBackground,
+                border: Border.all(color: theme.gridLine),
+              ),
+              child: Text(
+                widget.controller.nameBoxText,
+                style: style,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: ExcludeFocus(
+                excluding: !config.allowsSelection,
+                child: CallbackShortcuts(
+                  bindings: {
+                    const SingleActivator(LogicalKeyboardKey.escape): () =>
+                        _finish(commit: false),
+                  },
+                  child: Semantics(
+                    label: config.strings.formulaBar,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: theme.pageBackground,
+                        border: Border.all(color: theme.gridLine),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Center(
+                          child: EditableText(
+                            key: const ValueKey('sheet-formula-input'),
+                            controller: _text,
+                            focusNode: _focus,
+                            style: style,
+                            cursorColor: theme.chromeText,
+                            backgroundCursorColor: theme.gridLine,
+                            textInputAction: TextInputAction.done,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            readOnly: !_canEdit,
+                            onChanged: _change,
+                            onEditingComplete: () {},
+                            onSubmitted: (_) => _finish(commit: true),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _focus.removeListener(_onFocus);
+    _focus.dispose();
+    _text.dispose();
+    super.dispose();
   }
 }
 
@@ -2330,6 +2518,7 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _c.textEditor.bridge.viewId = View.of(context).viewId;
     _inputRoute = ModalRoute.of(context);
   }
 
@@ -2342,6 +2531,7 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
       oldWidget.controller.motionFrame.removeListener(_onMotionFrame);
       oldWidget.controller.textEditor.bridge.inputAllowed = () => false;
       oldWidget.controller.textEditor.bridge.detach();
+      _c.textEditor.bridge.viewId = View.of(context).viewId;
       _c.textEditor.bridge.inputAllowed = _inputGuard;
       _c.textEditor.bridge.detach();
       _c.addListener(_rebuild);

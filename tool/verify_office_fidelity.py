@@ -54,6 +54,7 @@ def verify_git_index(root, paths, exact_prefixes=()):
 def verify(root, source=None, legacy_source=None, *, require_tracked=False):
     manifest = json.loads((root / 'tool/office_fidelity_manifest.json').read_text())
     independent = office.standalone_sources(manifest, root)
+    patches = office.local_patch_bases(manifest, independent)
     failures = []
     for name, expected in manifest['files'].items():
         office.safe_path(name)
@@ -64,7 +65,7 @@ def verify(root, source=None, legacy_source=None, *, require_tracked=False):
             continue
         if source and not office.standalone_path(name, independent):
             upstream = source / name
-            if not upstream.is_file() or upstream.read_bytes() != local.read_bytes():
+            if not upstream.is_file() or office.digest(upstream.read_bytes()) != patches.get(name, expected):
                 failures.append(f'fork mismatch: {name}')
     if independent:
         pinned = {name[len(legacy.PREFIX) + 1:]: sha
