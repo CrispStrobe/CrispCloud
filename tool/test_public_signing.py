@@ -133,7 +133,25 @@ class AndroidSignerTests(unittest.TestCase):
     fingerprint = 'ab' * 32
 
     def report(self, fingerprint=None):
-        return 'Signer #1 certificate DN: CN=CrispCloud Release\nSigner #1 certificate SHA-256 digest: ' + (fingerprint or self.fingerprint) + '\n'
+        return ('Verifies\nNumber of signers: 1\nSigner #1 certificate DN: CN=CrispCloud Release\n'
+                'Signer #1 certificate SHA-256 digest: ' + (fingerprint or self.fingerprint) + '\n')
+
+    def v2_report(self, fingerprint=None):
+        # build-tools 36.1+ format, observed on ubuntu-latest 2026-11-23.
+        return ('Verifies\nNumber of signers: 1\nV2 Signer: certificate DN: CN=CrispCloud Release\n'
+                'V2 Signer: certificate SHA-256 digest: ' + (fingerprint or self.fingerprint) + '\n'
+                'V2 Signer: public key SHA-256 digest: ' + 'ef' * 32 + '\n')
+
+    def test_current_apksigner_format_is_accepted(self):
+        self.assertEqual(android.check_report(self.v2_report(), self.fingerprint), self.fingerprint)
+
+    def test_current_apksigner_format_refuses_other_or_extra_signers(self):
+        with self.assertRaisesRegex(ValueError, 'incompatible update'):
+            android.check_report(self.v2_report('cd' * 32), self.fingerprint)
+        for report in [self.v2_report().replace('signers: 1', 'signers: 2'),
+                       self.v2_report() + 'V3 Signer: certificate SHA-256 digest: ' + 'cd' * 32 + '\n']:
+            with self.subTest(report=report), self.assertRaisesRegex(ValueError, 'exactly one'):
+                android.check_report(report, self.fingerprint)
 
     def test_keystore_substitution_is_refused_before_building(self):
         with self.assertRaisesRegex(ValueError, 'previously published'):
@@ -151,7 +169,7 @@ class AndroidSignerTests(unittest.TestCase):
             android.check_report(self.report('cd' * 32), self.fingerprint)
 
     def test_multiple_signers_or_missing_signer_are_refused(self):
-        for report in ['', self.report() + self.report().replace('#1', '#2')]:
+        for report in ['', self.report() + self.report().replace('#1', '#2').replace('Verifies\nNumber of signers: 1\n', '')]:
             with self.subTest(report=report), self.assertRaisesRegex(ValueError, 'exactly one'):
                 android.check_report(report, self.fingerprint)
 

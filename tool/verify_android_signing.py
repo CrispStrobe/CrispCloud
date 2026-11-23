@@ -13,10 +13,18 @@ def check_report(report, expected):
         raise ValueError('Expected release certificate SHA-256 is invalid')
     if re.search(r'CN\s*=\s*Android Debug', report, re.I):
         raise ValueError('Refusing a debug-signed APK')
-    signers = re.findall(r'^Signer #(\d+) certificate SHA-256 digest:\s*([0-9a-fA-F:]+)\s*$', report, re.M)
-    if len(signers) != 1 or signers[0][0] != '1':
-        raise ValueError('Expected exactly one verified APK signer')
-    actual = signers[0][1].replace(':', '').lower()
+    # apksigner <= 35 prints "Signer #1 certificate ..."; newer build-tools
+    # print one "V2 Signer: certificate ..." (per scheme) block instead.
+    counts = re.findall(r'^Number of signers:\s*(\d+)\s*$', report, re.M)
+    signers = re.findall(
+        r'^(?:Signer #(\d+)|V[\d.]+ Signer:) certificate SHA-256 digest:\s*([0-9a-fA-F:]+)\s*$',
+        report, re.M)
+    digests = {digest.replace(':', '').lower() for _, digest in signers}
+    if (counts != ['1'] or not signers or len(digests) != 1
+            or any(number not in ('', '1') for number, _ in signers)):
+        summary = '\n'.join(line for line in report.splitlines() if not line.startswith('WARNING'))
+        raise ValueError('Expected exactly one verified APK signer; apksigner reported:\n' + summary)
+    actual = digests.pop()
     if actual != expected:
         raise ValueError('APK signer differs from the retained release key; refusing an incompatible update')
     return actual
