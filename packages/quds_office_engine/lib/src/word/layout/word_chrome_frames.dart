@@ -48,7 +48,7 @@ class _WordChromeFlow {
   double? textAnchor;
 }
 
-/// Supported native paragraph frame geometry for the footer story.
+/// Supported native paragraph frame geometry for running headers and footers.
 /// The authored attributes remain in the paragraph's source XML for save.
 class _WordChromeFrame {
   const _WordChromeFrame({
@@ -58,7 +58,7 @@ class _WordChromeFrame {
     required this.width,
     required this.horizontal,
     required this.vertical,
-    required this.alignment,
+    required this.horizontalAlignment,
   });
 
   final String key;
@@ -67,7 +67,7 @@ class _WordChromeFrame {
   final double? width;
   final String horizontal;
   final String vertical;
-  final WmlJustification? alignment;
+  final String? horizontalAlignment;
 
   static _WordChromeFrame? read(String? xml) {
     if (xml == null || !xml.contains('framePr')) return null;
@@ -85,13 +85,16 @@ class _WordChromeFrame {
     if (!anchors.contains(horizontal) || !anchors.contains(vertical))
       return null;
     final xAlign = attr('xAlign');
-    final alignment = switch (xAlign) {
-      'left' => WmlJustification.left,
-      'center' => WmlJustification.center,
-      'right' => WmlJustification.right,
-      _ => null,
-    };
-    if (xAlign != null && alignment == null) return null;
+    if (xAlign != null &&
+        !const {
+          'left',
+          'center',
+          'right',
+          'inside',
+          'outside',
+        }.contains(xAlign)) {
+      return null;
+    }
     final width = int.tryParse(attr('w') ?? '') ?? 0;
     final keys =
         frame.attributes
@@ -106,17 +109,32 @@ class _WordChromeFrame {
       width: width > 0 ? width / 20 : null,
       horizontal: horizontal,
       vertical: vertical,
-      alignment: alignment,
+      horizontalAlignment: xAlign,
     );
   }
 
-  ({double left, double width}) horizontalBox(WmlSection section) {
+  WmlJustification? alignmentForPage(int pageNumber) =>
+      switch (horizontalAlignment) {
+        'left' => WmlJustification.left,
+        'center' => WmlJustification.center,
+        'right' => WmlJustification.right,
+        'inside' =>
+          pageNumber.isEven ? WmlJustification.right : WmlJustification.left,
+        'outside' =>
+          pageNumber.isEven ? WmlJustification.left : WmlJustification.right,
+        _ => null,
+      };
+
+  ({double left, double width}) horizontalBox(
+    WmlSection section,
+    int pageNumber,
+  ) {
     final left = horizontal == 'page' ? 0.0 : section.margins.left;
     final available = horizontal == 'page'
         ? section.pageSize.width
         : section.contentWidth;
     final frameWidth = width ?? available;
-    final offset = switch (alignment) {
+    final offset = switch (alignmentForPage(pageNumber)) {
       WmlJustification.left => 0.0,
       WmlJustification.center => (available - frameWidth) / 2,
       WmlJustification.right => available - frameWidth,

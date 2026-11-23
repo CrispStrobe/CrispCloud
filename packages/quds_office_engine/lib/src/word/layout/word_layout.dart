@@ -4713,9 +4713,7 @@ class WordLayoutEngine {
     for (int i = 0; i < story.length; i++) {
       final WmlParagraph paragraph = story[i];
       final props = paragraph.properties;
-      final frame = isFooter
-          ? _WordChromeFrame.read(props.sourcePropertiesXml)
-          : null;
+      final frame = _WordChromeFrame.read(props.sourcePropertiesXml);
       if (frame == null) {
         activeFrame = null;
       } else if (activeFrame?.frame?.key != frame.key) {
@@ -4724,12 +4722,12 @@ class WordLayoutEngine {
       }
       final flow = activeFrame ?? ordinary;
       final box =
-          frame?.horizontalBox(section) ??
+          frame?.horizontalBox(section, pageNumber) ??
           (left: section.margins.left, width: section.contentWidth);
       final WmlDocument? doc = _layoutDoc;
       final String source = paragraph.text.replaceAll('\uFFFC', ' ');
       final String raw = source.trim();
-      if (isFooter) {
+      if (isFooter || frame != null) {
         for (final boundary
             in paragraph.inlines.whereType<WmlFieldBoundary>()) {
           switch (boundary.kind) {
@@ -4780,46 +4778,34 @@ class WordLayoutEngine {
         text.length + 1,
         (index) => generated ? null : rawStart + index,
       );
-      final double size = isFooter && run.fontSizePoints > 0
-          ? run.fontSizePoints
-          : run.fontSizePoints.clamp(8, 16);
-      var height = size + 3;
-      double? baseline;
-      if (isFooter) {
-        final point = text.isEmpty ? 0x20 : text.runes.first;
-        final font = _faceFor(point, run);
-        final metrics =
-            measureFont?.call(point, size, run) ??
-            (font == null
-                ? null
-                : FontMetrics(font: font, fontSizePoints: size));
-        height = _lineHeight(props, metrics, size);
-        final ascent = metrics?.typographicAscender ?? size * 0.8;
-        final naturalHeight = metrics?.typographicLineHeight ?? size * 1.32;
-        baseline = switch (props.lineSpacingRule) {
-          WmlLineSpacingRule.exact => height * 0.8,
-          WmlLineSpacingRule.atLeast => ascent + height - naturalHeight,
-          WmlLineSpacingRule.auto => ascent,
-        };
-        flow.height += props.spacingBefore;
-        if (flow.previousParagraph case final previous?) {
-          flow.height -= _paragraphGapOverlap(_afterParagraph(previous), props);
-        }
-        flow.previousParagraph = props;
-        if (frame == null) {
-          while (unanchored < frames.length) {
-            frames[unanchored++].textAnchor = flow.height;
-          }
+      final size = run.fontSizePoints > 0 ? run.fontSizePoints : 11.0;
+      final point = text.isEmpty ? 0x20 : text.runes.first;
+      final font = _faceFor(point, run);
+      final metrics =
+          measureFont?.call(point, size, run) ??
+          (font == null ? null : FontMetrics(font: font, fontSizePoints: size));
+      final height = _lineHeight(props, metrics, size);
+      final ascent = metrics?.typographicAscender ?? size * 0.8;
+      final naturalHeight = metrics?.typographicLineHeight ?? size * 1.32;
+      final baseline = switch (props.lineSpacingRule) {
+        WmlLineSpacingRule.exact => height * 0.8,
+        WmlLineSpacingRule.atLeast => ascent + height - naturalHeight,
+        WmlLineSpacingRule.auto => ascent,
+      };
+      flow.height += props.spacingBefore;
+      if (flow.previousParagraph case final previous?) {
+        flow.height -= _paragraphGapOverlap(_afterParagraph(previous), props);
+      }
+      flow.previousParagraph = props;
+      if (frame == null) {
+        while (unanchored < frames.length) {
+          frames[unanchored++].textAnchor = flow.height;
         }
       }
-      final String overlayColor = run.color.isEmpty
-          ? (isFooter ? '222222' : '6B7280')
-          : run.color;
+      final String overlayColor = run.color.isEmpty ? '222222' : run.color;
       void addLine(String label, List<int?> mapping, WmlJustification align) {
         final double width = label.isEmpty
             ? box.width
-            : frame == null
-            ? label.length * size * 0.52
             : label.runes.fold(
                 0.0,
                 (sum, rune) => sum + _advanceOf(rune, size, 0.52, run),
@@ -4835,7 +4821,7 @@ class WordLayoutEngine {
         final line = LaidOutLine(
           glyphs: <LaidOutGlyph>[],
           x: x,
-          y: y + flow.height,
+          y: (frame == null ? y : 0) + flow.height,
           width: width,
           height: height,
           pageIndex: pageNumber - 1,
@@ -4913,31 +4899,29 @@ class WordLayoutEngine {
           text,
           offsets,
           frame?.width == null
-              ? frame?.alignment ?? props.justification
+              ? frame?.alignmentForPage(pageNumber) ?? props.justification
               : props.justification,
         );
       }
-      flow.height += isFooter ? height + props.spacingAfter : size + 4;
+      flow.height += height + props.spacingAfter;
     }
+    final top = isFooter
+        ? section.pageSize.height - section.margins.footer - ordinary.height
+        : y;
     if (isFooter) {
-      final bottom = section.pageSize.height - section.margins.footer;
-      final top = bottom - ordinary.height;
       for (final line in ordinary.lines) {
         line._y += top;
       }
-      for (final flow in frames) {
-        final frame = flow.frame!;
-        final origin = switch (frame.vertical) {
-          'page' => 0.0,
-          'margin' => section.margins.top,
-          _ =>
-            flow.textAnchor == null
-                ? top - flow.height
-                : top + flow.textAnchor!,
-        };
-        for (final line in flow.lines) {
-          line._y += origin + frame.y;
-        }
+    }
+    for (final flow in frames) {
+      final frame = flow.frame!;
+      final origin = switch (frame.vertical) {
+        'page' => 0.0,
+        'margin' => section.margins.top,
+        _ => top + (flow.textAnchor ?? (isFooter ? -flow.height : 0)),
+      };
+      for (final line in flow.lines) {
+        line._y += origin + frame.y;
       }
     }
     return lines;

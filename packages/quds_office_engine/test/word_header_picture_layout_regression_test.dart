@@ -64,6 +64,36 @@ LaidOutDocument _layout(List<WmlSection> sections) => WordLayoutEngine(
 ).layout(WmlDocument(sections: sections), updateFields: false);
 
 void main() {
+  test('an outside-aligned header frame shares the running title row', () {
+    final number = _paragraph('7');
+    number.properties.sourcePropertiesXml =
+        '<w:pPr xmlns:w="${OfficeNamespaces.w}">'
+        '<w:framePr w:hAnchor="margin" w:vAnchor="text" '
+        'w:xAlign="outside" w:y="1"/></w:pPr>';
+    final title = _paragraph('Running title')
+      ..properties.justification = WmlJustification.center;
+    final pages = _layout([
+      _section(
+        header: [number, title],
+        blocks: [
+          _paragraph('First page'),
+          WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+          _paragraph('Second page'),
+        ],
+      ),
+    ]).pages;
+    expect(pages, hasLength(2));
+    for (final page in pages) {
+      final [label, runningTitle] = page.header;
+      expect(label.y, closeTo(runningTitle.y + 0.05, 0.001));
+      expect(runningTitle.x + runningTitle.width / 2, 200);
+      expect(
+        page.index.isEven ? label.x + label.width : label.x,
+        page.index.isEven ? 364 : 36,
+      );
+    }
+  });
+
   for (final locked in [false, true]) {
     test('a standalone header PAGE field keeps its lock state $locked', () {
       final number = WmlParagraph(
