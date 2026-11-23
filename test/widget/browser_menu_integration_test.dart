@@ -362,6 +362,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ConfigurableBrowserMenu), findsNothing);
     expect(find.byType(WindowsPlatformMenuBar), findsOneWidget);
+    expect(find.byKey(const ValueKey('windows-context-menu-Help')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('windows-context-menu-File')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('windows-context-item-Save')));
