@@ -808,6 +808,7 @@ class _StyleCascade {
     String name,
     Iterable<XmlElement?> layers, {
     Set<XmlElement> toggleLayers = const {},
+    Set<XmlElement> paragraphRunLayers = const {},
   }) {
     final result = WordPropertyIo.parse('', name)
       ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
@@ -901,8 +902,14 @@ class _StyleCascade {
                 'off',
               ].contains(element.getAttribute('val'));
           final on = enabled(child);
-          if (toggleLayers.contains(layer) && !on) continue;
-          final value = toggleLayers.contains(layer) ? !enabled(old) : on;
+          // Word uses the declared small-cap value in paragraph styles,
+          // including a derived heading which turns off inherited capitals.
+          final toggles =
+              toggleLayers.contains(layer) &&
+              !(child.localName == 'smallCaps' &&
+                  paragraphRunLayers.contains(layer));
+          if (toggles && !on) continue;
+          final value = toggles ? !enabled(old) : on;
           final effective = old ?? child.copy();
           effective.setAttribute('val', value ? '1' : '0', prefix: 'w');
           if (old == null) result.addChild(effective);
@@ -1103,16 +1110,25 @@ class _StyleCascade {
       markerProperties,
       'rStyle',
     )?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    final paragraphRunStyles = paragraphChain
+        .map((style) => _wordChild(style, 'rPr'))
+        .whereType<XmlElement>()
+        .toSet();
     final markerStyles = [
-      for (final s in paragraphChain) _wordChild(s, 'rPr'),
+      ...paragraphRunStyles,
       for (final s in chain(markerStyleId)) _wordChild(s, 'rPr'),
     ];
-    final markerXml = merged('rPr', [
-      _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
-      for (final t in tableLayers) _wordChild(t, 'rPr'),
-      ...markerStyles,
-      markerProperties,
-    ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
+    final markerXml = merged(
+      'rPr',
+      [
+        _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
+        for (final t in tableLayers) _wordChild(t, 'rPr'),
+        ...markerStyles,
+        markerProperties,
+      ],
+      toggleLayers: markerStyles.whereType<XmlElement>().toSet(),
+      paragraphRunLayers: paragraphRunStyles,
+    );
     if (markerXml.childElements.isNotEmpty) {
       final marker = WmlRunProps(kerningHalfPoints: _missingStyles ? 1 : null);
       reader._parseRPr(
@@ -1131,15 +1147,20 @@ class _StyleCascade {
       }
       final direct = WordPropertyIo.parse(props.sourcePropertiesXml, 'rPr');
       final styleRuns = [
-        for (final s in paragraphChain) _wordChild(s, 'rPr'),
+        ...paragraphRunStyles,
         for (final s in chain(props.styleId)) _wordChild(s, 'rPr'),
       ];
-      final rp = merged('rPr', [
-        _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
-        for (final t in tableLayers) _wordChild(t, 'rPr'),
-        ...styleRuns,
-        direct,
-      ], toggleLayers: styleRuns.whereType<XmlElement>().toSet());
+      final rp = merged(
+        'rPr',
+        [
+          _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
+          for (final t in tableLayers) _wordChild(t, 'rPr'),
+          ...styleRuns,
+          direct,
+        ],
+        toggleLayers: styleRuns.whereType<XmlElement>().toSet(),
+        paragraphRunLayers: paragraphRunStyles,
+      );
       final resolved = WmlRunProps(
         kerningHalfPoints: _missingStyles ? 1 : null,
       );

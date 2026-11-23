@@ -150,6 +150,57 @@ void main() {
   });
 
   test(
+    'a derived Word heading style can turn off inherited small capitals',
+    () {
+      final package = OpcPackage.create(OpcPackageKind.word);
+      package.createPart(
+        '/word/styles.xml',
+        OfficeContentTypes.wordStyles,
+        utf8.encode('''
+<w:styles xmlns:w="${OfficeNamespaces.w}">
+ <w:style w:type="paragraph" w:styleId="Base">
+  <w:rPr><w:smallCaps/></w:rPr>
+ </w:style>
+ <w:style w:type="paragraph" w:styleId="Derived">
+  <w:basedOn w:val="Base"/><w:rPr><w:smallCaps w:val="0"/></w:rPr>
+ </w:style>
+</w:styles>'''),
+      );
+      package
+          .relationshipsFor('/word/document.xml')
+          .add(type: RelationshipTypes.styles, target: 'styles.xml');
+      package.getPart('/word/document.xml')!.writeText('''
+<w:document xmlns:w="${OfficeNamespaces.w}"><w:body>
+ <w:p><w:pPr><w:pStyle w:val="Base"/></w:pPr><w:r><w:t>Base heading</w:t></w:r></w:p>
+ <w:p><w:pPr><w:pStyle w:val="Derived"/></w:pPr><w:r><w:t>Derived heading</w:t></w:r></w:p>
+ <w:sectPr/>
+</w:body></w:document>''');
+
+      final imported = WordDeserializer().read(package);
+      final reopened = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(imported),
+      );
+      for (final document in [imported, reopened]) {
+        final paragraphs = document.paragraphs.toList();
+        expect(
+          paragraphs.map(
+            (p) => p.inlines.whereType<WmlRun>().single.properties.smallCaps,
+          ),
+          [true, false],
+        );
+        expect(
+          paragraphs.map((p) => p.properties.importedParagraphMark?.smallCaps),
+          [true, false],
+        );
+        final lines = WordLayoutEngine(
+          font: null,
+        ).layout(document).pages.single.lines;
+        expect(lines.last.text, 'Derived heading');
+      }
+    },
+  );
+
+  test(
     'mixed native citation retains authored letters, metadata and protection',
     () {
       final rich = ZoteroFormattedText.fromHtml(
