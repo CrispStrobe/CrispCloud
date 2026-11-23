@@ -154,7 +154,9 @@ class _NoteStory {
       }
       height += bottom;
     }
-    return _NoteStory(lines, frames, math.max(height, 14));
+    // A short note reserves its measured height. Padding it to a fixed
+    // minimum could leave an invisible remainder on a continuation page.
+    return _NoteStory(lines, frames, height > 0 ? height : 14);
   }
 
   double cut(double start, double available) {

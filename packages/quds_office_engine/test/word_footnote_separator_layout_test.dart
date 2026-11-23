@@ -159,6 +159,40 @@ void main() {
     _expectClearBand(layout, document);
   });
 
+  test('short footnotes reserve their authored line height', () {
+    final document = _document(separator: _separator());
+    final paragraph = document.footnotes.single.paragraphs.single;
+    paragraph.properties
+      ..lineSpacingRule = WmlLineSpacingRule.exact
+      ..lineSpacing = 10;
+    final engine = WordLayoutEngine(font: null);
+    final roomy = engine.layout(document).pages.single;
+    final note = roomy.notes.single;
+    expect(note.height, 10);
+    final section = document.sections.single;
+    expect(
+      note.y + note.height,
+      section.pageSize.height - section.margins.bottom,
+    );
+
+    // Leave room for the body, separator, the note's exact line and one
+    // spare point. The note has no continuation to place on another page.
+    final height =
+        roomy.lines.single.y +
+        roomy.lines.single.height +
+        document.footnoteSeparator!.reservedHeight +
+        note.height +
+        section.margins.bottom +
+        1;
+    section.pageSize = WmlPageSize(
+      width: section.pageSize.width,
+      height: height,
+    );
+    final tight = engine.layout(document);
+    expect(tight.pages.single.notes.single.text, contains('Footnote text'));
+    _expectClearBand(tight, document);
+  });
+
   test('unused footnote preferences do not reserve body space', () {
     final document = _document(addNote: false, bodyParagraphs: 40);
     final engine = WordLayoutEngine(font: null);
