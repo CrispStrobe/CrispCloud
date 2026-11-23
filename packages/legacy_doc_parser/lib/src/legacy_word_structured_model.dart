@@ -95,6 +95,20 @@ enum LegacyWordSectionBreak {
   oddPage,
 }
 
+class LegacyWordHyphenation {
+  const LegacyWordHyphenation({
+    required this.enabled,
+    required this.hyphenateCapitals,
+    required this.zoneTwips,
+    required this.consecutiveLimit,
+  });
+
+  final bool enabled;
+  final bool hyphenateCapitals;
+  final int zoneTwips;
+  final int consecutiveLimit;
+}
+
 class LegacyWordDocument {
   const LegacyWordDocument({
     required this.blocks,
@@ -113,6 +127,7 @@ class LegacyWordDocument {
     this.media = const LegacyWordMediaCatalog(),
     this.evenAndOddHeaders = false,
     this.defaultTabStopTwips,
+    this.hyphenation,
     this.compatibility = const LegacyWordCompatibility.unspecified(),
     this.lineNumberStyle,
     this.fontTable = const [],
@@ -142,6 +157,7 @@ class LegacyWordDocument {
   /// DopBase.fFacingPages. Stored even-page stories alone do not enable them.
   final bool evenAndOddHeaders;
   final int? defaultTabStopTwips;
+  final LegacyWordHyphenation? hyphenation;
   final LegacyWordCompatibility compatibility;
 
   /// Resolved character formatting of an explicitly stored built-in Line

@@ -1,6 +1,6 @@
 part of 'word_layout.dart';
 
-bool _isPositionedPageField(WmlParagraph paragraph) {
+bool _isStandaloneChromePageField(WmlParagraph paragraph) {
   var started = false;
   var separated = false;
   var ended = false;

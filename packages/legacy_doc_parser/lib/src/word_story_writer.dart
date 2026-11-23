@@ -709,6 +709,10 @@ extension _WordStories on _StructuredWordWriter {
   }
 
   static final _fieldKeyword = RegExp(r'^\s*([A-Za-z][A-Za-z0-9_]*|=)');
+  static final _plainPageInstruction = RegExp(
+    r'^\s*PAGE(?:\s+\\\*\s+MERGEFORMAT)?\s*$',
+    caseSensitive: false,
+  );
 
   bool _safeField(LegacyWordField field) {
     final instruction = _fieldInstruction(field);
@@ -834,7 +838,25 @@ extension _WordStories on _StructuredWordWriter {
       });
     }
     _fieldRunStart(hidden || field.beginHidden);
-    _xml.add('<w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0">');
+    final storyKind = _stories[field.storyId]?.kind;
+    final livePage =
+        depth == 0 &&
+        (storyKind == LegacyWordStoryKind.header ||
+            storyKind == LegacyWordStoryKind.footer) &&
+        !hidden &&
+        !field.locked &&
+        !field.beginHidden &&
+        !field.separatorHidden &&
+        !field.endHidden &&
+        field.instructionHiddenRanges.isEmpty &&
+        field.displayRevision == null &&
+        _plainPageInstruction.hasMatch(instruction);
+    // A plain running page counter needs the current page. Other cached
+    // instructions retain their existing conversion lock.
+    _xml.add(
+      '<w:fldChar w:fldCharType="begin" '
+      '${livePage ? '' : 'w:fldLock="1" '}w:dirty="0">',
+    );
     _displayFieldRevision(field);
     _xml.add('</w:fldChar></w:r>');
     final instructionStart = field.startCp + 1;
@@ -1148,6 +1170,23 @@ extension _WordStories on _StructuredWordWriter {
         throw const FormatException('Invalid Word default tab interval.');
       }
       settings.add('<w:defaultTabStop w:val="$defaultTabs"/>');
+    }
+    if (document.hyphenation case final hyphenation?) {
+      final zone = hyphenation.zoneTwips;
+      final limit = hyphenation.consecutiveLimit;
+      if (zone < 0 || zone > 65535 || limit < 0 || limit > 65535) {
+        throw const FormatException('Invalid Word hyphenation settings.');
+      }
+      if (hyphenation.enabled) settings.add('<w:autoHyphenation/>');
+      if (limit != 0) {
+        settings.add('<w:consecutiveHyphenLimit w:val="$limit"/>');
+      }
+      if (zone != 0 || hyphenation.enabled) {
+        settings.add('<w:hyphenationZone w:val="$zone"/>');
+      }
+      if (hyphenation.enabled && !hyphenation.hyphenateCapitals) {
+        settings.add('<w:doNotHyphenateCaps/>');
+      }
     }
     if (document.evenAndOddHeaders) {
       settings.add('<w:evenAndOddHeaders/>');

@@ -4766,7 +4766,7 @@ class WordLayoutEngine {
         );
         text = resolved.isEmpty ? raw : resolved;
         generated = true;
-      } else if (frame != null && _isPositionedPageField(paragraph)) {
+      } else if (_isStandaloneChromePageField(paragraph)) {
         text = '$pageNumber';
         generated = true;
       } else {

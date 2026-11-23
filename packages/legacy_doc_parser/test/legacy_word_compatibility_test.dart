@@ -190,6 +190,27 @@ List<Map<String, dynamic>> _evidence(Map<String, Uint8List> files) =>
         .toList();
 
 void main() {
+  test('DopBase hyphenation settings survive structured conversion', () {
+    final dop = _dop(84);
+    dop[5] = 0x10; // fAutoHyphen on, fHyphCapitals off.
+    ByteData.sublistView(dop)
+      ..setUint16(14, 193, Endian.little)
+      ..setUint16(16, 2, Endian.little);
+    final bytes = _source(dop: dop);
+    final settings = parseLegacyWordDocument(bytes).hyphenation!;
+    expect(settings.enabled, isTrue);
+    expect(settings.hyphenateCapitals, isFalse);
+    expect(settings.zoneTwips, 193);
+    expect(settings.consecutiveLimit, 2);
+
+    final output = ZipDecoder().decodeBytes(convertLegacyWord(bytes).bytes);
+    final xml = utf8.decode(output.findFile('word/settings.xml')!.content);
+    expect(xml, contains('<w:autoHyphenation/>'));
+    expect(xml, contains('<w:doNotHyphenateCaps/>'));
+    expect(xml, contains('<w:hyphenationZone w:val="193"/>'));
+    expect(xml, contains('<w:consecutiveHyphenLimit w:val="2"/>'));
+  });
+
   test('absent settings differ from explicitly disabled source options', () {
     final absent = parseLegacyWordDocument(_source());
     expect(absent.compatibility.flags, isEmpty);

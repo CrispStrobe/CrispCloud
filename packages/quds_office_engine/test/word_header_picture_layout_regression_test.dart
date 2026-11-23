@@ -64,6 +64,43 @@ LaidOutDocument _layout(List<WmlSection> sections) => WordLayoutEngine(
 ).layout(WmlDocument(sections: sections), updateFields: false);
 
 void main() {
+  for (final locked in [false, true]) {
+    test('a standalone header PAGE field keeps its lock state $locked', () {
+      final number = WmlParagraph(
+        inlines: [
+          WmlFieldBoundary(
+            kind: WmlFieldBoundaryKind.begin,
+            sourceXml:
+                '<w:fldChar xmlns:w="${OfficeNamespaces.w}" '
+                'w:fldCharType="begin" ${locked ? 'w:fldLock="1"' : ''}/>',
+          ),
+          WmlFieldBoundary(
+            kind: WmlFieldBoundaryKind.instruction,
+            text: ' PAGE ',
+          ),
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+          WmlRun(text: '72'),
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+        ],
+      );
+      final pages = _layout([
+        _section(
+          header: [number],
+          blocks: [
+            _paragraph('First page'),
+            WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+            _paragraph('Second page'),
+          ],
+        ),
+      ]).pages;
+      expect(
+        pages.map((page) => page.header.single.text),
+        locked ? ['72', '72'] : ['1', '2'],
+      );
+      expect(number.text, '72');
+    });
+  }
+
   for (final footer in [false, true]) {
     final storyName = footer ? 'footer' : 'header';
 

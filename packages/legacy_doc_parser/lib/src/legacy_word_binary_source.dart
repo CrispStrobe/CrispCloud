@@ -126,6 +126,14 @@ class _BinarySource {
       evenAndOddHeaders = (table.u8(dopOffset) & 1) != 0;
       final tabInterval = table.u16(dopOffset + 10);
       if (tabInterval != 0) defaultTabStopTwips = tabInterval;
+      // MS-DOC 2.7.2 DopBase, bits R/S and the two hyphenation measures.
+      final hyphenationFlags = table.u8(dopOffset + 5);
+      hyphenation = LegacyWordHyphenation(
+        enabled: (hyphenationFlags & 0x10) != 0,
+        hyphenateCapitals: (hyphenationFlags & 0x08) != 0,
+        zoneTwips: table.u16(dopOffset + 14),
+        consecutiveLimit: table.u16(dopOffset + 16),
+      );
       compatibility = _readCompatibility(dopOffset, dopLength);
     }
     // An empty main story is valid, including older files whose otherwise
@@ -201,6 +209,7 @@ class _BinarySource {
   late final int totalLength;
   bool evenAndOddHeaders = false;
   int? defaultTabStopTwips;
+  LegacyWordHyphenation? hyphenation;
   LegacyWordCompatibility compatibility =
       const LegacyWordCompatibility.unspecified();
   late final int pairCount;

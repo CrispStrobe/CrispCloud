@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import 'package:archive/archive.dart';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:test/test.dart';
 
@@ -153,6 +154,15 @@ void main() {
       expect(document.fields.single.storyId, 'header-0-normal');
       expect(document.stories.single.plainText, '7');
       expect(document.plainText, 'Body');
+      final converted = ZipDecoder().decodeBytes(
+        convertLegacyWordDocument(document).bytes,
+      );
+      final xml = converted.files
+          .where((part) => part.name.startsWith('word/header'))
+          .map((part) => String.fromCharCodes(part.content))
+          .join();
+      expect(xml, contains('w:fldCharType="begin" w:dirty="0"'));
+      expect(xml, isNot(contains('w:fldLock="1"')));
     },
   );
 

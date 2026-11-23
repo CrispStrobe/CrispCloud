@@ -115,6 +115,7 @@ class _StructuredWordParser {
         media: media,
         evenAndOddHeaders: source.evenAndOddHeaders,
         defaultTabStopTwips: source.defaultTabStopTwips,
+        hyphenation: source.hyphenation,
         compatibility: source.compatibility,
       );
     }
@@ -216,6 +217,7 @@ class _StructuredWordParser {
       media: media,
       evenAndOddHeaders: source.evenAndOddHeaders,
       defaultTabStopTwips: source.defaultTabStopTwips,
+      hyphenation: source.hyphenation,
       compatibility: source.compatibility,
       lineNumberStyle: lineNumberStyle,
       fontTable: List.unmodifiable(fontTable),
