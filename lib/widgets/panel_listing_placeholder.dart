@@ -173,13 +173,19 @@ class PanelListingPlaceholder extends ConsumerWidget {
                         ),
                       );
                 }
-              : () => showConnectionDialogScreen(context),
+              : () => showConnectionDialogScreen(
+                  context,
+                  targetSide: side,
+                ),
         ),
       );
     } else if (state == PanelListingState.disconnected) {
       actions.add(
         ElevatedButton.icon(
-          onPressed: () => showConnectionDialogScreen(context),
+          onPressed: () => showConnectionDialogScreen(
+            context,
+            targetSide: side,
+          ),
           icon: const Icon(Icons.login),
           label: Text(l.connectToCloudShort),
         ),
