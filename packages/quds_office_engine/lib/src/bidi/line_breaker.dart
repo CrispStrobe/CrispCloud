@@ -133,9 +133,7 @@ abstract final class LineBreaker {
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
     final shaped = ligate == null ? logical : ligate(logical);
-    final clusterStarts = {
-      for (final cluster in GraphemeClusters.segment(text)) cluster.start,
-    };
+    final clusterStarts = GraphemeClusters.startOffsets(text);
     final hyphens = _hyphenGlyphs(
       text,
       shaped,
@@ -219,9 +217,7 @@ abstract final class LineBreaker {
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
-    final clusterStarts = {
-      for (final cluster in GraphemeClusters.segment(text)) cluster.start,
-    };
+    final clusterStarts = GraphemeClusters.startOffsets(text);
     final hyphens = _hyphenGlyphs(
       text,
       logical,

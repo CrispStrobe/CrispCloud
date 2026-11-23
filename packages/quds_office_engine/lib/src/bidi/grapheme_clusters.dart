@@ -41,6 +41,24 @@ abstract final class GraphemeClusters {
     return out;
   }
 
+  /// UTF-16 end offsets without allocating a substring for each grapheme.
+  static Iterable<int> endOffsets(String text) sync* {
+    final range = CharacterRange(text);
+    while (range.moveNext()) {
+      yield text.length - range.stringAfterLength;
+    }
+  }
+
+  /// UTF-16 offsets at which a grapheme starts.
+  static Set<int> startOffsets(String text) {
+    final range = CharacterRange(text);
+    final starts = <int>{};
+    while (range.moveNext()) {
+      starts.add(range.stringBeforeLength);
+    }
+    return starts;
+  }
+
   /// Returns the cluster index containing logical UTF-16 [offset].
   static int indexAt(List<GraphemeCluster> clusters, int offset) {
     for (int i = 0; i < clusters.length; i++) {

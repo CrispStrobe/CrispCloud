@@ -157,17 +157,15 @@ abstract final class WordRunMetrics {
       }
       final measured = <WordMeasuredCluster>[];
       var total = 0.0;
-      for (final cluster in GraphemeClusters.segment(text)) {
-        final advance = _clusterAdvance(painter, cluster.start, cluster.end);
+      var start = 0;
+      for (final end in GraphemeClusters.endOffsets(text)) {
+        final advance = _clusterAdvance(painter, start, end);
         if (advance == null || !advance.isFinite || advance < 0) return null;
         measured.add(
-          WordMeasuredCluster(
-            start: cluster.start,
-            end: cluster.end,
-            advance: advance,
-          ),
+          WordMeasuredCluster(start: start, end: end, advance: advance),
         );
         total += advance;
+        start = end;
       }
       // Range geometry and paragraph metrics can differ by floating-point
       // roundoff. A material difference signals that this decomposition is

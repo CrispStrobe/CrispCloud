@@ -54,8 +54,7 @@ List<double>? _clusterAdvances(
   if (measured == null || measured.isEmpty || measured.length > text.length) {
     return null;
   }
-  final graphemes = GraphemeClusters.segment(text);
-  if (measured.length != graphemes.length) return null;
+  final boundaries = GraphemeClusters.endOffsets(text).iterator;
   var end = 0;
   var total = 0.0;
   for (var i = 0; i < measured.length; i++) {
@@ -63,11 +62,13 @@ List<double>? _clusterAdvances(
     if (cluster.start != end ||
         cluster.end <= cluster.start ||
         cluster.end > text.length ||
-        cluster.end != graphemes[i].end ||
+        !boundaries.moveNext() ||
+        cluster.end != boundaries.current ||
         !cluster.advance.isFinite ||
         cluster.advance < 0 ||
-        (text.substring(cluster.start, cluster.end) == '\u00ad' &&
-            cluster.advance != 0)) {
+        (cluster.advance != 0 &&
+            cluster.end == cluster.start + 1 &&
+            text.codeUnitAt(cluster.start) == 0x00ad)) {
       return null;
     }
     total += cluster.advance;
@@ -267,7 +268,10 @@ List<ShapedGlyph> _measureWordRuns({
       final advances = _clusterAdvances(runText, offsets, measured);
       if (advances != null) {
         for (var i = start; i < end; i++) {
-          result[i] = _withMeasuredAdvance(glyphs[i], advances[i - start]);
+          final advance = advances[i - start];
+          if (!identical(glyphs[i].advance, advance)) {
+            result[i] = _withMeasuredAdvance(glyphs[i], advance);
+          }
         }
       }
     }

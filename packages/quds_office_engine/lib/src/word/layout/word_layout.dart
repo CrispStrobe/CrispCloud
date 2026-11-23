@@ -2661,7 +2661,9 @@ class WordLayoutEngine {
     // measurable. Preserve the original font/scalar advances before applying
     // host metrics so a declined fragment does not reuse a different context.
     // Repeated display-label scalars share this source/style and scalar width.
-    final fallbackAdvances = <(int, int, int), double>{};
+    List<ShapedGlyph?>? fallbackGlyphs;
+    final labelAdvances = <(int, int, int), double>{};
+    late final pictureOffsets = inlinePictures.keys.toSet();
     final hasMeasuredTabs =
         text.contains('\t') && paragraph.properties.bidiBaseLevel != 1;
     final tabStops = [...paragraph.properties.tabs]
@@ -2717,47 +2719,69 @@ class WordLayoutEngine {
       return result;
     }
 
-    List<ShapedGlyph> measuredLine(List<ShapedGlyph> presented) {
+    List<ShapedGlyph> measureHostRuns(List<ShapedGlyph> presented) {
       final host = measureRun;
       if (host == null) return measureTabs(presented);
-      final fallback = <ShapedGlyph>[
-        for (final glyph in presented)
-          if (fallbackAdvances[(
-                glyph.logicalIndex,
-                glyph.codePoint,
-                glyph.glyphId,
-              )]
-              case final advance?)
-            advance == glyph.advance
-                ? glyph
-                : _withMeasuredAdvance(glyph, advance)
-          else
-            // Selected hyphens are created after paragraph measurement and
-            // retain their independent scalar metrics and source ownership.
-            glyph,
-      ];
       return measureTabs(
         _measureWordRuns(
-          glyphs: fallback,
+          glyphs: presented,
           text: text,
           runIndex: runIndex,
           labels: displayLabels,
-          pictures: inlinePictures.keys.toSet(),
+          pictures: pictureOffsets,
           measure: host,
         ),
       );
     }
+
+    ShapedGlyph scalarGlyph(ShapedGlyph glyph) {
+      final index = fallbackGlyphs;
+      final offset = glyph.logicalIndex;
+      if (index != null) {
+        final original = offset < index.length ? index[offset] : null;
+        if (original == null ||
+            original.codePoint != glyph.codePoint ||
+            original.glyphId != glyph.glyphId ||
+            original.advance == glyph.advance) {
+          return glyph;
+        }
+        // Retain display and source ownership on a selected hyphen.
+        return _withMeasuredAdvance(glyph, original.advance);
+      }
+      final advance = labelAdvances[(offset, glyph.codePoint, glyph.glyphId)];
+      return advance == null || advance == glyph.advance
+          ? glyph
+          : _withMeasuredAdvance(glyph, advance);
+    }
+
+    List<ShapedGlyph> measuredLine(List<ShapedGlyph> presented) =>
+        measureRun == null
+        ? measureTabs(presented)
+        : measureHostRuns([for (final glyph in presented) scalarGlyph(glyph)]);
 
     List<ShapedGlyph> measuredRuns(List<ShapedGlyph> source) {
       final presented = displayLabels.isEmpty
           ? source
           : displayReplacements(source);
       if (measureRun == null) return measureTabs(presented);
-      for (final glyph in presented) {
-        fallbackAdvances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
-            glyph.advance;
+      if (displayLabels.isEmpty) {
+        final index = fallbackGlyphs = List<ShapedGlyph?>.filled(
+          text.length,
+          null,
+        );
+        for (final glyph in presented) {
+          index[glyph.logicalIndex] = glyph;
+        }
+      } else {
+        // A display label can have multiple glyphs at the same source offset.
+        for (final glyph in presented) {
+          labelAdvances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
+              glyph.advance;
+        }
+        // Match the scalar widths for repeated code points within a label.
+        return measuredLine(presented);
       }
-      return measuredLine(presented);
+      return measureHostRuns(presented);
     }
 
     // Widths and glyph IDs are resolved before wrapping, using each run's
