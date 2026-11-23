@@ -457,8 +457,10 @@ class PanelNotifier extends ChangeNotifier {
       }
     });
     if (_windowsDesktop) {
-      // The tab restore and default-folder load must be sequenced. Previously
-      // both raced at startup, letting an old unscoped tab replace Home.
+      // Restored tabs, not stale standalone panel_source_* preferences,
+      // determine the initial Windows layout. Cancel their pending restore
+      // before the first asynchronous tab read can yield.
+      _ref.read(panelSourceProvider(side).notifier).deferToRestoredTabs();
       unawaited(_restoreWindowsPane());
     } else {
       _restoreTabs();
