@@ -547,13 +547,24 @@ void main() {
       final outside = await Directory(p.join(root.path, 'outside')).create();
       await File(p.join(outside.path, 'unrelated.bin'))
           .writeAsBytes(List.filled(100, 1));
-      if (!Platform.isWindows)
+      if (Platform.isWindows) {
+        final junction = await Process.run('cmd.exe', [
+          '/d',
+          '/c',
+          'mklink',
+          '/J',
+          p.join(box.path, 'link'),
+          outside.path,
+        ]);
+        expect(junction.exitCode, 0, reason: junction.stderr.toString());
+      } else {
         await Link(p.join(box.path, 'link')).create(outside.path);
+      }
       final panel = await native();
       final result = await panel.calculateFolderSize(folder(panel));
       expect(result?.phase, FolderSizePhase.complete);
       expect(result?.bytes, 4);
-      if (!Platform.isWindows) expect(result?.skippedLinks, 1);
+      expect(result?.skippedLinks, 1);
       expect(local.scopes, greaterThan(0));
       expect(local.released, local.scopes);
       expect(local.activeScopes, 0);
@@ -561,6 +572,24 @@ void main() {
       expect(cloud.scans, isEmpty);
     },
   );
+
+  test('native folder sizes include more than 20,000 entries', () async {
+    final box = Directory(p.join(root.path, 'box'))..createSync();
+    final nested = Directory(p.join(box.path, 'nested'))..createSync();
+    const fileCount = PanelNotifier.maxInlineFolderSizeEntries + 1;
+    for (var i = 0; i < fileCount; i++) {
+      File(p.join(box.path, 'entry-$i')).createSync();
+    }
+    File(p.join(nested.path, 'payload.bin')).writeAsBytesSync([1, 2, 3]);
+
+    final panel = await native();
+    final result = await panel.calculateFolderSize(folder(panel));
+    expect(result?.phase, FolderSizePhase.complete);
+    expect(result?.limited, isFalse);
+    expect(result?.files, fileCount + 1);
+    expect(result?.bytes, 3);
+    expect(folder(panel).calculatedSize, 3);
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test(
     'replacing a local grant invalidates a scan before scoped work returns',

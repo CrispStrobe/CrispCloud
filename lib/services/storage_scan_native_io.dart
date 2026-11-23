@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
+import 'package:win32/win32.dart' as win32;
 
 import '../models/file_item.dart';
 import '../models/storage_analysis.dart';
@@ -155,6 +158,82 @@ void _runStorageScanWorker(SendPort events) {
 }
 
 StorageScanDirectory _readDirectory(String path) {
+  // Reject roots replaced by a link before or during the directory read.
+  if (FileSystemEntity.typeSync(path, followLinks: false) !=
+      FileSystemEntityType.directory) {
+    throw FileSystemException('The directory is no longer available.', path);
+  }
+  final windowsListing = Platform.isWindows
+      ? _readWindowsDirectory(path)
+      : null;
+  final listing = windowsListing ?? _readPortableDirectory(path);
+  if (FileSystemEntity.typeSync(path, followLinks: false) !=
+      FileSystemEntityType.directory) {
+    throw FileSystemException(
+      'The directory changed during enumeration.',
+      path,
+    );
+  }
+  return listing;
+}
+
+/// Windows returns each child's size and reparse tag in the listing itself.
+/// Fall back to Dart for unusual reparse points or unsupported searches.
+StorageScanDirectory? _readWindowsDirectory(String path) {
+  final prefix = path.endsWith(r'\') ? path : '$path\\';
+  return using((arena) {
+    final pattern = '$prefix*'.toNativeUtf16(allocator: arena);
+    final data = arena<win32.WIN32_FIND_DATA>();
+    final handle = win32.FindFirstFileEx(
+      pattern,
+      win32.FindExInfoBasic,
+      data,
+      win32.FindExSearchNameMatch,
+      nullptr,
+      win32.FIND_FIRST_EX_LARGE_FETCH,
+    );
+    if (handle == win32.INVALID_HANDLE_VALUE) return null;
+    final entries = <FileItem>[];
+    try {
+      do {
+        final entry = data.ref;
+        final name = entry.cFileName;
+        if (name == '.' || name == '..') continue;
+        final attributes = entry.dwFileAttributes;
+        final reparsePoint =
+            attributes & win32.FILE_ATTRIBUTE_REPARSE_POINT != 0;
+        // The name-surrogate bit marks redirections such as symlinks and junctions.
+        final link = reparsePoint && entry.dwReserved0 & 0x20000000 != 0;
+        if (reparsePoint && !link) return null;
+        final directory = attributes & win32.FILE_ATTRIBUTE_DIRECTORY != 0;
+        final modified = entry.ftLastWriteTime;
+        final ticks = (modified.dwHighDateTime << 32) | modified.dwLowDateTime;
+        entries.add(
+          FileItem(
+            name: name,
+            path: '$prefix$name',
+            isFolder: directory && !link,
+            isSymlink: link,
+            size: directory || link
+                ? null
+                : (entry.nFileSizeHigh << 32) | entry.nFileSizeLow,
+            updatedAt: link || ticks == 0
+                ? null
+                : DateTime.fromMicrosecondsSinceEpoch(
+                    ticks ~/ 10 - 11644473600000000,
+                  ),
+          ),
+        );
+      } while (win32.FindNextFile(handle, data) != 0);
+      if (win32.GetLastError() != win32.ERROR_NO_MORE_FILES) return null;
+      return StorageScanDirectory(entries: entries);
+    } finally {
+      win32.FindClose(handle);
+    }
+  });
+}
+
+StorageScanDirectory _readPortableDirectory(String path) {
   final entries = <FileItem>[];
   final issues = <StorageScanIssue>[];
   var complete = true;
@@ -176,11 +255,6 @@ StorageScanDirectory _readDirectory(String path) {
     }
   }
 
-  // Do not follow a root that was replaced by a link after the caller's stat.
-  if (FileSystemEntity.typeSync(path, followLinks: false) !=
-      FileSystemEntityType.directory) {
-    throw FileSystemException('The directory is no longer available.', path);
-  }
   // Ordinary POSIX enumeration preserves this already-normalized parent. A
   // direct child component therefore needs no second full-path normalization.
   // Windows aliases, roots, leading double slashes, trailing separators and
@@ -266,15 +340,6 @@ StorageScanDirectory _readDirectory(String path) {
         code: StorageScanIssueCode.incompleteListing,
         message: '$suppressed additional entries could not be inspected.',
       ),
-    );
-  }
-  if (FileSystemEntity.typeSync(path, followLinks: false) !=
-      FileSystemEntityType.directory) {
-    // A changed root invalidates the entire listing: its apparent children
-    // could have come from a replacement link target under the same names.
-    throw FileSystemException(
-      'The directory changed during enumeration.',
-      path,
     );
   }
   return StorageScanDirectory(

@@ -203,7 +203,7 @@ void main() {
     expect(row, findsOneWidget);
     final label = tester.getSemantics(row).getSemanticsData().label;
     expect(label, contains('Partial results'));
-    expect(label, contains('2 files · 0 folders · 1.5 KB'));
+    expect(label, contains('2 files · 0 folders · 1.5 KB (1,536 B)'));
     expect(label, contains('1 files have unknown sizes'));
     expect(label, contains('known portion of this folder'));
     expect(tester.takeException(), isNull);

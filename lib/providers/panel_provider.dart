@@ -5162,8 +5162,9 @@ class PanelNotifier extends ChangeNotifier {
     StorageScanProgress? lastProgress;
     try {
       final origin = request.origin;
+      final localSource = origin.source is LocalPanelSource;
       final backend = storageScanBackend(
-        source: origin.source is LocalPanelSource
+        source: localSource
             ? LocalPanelSource(request.folder.path!)
             : origin.source,
         local: _localFileService,
@@ -5172,7 +5173,9 @@ class PanelNotifier extends ChangeNotifier {
       final result = await const StorageScanService().scanSummary(
         backend,
         request.folder.path!,
-        maxEntries: maxInlineFolderSizeEntries,
+        // Native metadata reads run off the UI isolate. Keep the entry limit
+        // for scans that rely on cloud listings or browser folder snapshots.
+        maxEntries: localSource && !kIsWeb ? null : maxInlineFolderSizeEntries,
         maxDepth: 128,
         maxIssues: 20,
         isCancelled: () => request.cancelled || !request.isCurrent(),

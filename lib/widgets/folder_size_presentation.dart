@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 
 import '../l10n/storage_analyzer_strings.dart';
 import '../models/file_item.dart';
@@ -21,10 +22,12 @@ class FolderSizePresentation {
     if (measurement == null && file.calculatedSize == null) return null;
     final strings = StorageAnalyzerStrings(context);
     if (measurement == null) {
-      final size = formatBytes(file.calculatedSize!);
+      final bytes = file.calculatedSize!;
+      final size = formatBytes(bytes);
+      final detail = _detailedSize(bytes, size, strings.language);
       return FolderSizePresentation(
         size,
-        '${strings.text('knownSize')}: $size',
+        '${strings.text('knownSize')}: $detail',
       );
     }
     if (measurement.sourceChanged) {
@@ -57,7 +60,7 @@ class FolderSizePresentation {
           strings.text('progress', {
             'files': measurement.files,
             'folders': measurement.folders,
-            'size': size,
+            'size': _detailedSize(measurement.bytes, size, strings.language),
           }),
         if (phase == FolderSizePhase.partial) strings.text('partialHint'),
         if (measurement.unknownSizes > 0)
@@ -67,5 +70,10 @@ class FolderSizePresentation {
         if (measurement.limited) strings.text('limited'),
       ].join('\n'),
     );
+  }
+
+  static String _detailedSize(int bytes, String size, String language) {
+    if (bytes < 1024) return size;
+    return '$size (${NumberFormat.decimalPattern(language).format(bytes)} B)';
   }
 }

@@ -57,12 +57,13 @@ class StorageScanService {
   /// diagnostics, pending directories and the path keys needed to reject
   /// duplicates. File display nodes and sorted child lists are unnecessary
   /// for an inline size calculation.
+  /// Pass null for [maxEntries] to continue until the scan finishes or stops.
   Future<StorageScanSummary> scanSummary(
     StorageScanSource source,
     String rootPath, {
     bool Function()? isCancelled,
     void Function(StorageScanProgress)? onProgress,
-    int maxEntries = 200000,
+    int? maxEntries = 200000,
     int maxDepth = 200,
     int maxIssues = 1000,
     Duration progressInterval = const Duration(milliseconds: 100),
@@ -84,12 +85,14 @@ class StorageScanService {
     required bool retainTree,
     bool Function()? isCancelled,
     void Function(StorageScanProgress)? onProgress,
-    required int maxEntries,
+    required int? maxEntries,
     required int maxDepth,
     required int maxIssues,
     required Duration progressInterval,
   }) async {
-    if (maxEntries < 1 || maxDepth < 0 || maxIssues < 1) {
+    if ((maxEntries != null && maxEntries < 1) ||
+        maxDepth < 0 ||
+        maxIssues < 1) {
       throw ArgumentError('Scan limits must be positive (depth may be zero).');
     }
     if (progressInterval.isNegative) {
@@ -263,7 +266,7 @@ class StorageScanService {
         }
         for (final item in listing.entries) {
           check();
-          if (examined >= maxEntries) {
+          if (maxEntries != null && examined >= maxEntries) {
             limited = true;
             directory.complete = false;
             directoriesComplete = false;
