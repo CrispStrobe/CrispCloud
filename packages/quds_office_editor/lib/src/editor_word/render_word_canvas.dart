@@ -3656,6 +3656,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   void paint(PaintingContext context, Offset offset) {
     _resetPaintFit();
     final zoteroRanges = _zoteroRangesForDocument();
+    late final findHitsByParagraph = _findHitsInSelection();
     final Canvas canvas = context.canvas;
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
@@ -3676,8 +3677,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             line,
             zoteroRanges[line.sourceParagraph],
           );
-          if (_paintsLineSelection(line, laidOut.pages.first)) {
-            _paintFindHits(canvas, line);
+          if (findHits.isNotEmpty &&
+              _paintsLineSelection(line, laidOut.pages.first)) {
+            _paintFindHits(
+              canvas,
+              line,
+              findHitsByParagraph[line.paragraphIndex],
+            );
           }
           _drawLine(
             canvas,
@@ -3801,9 +3807,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             final ranges = zoteroRanges[line.sourceParagraph];
             final hasProofing =
                 proofingFindings[line.sourceParagraph]?.isNotEmpty == true;
-            final paintsFind =
-                findHits.isNotEmpty && _paintsLineSelection(line, page);
-            if (ranges == null && !hasProofing && !paintsFind) continue;
+            final lineHits =
+                findHits.isNotEmpty && _paintsLineSelection(line, page)
+                ? findHitsByParagraph[line.paragraphIndex]
+                : null;
+            if (ranges == null && !hasProofing && lineHits == null) continue;
             final cell = _cellForLine(
               page,
               line,
@@ -3816,7 +3824,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
               );
             }
             _paintZoteroFieldRanges(canvas, page, line, ranges);
-            if (paintsFind) _paintFindHits(canvas, line);
+            _paintFindHits(canvas, line, lineHits);
             if (hasProofing) {
               _paintProofing(canvas, line);
               if (line.overlayText?.isNotEmpty == true) {
@@ -4139,16 +4147,36 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
   }
 
-  void _paintFindHits(Canvas canvas, LaidOutLine line) {
-    if (findHits.isEmpty) {
-      return;
+  Map<int, List<(int, OfficeFindHit)>> _findHitsInSelection() {
+    final selection = caret.normalizedRange;
+    final hits = <int, List<(int, OfficeFindHit)>>{};
+    for (var index = 0; index < findHits.length; index++) {
+      final hit = findHits[index];
+      final paragraph = hit.paragraphIndex;
+      if (paragraph != null &&
+          paragraph >= selection.startPara &&
+          paragraph <= selection.endPara) {
+        hits.putIfAbsent(paragraph, () => []).add((index, hit));
+      }
     }
-    for (int i = 0; i < findHits.length; i++) {
-      final OfficeFindHit hit = findHits[i];
-      if (hit.paragraphIndex != line.paragraphIndex) {
+    return hits;
+  }
+
+  void _paintFindHits(
+    Canvas canvas,
+    LaidOutLine line,
+    List<(int, OfficeFindHit)>? hits,
+  ) {
+    if (hits == null) return;
+    late final span = CaretEngine.logicalSpan(line);
+    for (final (index, hit) in hits) {
+      // A discretionary hyphen at a match's exclusive end can still be
+      // highlighted. Keep that boundary for the exact glyph geometry.
+      if (line.glyphs.isNotEmpty &&
+          (hit.end < span.min || hit.start >= span.max)) {
         continue;
       }
-      final Color fill = i == activeFindIndex
+      final Color fill = index == activeFindIndex
           ? const Color(0x99F4B183)
           : const Color(0x66FFE699);
       for (final Rect r in CaretEngine.rangeRectsOnLine(

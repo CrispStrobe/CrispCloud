@@ -140,8 +140,8 @@ const _staleWordReplacement =
 /// Text and typed range structure, independent of mutable inline identities.
 /// Rich undo restores cloned runs and boundary tokens with this same shape.
 final class _WordParagraphSnapshot {
-  _WordParagraphSnapshot(WmlParagraph paragraph)
-    : text = paragraph.text,
+  _WordParagraphSnapshot(WmlParagraph paragraph, {String? text})
+    : text = text ?? paragraph.text,
       wrappers = List.of(paragraph.contentControlWrappers),
       shape = [for (final inline in paragraph.inlines) _inlineShape(inline)];
 
@@ -206,8 +206,8 @@ final class _WordParagraphSnapshot {
 }
 
 final class _WordFindTarget {
-  _WordFindTarget(this.document, this.paragraph)
-    : snapshot = _WordParagraphSnapshot(paragraph);
+  _WordFindTarget(this.document, this.paragraph, String text)
+    : snapshot = _WordParagraphSnapshot(paragraph, text: text);
 
   final WmlDocument document;
   final WmlParagraph paragraph;
@@ -290,22 +290,24 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return const <OfficeFindHit>[];
     }
+    final matcher = _FindMatcher(options);
     final List<OfficeFindHit> hits = <OfficeFindHit>[];
-    final List<WmlParagraph> paras = document.paragraphs.toList();
-    for (int i = 0; i < paras.length; i++) {
-      final String text = paras[i].text;
+    var index = 0;
+    for (final paragraph in document.paragraphs) {
+      final String text = paragraph.text;
       _WordFindTarget? target;
-      for (final (int start, int end) in _spans(text, options)) {
+      for (final (int start, int end) in matcher.spans(text)) {
         hits.add(
           OfficeFindHit._word(
             preview: text,
-            paragraphIndex: i,
+            paragraphIndex: index,
             start: start,
             end: end,
-            target: target ??= _WordFindTarget(document, paras[i]),
+            target: target ??= _WordFindTarget(document, paragraph, text),
           ),
         );
       }
+      index++;
     }
     return hits;
   }
@@ -341,11 +343,12 @@ abstract final class OfficeFind {
     }
     final edits = <({WmlParagraph paragraph, int start, int end})>[];
     if (options.query.isNotEmpty) {
+      final matcher = _FindMatcher(options);
       for (var index = 0; index < paras.length; index++) {
         if (only != null && only.paragraphIndex != index) continue;
         final paragraph = paras[index];
         final ranges = <({int start, int end})>{};
-        for (final (start, end) in _spans(paragraph.text, options)) {
+        for (final (start, end) in matcher.spans(paragraph.text)) {
           if (only != null && (only.start != start || only.end != end)) {
             continue;
           }
@@ -379,11 +382,12 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return const <OfficeFindHit>[];
     }
+    final matcher = _FindMatcher(options);
     final List<OfficeFindHit> hits = <OfficeFindHit>[];
     for (final SmlWorksheet sheet in workbook.sheets) {
       for (final SmlCell cell in sheet.allCells) {
         final String text = cell.asString;
-        if (_contains(text, options)) {
+        if (matcher.contains(text)) {
           hits.add(
             OfficeFindHit(
               kind: OpcPackageKindHint.sheet,
@@ -409,6 +413,7 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return 0;
     }
+    final matcher = _FindMatcher(options);
     var count = 0;
     for (final SmlWorksheet sheet in workbook.sheets) {
       if (only != null && only.sheetName != sheet.name) {
@@ -419,10 +424,10 @@ abstract final class OfficeFind {
           continue;
         }
         final String text = cell.asString;
-        if (!_contains(text, options)) {
+        if (!matcher.contains(text)) {
           continue;
         }
-        cell.value = _replaceAll(text, options);
+        cell.value = matcher.replaceAll(text);
         cell.type = SmlCellType.string;
         count++;
       }
@@ -438,10 +443,11 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return const <OfficeFindHit>[];
     }
+    final matcher = _FindMatcher(options);
     final List<OfficeFindHit> hits = <OfficeFindHit>[];
     for (int s = 0; s < presentation.slides.length; s++) {
       final PmlSlide slide = presentation.slides[s];
-      if (_contains(slide.notes, options)) {
+      if (matcher.contains(slide.notes)) {
         hits.add(
           OfficeFindHit(
             kind: OpcPackageKindHint.slide,
@@ -453,7 +459,7 @@ abstract final class OfficeFind {
         );
       }
       for (final PmlShape shape in slide.shapes) {
-        if (_contains(shape.text, options)) {
+        if (matcher.contains(shape.text)) {
           hits.add(
             OfficeFindHit(
               kind: OpcPackageKindHint.slide,
@@ -471,7 +477,7 @@ abstract final class OfficeFind {
         }
         for (final List<PmlTableCell> row in table.rows) {
           for (final PmlTableCell cell in row) {
-            if (_contains(cell.text, options)) {
+            if (matcher.contains(cell.text)) {
               hits.add(
                 OfficeFindHit(
                   kind: OpcPackageKindHint.slide,
@@ -499,6 +505,7 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return 0;
     }
+    final matcher = _FindMatcher(options);
     var count = 0;
     for (int s = 0; s < presentation.slides.length; s++) {
       if (only != null && only.slideIndex != s) {
@@ -506,8 +513,8 @@ abstract final class OfficeFind {
       }
       final PmlSlide slide = presentation.slides[s];
       if (only == null || only.shapeId == null) {
-        if (_contains(slide.notes, options)) {
-          slide.notes = _replaceAll(slide.notes, options);
+        if (matcher.contains(slide.notes)) {
+          slide.notes = matcher.replaceAll(slide.notes);
           count++;
         }
       }
@@ -515,8 +522,8 @@ abstract final class OfficeFind {
         if (only != null && only.shapeId != null && only.shapeId != shape.id) {
           continue;
         }
-        if (_contains(shape.text, options)) {
-          shape.text = _replaceAll(shape.text, options);
+        if (matcher.contains(shape.text)) {
+          shape.text = matcher.replaceAll(shape.text);
           count++;
         }
         final PmlTable? table = shape.table;
@@ -525,8 +532,8 @@ abstract final class OfficeFind {
         }
         for (final List<PmlTableCell> row in table.rows) {
           for (final PmlTableCell cell in row) {
-            if (_contains(cell.text, options)) {
-              cell.text = _replaceAll(cell.text, options);
+            if (matcher.contains(cell.text)) {
+              cell.text = matcher.replaceAll(cell.text);
               count++;
             }
           }
@@ -541,10 +548,11 @@ abstract final class OfficeFind {
     if (options.query.isEmpty) {
       return const <OfficeFindHit>[];
     }
+    final matcher = _FindMatcher(options);
     final List<OfficeFindHit> hits = <OfficeFindHit>[];
     for (int i = 0; i < file.pageCount; i++) {
       final String text = PdfExtract.pageText(file, i);
-      for (final (int start, int end) in _spans(text, options)) {
+      for (final (int start, int end) in matcher.spans(text)) {
         hits.add(
           OfficeFindHit(
             kind: OpcPackageKindHint.pdf,
@@ -558,39 +566,46 @@ abstract final class OfficeFind {
     }
     return hits;
   }
+}
 
-  static Iterable<(int, int)> _spans(String text, OfficeFindOptions options) {
-    if (options.query.isEmpty) {
-      return const <(int, int)>[];
+final class _FindMatcher {
+  _FindMatcher(this.options);
+
+  final OfficeFindOptions options;
+  late final _needle = options.matchCase
+      ? options.query
+      : options.query.toLowerCase();
+  late final _pattern =
+      options.wildcards || options.matchPrefix || options.matchSuffix
+      ? _compilePattern()
+      : null;
+  late final _caseInsensitiveReplacement = RegExp(
+    RegExp.escape(options.query),
+    caseSensitive: false,
+  );
+
+  Iterable<(int, int)> spans(String text) sync* {
+    final pattern = _pattern;
+    if (pattern != null) {
+      for (final match in pattern.allMatches(text)) {
+        yield (match.start, match.end);
+      }
+      return;
     }
-    if (options.wildcards || options.matchPrefix || options.matchSuffix) {
-      return _regexSpans(text, options);
-    }
-    final String hay = options.matchCase ? text : text.toLowerCase();
-    final String needle = options.matchCase
-        ? options.query
-        : options.query.toLowerCase();
-    final List<(int, int)> spans = <(int, int)>[];
+    final haystack = options.matchCase ? text : text.toLowerCase();
+    final limit = haystack.length - _needle.length;
     var from = 0;
-    while (from <= hay.length - needle.length) {
-      final int at = hay.indexOf(needle, from);
-      if (at < 0) {
-        break;
-      }
-      final int end = at + needle.length;
-      if (!options.wholeWord || _isWholeWord(text, at, end)) {
-        spans.add((at, end));
-      }
-      from = at + needle.length;
+    while (from <= limit) {
+      final at = haystack.indexOf(_needle, from);
+      if (at < 0) break;
+      final end = at + _needle.length;
+      if (!options.wholeWord || _isWholeWord(text, at, end)) yield (at, end);
+      from = end;
     }
-    return spans;
   }
 
-  static Iterable<(int, int)> _regexSpans(
-    String text,
-    OfficeFindOptions options,
-  ) {
-    final String body = options.wildcards
+  RegExp _compilePattern() {
+    final body = options.wildcards
         ? _wildcardPattern(options.query)
         : RegExp.escape(options.query);
     final String pattern;
@@ -603,14 +618,7 @@ abstract final class OfficeFind {
     } else {
       pattern = body;
     }
-    final RegExp re = RegExp(
-      pattern,
-      caseSensitive: options.matchCase,
-      unicode: true,
-    );
-    return <(int, int)>[
-      for (final Match match in re.allMatches(text)) (match.start, match.end),
-    ];
+    return RegExp(pattern, caseSensitive: options.matchCase, unicode: true);
   }
 
   static String _wildcardPattern(String query) {
@@ -629,24 +637,25 @@ abstract final class OfficeFind {
     return buffer.toString();
   }
 
-  static bool _contains(String text, OfficeFindOptions options) {
-    return _spans(text, options).isNotEmpty;
+  bool contains(String text) {
+    final pattern = _pattern;
+    if (pattern != null) return pattern.hasMatch(text);
+    if (options.wholeWord) return spans(text).isNotEmpty;
+    final haystack = options.matchCase ? text : text.toLowerCase();
+    return haystack.contains(_needle);
   }
 
-  static String _replaceAll(String text, OfficeFindOptions options) {
+  String replaceAll(String text) {
     if (!options.matchCase &&
         !options.wholeWord &&
         !options.wildcards &&
         !options.matchPrefix &&
         !options.matchSuffix) {
-      return text.replaceAll(
-        RegExp(RegExp.escape(options.query), caseSensitive: false),
-        options.replaceWith,
-      );
+      return text.replaceAll(_caseInsensitiveReplacement, options.replaceWith);
     }
     final StringBuffer buffer = StringBuffer();
     var cursor = 0;
-    for (final (int start, int end) in _spans(text, options)) {
+    for (final (int start, int end) in spans(text)) {
       buffer
         ..write(text.substring(cursor, start))
         ..write(options.replaceWith);

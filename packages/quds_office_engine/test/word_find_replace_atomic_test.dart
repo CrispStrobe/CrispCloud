@@ -38,6 +38,50 @@ final _shapeChanges = <String, void Function(WmlParagraph)>{
 };
 
 void main() {
+  test('compiled Word queries keep paragraph order and UTF-16 offsets', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            _paragraph('😀 Cat catapult scatter'),
+            _paragraph('preCat cat'),
+          ],
+        ),
+      ],
+    );
+    Iterable<(int?, int, int)> matches(OfficeFindOptions options) =>
+        OfficeFind.inWord(
+          document,
+          options,
+        ).map((hit) => (hit.paragraphIndex, hit.start, hit.end));
+
+    expect(
+      matches(
+        const OfficeFindOptions(
+          query: 'cat*',
+          wildcards: true,
+          wholeWord: true,
+        ),
+      ),
+      [(0, 3, 6), (0, 7, 15), (1, 7, 10)],
+    );
+    expect(
+      matches(
+        const OfficeFindOptions(
+          query: 'cat',
+          matchCase: true,
+          matchPrefix: true,
+        ),
+      ),
+      [(0, 7, 10), (1, 7, 10)],
+    );
+    expect(matches(const OfficeFindOptions(query: 'cat', matchSuffix: true)), [
+      (0, 3, 6),
+      (1, 3, 6),
+      (1, 7, 10),
+    ]);
+  });
+
   test(
     'replace all validates later control boundaries before earlier matches mutate',
     () {
