@@ -5,6 +5,7 @@ import '../bidi/grapheme_clusters.dart';
 import '../opc/zip/deflate_codec.dart';
 import 'data/german_lexicon_data.dart';
 import 'german_literal_ranges.dart';
+import 'german_suggestion_distance.dart';
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
@@ -233,6 +234,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   /// Yield during long scans on the UI isolate. Dedicated workers can run
   /// a paragraph without scheduling timer turns between tokens.
   final bool yieldBetweenChecks;
+  late final _distance = GermanSuggestionDistance();
   int _suggestionRevision = -1;
   var _suggestions = <(String, String, bool, String?), List<String>>{};
   static const _maxCachedSuggestions = 1024;
@@ -994,7 +996,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           _tokens.stringMatch(value) != value) {
         continue;
       }
-      final int distance = _boundedEditDistance(
+      final int distance = _distance.measure(
         lower,
         value.toLowerCase(),
         limit: lower.length >= 5 ? 2 : 1,
@@ -1029,7 +1031,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         if (value == word || !checked.add(value)) continue;
         examined++;
         budget.remaining--;
-        final int distance = _boundedEditDistance(
+        final int distance = _distance.measure(
           lower,
           value.toLowerCase(),
           limit: maximumDistance,
@@ -1084,7 +1086,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           _tokens.stringMatch(value) != value) {
         continue;
       }
-      final distance = _boundedEditDistance(lower, value.toLowerCase());
+      final distance = _distance.measure(lower, value.toLowerCase());
       if (distance <= 2) matches.add((value, distance));
     }
     matches.sort((a, b) {
@@ -1224,53 +1226,6 @@ String _upper(String word) => word.replaceAll('ß', 'ss').toUpperCase();
 String _title(String word) =>
     word.isEmpty ? word : '${word[0].toUpperCase()}${word.substring(1)}';
 
-/// Banded optimal-string-alignment distance. Values above [limit] are reported
-/// as limit + 1; at most five cells per source character need evaluation for
-/// the ordinary two-edit search. This implementation has no external corpus.
-int _boundedEditDistance(String source, String target, {int limit = 2}) {
-  if ((source.length - target.length).abs() > limit) return limit + 1;
-  if (source == target) return 0;
-  final int beyond = limit + 1;
-  List<int> previousPrevious = List<int>.filled(target.length + 1, beyond);
-  List<int> previous = <int>[
-    for (int j = 0; j <= target.length; j++) j <= limit ? j : beyond,
-  ];
-  List<int> current = List<int>.filled(target.length + 1, beyond);
-  for (int i = 1; i <= source.length; i++) {
-    final int start = i > limit ? i - limit : 1;
-    final int end = i + limit < target.length ? i + limit : target.length;
-    // Only the neighboring cells can be read from outside the band.
-    current[start - 1] = i <= limit ? i : beyond;
-    if (end < target.length) current[end + 1] = beyond;
-    int best = beyond;
-    final int sourceUnit = source.codeUnitAt(i - 1);
-    for (int j = start; j <= end; j++) {
-      final int targetUnit = target.codeUnitAt(j - 1);
-      final int substitution =
-          previous[j - 1] + (sourceUnit == targetUnit ? 0 : 1);
-      final int insertion = current[j - 1] + 1;
-      final int deletion = previous[j] + 1;
-      int cost = substitution < insertion ? substitution : insertion;
-      if (deletion < cost) cost = deletion;
-      if (i > 1 &&
-          j > 1 &&
-          sourceUnit == target.codeUnitAt(j - 2) &&
-          source.codeUnitAt(i - 2) == targetUnit) {
-        final int transposition = previousPrevious[j - 2] + 1;
-        if (transposition < cost) cost = transposition;
-      }
-      current[j] = cost;
-      if (cost < best) best = cost;
-    }
-    if (best > limit) return beyond;
-    final List<int> reusable = previousPrevious;
-    previousPrevious = previous;
-    previous = current;
-    current = reusable;
-  }
-  return previous[target.length];
-}
-
 class _GermanLexicon {
   _GermanLexicon(this.standard, this.swissAdditions, this._suggestionIndex)
     : sharpSCapitals = standard
@@ -1347,14 +1302,15 @@ class _GermanLexicon {
     }
     // Interleave buckets so a dense common prefix cannot starve suffix/middle
     // candidates before the caller's budget expires.
-    bool remaining = true;
-    for (int row = 0; remaining; row++) {
-      remaining = false;
-      for (final List<String> group in groups) {
+    for (var row = 0; groups.isNotEmpty; row++) {
+      var active = 0;
+      for (var bucket = 0; bucket < groups.length; bucket++) {
+        final group = groups[bucket];
         if (row >= group.length) continue;
-        remaining = true;
+        groups[active++] = group;
         yield group[row];
       }
+      groups.length = active;
     }
   }
 
