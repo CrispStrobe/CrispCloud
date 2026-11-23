@@ -50,9 +50,11 @@ import '../l10n/connection_failure_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/sftp_key_strings.dart';
 import '../l10n/key_management_strings.dart';
+import '../models/panel_side.dart';
 import '../services/nextcloud_client_adapter.dart';
 import '../services/nextcloud_endpoint.dart';
 import '../services/nextcloud_login_flow.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
@@ -1862,15 +1864,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       // a local left pane intact when the right already owns the cloud.
       final left = ref.read(panelSourceProvider(PanelSide.local));
       final right = ref.read(panelSourceProvider(PanelSide.remote));
-      final target = widget.targetSide ??
+      final target =
+          widget.targetSide ??
           (left.isLocal && right.isRemote
               ? PanelSide.remote
               : left.isRemote && right.isLocal
-                  ? PanelSide.local
-                  : ref.read(panelSourceProvider(active)).isRemote &&
-                          ref.read(panelSourceProvider(other)).isLocal
-                      ? other
-                      : active);
+              ? PanelSide.local
+              : ref.read(panelSourceProvider(active)).isRemote &&
+                    ref.read(panelSourceProvider(other)).isLocal
+              ? other
+              : active);
       ref
           .read(panelSourceProvider(target).notifier)
           .setSource(
