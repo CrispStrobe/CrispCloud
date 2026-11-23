@@ -189,6 +189,27 @@ void main() {
     }
   });
 
+  test('standalone hard breaks preserve an intentional blank page', () {
+    final doc = document([
+      paragraph('Before'),
+      WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+      paragraph(''),
+      WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+      paragraph('After'),
+    ]);
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(doc),
+    );
+    for (final version in [doc, reopened]) {
+      final pages = engine().layout(version).pages;
+      expect(pages, hasLength(3));
+      expect(pages.first.lines.single.text, 'Before');
+      expect(pages[1].lines, isEmpty);
+      expect(pages.last.lines.single.text, 'After');
+      expect(pages.last.lines.single.paragraphIndex, 4);
+    }
+  });
+
   for (final columns in [1, 2]) {
     test(
       'an overflowing blank line moves with its height in $columns columns',

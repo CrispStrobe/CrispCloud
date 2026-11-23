@@ -1995,17 +1995,18 @@ class WordLayoutEngine {
             flow.nextColumn();
             adjacentParagraph = null;
           } else if (_hasBreak(block, WmlBreakType.page)) {
-            flow.breakPage();
             adjacentParagraph = null;
-            // A break on its own ends the page, even if a bookmark owns the
-            // break position. It does not occupy a line on the new page.
+            // An authored break ends even a blank page. Word preserves the
+            // blank pages between consecutive hard breaks.
             if (block.inlines
                     .where((inline) => inline is! WmlBookmarkBoundary)
                     .singleOrNull
                 is WmlBreak) {
+              flow.flushPage();
               paragraphIndex++;
               break;
             }
+            flow.breakPage();
           }
           if (block.properties.keepWithNext && bi > keepGroupEnd) {
             keepGroupEnd = bi;
