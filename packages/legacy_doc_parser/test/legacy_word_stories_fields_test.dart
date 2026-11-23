@@ -8,6 +8,52 @@ import 'support/story_word_fixture.dart';
 import 'support/structured_word_fixture.dart';
 
 void main() {
+  test('binary running header retains its outside-aligned frame', () {
+    const text = '7\rTitle\r';
+    final document = parseLegacyWordDocument(
+      storyWordFixture(
+        main: 'Body\r',
+        headers: '$text\r\r',
+        tablePairs: {
+          11: storyPlc([
+            ...List.filled(8, 0),
+            ...List.filled(5, text.length + 1),
+            0xffffffff,
+          ]),
+        },
+        paragraphRuns: [
+          const WordFixtureFkpRun(8192, 20480),
+          WordFixtureFkpRun(
+            20480,
+            20484,
+            properties: [
+              ...wordSprm(0x8418, [0xf0, 0xff]),
+              ...wordSprm(0x8419, [1, 0]),
+              ...wordSprm(0x261b, [0x60]),
+              ...wordSprm(0x2423, [2]),
+            ],
+          ),
+          const WordFixtureFkpRun(20484, 28672),
+        ],
+      ),
+    );
+    final converted = ZipDecoder().decodeBytes(
+      convertLegacyWordDocument(document).bytes,
+    );
+    final xml = converted.files
+        .where((part) => part.name.startsWith('word/header'))
+        .map((part) => String.fromCharCodes(part.content))
+        .join();
+    expect(
+      xml,
+      contains(
+        '<w:framePr w:wrap="around" w:hAnchor="margin" '
+        'w:vAnchor="text" w:xAlign="outside" w:y="1"/>',
+      ),
+    );
+    expect(RegExp('<w:framePr').allMatches(xml), hasLength(1));
+  });
+
   test(
     'stored first/even header content does not activate different-page flags',
     () {

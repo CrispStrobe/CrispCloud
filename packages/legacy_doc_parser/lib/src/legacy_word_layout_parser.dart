@@ -19,6 +19,24 @@ const _paragraphLayoutBooleans = <int, String>{
 };
 
 bool _applyParagraphLayout(_Sprm operation, _Props output) {
+  // MS-DOC 2.6.2 retains these operands separately through style resolution.
+  switch (operation.code) {
+    case 0x8418:
+      output['frameX'] = operation.data.i16(0);
+      return true;
+    case 0x8419:
+      output['frameY'] = operation.data.i16(0);
+      return true;
+    case 0x841a:
+      output['frameWidth'] = operation.data.u16(0);
+      return true;
+    case 0x261b:
+      output['frameAnchor'] = operation.data.u8(0);
+      return true;
+    case 0x2423:
+      output['frameWrap'] = operation.data.u8(0);
+      return true;
+  }
   final key = _paragraphLayoutBooleans[operation.code];
   if (key == null) return false;
   output[key] = _boolean(operation.data);
@@ -41,7 +59,24 @@ LegacyWordParagraphLayout _paragraphLayout(_Props properties) =>
       autoSpaceEastAsianLatin: properties['autoSpaceEastAsianLatin'] as bool?,
       autoSpaceEastAsianNumbers:
           properties['autoSpaceEastAsianNumbers'] as bool?,
+      frame: _paragraphFrame(properties),
     );
+
+LegacyWordParagraphFrame? _paragraphFrame(_Props properties) {
+  final x = properties['frameX'] as int?;
+  final y = properties['frameY'] as int?;
+  final width = properties['frameWidth'] as int?;
+  final anchor = properties['frameAnchor'] as int?;
+  final wrap = properties['frameWrap'] as int?;
+  if ((x ?? 0) == 0 &&
+      (y ?? 0) == 0 &&
+      (width ?? 0) == 0 &&
+      (anchor == null || (anchor >> 4) == 15) &&
+      (wrap ?? 0) == 0) {
+    return null;
+  }
+  return (x: x, y: y, width: width, anchor: anchor, wrap: wrap);
+}
 
 bool _applySectionLayout(
   _Sprm operation,

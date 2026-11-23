@@ -2,6 +2,74 @@
 part of 'conversion.dart';
 
 extension _WordLayout on _StructuredWordWriter {
+  void _paragraphFrameXml(LegacyWordParagraphFrame? frame) {
+    if (frame == null) return;
+    final x = frame.x ?? 0;
+    final y = frame.y ?? 0;
+    final width = frame.width ?? 0;
+    final position = frame.anchor ?? 0x20;
+    final wrap = frame.wrap ?? 0;
+    if (x < -31679 ||
+        x > 31681 ||
+        y < -31679 ||
+        y > 31681 ||
+        width < 0 ||
+        width > 31680 ||
+        position < 0 ||
+        position > 255 ||
+        wrap < 0 ||
+        wrap > 5) {
+      limitations.add(LegacyWordConversionLimitation.partialFormatting);
+      return;
+    }
+    const horizontal = ['text', 'margin', 'page'];
+    const vertical = ['margin', 'page', 'text'];
+    const wrapping = [
+      'auto',
+      'notBeside',
+      'around',
+      'none',
+      'tight',
+      'through',
+    ];
+    final h = (position >> 6) & 3;
+    final v = (position >> 4) & 3;
+    // PositionCodeOperand places vertical anchor in bits 4–5 and
+    // horizontal anchor in bits 6–7.
+    final xAlign = const {
+      0: 'left',
+      -4: 'center',
+      -8: 'right',
+      -12: 'inside',
+      -16: 'outside',
+    }[x];
+    final yAlign = const {
+      -4: 'top',
+      -8: 'center',
+      -12: 'bottom',
+      -16: 'inside',
+      -20: 'outside',
+    }[y];
+    _xml.add('<w:framePr');
+    if (width > 0) _xml.add(' w:w="$width"');
+    if (wrap != 0) _xml.add(' w:wrap="${wrapping[wrap]}"');
+    if (h < 3) _xml.add(' w:hAnchor="${horizontal[h]}"');
+    if (v < 3) _xml.add(' w:vAnchor="${vertical[v]}"');
+    if (xAlign == null) {
+      _xml.add(' w:x="$x"');
+    } else {
+      _xml.add(' w:xAlign="$xAlign"');
+    }
+    if (yAlign != null) {
+      _xml.add(' w:yAlign="$yAlign"');
+    } else if (y != 0) {
+      // Keep the stored offset, including the explicit one-twip value
+      // emitted by Word when converting a positioned running header.
+      _xml.add(' w:y="$y"');
+    }
+    _xml.add('/>');
+  }
+
   void _lineNumberStyleXml(_BoundedWordXml xml) {
     final style = document.lineNumberStyle;
     if (style == null) return;

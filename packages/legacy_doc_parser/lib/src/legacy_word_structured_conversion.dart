@@ -223,6 +223,7 @@ class _StructuredWordWriter {
     _bool('keepNext', style.keepNext);
     _bool('keepLines', style.keepTogether);
     _bool('pageBreakBefore', style.pageBreakBefore);
+    _paragraphFrameXml(style.layout.frame);
     _bool('widowControl', style.layout.widowControl);
     _paragraphNumbering(paragraph);
     _bool('suppressLineNumbers', style.layout.suppressLineNumbers);

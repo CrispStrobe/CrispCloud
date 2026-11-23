@@ -18,6 +18,7 @@ class LegacyWordParagraphLayout {
     this.overflowPunctuation,
     this.autoSpaceEastAsianLatin,
     this.autoSpaceEastAsianNumbers,
+    this.frame,
   });
   final bool widowControl;
   final bool suppressAutoHyphens;
@@ -32,7 +33,17 @@ class LegacyWordParagraphLayout {
   final bool? overflowPunctuation;
   final bool? autoSpaceEastAsianLatin;
   final bool? autoSpaceEastAsianNumbers;
+  final LegacyWordParagraphFrame? frame;
 }
+
+/// Native MS-DOC paragraph frame operands retained for OOXML conversion.
+typedef LegacyWordParagraphFrame = ({
+  int? x,
+  int? y,
+  int? width,
+  int? anchor,
+  int? wrap,
+});
 
 enum LegacyWordPageVerticalAlignment { top, center, both, bottom }
 

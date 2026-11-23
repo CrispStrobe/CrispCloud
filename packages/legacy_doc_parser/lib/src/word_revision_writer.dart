@@ -431,6 +431,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     _bool('keepNext', style.keepNext);
     _bool('keepLines', style.keepTogether);
     _bool('pageBreakBefore', style.pageBreakBefore);
+    _paragraphFrameXml(style.layout.frame);
     _bool('widowControl', style.layout.widowControl);
     final listId = style.listId?.abs();
     final template = _numberingTemplates[(listId, style.listLevel ?? 0)];
