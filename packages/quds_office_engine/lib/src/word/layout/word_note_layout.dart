@@ -174,28 +174,31 @@ class _NoteStory {
     return _NoteStory(lines, frames, height > 0 ? height : 14);
   }
 
+  late final List<double> _cutBoundaries = <double>[
+    height,
+    for (final LaidOutLine line in lines) line.y + line.height,
+    for (final LaidOutBox box in frames) box.y + box.height,
+  ]..sort();
+
+  bool _canCutAt(double end) =>
+      !lines.any(
+        (line) => line.y < end - 0.01 && line.y + line.height > end + 0.01,
+      ) &&
+      !frames.any(
+        (box) =>
+            box.visual != null &&
+            box.y < end - 0.01 &&
+            box.y + box.height > end + 0.01,
+      );
+
   double cut(double start, double available) {
     final double limit = math.min(height, start + available);
-    final List<double> candidates = <double>[
-      height,
-      for (final LaidOutLine line in lines) line.y + line.height,
-      for (final LaidOutBox box in frames) box.y + box.height,
-    ]..sort();
     var lastFitting = start;
     var lastWithoutWidow = start;
-    for (final double end in candidates) {
-      if (end <= start + 0.01 || end > limit + 0.01) continue;
-      if (lines.any(
-        (LaidOutLine l) => l.y < end - 0.01 && l.y + l.height > end + 0.01,
-      )) {
-        continue;
-      }
-      if (frames.any(
-        (LaidOutBox b) =>
-            b.visual != null && b.y < end - 0.01 && b.y + b.height > end + 0.01,
-      )) {
-        continue;
-      }
+    for (final double end in _cutBoundaries) {
+      if (end <= start + 0.01) continue;
+      if (end > limit + 0.01) break;
+      if (!_canCutAt(end)) continue;
       lastFitting = end;
       if (!_widowControlledParagraphs.any(
         (paragraph) => _leavesSingleLine(paragraph, start, end),
@@ -231,19 +234,15 @@ class _NoteStory {
     return before > 0 && after > 0 && (before == 1 || after == 1);
   }
 
-  double get firstHeight {
-    // The first line/box bottom is the earliest non-splitting boundary; no
-    // candidate sort or repeated full scan is needed for each note.
-    var first = height;
-    for (final LaidOutLine line in lines) {
-      final bottom = line.y + line.height;
-      if (bottom > 0.01 && bottom < first) first = bottom;
+  late final double firstHeight = _firstCut();
+
+  double _firstCut() {
+    for (final end in _cutBoundaries) {
+      // Parallel table cells or a picture can span an earlier line bottom.
+      // Reserve through the first boundary that can actually be painted.
+      if (end > 0.01 && _canCutAt(end)) return end;
     }
-    for (final LaidOutBox box in frames) {
-      final bottom = box.y + box.height;
-      if (bottom > 0.01 && bottom < first) first = bottom;
-    }
-    return first;
+    return height;
   }
 }
 

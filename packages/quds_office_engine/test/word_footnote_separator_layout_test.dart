@@ -193,6 +193,70 @@ void main() {
     _expectClearBand(tight, document);
   });
 
+  test('footnote table starts on the page of its reference', () {
+    final document = _document(
+      separator: _separator(),
+      bodyParagraphs: 2,
+      addNote: false,
+    );
+    document.paragraphs.first.properties
+      ..lineSpacingRule = WmlLineSpacingRule.exact
+      ..lineSpacing = 36;
+    WordNotes.insert(document, document.paragraphs.last, endnote: false);
+    WmlParagraph cellLine(String text, double height) => _paragraph(text)
+      ..properties.lineSpacingRule = WmlLineSpacingRule.exact
+      ..properties.lineSpacing = height;
+    document.footnotes[0] = WmlNote(
+      id: document.footnotes.single.id,
+      endnote: false,
+      addReference: false,
+      blocks: [
+        WmlTable(
+          grid: [140, 140],
+          rows: [
+            WmlTableRow(
+              cells: [
+                WmlTableCell(blocks: [cellLine('Short cell', 10)]),
+                WmlTableCell(blocks: [cellLine('Tall cell', 26)]),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final section = document.sections.single;
+    final engine = WordLayoutEngine(font: null);
+    final roomy = engine.layout(document).pages.single;
+    final body = roomy.lines.last;
+    final short = roomy.notes.singleWhere((line) => line.text == 'Short cell');
+    final tall = roomy.notes.singleWhere((line) => line.text == 'Tall cell');
+    expect(short.y, closeTo(tall.y, .01));
+    expect(tall.height, greaterThan(short.height));
+    // The first page can fit the reference and the short cell, but a cut
+    // there would split the tall cell's line. Move the reference as well.
+    section.pageSize = WmlPageSize(
+      width: section.pageSize.width,
+      height:
+          body.y +
+          body.height +
+          document.footnoteSeparator!.reservedHeight +
+          (short.height + tall.height) / 2 +
+          section.margins.bottom,
+    );
+
+    final layout = engine.layout(document);
+    final pages = layout.pages;
+    expect(pages, hasLength(2));
+    expect(pages.first.notes, isEmpty);
+    expect(pages.last.lines.single.text, startsWith('Body 1'));
+    expect(pages.last.notes.map((line) => line.text), [
+      'Short cell',
+      'Tall cell',
+    ]);
+    _expectClearBand(layout, document);
+  });
+
   for (final widowControl in [true, false]) {
     test('footnote continuation respects widow control $widowControl', () {
       final document = _document(
