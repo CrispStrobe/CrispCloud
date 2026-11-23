@@ -49,6 +49,7 @@ import '../services/syntax_highlight_theme.dart';
 import '../services/file_operation_backend.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
+import '../services/crisp_office_launcher.dart';
 import '../services/save_coordinator.dart';
 import '../utils/file_editability.dart'
     show isTextEditableName, isKeePassFileName, isLegacyWordFileName;
@@ -62,7 +63,6 @@ import 'pdf_editor_dialog.dart';
 import 'ebook_editor_dialog.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'keepass_editor_dialog.dart';
-import 'legacy_word_conversion_action.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 Future<void> showFileEditorDialog(
@@ -85,7 +85,25 @@ Future<void> showFileEditorDialog(
         return;
       }
       if (isLegacyWordFileName(file.name)) {
-        await showLegacyWordConversionForFile(context, ref, file, side);
+        // Legacy Word belongs to the installed CrispOffice app. Do not convert
+        // merely because the file was opened; conversion is an explicit
+        // context-menu/menu action.
+        final path = file.path;
+        final opened =
+            path != null &&
+            await ref.read(crispOfficeLauncherProvider).open(path);
+        if (opened) return;
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                path == null
+                    ? 'Open this file from a local path to edit it in CrispOffice, or use Convert to DOCX… from the context menu.'
+                    : 'CrispOffice could not be opened. Use Open with System App or Convert to DOCX… from the context menu.',
+              ),
+            ),
+          );
+        }
         return;
       }
       if (isImageEditorFileName(file.name)) {

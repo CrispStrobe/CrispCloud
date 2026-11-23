@@ -53,6 +53,8 @@ import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
+import '../services/crisp_office_launcher.dart';
+import 'legacy_word_conversion_action.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/share_service.dart';
 import '../utils/file_editability.dart';
@@ -771,6 +773,54 @@ void showFileContextMenu(
       );
     }
     final preferExternal = native && ref.read(preferExternalEditorProvider);
+    if (isLegacyWordFileName(file.name)) {
+      if (native && file.path != null) {
+        items.add(
+          PopupMenuItem(
+            child: Row(
+              children: [
+                const Icon(Icons.open_in_new, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(context.commanderTr('Open in CrispOffice')),
+                ),
+              ],
+            ),
+            onTap: () => Future.delayed(Duration.zero, () async {
+              if (!context.mounted || !current()) return;
+              final opened = await ref
+                  .read(crispOfficeLauncherProvider)
+                  .open(file.path!);
+              if (!opened && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr('CrispOffice could not be opened'),
+                    ),
+                  ),
+                );
+              }
+            }),
+          ),
+        );
+      }
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(Icons.auto_fix_high, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(context.commanderTr('Convert to DOCX…'))),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (context.mounted) {
+              showLegacyWordConversionForFile(context, ref, file, side);
+            }
+          }),
+        ),
+      );
+    }
     if (isImageEditorFileName(file.name)) {
       items.add(
         PopupMenuItem(
