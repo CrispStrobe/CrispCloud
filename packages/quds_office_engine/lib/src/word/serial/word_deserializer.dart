@@ -3828,11 +3828,12 @@ class WordDeserializer {
             paragraph.properties.sourcePropertiesXml,
             'pPr',
           );
-          final sectionMark = sectionEnds.contains(paragraph) ||
-              direct?.firstChild('sectPr', namespaceUri: OfficeNamespaces.w) !=
+          final sectionMark =
+              sectionEnds.contains(paragraph) ||
+              direct.firstChild('sectPr', namespaceUri: OfficeNamespaces.w) !=
                   null;
           if (sectionMark &&
-              direct?.firstChild('numPr', namespaceUri: OfficeNamespaces.w) ==
+              direct.firstChild('numPr', namespaceUri: OfficeNamespaces.w) ==
                   null) {
             // The section mark can inherit the previous heading's style.
             // Word does not display or count its inherited numbering.

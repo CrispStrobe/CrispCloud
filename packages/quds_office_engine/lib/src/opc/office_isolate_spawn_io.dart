@@ -113,6 +113,11 @@ void _openIsolateWorker(List<Object?> args) async {
       formulaLocale: args[4] as String?,
     );
     try {
+      if (kind == 'word-document') {
+        // The receiver can take ownership of the parsed document graph when
+        // this one-shot worker exits, avoiding a second full model copy.
+        Isolate.exit(port, <Object>['done', result]);
+      }
       port.send(<Object>['done', result]);
     } catch (error) {
       final String text = error.toString();
