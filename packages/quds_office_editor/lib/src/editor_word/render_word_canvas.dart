@@ -384,7 +384,7 @@ class WordCanvas extends LeafRenderObjectWidget {
         !identical(renderObject.config, config) ||
         !identical(renderObject.config.theme, config.theme) ||
         renderObject.selectedCommentId != selectedCommentId) {
-      renderObject._clearBodyTextPictures();
+      renderObject._clearTextPictures();
     }
     renderObject
       ..document = document
@@ -480,7 +480,7 @@ typedef _RunPaintKey = ({
 
 // Snapshots only values that can change recorded body ink without a new layout.
 // Adaptive-color inputs stay absent when authored document colors are used.
-typedef _BodyTextInkState = ({
+typedef _PageTextInkState = ({
   int? selectedCommentId,
   ({
     WmlTable? selectedTable,
@@ -494,10 +494,21 @@ typedef _BodyTextInkState = ({
   adaptive,
 });
 
-typedef _CachedBodyTextPicture = ({
-  _BodyTextInkState inkState,
-  ui.Picture picture,
-});
+class _CachedPageText {
+  _CachedPageText(this.inkState, this.body);
+
+  final _PageTextInkState inkState;
+  final ui.Picture body;
+  ui.Picture? notes;
+
+  int get approximateBytesUsed =>
+      body.approximateBytesUsed + (notes?.approximateBytesUsed ?? 0);
+
+  void dispose() {
+    body.dispose();
+    notes?.dispose();
+  }
+}
 
 class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   /// RenderWordCanvas API.
@@ -828,14 +839,17 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       <(int, int, int, int), Path>{};
   final Map<(LaidOutPage, int, int, int, int, WmlTable?), Path>
   _selectionPaths = <(LaidOutPage, int, int, int, int, WmlTable?), Path>{};
-  final Map<LaidOutPage, _CachedBodyTextPicture> _bodyTextPictures =
-      <LaidOutPage, _CachedBodyTextPicture>{};
+  final _textPictures = <LaidOutPage, _CachedPageText>{};
   static const int _maxTextPicturePages = 8;
   static const int _maxTextPictureBytes = 24 * 1024 * 1024;
   var _textPictureBytes = 0;
 
   @visibleForTesting
-  int get debugCachedTextPageCount => _bodyTextPictures.length;
+  int get debugCachedTextPageCount => _textPictures.length;
+
+  @visibleForTesting
+  int get debugCachedNoteTextPageCount =>
+      _textPictures.values.where((entry) => entry.notes != null).length;
 
   WmlDocument? _paragraphIndicesFor;
   Map<WmlParagraph, int>? _paragraphIndicesCache;
@@ -854,22 +868,15 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     _runPainters.clear();
     _proofingPaths.clear();
     _selectionPaths.clear();
-    for (final cached in _bodyTextPictures.values) {
-      cached.picture.dispose();
-    }
-    _bodyTextPictures.clear();
-    _textPictureBytes = 0;
-    _paragraphIndicesFor = null;
-    _paragraphIndicesCache = null;
-    _frameOwnersCache.clear();
+    _clearTextPictures();
     super.dispose();
   }
 
-  void _clearBodyTextPictures() {
-    for (final cached in _bodyTextPictures.values) {
-      cached.picture.dispose();
+  void _clearTextPictures() {
+    for (final cached in _textPictures.values) {
+      cached.dispose();
     }
-    _bodyTextPictures.clear();
+    _textPictures.clear();
     _textPictureBytes = 0;
     _paragraphIndicesFor = null;
     _paragraphIndicesCache = null;
@@ -3769,74 +3776,80 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           Paint()..color = const Color(0x55F3F3F3),
         );
       }
-      final paragraphIndices = _paragraphIndices();
-      final frameOwners = _frameOwners(page, paragraphIndices);
+      late final frameOwners = _frameOwners(page);
       if (!_editingHeaderFooter) {
         _paintSelectionBand(canvas, page);
         // Selection and proofing stay under the cached text layer. The text
         // layer itself is recorded once per page and reused for caret moves,
         // proofing updates and unrelated repaints.
-        for (final LaidOutLine line in page.lines) {
-          final LaidOutBox? cell = _cellForLine(
-            page,
-            line,
-            containingFrame: frameOwners[line.paragraphIndex],
-          );
-          if (cell != null) {
-            canvas.save();
-            canvas.clipRect(
-              Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
-            );
-          }
-          _paintZoteroFieldRanges(
-            canvas,
-            page,
-            line,
-            zoteroRanges[line.sourceParagraph],
-          );
-          if (_paintsLineSelection(line, page)) {
-            _paintFindHits(canvas, line);
-          }
-          _paintProofing(canvas, line);
-          if (line.overlayText?.isNotEmpty == true &&
-              proofingFindings[line.sourceParagraph]?.isNotEmpty == true) {
-            final painter = _overlayPainter(line);
-            final x = _overlayOrigin(
+        if (zoteroRanges.isNotEmpty ||
+            findHits.isNotEmpty ||
+            proofingFindings.isNotEmpty) {
+          for (final LaidOutLine line in page.lines) {
+            final ranges = zoteroRanges[line.sourceParagraph];
+            final hasProofing =
+                proofingFindings[line.sourceParagraph]?.isNotEmpty == true;
+            final paintsFind =
+                findHits.isNotEmpty && _paintsLineSelection(line, page);
+            if (ranges == null && !hasProofing && !paintsFind) continue;
+            final cell = _cellForLine(
+              page,
               line,
-              painter,
-              pageWidth: page.width,
-              marginRight: _marginRightOf(page),
+              containingFrame: frameOwners[line.paragraphIndex],
             );
-            _paintProofingOverlay(canvas, line, painter, x);
-            painter.dispose();
+            if (cell != null) {
+              canvas.save();
+              canvas.clipRect(
+                Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
+              );
+            }
+            _paintZoteroFieldRanges(canvas, page, line, ranges);
+            if (paintsFind) _paintFindHits(canvas, line);
+            if (hasProofing) {
+              _paintProofing(canvas, line);
+              if (line.overlayText?.isNotEmpty == true) {
+                final painter = _overlayPainter(line);
+                final x = _overlayOrigin(
+                  line,
+                  painter,
+                  pageWidth: page.width,
+                  marginRight: _marginRightOf(page),
+                );
+                _paintProofingOverlay(canvas, line, painter, x);
+                painter.dispose();
+              }
+            }
+            if (cell != null) canvas.restore();
           }
-          if (cell != null) canvas.restore();
         }
       }
-      canvas.drawPicture(_bodyTextPicture(page, frameOwners));
-      if (!_editingHeaderFooter) {
+      final pictures = _textPicturesForPage(page);
+      canvas.drawPicture(pictures.body);
+      if (!_editingHeaderFooter &&
+          config.showsCaret &&
+          hasFocus &&
+          caret.visible) {
         for (final LaidOutLine line in page.lines) {
-          final LaidOutBox? cell = _cellForLine(
-            page,
-            line,
-            containingFrame: frameOwners[line.paragraphIndex],
-          );
-          if (cell != null) {
-            canvas.save();
-            canvas.clipRect(
-              Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
-            );
-          }
-          if (config.showsCaret &&
-              hasFocus &&
-              caret.visible &&
-              line.paragraphIndex >= 0 &&
-              caret.isOnLine(
+          if (line.paragraphIndex < 0 ||
+              line.paragraphIndex != caret.paragraphIndex ||
+              !caret.isOnLine(
                 line,
                 lastOfParagraph: _isLastParagraphLine(page, line),
               )) {
-            _paintCaret(canvas, line);
+            continue;
           }
+          final cell = _cellForLine(
+            page,
+            line,
+            containingFrame: frameOwners[line.paragraphIndex],
+          );
+          if (cell != null) {
+            canvas.save();
+            canvas.clipRect(
+              Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
+            );
+          }
+          _paintCaret(canvas, line);
           if (cell != null) canvas.restore();
         }
       }
@@ -3848,20 +3861,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           marginRight: _marginRightOf(page),
         );
       }
-      for (final LaidOutLine line in page.notes) {
-        _paintZoteroFieldRanges(
-          canvas,
-          page,
-          line,
-          zoteroRanges[line.sourceParagraph],
-        );
-        _drawLine(
-          canvas,
-          line,
-          pageWidth: page.width,
-          marginRight: _marginRightOf(page),
-        );
-      }
+      _paintPageNotes(canvas, page, pictures, zoteroRanges);
       if (_pageUsesHeaderFooterStory(page)) {
         _paintHeaderFooterCaret(canvas, page);
       }
@@ -5007,13 +5007,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     };
   }
 
-  Map<int, WmlFrame> _frameOwners(
-    LaidOutPage page,
-    Map<WmlParagraph, int> paragraphIndices,
-  ) {
+  Map<int, WmlFrame> _frameOwners(LaidOutPage page) {
     final cached = _frameOwnersCache[page];
     if (cached != null) return cached;
     final owners = <int, WmlFrame>{};
+    late final paragraphIndices = _paragraphIndices();
     for (final box in page.frames) {
       final frame = box.frame;
       if (frame == null) continue;
@@ -5026,7 +5024,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     return owners;
   }
 
-  _BodyTextInkState _bodyTextInkState(LaidOutPage page) {
+  _PageTextInkState _pageTextInkState(LaidOutPage page) {
     if (!_theme.adaptDocumentColors) {
       return (selectedCommentId: selectedCommentId, adaptive: null);
     }
@@ -5060,20 +5058,18 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
   }
 
-  ui.Picture _bodyTextPicture(
-    LaidOutPage page,
-    Map<int, WmlFrame> frameOwners,
-  ) {
-    final inkState = _bodyTextInkState(page);
-    final cached = _bodyTextPictures.remove(page);
+  _CachedPageText _textPicturesForPage(LaidOutPage page) {
+    final inkState = _pageTextInkState(page);
+    final cached = _textPictures.remove(page);
     if (cached != null) {
       if (cached.inkState == inkState) {
-        _bodyTextPictures[page] = cached;
-        return cached.picture;
+        _textPictures[page] = cached;
+        return cached;
       }
-      _textPictureBytes -= cached.picture.approximateBytesUsed;
-      cached.picture.dispose();
+      _textPictureBytes -= cached.approximateBytesUsed;
+      cached.dispose();
     }
+    final frameOwners = _frameOwners(page);
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.clipRect(Rect.fromLTWH(0, 0, page.width, page.height));
@@ -5097,19 +5093,78 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       );
       if (cell != null) canvas.restore();
     }
-    final picture = recorder.endRecording();
-    _bodyTextPictures[page] = (inkState: inkState, picture: picture);
-    _textPictureBytes += picture.approximateBytesUsed;
-    while (_bodyTextPictures.length > 1 &&
-        (_bodyTextPictures.length > _maxTextPicturePages ||
+    final pictures = _CachedPageText(inkState, recorder.endRecording());
+    _textPictures[page] = pictures;
+    _textPictureBytes += pictures.approximateBytesUsed;
+    _evictTextPictures();
+    return pictures;
+  }
+
+  void _paintPageNotes(
+    Canvas canvas,
+    LaidOutPage page,
+    _CachedPageText pictures,
+    Map<WmlParagraph, List<WordZoteroFieldSelectionRange>> zoteroRanges,
+  ) {
+    if (page.notes.isEmpty) return;
+    final hasAnnotations =
+        _editingHeaderFooter ||
+        page.notes.any(
+          (line) =>
+              zoteroRanges.containsKey(line.sourceParagraph) ||
+              proofingFindings[line.sourceParagraph]?.isNotEmpty == true,
+        );
+    if (hasAnnotations) {
+      // A note's background and proofing ink must stay next to its own
+      // glyphs in paint order, including in overlapping cells and frames.
+      for (final line in page.notes) {
+        _paintZoteroFieldRanges(
+          canvas,
+          page,
+          line,
+          zoteroRanges[line.sourceParagraph],
+        );
+        _drawLine(
+          canvas,
+          line,
+          pageWidth: page.width,
+          marginRight: _marginRightOf(page),
+        );
+      }
+      return;
+    }
+
+    var notes = pictures.notes;
+    if (notes == null) {
+      final recorder = ui.PictureRecorder();
+      final recording = Canvas(recorder);
+      final marginRight = _marginRightOf(page);
+      for (final line in page.notes) {
+        _drawLine(
+          recording,
+          line,
+          pageWidth: page.width,
+          marginRight: marginRight,
+          paintProofing: false,
+        );
+      }
+      notes = pictures.notes = recorder.endRecording();
+      _textPictureBytes += notes.approximateBytesUsed;
+      _evictTextPictures();
+    }
+    canvas.drawPicture(notes);
+  }
+
+  void _evictTextPictures() {
+    while (_textPictures.length > 1 &&
+        (_textPictures.length > _maxTextPicturePages ||
             _textPictureBytes > _maxTextPictureBytes)) {
-      final oldest = _bodyTextPictures.keys.first;
-      final evicted = _bodyTextPictures.remove(oldest)!.picture;
+      final oldest = _textPictures.keys.first;
+      final evicted = _textPictures.remove(oldest)!;
       _textPictureBytes -= evicted.approximateBytesUsed;
       evicted.dispose();
       _frameOwnersCache.remove(oldest);
     }
-    return picture;
   }
 
   void _drawLine(

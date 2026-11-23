@@ -236,6 +236,49 @@ void main() {
     },
   );
 
+  testWidgets('cached note text keeps live annotations in paint order', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(520, 460);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final document = _document(separator: _separator());
+    final layout = WordLayoutEngine(font: null).layout(document);
+    final canvas = await _mount(tester, document, layout);
+    final initial = (await _pixels(tester)).bytes;
+    expect(canvas.debugCachedNoteTextPageCount, 1);
+
+    final paragraph = document.footnotes.single.paragraphs.single;
+    canvas.proofingFindings = {
+      paragraph: [
+        OfficeProofingFinding.forRequest(
+          OfficeProofingRequest(
+            documentId: 'footnote',
+            blockId: 'paragraph',
+            revision: 0,
+            text: paragraph.text,
+          ),
+          providerId: 'test',
+          start: 0,
+          end: 8,
+          ruleId: 'spelling',
+          message: 'Check source text.',
+          category: OfficeProofingCategory.spelling,
+        ),
+      ],
+    };
+    canvas.markNeedsPaint();
+    await tester.pump();
+    expect((await _pixels(tester)).bytes, isNot(orderedEquals(initial)));
+
+    canvas.proofingFindings = const {};
+    canvas.markNeedsPaint();
+    await tester.pump();
+    expect((await _pixels(tester)).bytes, orderedEquals(initial));
+    expect(canvas.debugCachedNoteTextPageCount, 1);
+  });
+
   test('footnote insertion undo and redo retain separator preferences', () {
     final separator = _separator(
       alignment: WmlFootnoteSeparatorAlignment.center,
