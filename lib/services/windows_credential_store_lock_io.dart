@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../utils/async_lock.dart';
@@ -7,9 +9,20 @@ import '../utils/async_lock.dart';
 final _localLock = AsyncLock();
 
 Future<T> withWindowsCredentialStoreLock<T>(Future<T> Function() operation) {
-  if (!Platform.isWindows) return operation();
+  // Follow the platform the storage plugin targets: tests on a Windows host
+  // that override the target platform must not take the Windows file lock.
+  if (!Platform.isWindows || defaultTargetPlatform != TargetPlatform.windows) {
+    return operation();
+  }
   return _localLock.synchronized(() async {
-    final directory = await getApplicationSupportDirectory();
+    final Directory directory;
+    try {
+      directory = await getApplicationSupportDirectory();
+    } on MissingPluginException {
+      // No registered path provider means no other app instance shares the
+      // store (headless tests); the in-process lock still serializes access.
+      return operation();
+    }
     // The plugin reads and rewrites one DPAPI-protected map for every key.
     // Keep the entire operation under a lock shared by app instances.
     final file = File('${directory.path}\\flutter_secure_storage.dat.lock');
