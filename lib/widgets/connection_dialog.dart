@@ -1852,11 +1852,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       final active = ref.read(activePanelProvider);
       final other = oppositePanel(active);
       // Prefer a local pane when the active pane already shows another cloud.
-      final target =
-          ref.read(panelSourceProvider(active)).isRemote &&
-              ref.read(panelSourceProvider(other)).isLocal
-          ? other
-          : active;
+      final target = ref.read(panelProvider(PanelSide.remote)).activeTab?.isCloudSetup == true
+          ? PanelSide.remote
+          : ref.read(panelSourceProvider(active)).isRemote &&
+                  ref.read(panelSourceProvider(other)).isLocal
+              ? other
+              : active;
       ref
           .read(panelSourceProvider(target).notifier)
           .setSource(
