@@ -1,4 +1,4 @@
-import 'package:characters/characters.dart';
+import '../bidi/grapheme_clusters.dart';
 
 import 'german_literal_ranges.dart';
 import 'german_morphology.dart';
@@ -9,16 +9,6 @@ import 'proofing_text_ranges.dart';
 part 'german_grammar.dart';
 part 'german_context_grammar.dart';
 part 'german_agreement_facts.dart';
-
-Set<int> _sourceGraphemeBoundaries(String text) {
-  final Set<int> boundaries = <int>{0};
-  int end = 0;
-  for (final String cluster in text.characters) {
-    end += cluster.length;
-    boundaries.add(end);
-  }
-  return boundaries;
-}
 
 /// Independently authored writing checks with licensed noun morphology.
 /// This provider is not a general sentence parser.
@@ -780,7 +770,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     final literals = GermanLiteralTextRanges(text);
     bool isProtected(int start, int end) =>
         protected.overlaps(start, end) || literals.overlaps(start, end);
-    final Set<int> boundaries = projection.boundaries;
+    final GraphemeBoundaries boundaries = projection.boundaries;
     await GermanNounMorphology.shared.prepareWords(
       _grammarMorphologyCandidates(text, isProtected, boundaries),
     );
@@ -1094,7 +1084,7 @@ bool _germanFormsEquivalent(String a, String b) =>
 /// graphemes, including when omitting a control rejoins an accented letter.
 final class _GermanWritingText {
   _GermanWritingText(String source) : _sourceLength = source.length {
-    _sourceBoundaries = _sourceGraphemeBoundaries(source);
+    _sourceBoundaries = GraphemeBoundaries(source);
     if (!source.contains('\u00ad')) {
       text = source;
       boundaries = _sourceBoundaries;
@@ -1111,13 +1101,13 @@ final class _GermanWritingText {
     }
     _sourceOffsets = sourceOffsets;
     text = String.fromCharCodes(units);
-    boundaries = _sourceGraphemeBoundaries(text);
+    boundaries = GraphemeBoundaries(text);
   }
 
   final int _sourceLength;
   late final String text;
-  late final Set<int> boundaries;
-  late final Set<int> _sourceBoundaries;
+  late final GraphemeBoundaries boundaries;
+  late final GraphemeBoundaries _sourceBoundaries;
   List<int>? _sourceOffsets;
 
   ({int start, int end})? sourceRange(int start, int end) {
@@ -1246,7 +1236,7 @@ class OfficeTerminologyProvider extends OfficeProofingProvider {
       );
     }
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
-    final Set<int> boundaries = _sourceGraphemeBoundaries(request.text);
+    final GraphemeBoundaries boundaries = GraphemeBoundaries(request.text);
     for (final OfficeTerminologyRule rule in rules) {
       await Future<void>.delayed(Duration.zero);
       if (_disposed) {

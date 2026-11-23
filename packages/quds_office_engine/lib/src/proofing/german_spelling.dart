@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:characters/characters.dart';
-
+import '../bidi/grapheme_clusters.dart';
 import '../opc/zip/deflate_codec.dart';
 import 'data/german_lexicon_data.dart';
 import 'german_literal_ranges.dart';
@@ -654,7 +653,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     RegExpMatch token,
     String word,
     OfficeProofingTextRanges protectedRanges,
-    Set<int> boundaries,
+    GraphemeBoundaries boundaries,
   ) {
     final String lower = word.toLowerCase();
     final String? habenPreferred = _habenParticiplePreferences[lower];
@@ -1164,40 +1163,37 @@ final class _GermanSpellingText {
       checked = buffer.toString();
       _checkedOffsets = offsets;
       _checkedProtected = OfficeProofingTextRanges(checked);
-      boundaries = <int>{0};
-      int sourceOffset = 0;
-      for (final cluster in source.characters) {
-        sourceOffset += cluster.length;
-        boundaries.add(sourceOffset);
-      }
     } else {
       checked = source;
       _checkedOffsets = null;
       _checkedProtected = protectedRanges;
-      boundaries = _checkedBoundaries;
     }
-    int boundary = 0;
-    for (final cluster in checked.characters) {
-      final start = boundary;
-      boundary += cluster.length;
-      _checkedBoundaries.add(boundary);
-      // Marked and supplementary digits/connectors own their entire projected
-      // grapheme, with no limit on intervening discretionary controls or marks.
-      // Unicode Prepend characters can precede the digit inside this same
-      // grapheme. Inspect the whole cluster, not just its first code point.
-      if (_identifierMarker.hasMatch(cluster)) {
-        _identifierStarts.add(start);
-        _identifierEnds.add(boundary);
+    _checkedBoundaries = GraphemeBoundaries(checked);
+    boundaries = _checkedOffsets == null
+        ? _checkedBoundaries
+        : GraphemeBoundaries(source);
+    // Marked and supplementary digits/connectors own their whole projected
+    // grapheme, including any preceding Unicode Prepend characters.
+    for (final marker in _identifierMarker.allMatches(checked)) {
+      var start = marker.start;
+      var end = marker.end;
+      while (!_checkedBoundaries.contains(start)) {
+        start--;
       }
+      while (!_checkedBoundaries.contains(end)) {
+        end++;
+      }
+      _identifierStarts.add(start);
+      _identifierEnds.add(end);
     }
   }
 
   static final _identifierMarker = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
   late final OfficeProofingTextRanges protectedRanges;
-  late final Set<int> boundaries;
+  late final GraphemeBoundaries boundaries;
   late final OfficeProofingTextRanges _checkedProtected;
   late final List<int>? _checkedOffsets;
-  final _checkedBoundaries = <int>{0};
+  late final GraphemeBoundaries _checkedBoundaries;
   final _identifierStarts = <int>{};
   final _identifierEnds = <int>{};
 
@@ -1207,10 +1203,11 @@ final class _GermanSpellingText {
     final checkedEnd = offsets == null ? end : offsets[end];
     return !boundaries.contains(start) ||
         !boundaries.contains(end) ||
-        !_checkedBoundaries.contains(checkedStart) ||
-        !_checkedBoundaries.contains(checkedEnd) ||
         protectedRanges.overlaps(start, end) ||
-        _checkedProtected.overlaps(checkedStart, checkedEnd) ||
+        (offsets != null &&
+            (!_checkedBoundaries.contains(checkedStart) ||
+                !_checkedBoundaries.contains(checkedEnd) ||
+                _checkedProtected.overlaps(checkedStart, checkedEnd))) ||
         _identifierEnds.contains(checkedStart) ||
         _identifierStarts.contains(checkedEnd);
   }

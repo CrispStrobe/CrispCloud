@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:characters/characters.dart';
 
 /// UAX #29 grapheme-cluster segmentation used for caret hit-testing.
@@ -67,5 +69,36 @@ abstract final class GraphemeClusters {
       }
     }
     return clusters.length;
+  }
+}
+
+/// Membership index for UTF-16 grapheme boundaries. Common Latin text needs
+/// no table. Other text gets one byte per offset, built on the first lookup.
+final class GraphemeBoundaries {
+  GraphemeBoundaries(this._text);
+
+  // Latin-1 and these common punctuation marks each form one grapheme
+  // when adjacent only to characters in the same range, except for CRLF.
+  static final _needsSegmentation = RegExp(
+    r'\r\n|[^\u0000-\u00ff\u2010-\u201f\u2026]',
+  );
+  final String _text;
+  late final Uint8List? _boundaries = _index();
+
+  Uint8List? _index() {
+    if (!_needsSegmentation.hasMatch(_text)) return null;
+    final boundaries = Uint8List(_text.length + 1);
+    final range = CharacterRange(_text);
+    while (range.moveNext()) {
+      boundaries[_text.length - range.stringAfterLength] = 1;
+    }
+    return boundaries;
+  }
+
+  bool contains(int offset) {
+    if (offset < 0 || offset > _text.length) return false;
+    if (offset == 0 || offset == _text.length) return true;
+    final boundaries = _boundaries;
+    return boundaries == null || boundaries[offset] != 0;
   }
 }

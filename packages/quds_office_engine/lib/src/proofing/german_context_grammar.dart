@@ -22,7 +22,7 @@ bool _contextWhole(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) =>
     words.isNotEmpty &&
     words.length <= 48 &&
@@ -34,7 +34,7 @@ _GermanVerbContext? _grammarVerbContext(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) {
   if (words.length < 4 ||
       !_contextWhole(text, words, protected, boundaries) ||
@@ -214,7 +214,7 @@ Iterable<_GermanGrammarIssue> _grammarContextIssues(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
   _GermanVerbContext? context,
 ) sync* {
   if (!_contextWhole(text, words, protected, boundaries)) return;

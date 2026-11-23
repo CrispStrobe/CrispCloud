@@ -108,7 +108,7 @@ abstract final class GermanAgreementFacts {
   /// Grammar corrections, unlike annotation display, need whole graphemes.
   static bool hasSourceBoundaries(String text, int start, int end) {
     if (start < 0 || end < start || end > text.length) return false;
-    final boundaries = _sourceGraphemeBoundaries(text);
+    final boundaries = GraphemeBoundaries(text);
     return boundaries.contains(start) && boundaries.contains(end);
   }
 

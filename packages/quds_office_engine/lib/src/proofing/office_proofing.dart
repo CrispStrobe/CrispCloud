@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:characters/characters.dart';
+import '../bidi/grapheme_clusters.dart';
 
 /// Provider outcomes. An empty successful result is different from no checker.
 enum OfficeProofingStatus { success, unavailable, unsupported, failed }
@@ -478,10 +478,9 @@ class OfficeProofingService {
         ],
       );
     }
+    final boundaries = GraphemeBoundaries(request.text);
     final List<OfficeProofingResult> results = await Future.wait(
-      selected.map(
-        (OfficeProofingProvider provider) => _checkProvider(provider, request),
-      ),
+      selected.map((provider) => _checkProvider(provider, request, boundaries)),
     );
     return OfficeProofingReport(request: request, results: results);
   }
@@ -489,6 +488,7 @@ class OfficeProofingService {
   Future<OfficeProofingResult> _checkProvider(
     OfficeProofingProvider provider,
     OfficeProofingRequest request,
+    GraphemeBoundaries boundaries,
   ) async {
     OfficeProofingResult unavailable(String message) => OfficeProofingResult(
       request: request,
@@ -525,7 +525,12 @@ class OfficeProofingService {
           .check(request)
           .timeout(timeout);
       if (_disposed) return unavailable('Proofing service is disposed.');
-      final String? invalid = _invalidResult(provider, request, result);
+      final String? invalid = _invalidResult(
+        provider,
+        request,
+        result,
+        boundaries,
+      );
       if (invalid != null) throw FormatException(invalid);
       return OfficeProofingResult(
         request: request,
@@ -565,6 +570,7 @@ class OfficeProofingService {
     OfficeProofingProvider provider,
     OfficeProofingRequest request,
     OfficeProofingResult result,
+    GraphemeBoundaries boundaries,
   ) {
     if (result.providerId != provider.id ||
         !identical(result.request, request)) {
@@ -573,13 +579,6 @@ class OfficeProofingService {
     if (result.status != OfficeProofingStatus.success &&
         result.findings.isNotEmpty) {
       return 'An incomplete provider result must not contain findings.';
-    }
-    if (result.findings.isEmpty) return null;
-    final Set<int> boundaries = <int>{0};
-    int boundary = 0;
-    for (final String cluster in request.text.characters) {
-      boundary += cluster.length;
-      boundaries.add(boundary);
     }
     for (final OfficeProofingFinding finding in result.findings) {
       final int start = finding.start - request.startOffset;
@@ -593,7 +592,8 @@ class OfficeProofingService {
           end > request.text.length ||
           !boundaries.contains(start) ||
           !boundaries.contains(end) ||
-          request.text.substring(start, end) != finding.originalText) {
+          end - start != finding.originalText.length ||
+          !request.text.startsWith(finding.originalText, start)) {
         return 'Provider returned an invalid or stale source range.';
       }
     }

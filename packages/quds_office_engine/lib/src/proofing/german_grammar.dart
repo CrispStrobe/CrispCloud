@@ -97,7 +97,7 @@ bool _grammarContextSafe(
   int start,
   int end,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) =>
     boundaries.contains(start) &&
     boundaries.contains(end) &&
@@ -587,7 +587,7 @@ int? _grammarNounIndex(
 Iterable<String> _grammarMorphologyCandidates(
   String text,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) sync* {
   final List<_GermanGrammarWord> words = _grammarWordExpression
       .allMatches(text)
@@ -614,7 +614,7 @@ Iterable<String> _grammarMorphologyCandidates(
 Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   String text,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
   bool swiss,
 ) sync* {
   final List<_GermanGrammarWord> words = _grammarWordExpression
@@ -824,7 +824,7 @@ bool _grammarCompleteVerbObject(
   List<_GermanGrammarWord> words,
   int index,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) {
   // Accept only an entire short clause: pronoun + matching finite verb + one
   // modeled noun phrase + actual final punctuation. Never truncate lookahead
@@ -1056,7 +1056,7 @@ Iterable<_GermanGrammarIssue> _grammarSimpleNounAgreement(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
   bool swiss,
 ) sync* {
   if (words.length < 3 ||
@@ -1173,7 +1173,7 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
   _GermanCase? governedCase,
   int contextStart,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
   bool swiss, {
   String articleRuleId = 'de.grammar.preposition-case',
   String articleMessage =
@@ -1602,7 +1602,7 @@ Iterable<_GermanGrammarIssue> _grammarClauseIssues(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) sync* {
   for (int i = 2; i + 2 < words.length; i++) {
     final _GermanGrammarWord conjunction = words[i];
@@ -1708,7 +1708,7 @@ Iterable<_GermanGrammarIssue> _grammarInvertedAgreement(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) sync* {
   for (int i = 0; i + 1 < words.length; i++) {
     final _GermanGrammarWord verb = words[i];
@@ -1789,7 +1789,7 @@ Iterable<_GermanGrammarIssue> _grammarComparisonIssues(
   String text,
   List<_GermanGrammarWord> words,
   bool Function(int, int) protected,
-  Set<int> boundaries,
+  GraphemeBoundaries boundaries,
 ) sync* {
   for (int i = 1; i + 1 < words.length; i++) {
     final _GermanGrammarWord conjunction = words[i];

@@ -1,4 +1,4 @@
-import 'package:characters/characters.dart';
+import '../bidi/grapheme_clusters.dart';
 
 import 'arabic_morphology.dart';
 import 'office_proofing.dart';
@@ -772,16 +772,6 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
     return units.join();
   }
 
-  static Set<int> _graphemeBoundaries(String text) {
-    final Set<int> boundaries = <int>{0};
-    int end = 0;
-    for (final String cluster in text.characters) {
-      end += cluster.length;
-      boundaries.add(end);
-    }
-    return boundaries;
-  }
-
   static bool _arabicBefore(String text, int index) {
     int i = index - 1;
     while (i >= 0 && _mark.hasMatch(text[i])) {
@@ -806,7 +796,7 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
     }
     final String text = request.text;
     final OfficeProofingTextRanges protected = OfficeProofingTextRanges(text);
-    final Set<int> boundaries = _graphemeBoundaries(text);
+    final boundaries = GraphemeBoundaries(text);
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
 
     void add(
