@@ -393,6 +393,93 @@ void main() {
     );
   }
 
+
+  testWidgets('Windows toolbar menus open below the title row, not over it', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 48,
+          title: ConfigurableBrowserMenu(
+            layout: sampleMenu(),
+            commands: commands,
+            fixedCommands: const [],
+            inToolbar: true,
+          ),
+        ),
+        body: const Center(child: Text('File panels')),
+      ),
+      size: const Size(1000, 320),
+    );
+
+    expect(find.byKey(const ValueKey('browser-menu-toolbar')), findsOneWidget);
+    expect(find.byType(MenuBar), findsOneWidget);
+    final opener = find.byKey(const ValueKey('browser-menu-files'));
+    final root = tester.widget<SubmenuButton>(opener);
+    expect(root.menuStyle!.alignment, AlignmentDirectional.bottomStart);
+    expect(
+      root.menuStyle!.maximumSize!.resolve(<WidgetState>{})!.height,
+      lessThan(320),
+    );
+    expect(
+      tester.widget<MenuAcceleratorLabel>(
+        find.descendant(
+          of: opener,
+          matching: find.byType(MenuAcceleratorLabel),
+        ),
+      ).label,
+      contains('&'),
+    );
+
+    await tester.tap(opener);
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('browser-menu-entry-copy'));
+    expect(entry, findsOneWidget);
+    expect(
+      tester.getTopLeft(entry).dy,
+      greaterThanOrEqualTo(tester.getBottomLeft(opener).dy - 1),
+    );
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    expect(called, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('narrow Windows toolbar keeps a compact cascading menu', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 48,
+          title: ConfigurableBrowserMenu(
+            layout: sampleMenu(),
+            commands: commands,
+            fixedCommands: const [],
+            inToolbar: true,
+          ),
+        ),
+      ),
+      size: const Size(480, 360),
+    );
+    expect(find.byKey(const ValueKey('browser-menu-toolbar')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('browser-menu-compact')));
+    await tester.pumpAndSettle();
+    final submenu = tester.widget<SubmenuButton>(
+      find.byKey(const ValueKey('browser-menu-files')),
+    );
+    expect(submenu.menuStyle, isNull);
+    await tester.tap(find.byKey(const ValueKey('browser-menu-files')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('browser-menu-entry-copy')));
+    await tester.pumpAndSettle();
+    expect(called, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   test('all new menu text covers the supported locales', () {
     for (final values in BrowserMenuStrings.messages.values) {
       expect(values.length, BrowserMenuStrings.languages.length);

@@ -14,8 +14,9 @@ class WindowsPlatformMenuBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxPopupHeight =
-        (MediaQuery.sizeOf(context).height - 48 - 16).clamp(120.0, double.infinity);
+    final maxPopupHeight = (MediaQuery.sizeOf(context).height - 48 - 16)
+        .clamp(120.0, double.infinity)
+        .toDouble();
     final popupStyle = MenuStyle(
       alignment: AlignmentDirectional.bottomStart,
       maximumSize: WidgetStatePropertyAll(
@@ -49,6 +50,7 @@ class WindowsPlatformMenuBar extends StatelessWidget {
           control: true,
           shift: shortcut.shift,
           alt: shortcut.alt,
+          numLock: shortcut.numLock,
           includeRepeats: shortcut.includeRepeats,
         );
       }

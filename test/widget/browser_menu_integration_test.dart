@@ -324,6 +324,69 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
+
+  testWidgets('Windows keeps one menu row when the toolbar is hidden', (
+    tester,
+  ) async {
+    await mount(tester);
+    final menu = find.byType(ConfigurableBrowserMenu);
+    expect(menu, findsOneWidget);
+    expect(tester.widget<ConfigurableBrowserMenu>(menu).inToolbar, isTrue);
+    expect(find.ancestor(of: menu, matching: find.byType(AppBar)), findsOneWidget);
+    expect(find.byKey(const ValueKey('browser-menu-toolbar')), findsOneWidget);
+    expect(find.byType(PlatformMenuBar), findsNothing);
+
+    await container.read(topToolbarVisibleProvider.notifier).setVisible(false);
+    await tester.pumpAndSettle();
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.byType(ConfigurableBrowserMenu), findsOneWidget);
+    expect(find.byKey(const ValueKey('browser-menu-toolbar')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('Windows editor and terminal replace browser menus', (
+    tester,
+  ) async {
+    await mount(tester);
+    CodeEditorMenuAction? editorAction;
+    container.read(codeEditorMenuProvider.notifier).state =
+        CodeEditorMenuActions(
+      perform: (action) => editorAction = action,
+      canSave: true,
+      canUndo: true,
+      canRedo: true,
+      hasSelection: true,
+      canReload: true,
+      canHighlight: true,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(ConfigurableBrowserMenu), findsNothing);
+    expect(find.byType(WindowsPlatformMenuBar), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('windows-context-menu-File')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('windows-context-item-Save')));
+    await tester.pumpAndSettle();
+    expect(editorAction, CodeEditorMenuAction.save);
+
+    container.read(codeEditorMenuProvider.notifier).state = null;
+    TerminalMenuAction? terminalAction;
+    container.read(terminalMenuProvider.notifier).state = TerminalMenuActions(
+      owner: Object(),
+      perform: (action) => terminalAction = action,
+      canCopy: true,
+      canPaste: true,
+      canDisconnect: true,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(ConfigurableBrowserMenu), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('windows-context-menu-Edit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('windows-context-item-Paste')));
+    await tester.pumpAndSettle();
+    expect(terminalAction, TerminalMenuAction.paste);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
   testWidgets(
     'native code-editor and terminal menus keep ownership over a configured browser layout',
     (tester) async {

@@ -184,8 +184,9 @@ class ConfigurableBrowserMenu extends StatelessWidget {
     // Limit top-level popups to the space below the Windows menu strip.
     // Otherwise Flutter flips a long menu above its anchor and obscures the
     // entire toolbar, which feels like a modal instead of a desktop dropdown.
-    final maxPopupHeight =
-        (MediaQuery.sizeOf(context).height - 48 - 16).clamp(120.0, double.infinity);
+    final maxPopupHeight = (MediaQuery.sizeOf(context).height - 48 - 16)
+        .clamp(120.0, double.infinity)
+        .toDouble();
     final toolbarPopupStyle = inToolbar
         ? MenuStyle(
             alignment: AlignmentDirectional.bottomStart,
@@ -249,13 +250,13 @@ class ConfigurableBrowserMenu extends StatelessWidget {
           ),
         },
     ];
-    final menus = [
-      ...children(layout.menus, topLevel: true),
+    List<Widget> menusFor({required bool toolbarMode}) => [
+      ...children(layout.menus, topLevel: toolbarMode),
       if (fixedCommands.isNotEmpty)
         SubmenuButton(
           key: const ValueKey('browser-menu-controls'),
-          menuStyle: toolbarPopupStyle,
-          style: inToolbar
+          menuStyle: toolbarMode ? toolbarPopupStyle : null,
+          style: toolbarMode
               ? const ButtonStyle(
                   minimumSize: WidgetStatePropertyAll(Size(0, 36)),
                   padding: WidgetStatePropertyAll(
@@ -267,7 +268,7 @@ class ConfigurableBrowserMenu extends StatelessWidget {
             for (final binding in fixedCommands)
               command(binding, 'browser-menu-fixed-${binding.id}'),
           ],
-          child: inToolbar
+          child: toolbarMode
               ? MenuAcceleratorLabel(
                   acceleratorLabel(strings.text('controls')),
                 )
@@ -276,7 +277,9 @@ class ConfigurableBrowserMenu extends StatelessWidget {
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < (inToolbar ? 600 : 650)) {
+        final compact = constraints.maxWidth < (inToolbar ? 600 : 650);
+        final menus = menusFor(toolbarMode: inToolbar && !compact);
+        if (compact) {
           return Align(
             alignment: AlignmentDirectional.centerStart,
             child: MenuAnchor(

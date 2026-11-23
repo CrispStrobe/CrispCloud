@@ -1065,11 +1065,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
           ],
         ),
-        const PlatformMenuItemGroup(
-          members: <PlatformMenuItem>[
-            PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
-          ],
-        ),
+        if (defaultTargetPlatform == TargetPlatform.macOS)
+          const PlatformMenuItemGroup(
+            members: <PlatformMenuItem>[
+              PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
+            ],
+          ),
         PlatformMenuItemGroup(
           members: [
             for (final command in _fixedBrowserMenuBindings(
