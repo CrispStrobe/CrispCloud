@@ -21,20 +21,29 @@ bool validInstalledFontFamily(String family) =>
     !family.contains(RegExp(r'[\x00-\x1f\x7f]'));
 
 /// Validate actual font metadata rather than trusting a file's name.
-/// Collections, CFF/variable/color faces and mismatched families retain fallback.
-InstalledFontData? parseInstalledFont(String family, Uint8List bytes) {
+/// Static CFF outlines can be enabled for canvas paint and measurement.
+InstalledFontData? parseInstalledFont(
+  String family,
+  Uint8List bytes, {
+  bool allowPostScriptOutlines = false,
+}) {
   if (!validInstalledFontFamily(family) ||
       bytes.length < 12 ||
       bytes.length > maxInstalledFontBytes) {
     return null;
   }
   final signature = ByteData.sublistView(bytes).getUint32(0);
-  if (signature != 0x00010000 && signature != 0x74727565) return null;
+  final postScript = signature == 0x4f54544f;
+  if (signature != 0x00010000 &&
+      signature != 0x74727565 &&
+      !(postScript && allowPostScriptOutlines))
+    return null;
   try {
     final font = SfntFont.parse(bytes);
     if (font.familyName.trim().toLowerCase() != family.trim().toLowerCase() ||
-        !font.hasTable('glyf') ||
-        !font.hasTable('loca') ||
+        !(postScript
+            ? font.hasTable('CFF ')
+            : font.hasTable('glyf') && font.hasTable('loca')) ||
         font.hasTable('fvar') ||
         font.hasTable('COLR') ||
         font.hasTable('CBDT') ||

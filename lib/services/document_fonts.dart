@@ -95,7 +95,7 @@ abstract final class DocumentFonts {
     }
     // Exact local Office faces are read from the host at runtime, not bundled.
     // Existing compatibility aliases remain authoritative for Flutter paint.
-    final system = await OfficeSystemFonts.load();
+    final system = await OfficeSystemFonts.load(allowPostScriptOutlines: true);
     final byFamily = <String, List<OfficeSystemFontFace>>{};
     for (final face in system) {
       byFamily

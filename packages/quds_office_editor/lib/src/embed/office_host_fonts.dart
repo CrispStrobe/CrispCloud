@@ -67,9 +67,13 @@ abstract final class OfficeHostFonts {
     final registered = registeredFamily(family) ?? family;
     final faces = _metricFaces[registered.toLowerCase()];
     if (faces == null) return null;
-    final face = OfficeFontSet(
-      faces: faces,
-    ).resolve(codePoint, family: registered, weight: weight, italic: italic);
+    final face = OfficeFontSet(faces: faces).resolve(
+      codePoint,
+      family: registered,
+      weight: weight,
+      italic: italic,
+      allowPostScriptOutlines: true,
+    );
     return face == null
         ? null
         : FontMetrics(font: face.font, fontSizePoints: sizePoints);

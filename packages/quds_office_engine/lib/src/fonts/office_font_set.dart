@@ -142,12 +142,16 @@ class OfficeFontSet {
     String? family,
     int weight = 400,
     bool italic = false,
+    bool allowPostScriptOutlines = false,
   }) {
+    bool hasMetrics(SfntFont font) =>
+        font.hasTable('glyf') ||
+        (allowPostScriptOutlines && font.hasTable('CFF '));
     OfficeFontFace? choose(Iterable<OfficeFontFace> candidates) {
       OfficeFontFace? best;
       var bestScore = 1 << 30;
       for (final candidate in candidates) {
-        if (!candidate.font.hasTable('glyf') ||
+        if (!hasMetrics(candidate.font) ||
             candidate.font.glyphIdFor(codePoint) == 0) {
           continue;
         }
@@ -181,7 +185,7 @@ class OfficeFontSet {
     }
     if (selected == null) {
       for (final font in <SfntFont>[?primary, ...fallbacks]) {
-        if (font.hasTable('glyf') && font.glyphIdFor(codePoint) != 0) {
+        if (hasMetrics(font) && font.glyphIdFor(codePoint) != 0) {
           selected = OfficeFontFace(font: font, family: 'Supplied font');
           break;
         }
