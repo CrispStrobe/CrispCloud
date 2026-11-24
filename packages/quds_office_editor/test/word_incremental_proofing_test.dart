@@ -476,6 +476,34 @@ void main() {
     },
   );
 
+  test('a detach during progress prunes the paragraph before reuse', () async {
+    final h = _Harness(['Feler first', 'Feler second', 'Feler third']);
+    final [first, detached, third] = h.paragraphs;
+    final gate = h.provider.gate('Feler third');
+    final pending = h.session.checkNow();
+    await h.provider.started('Feler third');
+    expect(h.session.summary.issues.map((issue) => issue.paragraph), [
+      first,
+      detached,
+    ]);
+
+    final blocks = h.document.sections.single.blocks;
+    blocks.remove(detached);
+    gate.complete();
+    final updated = await pending;
+    expect(updated.issues.map((issue) => issue.paragraph), [first, third]);
+
+    blocks.insert(1, detached);
+    h.changed();
+    expect((await h.session.checkNow()).issues, hasLength(3));
+    expect(h.provider.requests.map((request) => request.text), [
+      'Feler first',
+      'Feler second',
+      'Feler third',
+      'Feler second',
+    ]);
+  });
+
   for (final change in ['detach', 'story', 'noProof', 'language']) {
     test(
       '$change invalidates affected findings and preserves other paragraphs',

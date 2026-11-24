@@ -2131,8 +2131,9 @@ final class WordProofingSession extends ChangeNotifier {
     passCount++;
     passCountsByTrigger.update(trigger.name, (n) => n + 1, ifAbsent: () => 1);
     final hasWork = checkOrder.isNotEmpty;
-    _passShowsProgress = showProgress && hasWork;
-    if (_passShowsProgress) {
+    final publishesProgress = showProgress && hasWork;
+    _passShowsProgress = publishesProgress;
+    if (publishesProgress) {
       _publishCached(
         captured,
         documentId: documentId,
@@ -2256,6 +2257,7 @@ final class WordProofingSession extends ChangeNotifier {
           revision: revision,
           useManual: useManual,
           checking: true,
+          pruneDetached: false,
         );
         notifyListeners();
       }
@@ -2281,6 +2283,7 @@ final class WordProofingSession extends ChangeNotifier {
       revision: revision,
       useManual: useManual,
       finished: true,
+      pruneDetached: !publishesProgress,
     );
     // A check of the text being typed that changes no mark on screen does
     // not notify: listeners (and the host's whole chrome) would rebuild for
@@ -2512,9 +2515,14 @@ final class WordProofingSession extends ChangeNotifier {
     bool checking = false,
     bool scheduled = false,
     bool finished = false,
+    bool pruneDetached = true,
   }) {
-    final attached = captured.attachedParagraphs;
-    _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
+    // The first progress publication already pruned this capture. The pass
+    // only adds cache entries for paragraphs in the same captured document.
+    if (pruneDetached) {
+      final attached = captured.attachedParagraphs;
+      _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
+    }
     _pendingPublish = null;
     _clearProvisionalFindings();
     final previous = _published;

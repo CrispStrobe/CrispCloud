@@ -41,6 +41,18 @@ test into hosted, installed, live-provider or App Store evidence.
 | CC-SEC-011 | S1 | Fuzz coverage | No committed, reproducible fuzz job covers archive readers, saved EML/MBOX, MSG and the viewer parser surface at each revision. | **Verified locally**: `fuzz_archive_codecs.dart`, `fuzz_internal_viewer.dart` and `fuzz_mail.dart` are committed; the bounded workflow runs them. Mail fuzzing found the CFBF escape below. |
 | CC-SEC-012 | S1 | Outlook CFB sectors | The vendored `CfbfFile` used untrusted stream-start/FAT/DIFAT sectors before checking the container, so a mutated MSG escaped `RangeError` through CFB preview. | **Closed** in the vendored engine: sector and size checks now return typed `CfbfException`; `fuzz_mail.dart` is clean over 50,003 runs and the engine regression covers both start-sector and DIFAT cases. |
 
+### Saved-mail and compound-file hardening
+
+- `fuzz_mail.dart` found a `RangeError` escape in CFBF stream-sector reads
+  reached by Outlook MSG preview. The vendored engine now validates stream
+  size, FAT/DIFAT and mini-FAT indices before every sector view and returns a
+  typed `CfbfException`.
+- `bounded_cfb_reader_test.dart` pins the start-sector and DIFAT repros at the
+  engine boundary; `email_message_service_test.dart` pins the host MSG path.
+- The same fuzz harness covers EML MIME nesting, transfer encodings, MBOX
+  indexing and per-message decoding. It completed **50,003 runs clean** after
+  the fix.
+
 ## Fuzz targets
 
 High-value pure-Dart/IO surfaces:
