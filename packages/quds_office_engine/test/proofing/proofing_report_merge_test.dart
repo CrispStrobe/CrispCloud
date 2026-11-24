@@ -47,6 +47,83 @@ OfficeProofingReport _report(
 ) => OfficeProofingReport(request: request, results: results);
 
 void main() {
+  test('indexed conflicts match the direct scan in provider order', () {
+    const blocks = 24;
+    final request = OfficeProofingRequest(
+      documentId: 'long-report',
+      blockId: 'paragraph',
+      revision: 3,
+      text: 'x' * (16 * blocks),
+      startOffset: 37,
+    );
+    List<OfficeProofingFinding> blockFindings(
+      String provider,
+      List<(int, int)> spans,
+    ) => [
+      for (var block = blocks - 1; block >= 0; block--)
+        for (final (start, end) in spans)
+          _finding(request, provider, 16 * block + start, 16 * block + end),
+    ];
+
+    final primary = _report(request, [
+      _result(
+        request,
+        'primary',
+        findings: blockFindings('primary', [(3, 7), (5, 8), (10, 10)]),
+      ),
+    ]);
+    final secondary = _report(request, [
+      _result(
+        request,
+        'first',
+        findings: blockFindings('first', [
+          (3, 3),
+          (1, 3),
+          (8, 8),
+          (8, 9),
+          (9, 10),
+          (12, 13),
+          (12, 14),
+        ]),
+      ),
+      _result(
+        request,
+        'second',
+        findings: blockFindings('second', [
+          (8, 9),
+          (11, 11),
+          (12, 12),
+          (13, 15),
+          (15, 15),
+        ]),
+      ),
+    ]);
+
+    bool overlaps(OfficeProofingFinding a, OfficeProofingFinding b) {
+      if (a.start == a.end) return a.start >= b.start && a.start <= b.end;
+      if (b.start == b.end) return b.start >= a.start && b.start <= a.end;
+      return a.start < b.end && b.start < a.end;
+    }
+
+    final report = mergeOfficeProofingReports(
+      primary: primary,
+      secondary: secondary,
+    );
+    final accepted = [...primary.findings];
+    expect(report.results.first, same(primary.results.first));
+    for (var index = 0; index < secondary.results.length; index++) {
+      final expected = <OfficeProofingFinding>[];
+      for (final candidate in secondary.results[index].findings) {
+        if (accepted.any((prior) => overlaps(prior, candidate))) continue;
+        accepted.add(candidate);
+        expected.add(candidate);
+      }
+      expect(expected, hasLength((index == 0 ? 3 : 2) * blocks));
+      expect(report.results[index + 1].findings, orderedEquals(expected));
+    }
+    expect(report.findings, unorderedEquals(accepted));
+  });
+
   test('primary wins competing edits without rebasing source offsets', () {
     final OfficeProofingRequest request = _request();
     final OfficeProofingFinding first = _finding(request, 'rules', 2, 5);

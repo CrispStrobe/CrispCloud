@@ -427,23 +427,30 @@ OfficeProofingReport mergeOfficeProofingReports({
       throw ArgumentError('An incomplete provider result contains findings.');
     }
   }
-  final List<OfficeProofingFinding> accepted = <OfficeProofingFinding>[
-    ...primary.findings,
-  ];
+  final secondaryCount = secondary.results.fold<int>(
+    0,
+    (count, result) => count + result.findings.length,
+  );
+  // Few proposals are cheaper to check directly than to build an index for.
+  final conflicts =
+      secondaryCount >= 8 && primary.findings.length + secondaryCount >= 64
+      ? _ProofingConflictIndex(primary.findings, secondary.results)
+      : null;
+  final accepted = conflicts == null ? [...primary.findings] : null;
   final List<OfficeProofingResult> results = <OfficeProofingResult>[
     ...primary.results,
   ];
   for (final OfficeProofingResult result in secondary.results) {
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
     for (final OfficeProofingFinding finding in result.findings) {
-      if (accepted.any(
-        (OfficeProofingFinding previous) =>
-            _proofingFindingsConflict(previous, finding),
-      )) {
-        continue;
-      }
+      final allowed =
+          conflicts?.accept(finding) ??
+          !accepted!.any(
+            (previous) => _proofingFindingsConflict(previous, finding),
+          );
+      if (!allowed) continue;
       findings.add(finding);
-      accepted.add(finding);
+      accepted?.add(finding);
     }
     results.add(
       OfficeProofingResult(
@@ -465,6 +472,71 @@ bool _proofingFindingsConflict(
   if (a.start == a.end) return a.start >= b.start && a.start <= b.end;
   if (b.start == b.end) return b.start >= a.start && b.start <= a.end;
   return a.start < b.end && b.start < a.end;
+}
+
+/// Indexes accepted ranges in provider order, with a prefix maximum of end
+/// positions. Both conflict checks and insertions take logarithmic time.
+final class _ProofingConflictIndex {
+  factory _ProofingConflictIndex(
+    List<OfficeProofingFinding> primary,
+    List<OfficeProofingResult> secondary,
+  ) {
+    final endpoints = <int>{};
+    void collect(List<OfficeProofingFinding> findings) {
+      for (final finding in findings) {
+        endpoints
+          ..add(finding.start)
+          ..add(finding.end);
+      }
+    }
+
+    collect(primary);
+    for (final result in secondary) {
+      collect(result.findings);
+    }
+    final offsets = endpoints.toList()..sort();
+    final index = _ProofingConflictIndex._({
+      for (var i = 0; i < offsets.length; i++) offsets[i]: 3 * i + 1,
+    }, List<int>.filled(3 * offsets.length + 1, 0));
+    for (final finding in primary) {
+      final (start, end) = index._span(finding);
+      index._add(start, end);
+    }
+    return index;
+  }
+
+  _ProofingConflictIndex._(this._positions, this._maxEnd);
+
+  final Map<int, int> _positions;
+  final List<int> _maxEnd;
+
+  // Give each endpoint three positions. An insertion occupies all three;
+  // a nonempty range includes only the inward position at each endpoint.
+  // Touching ranges remain disjoint, but a shared endpoint can still conflict
+  // with an insertion. Compressing offsets keeps memory proportional to findings.
+  (int, int) _span(OfficeProofingFinding finding) {
+    final start = _positions[finding.start]!;
+    final end = _positions[finding.end]!;
+    return start == end ? (start, end + 2) : (start + 2, end);
+  }
+
+  bool accept(OfficeProofingFinding finding) {
+    final (start, end) = _span(finding);
+    // Fenwick tree prefix query: among accepted spans that start at or
+    // before this end, any span ending at or after this start conflicts.
+    for (var i = end; i > 0; i -= i & -i) {
+      if (_maxEnd[i] >= start) return false;
+    }
+    _add(start, end);
+    return true;
+  }
+
+  void _add(int start, int end) {
+    for (var i = start; i < _maxEnd.length; i += i & -i) {
+      if (_maxEnd[i] >= end) break;
+      _maxEnd[i] = end;
+    }
+  }
 }
 
 /// Runs configured providers with a deadline, validates their output against
