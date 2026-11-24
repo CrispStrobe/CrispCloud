@@ -647,6 +647,76 @@ class TransferNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Permanently removes every settled queue row and its saved recovery
+  /// history, including failed, cancelled and interrupted jobs. Active jobs
+  /// are deliberately left alone; their row must be stopped first. File
+  /// contents and any staging or backup copies are never deleted here.
+  Future<int> clearQueue() async {
+    await ready;
+    final settled = <String>{
+      for (final operation in _operations)
+        if (!isJobLive(operation.id)) operation.id,
+      for (final job in _journal.jobs)
+        if (!isJobLive(job.id)) job.id,
+    };
+    if (settled.isEmpty) return 0;
+
+    Object? failure;
+    final removed = <String>{};
+    for (final id in settled) {
+      try {
+        if (_journal.job(id) != null) {
+          await _journal.runExclusiveOperation(id, () => _journal.dismiss(id));
+        }
+        await _archiveWorkspaces.remove(id)?.close();
+        _archiveHandles.remove(id)?.dispose();
+        removed.add(id);
+      } catch (error) {
+        failure ??= error;
+      }
+    }
+    _operations.removeWhere((operation) => removed.contains(operation.id));
+    for (final id in removed) {
+      _unknownFileSizes.remove(id);
+      _integrityProgressIds.remove(id);
+    }
+    _queue.clearCompleted();
+    try {
+      await _journal.compact();
+    } catch (error) {
+      failure ??= error;
+    }
+    if (failure != null) {
+      recoveryError = 'Some queue entries could not be removed: $failure';
+    }
+    notifyListeners();
+    if (failure != null) {
+      throw StateError(recoveryError ?? '$failure');
+    }
+    return removed.length;
+  }
+
+  /// Removes one settled job and its durable recovery record, so it cannot
+  /// reappear after a restart. This is the per-row version of [clearQueue].
+  Future<void> dismissOperation(String id) async {
+    await ready;
+    if (isJobLive(id)) {
+      throw StateError('Stop this transfer before removing it from the queue.');
+    }
+    if (_journal.job(id) != null) {
+      await dismissSavedJob(id);
+      _unknownFileSizes.remove(id);
+      _integrityProgressIds.remove(id);
+      notifyListeners();
+      return;
+    }
+    _operations.removeWhere((operation) => operation.id == id);
+    _unknownFileSizes.remove(id);
+    _integrityProgressIds.remove(id);
+    _queue.clearCompleted();
+    notifyListeners();
+  }
+
   /// Restores a reviewed backup only into a vacant original location. The
   /// rename intent is durable before the storage operation starts. Restoration
   /// holds dispatch and requires existing workers to settle, so its verification

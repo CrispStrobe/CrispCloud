@@ -3,12 +3,14 @@
 // Base dependencies injected via ProviderScope overrides in main.dart.
 
 import 'dart:ui' show Locale;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/directory_cache_service.dart';
+import 'panel_cache_provider.dart';
 import '../services/file_cache_service.dart';
 import '../services/local_file_service.dart';
 import '../services/thumbnail_service.dart';
@@ -33,18 +35,22 @@ final localFileServiceProvider = Provider<LocalFileService>((ref) {
 
 /// In-memory directory listing cache for instant source switching.
 final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
-  return DirectoryCacheService();
+  return DirectoryCacheService(
+    maxItems: ref.watch(panelCacheSettingsProvider).maxItems,
+  );
 });
 
 /// User-selected locale override (null = use system locale).
 ///
 /// The choice is persisted so it survives app restarts and updates. Keeping
 /// this in Riverpod lets the whole MaterialApp rebuild immediately.
-final localeProvider =
-    StateNotifierProvider<LocaleNotifier, Locale?>((ref) => LocaleNotifier());
+final localeProvider = StateNotifierProvider<LocaleNotifier, Locale?>(
+  (ref) => LocaleNotifier(),
+);
 
 class LocaleNotifier extends StateNotifier<Locale?> {
-  LocaleNotifier({Locale? initialLocale, bool load = true}) : super(initialLocale) {
+  LocaleNotifier({Locale? initialLocale, bool load = true})
+    : super(initialLocale) {
     if (load) _load();
   }
 
@@ -77,8 +83,9 @@ class LocaleNotifier extends StateNotifier<Locale?> {
 }
 
 /// Application theme state. Riverpod is the sole ownership boundary.
-final themeProvider =
-    ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
+final themeProvider = ChangeNotifierProvider<ThemeService>(
+  (ref) => ThemeService(),
+);
 
 /// Which panel is active (Local / Remote).
 final activePanelProvider = StateProvider<PanelSide>((ref) => PanelSide.local);
@@ -114,7 +121,9 @@ extension ViewModeCycle on ViewMode {
 
 /// Persist the visual layout per panel without resetting navigation/selection.
 class FileViewModeController extends StateController<ViewMode> {
-  FileViewModeController(this.side) : super(ViewMode.list) { _load(); }
+  FileViewModeController(this.side) : super(ViewMode.list) {
+    _load();
+  }
   final PanelSide side;
   int _changes = 0;
   Future<void> _tail = Future.value();
@@ -126,30 +135,36 @@ class FileViewModeController extends StateController<ViewMode> {
       final saved = prefs.getString(_key);
       if (mounted && _changes == 0) {
         super.state = ViewMode.values.firstWhere(
-          (mode) => mode.name == saved, orElse: () => ViewMode.list,
+          (mode) => mode.name == saved,
+          orElse: () => ViewMode.list,
         );
       }
-    } catch (_) { /* Keep the usable default if storage is unavailable. */ }
+    } catch (_) {
+      /* Keep the usable default if storage is unavailable. */
+    }
   }
 
   @override
   set state(ViewMode value) {
     _changes++;
     super.state = value;
-    _tail = _tail.then((_) async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_key, value.name);
-    }).catchError((Object _) {});
+    _tail = _tail
+        .then((_) async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_key, value.name);
+        })
+        .catchError((Object _) {});
   }
-
 }
 
-final localViewModeProvider = StateNotifierProvider<FileViewModeController, ViewMode>(
-  (ref) => FileViewModeController(PanelSide.local),
-);
-final remoteViewModeProvider = StateNotifierProvider<FileViewModeController, ViewMode>(
-  (ref) => FileViewModeController(PanelSide.remote),
-);
+final localViewModeProvider =
+    StateNotifierProvider<FileViewModeController, ViewMode>(
+      (ref) => FileViewModeController(PanelSide.local),
+    );
+final remoteViewModeProvider =
+    StateNotifierProvider<FileViewModeController, ViewMode>(
+      (ref) => FileViewModeController(PanelSide.remote),
+    );
 
 /// Proxy service — overridden in main.dart with the loaded instance.
 final proxyServiceProvider = Provider<ProxyService>((ref) {
@@ -302,8 +317,8 @@ String privacyLabel(int score) {
 /// Whether to disable screenshots on mobile (opt-in).
 final disableScreenshotsProvider =
     StateNotifierProvider<_DisableScreenshotsNotifier, bool>(
-  (ref) => _DisableScreenshotsNotifier(),
-);
+      (ref) => _DisableScreenshotsNotifier(),
+    );
 
 class _DisableScreenshotsNotifier extends StateNotifier<bool> {
   _DisableScreenshotsNotifier() : super(false) {
@@ -339,8 +354,8 @@ const _preferExternalEditorKey = 'prefer_external_editor';
 /// editor instead of the built-in editor.
 final preferExternalEditorProvider =
     StateNotifierProvider<PreferExternalEditorNotifier, bool>(
-  (ref) => PreferExternalEditorNotifier(),
-);
+      (ref) => PreferExternalEditorNotifier(),
+    );
 
 class PreferExternalEditorNotifier extends StateNotifier<bool> {
   PreferExternalEditorNotifier() : super(false) {
@@ -376,8 +391,8 @@ const _layoutPresetKey = 'layout_preset';
 /// Currently selected layout preset. Persisted to SharedPreferences.
 final layoutPresetProvider =
     StateNotifierProvider<LayoutPresetNotifier, LayoutPreset>(
-  (ref) => LayoutPresetNotifier(),
-);
+      (ref) => LayoutPresetNotifier(),
+    );
 
 class LayoutPresetNotifier extends StateNotifier<LayoutPreset> {
   LayoutPresetNotifier() : super(LayoutPreset.commander) {

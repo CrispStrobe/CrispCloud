@@ -252,10 +252,42 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
               : operation.id;
         });
       case 'hide':
-        transfers.removeOperation(operation.id);
-        setState(() => _selectedIds.remove(operation.id));
+        await transfers.dismissOperation(operation.id);
+        if (mounted) {
+          setState(() => _selectedIds.remove(operation.id));
+        }
     }
   });
+
+  Future<void> _emptyQueue(TransferNotifier transfers, int count) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.commanderTr('Empty the queue?')),
+        content: Text(
+          context.commanderTr(
+            'Remove {0} finished, failed or cancelled job(s) and their saved recovery history? Active transfers are not stopped. File contents and any staging or backup copies stay on disk.',
+            [count],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.commanderTr('Keep queue')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.commanderTr('Empty queue')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _action(() async {
+      await transfers.clearQueue();
+      if (mounted) setState(_selectedIds.clear);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -332,6 +364,12 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
       final state = states[operation.id]!;
       return state == _JobState.completed || state == _JobState.cancelled;
     }).toList();
+    final clearableCount = <String>{
+      for (final operation in operations)
+        if (!transfers.isJobLive(operation.id)) operation.id,
+      for (final job in transfers.savedJobs)
+        if (!transfers.isJobLive(job.id)) job.id,
+    }.length;
 
     // Keep the browser usable when controls wrap on a narrow phone. The queue
     // and its file details remain lazy, within a bounded scrolling surface.
@@ -392,7 +430,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                         _buildQueueControls(context, transfers, finished, [
                           for (final operation in operations)
                             if (_canCancel(states[operation.id]!)) operation.id,
-                        ]),
+                        ], clearableCount),
                         const TransferBandwidthTrafficSummary(),
                         const SizedBox(height: 4),
                         _buildFilters(context, operations, states, order),
@@ -589,6 +627,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     TransferNotifier transfers,
     List<OperationProgress> finished,
     List<String> stoppableIds,
+    int clearableCount,
   ) => Wrap(
     spacing: 8,
     runSpacing: 4,
@@ -658,6 +697,16 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
           }),
           icon: const Icon(Icons.clear_all),
           label: Text(context.commanderTr('Hide finished')),
+        ),
+      if (clearableCount > 0)
+        TextButton.icon(
+          key: const ValueKey('queue-empty'),
+          onPressed: () => _emptyQueue(transfers, clearableCount),
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
+          icon: const Icon(Icons.delete_sweep_outlined),
+          label: Text(context.commanderTr('Empty queue')),
         ),
     ],
   );

@@ -411,10 +411,13 @@ abstract final class FormulaFunctions {
       case 'SUBSTITUTE':
         return _substitute(vals);
       case 'REPT':
-        return List<String>.filled(
-          _n(vals, 1)?.toInt() ?? 0,
-          formulaString(vals[0]),
-        ).join();
+        final String source = formulaString(vals[0]);
+        final int repeat = _n(vals, 1)?.toInt() ?? 0;
+        if (repeat < 0 || repeat > 32767 || source.length * repeat > 32767) {
+          return const FormulaErrorValue('#VALUE!');
+        }
+        ctx.budget?.spendText(source.length * repeat);
+        return List<String>.filled(repeat, source).join();
       case 'VALUE':
         return asFormulaNumber(vals[0]) ?? const FormulaErrorValue('#VALUE!');
       case 'NUMBERVALUE':
@@ -738,9 +741,11 @@ abstract final class FormulaFunctions {
     return n;
   }
 
+  /// Only aliases with matching semantics belong here. A function that needs
+  /// criteria, timing, basis, mode or array-spill semantics must not be routed
+  /// to a simpler function: Excel-compatible-looking but wrong numbers are
+  /// worse than an explicit `#NAME?`.
   static const Map<String, String> _aliases = <String, String>{
-    'SUMX2MY2': 'SUMSQ',
-    'SUMX2PY2': 'SUMSQ',
     'AVERAGEA': 'AVERAGE',
     'MAXA': 'MAX',
     'MINA': 'MIN',
@@ -750,18 +755,12 @@ abstract final class FormulaFunctions {
     'STDEV.P': 'STDEVP',
     'VAR.S': 'VAR',
     'VAR.P': 'VARP',
-    'CEILING.MATH': 'CEILING',
-    'FLOOR.MATH': 'FLOOR',
-    'ISO.CEILING': 'CEILING',
     'ROUNDUP': 'ROUNDUP',
     'ROUNDDOWN': 'ROUNDDOWN',
     'CONCAT': 'CONCATENATE',
     'UNICHAR': 'UNICHAR',
     'UNICODE': 'UNICODE',
-    'ERROR.TYPE': 'TYPE',
     'ISERR': 'ISERROR',
-    'AREAS': 'ROWS',
-    'DBCS': 'UPPER',
     'FINDB': 'FIND',
     'LEFTB': 'LEFT',
     'RIGHTB': 'RIGHT',
@@ -769,39 +768,9 @@ abstract final class FormulaFunctions {
     'LENB': 'LEN',
     'REPLACEB': 'REPLACE',
     'SEARCHB': 'SEARCH',
-    'DATEVALUE': 'DATE',
-    'TIMEVALUE': 'NOW',
-    'WORKDAY': 'DATE',
-    'DATEDIF': 'DAY',
-    'YEARFRAC': 'YEAR',
-    'DAYS360': 'DAY',
-    'ISOWEEKNUM': 'WEEKDAY',
-    'WEEKNUM': 'WEEKDAY',
-    'NPER': 'PMT',
-    'RATE': 'PMT',
-    'MIRR': 'NPV',
-    'CUMIPMT': 'PMT',
-    'CUMPRINC': 'PMT',
-    'IPMT': 'PMT',
-    'PPMT': 'PMT',
-    'EFFECT': 'POWER',
-    'NOMINAL': 'POWER',
-    'ACCRINT': 'SUM',
-    'COMBIN': 'FACT',
-    'PERMUT': 'FACT',
-    'COMBINA': 'FACT',
-    'PERMUTATIONA': 'FACT',
-    'SERIESSUM': 'SUM',
-    'SUBTOTAL': 'SUM',
-    'AGGREGATE': 'SUM',
-    'MAXIFS': 'MAX',
-    'MINIFS': 'MIN',
-    'AVERAGEIFS': 'AVERAGEIF',
-    'XMATCH': 'MATCH',
     'FILTER': 'FILTER',
     'SORT': 'SORT',
     'UNIQUE': 'UNIQUE',
-    'RANDARRAY': 'RAND',
   };
 
   static double _sum(List<Object?> vals) =>
@@ -1497,6 +1466,10 @@ abstract final class FormulaFunctions {
     final Object? key = args[0].eval(ctx);
     final RangeNode table = args[1] as RangeNode;
     final int index = (asFormulaNumber(args[2].eval(ctx)) ?? 1).toInt();
+    final SmlWorksheet? target = table.sheetName == null
+        ? ctx.sheet
+        : ctx.workbook.sheetByName(table.sheetName!);
+    if (target == null) return const FormulaErrorValue('#REF!');
     final List<SmlCellRef> cells = table.range.cells.toList();
     final int cols = (table.range.end.col - table.range.start.col).abs() + 1;
     final int rows = (table.range.end.row - table.range.start.row).abs() + 1;
@@ -1505,6 +1478,7 @@ abstract final class FormulaFunctions {
         if (formulaString(
               ctx.valueOf(
                 SmlCellRef(table.range.start.col + c, table.range.start.row),
+                onSheet: target,
               ),
             ) ==
             formulaString(key)) {
@@ -1513,6 +1487,7 @@ abstract final class FormulaFunctions {
               table.range.start.col + c,
               table.range.start.row + index - 1,
             ),
+            onSheet: target,
           );
         }
       }
@@ -1521,6 +1496,7 @@ abstract final class FormulaFunctions {
         if (formulaString(
               ctx.valueOf(
                 SmlCellRef(table.range.start.col, table.range.start.row + r),
+                onSheet: target,
               ),
             ) ==
             formulaString(key)) {
@@ -1529,6 +1505,7 @@ abstract final class FormulaFunctions {
               table.range.start.col + index - 1,
               table.range.start.row + r,
             ),
+            onSheet: target,
           );
         }
       }

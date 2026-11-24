@@ -1,4 +1,5 @@
 import '../services/pdf_open_preferences.dart';
+import '../widgets/app_scaffold_messenger.dart';
 import '../widgets/file_delete_dialog.dart';
 import '../widgets/catalogue_file_action.dart';
 // lib/screens/screen_dialogs.dart
@@ -50,10 +51,7 @@ List<FileItem> _selectedOrCursor(PanelNotifier panel) {
   return const <FileItem>[];
 }
 
-void showConnectionDialogScreen(
-  BuildContext context, {
-  PanelSide? targetSide,
-}) {
+void showConnectionDialogScreen(BuildContext context, {PanelSide? targetSide}) {
   showDialog(
     context: context,
     builder: (context) => ConnectionDialog(targetSide: targetSide),
@@ -888,9 +886,8 @@ void _showUndoSnackBar(
   final canUndo = last != null && historyNotifier.canUndo(last);
 
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
+    TransientSnackBar(
       content: Text(message),
-      duration: const Duration(seconds: 4),
       action: canUndo
           ? SnackBarAction(
               label: ScreenDialogStrings(context).text('undo'),

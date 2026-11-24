@@ -98,6 +98,59 @@ class FormulaErrorValue {
   };
 }
 
+/// Hard bounds for one formula recalculation run.
+///
+/// Excel-compatible evaluation is not a security boundary: a small workbook
+/// can contain a whole-column range, a repeated string or a deeply recursive
+/// dependency chain. These counters make the open/edit path fail with a typed
+/// limit instead of freezing the isolate or exhausting memory.
+class FormulaBudget {
+  FormulaBudget({
+    this.maxRangeCells = 2000000,
+    this.maxEvaluations = 1000000,
+    this.maxTextChars = 1000000,
+  });
+
+  final int maxRangeCells;
+  final int maxEvaluations;
+  final int maxTextChars;
+  int rangeCells = 0;
+  int evaluations = 0;
+  int textChars = 0;
+
+  void spendRange(int cells) {
+    if (cells < 0 || rangeCells > maxRangeCells - cells) {
+      throw const FormulaBudgetException('Formula range exceeds its limit');
+    }
+    rangeCells += cells;
+  }
+
+  void spendEvaluation() {
+    if (++evaluations > maxEvaluations) {
+      throw const FormulaBudgetException(
+        'Formula evaluation exceeds its limit',
+      );
+    }
+  }
+
+  void spendText(int chars) {
+    if (chars < 0 || textChars > maxTextChars - chars) {
+      throw const FormulaBudgetException('Formula text exceeds its limit');
+    }
+    textChars += chars;
+  }
+}
+
+/// A bounded formula pass was stopped before it could exhaust the process.
+class FormulaBudgetException implements Exception {
+  const FormulaBudgetException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'FormulaBudgetException: $message';
+}
+
 /// Class FormulaContext.
 class FormulaContext {
   /// FormulaContext API.
@@ -107,12 +160,15 @@ class FormulaContext {
     required this.origin,
     this.onCircular,
     this.resolveCell,
-  }) : _stack = <String>{};
+    FormulaBudget? budget,
+  }) : budget = budget ?? FormulaBudget(),
+       _stack = <String>{};
 
   FormulaContext._cell(FormulaContext parent, this.sheet, this.origin)
     : workbook = parent.workbook,
       onCircular = parent.onCircular,
       resolveCell = parent.resolveCell,
+      budget = parent.budget,
       _stack = parent._stack,
       _typedErrors = parent._typedErrors;
 
@@ -131,6 +187,9 @@ class FormulaContext {
   /// Optional recalculation-run resolver. It returns fresh, typed results while
   /// leaving workbook caches unchanged until the entire run has evaluated.
   final Object? Function(SmlWorksheet sheet, SmlCellRef ref)? resolveCell;
+
+  /// Shared counters for the complete recalculation run, if bounded.
+  final FormulaBudget? budget;
   final Set<String> _stack;
   var _typedErrors = false;
 
@@ -162,6 +221,7 @@ class FormulaContext {
 
   /// valueOf API.
   Object? valueOf(SmlCellRef ref, {SmlWorksheet? onSheet}) {
+    budget?.spendEvaluation();
     final SmlWorksheet target = onSheet ?? sheet;
     final resolver = resolveCell;
     if (resolver != null) {
@@ -376,6 +436,9 @@ class RangeNode extends FormulaNode {
         ? ctx.sheet
         : ctx.workbook.sheetByName(sheetName!);
     if (sheet == null) return ctx.error('#REF!');
+    final int width = range.maxCol - range.minCol + 1;
+    final int height = range.maxRow - range.minRow + 1;
+    ctx.budget?.spendRange(width * height);
     final List<Object?> values = <Object?>[];
     for (final SmlCellRef ref in range.cells) {
       values.add(ctx.valueOf(ref, onSheet: sheet));

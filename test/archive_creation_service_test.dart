@@ -317,9 +317,28 @@ void main() {
   );
 
   test(
-    'symbolic links and per-file limits fail before an output write',
+    'symbolic links inside the selection are dereferenced; escapes fail',
     () async {
       backend.links.add('/input/folder/link');
+      backend.linkTargets['/input/folder/link'] = 'Ünicode.txt';
+      final result = await create(ArchiveCreationFormat.zip);
+      final archive = await openViewerArchive(
+        backend.contents[result.path]!,
+        name: result.path,
+      );
+      addTearDown(archive.close);
+      final link = archive.members.singleWhere(
+        (entry) => entry.name.endsWith('/link'),
+      );
+      expect(
+        utf8.decode(await archive.readMember(link)),
+        'A complete archive.\n',
+      );
+      backend.contents.remove(result.path);
+      backend.writes.clear();
+      backend.links.clear();
+      backend.links.add('/input/folder/escape');
+      backend.linkTargets['/input/folder/escape'] = '../../etc/passwd';
       await expectLater(
         create(ArchiveCreationFormat.zip),
         error(ArchiveCreationError.unsupportedEntry),

@@ -26,6 +26,8 @@ Future<void> showArchiveCreationDialog(
   PanelSide side,
   List<FileItem> files, {
   required PanelFileOrigin sourceOrigin,
+  ArchiveCreationFormat initialFormat = ArchiveCreationFormat.zip,
+  bool autoStart = false,
 }) async {
   try {
     if (kIsWeb ||
@@ -58,6 +60,8 @@ Future<void> showArchiveCreationDialog(
         destination: backend,
         files: selection,
         destinationDirectory: directory,
+        initialFormat: initialFormat,
+        autoStart: autoStart,
         onCreated: rememberSelection,
         onQueueBatch:
             !kIsWeb &&
@@ -119,6 +123,8 @@ class ArchiveCreationDialog extends StatefulWidget {
     required this.destination,
     required this.files,
     required this.destinationDirectory,
+    this.initialFormat = ArchiveCreationFormat.zip,
+    this.autoStart = false,
     this.service = const ArchiveCreationService(),
     this.onCreated,
     this.enqueue,
@@ -131,6 +137,8 @@ class ArchiveCreationDialog extends StatefulWidget {
   final FileOperationBackend destination;
   final List<FileItem> files;
   final String destinationDirectory;
+  final ArchiveCreationFormat initialFormat;
+  final bool autoStart;
   final ArchiveCreationService service;
   final VoidCallback? onCreated;
 
@@ -157,8 +165,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   late final TextEditingController _name;
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
-  ArchiveCreationFormat _format = ArchiveCreationFormat.zip;
-  ArchiveCreationCompression _compression = ArchiveCreationCompression.normal;
+  late ArchiveCreationFormat _format;
+  late ArchiveCreationCompression _compression;
   bool _protect = false, _hideNames = true, _busy = false, _admitting = false;
   ArchiveOperationHandle<ArchiveCreationResult>? _job;
   FileOperationControl? _localControl;
@@ -177,13 +185,20 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   @override
   void initState() {
     super.initState();
+    _format = widget.initialFormat;
+    _compression = _format.defaultCompression;
     final first = widget.files.length == 1 ? widget.files.single : null;
     final stem = first == null
         ? 'archive'
         : first.isFolder
         ? first.name
         : p.basenameWithoutExtension(first.name);
-    _name = TextEditingController(text: '$stem.zip');
+    _name = TextEditingController(text: '$stem${_format.extension}');
+    if (widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _result == null && !_busy) _create();
+      });
+    }
   }
 
   @override

@@ -194,6 +194,9 @@ class ZipReader {
     return raw;
   }
 
+  /// Maximum output for recovery reads that cannot trust ZIP headers.
+  static const int maxRelaxedBytes = 256 * 1024 * 1024;
+
   /// Inflates [name] even when CRC or declared size is wrong.
   Uint8List readRelaxed(String name) {
     final ZipEntry? entry = _entries[name];
@@ -216,7 +219,7 @@ class ZipReader {
         return Uint8List.fromList(payload);
       case zipMethodDeflate:
         try {
-          return RawDeflate.inflate(payload);
+          return RawDeflate.inflate(payload, maxOutputBytes: maxRelaxedBytes);
         } on ZipDeflateException {
           return Uint8List.fromList(payload);
         }
@@ -227,7 +230,13 @@ class ZipReader {
 
   /// Yields inflated chunks for [name] without buffering the whole member
   /// when the codec can stream. Stored entries are yielded as a single view.
-  Stream<List<int>> openStream(String name) async* {
+  ///
+  /// The current in-engine DEFLATE codec still materializes the output, so a
+  /// default bound applies even to callers that do not know the size yet.
+  Stream<List<int>> openStream(
+    String name, {
+    int maxBytes = maxRelaxedBytes,
+  }) async* {
     final ZipEntry? entry = _entries[name];
     if (entry == null) {
       throw ZipException('ZIP entry not found: $name');
@@ -238,7 +247,7 @@ class ZipReader {
       case zipMethodStore:
         yield payload;
       case zipMethodDeflate:
-        yield RawDeflate.inflate(payload);
+        yield RawDeflate.inflate(payload, maxOutputBytes: maxBytes);
       default:
         throw ZipException(
           'Unsupported ZIP compression method ${entry.compressionMethod}',

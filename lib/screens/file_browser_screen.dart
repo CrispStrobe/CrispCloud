@@ -18,7 +18,6 @@ import '../widgets/directory_selection_actions.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
-import 'dart:io' show Platform;
 import 'dart:async';
 
 import '../l10n/pdf_workspace_strings.dart';
@@ -42,6 +41,7 @@ import '../services/platform_diagnostics_service.dart';
 import '../services/mac_browser_toolbar.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/panel_source_service.dart';
 import '../services/code_editor_menu.dart';
 import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
@@ -78,7 +78,10 @@ import '../widgets/integrity_dialogs.dart';
 import '../widgets/integrity_recovery_dialog.dart';
 import '../widgets/archive_endpoint_actions.dart';
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_creation_strings.dart';
+import '../services/archive_creation_service.dart';
 import '../l10n/archive_job_strings.dart';
+import '../widgets/archive_creation_dialog.dart';
 import '../widgets/archive_jobs_dialog.dart';
 import '../widgets/archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
@@ -88,6 +91,7 @@ import '../widgets/archive_zip_recovery_actions.dart';
 import '../widgets/archive_png_carving_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
+import '../widgets/diff_viewer_dialog.dart' show showDiffViewerDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
@@ -309,7 +313,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final scaffold = Scaffold(
       // Windows keeps its application menus even when the optional toolbar is
       // hidden. They share the same row as the primary window actions.
-      appBar: (isWindowsDesktop && officeEditor == null) ||
+      appBar:
+          (isWindowsDesktop && officeEditor == null) ||
               (!isWindowsDesktop && showTopToolbar && !_nativeToolbarReady)
           ? AppBar(
               toolbarHeight: isWindowsDesktop ? 48 : null,
@@ -322,7 +327,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                         ? ConfigurableBrowserMenu(
                             layout: menuStore.layout,
                             commands: _browserMenuBindings(context, ref),
-                            fixedCommands: _fixedBrowserMenuBindings(context, ref),
+                            fixedCommands: _fixedBrowserMenuBindings(
+                              context,
+                              ref,
+                            ),
                             inToolbar: true,
                           )
                         : WindowsPlatformMenuBar(
@@ -339,8 +347,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                             ),
                           ))
                   : isNarrow
-                      ? Text(l.appTitle)
-                      : null,
+                  ? Text(l.appTitle)
+                  : null,
               actions: isWindowsDesktop
                   ? _buildWindowsActions(
                       context,
@@ -349,13 +357,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       showToolbar: showTopToolbar && browserMenusVisible,
                     )
                   : isNarrow
-                      ? _buildNarrowActions(context, auth)
-                      : _buildWideActions(
-                          context,
-                          auth,
-                          showPreview,
-                          isDesktopPlatform,
-                        ),
+                  ? _buildNarrowActions(context, auth)
+                  : _buildWideActions(
+                      context,
+                      auth,
+                      showPreview,
+                      isDesktopPlatform,
+                    ),
             )
           : null,
       body: Focus(
@@ -445,6 +453,99 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return panel.selection.isNotEmpty
         ? panel.selection.toList()
         : [if (panel.cursorItem case final file?) file];
+  }
+
+  /// Resolves the two files a bytewise comparison should open: two files
+  /// selected in one pane, or one file from each pane.
+  ({
+    PanelSide leftSide,
+    FileItem leftFile,
+    PanelSide rightSide,
+    FileItem rightFile,
+  })?
+  _byteComparisonPair(WidgetRef ref) {
+    final activeSide = ref.read(activePanelProvider);
+    final active = ref.read(panelProvider(activeSide));
+    final selected = active.selection.toList(growable: false);
+    if (selected.length == 2 && selected.every((file) => !file.isFolder)) {
+      return (
+        leftSide: activeSide,
+        leftFile: selected[0],
+        rightSide: activeSide,
+        rightFile: selected[1],
+      );
+    }
+    if (selected.length > 1) return null;
+
+    final FileItem? activeFile;
+    if (selected.length == 1) {
+      if (selected.single.isFolder) return null;
+      activeFile = selected.single;
+    } else {
+      final cursor = active.cursorItem;
+      if (cursor == null || cursor.name == '..' || cursor.isFolder) {
+        return null;
+      }
+      activeFile = cursor;
+    }
+
+    final otherSide = activeSide == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
+    final other = ref.read(panelProvider(otherSide));
+    final otherSelected = other.selection.toList(growable: false);
+    final FileItem? otherFile;
+    if (otherSelected.isNotEmpty) {
+      if (otherSelected.length != 1 || otherSelected.single.isFolder) {
+        return null;
+      }
+      otherFile = otherSelected.single;
+    } else {
+      final cursor = other.cursorItem;
+      if (cursor == null || cursor.name == '..' || cursor.isFolder) {
+        return null;
+      }
+      otherFile = cursor;
+    }
+
+    return activeSide == PanelSide.local
+        ? (
+            leftSide: PanelSide.local,
+            leftFile: activeFile,
+            rightSide: PanelSide.remote,
+            rightFile: otherFile,
+          )
+        : (
+            leftSide: PanelSide.local,
+            leftFile: otherFile,
+            rightSide: PanelSide.remote,
+            rightFile: activeFile,
+          );
+  }
+
+  void _compareSelectedBytes(BuildContext context, WidgetRef ref) {
+    final pair = _byteComparisonPair(ref);
+    if (pair == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.commanderTr(
+              'Select exactly two files in one pane, or one file in each pane.',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    showDiffViewerDialog(
+      context,
+      ref,
+      pair.leftFile,
+      pair.rightFile,
+      leftSide: pair.leftSide,
+      rightSide: pair.rightSide,
+      startBinary: true,
+    );
   }
 
   /// Prints the active panel's visible listing (current filter and sort).
@@ -703,6 +804,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     route('columns', context.commanderTr('Columns and view'), 'columns');
     route('customCommands', context.commanderTr('Custom commands'), 'commands');
     add(
+      'compareSelectedBytes',
+      context.commanderTr('Compare by Content (byte-for-byte)…'),
+      () => _compareSelectedBytes(context, ref),
+      available: () => _byteComparisonPair(ref) != null,
+    );
+    add(
       'externalCompare',
       ExternalComparisonStrings(context).text('compare'),
       () => showExternalComparisonForSelection(context, ref),
@@ -768,6 +875,49 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       () => showArchiveBatchExtractionForSelection(context, ref),
       available: () => canExtractArchiveSelection(ref),
     );
+    add('clearSelection', context.commanderTr('Clear'), () {
+      ref.read(panelProvider(ref.read(activePanelProvider))).clearSelection();
+    }, available: () => _activePanel(ref).selection.isNotEmpty);
+    for (final (id, format, label) in <(String, ArchiveCreationFormat, String)>[
+      ('archiveCreateZip', ArchiveCreationFormat.zip, 'Compress to ZIP'),
+      ('archiveCreate7z', ArchiveCreationFormat.sevenZip, 'Compress to 7z'),
+    ]) {
+      add(
+        id,
+        archiveCreationText(context, label),
+        () {
+          final side = ref.read(activePanelProvider);
+          final panel = ref.read(panelProvider(side));
+          final files = panel.selection.isNotEmpty
+              ? panel.selection.toList()
+              : <FileItem>[
+                  if (panel.cursorItem case final file? when file.name != '..')
+                    file,
+                ];
+          if (files.isEmpty || kIsWeb || panel.isInArchive) return;
+          final origin = panel.captureOperationOrigin(files);
+          if (origin.source is! LocalPanelSource || !origin.isCurrent) return;
+          unawaited(
+            showArchiveCreationDialog(
+              context,
+              ref,
+              side,
+              files,
+              sourceOrigin: origin,
+              initialFormat: format,
+              autoStart: true,
+            ),
+          );
+        },
+        available: () {
+          final panel = _activePanel(ref);
+          final hasFiles =
+              panel.selection.isNotEmpty ||
+              (panel.cursorItem != null && panel.cursorItem!.name != '..');
+          return !kIsWeb && !panel.isInArchive && hasFiles;
+        },
+      );
+    }
     add(
       'gatherSelection',
       GatheringStackStrings(context).text('gather'),
@@ -1078,15 +1228,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
             ],
           ),
-        PlatformMenuItemGroup(
-          members: [
-            for (final command in _fixedBrowserMenuBindings(
-              context,
-              ref,
-            ).where((command) => command.id != 'settings'))
-              command.platform(),
-          ],
-        ),
       ],
     );
 
@@ -1495,7 +1636,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     // macOS already adds Help in some contexts. Reuse it instead of showing
     // two Help menus or duplicating About/keyboard shortcut entries.
-    final helpItems = existingHelp?.menus ??
+    final helpItems =
+        existingHelp?.menus ??
         <PlatformMenuItem>[
           PlatformMenuItem(
             label: HelpGuideStrings(context).text('title'),

@@ -41,12 +41,17 @@ class QuickSearchSettings {
   /// Clear the search after this many seconds of inactivity (0 = never).
   final int resetSeconds;
 
+  /// Whether Space/Insert also advances the cursor after toggling the mark.
+  /// Off by default: Space only selects or deselects the current item.
+  final bool spaceAdvancesCursor;
+
   const QuickSearchSettings({
     this.mode = QuickSearchMode.jump,
     this.matchFromStart = true,
     this.caseSensitive = false,
     this.arrowNavigation = true,
     this.resetSeconds = 3,
+    this.spaceAdvancesCursor = false,
   });
 
   QuickSearchSettings copyWith({
@@ -55,6 +60,7 @@ class QuickSearchSettings {
     bool? caseSensitive,
     bool? arrowNavigation,
     int? resetSeconds,
+    bool? spaceAdvancesCursor,
   }) {
     return QuickSearchSettings(
       mode: mode ?? this.mode,
@@ -62,6 +68,7 @@ class QuickSearchSettings {
       caseSensitive: caseSensitive ?? this.caseSensitive,
       arrowNavigation: arrowNavigation ?? this.arrowNavigation,
       resetSeconds: resetSeconds ?? this.resetSeconds,
+      spaceAdvancesCursor: spaceAdvancesCursor ?? this.spaceAdvancesCursor,
     );
   }
 }
@@ -76,6 +83,7 @@ class QuickSearchSettingsNotifier extends StateNotifier<QuickSearchSettings> {
   static const _caseKey = 'quick_search_case_sensitive';
   static const _arrowsKey = 'quick_search_arrow_navigation';
   static const _resetKey = 'quick_search_reset_seconds';
+  static const _spaceAdvancesKey = 'panel.spaceAdvancesCursor.v1';
 
   Future<void> _load() async {
     try {
@@ -91,6 +99,8 @@ class QuickSearchSettingsNotifier extends StateNotifier<QuickSearchSettings> {
         caseSensitive: prefs.getBool(_caseKey) ?? state.caseSensitive,
         arrowNavigation: prefs.getBool(_arrowsKey) ?? state.arrowNavigation,
         resetSeconds: prefs.getInt(_resetKey) ?? state.resetSeconds,
+        spaceAdvancesCursor:
+            prefs.getBool(_spaceAdvancesKey) ?? state.spaceAdvancesCursor,
       );
     } catch (_) {
       // Preferences are optional; defaults are fine.
@@ -115,6 +125,11 @@ class QuickSearchSettingsNotifier extends StateNotifier<QuickSearchSettings> {
   Future<void> setArrowNavigation(bool value) async {
     state = state.copyWith(arrowNavigation: value);
     await _writeBool(_arrowsKey, value);
+  }
+
+  Future<void> setSpaceAdvancesCursor(bool value) async {
+    state = state.copyWith(spaceAdvancesCursor: value);
+    await _writeBool(_spaceAdvancesKey, value);
   }
 
   Future<void> setResetSeconds(int value) async {
@@ -149,5 +164,5 @@ class QuickSearchSettingsNotifier extends StateNotifier<QuickSearchSettings> {
 
 final quickSearchSettingsProvider =
     StateNotifierProvider<QuickSearchSettingsNotifier, QuickSearchSettings>(
-  (ref) => QuickSearchSettingsNotifier(),
-);
+      (ref) => QuickSearchSettingsNotifier(),
+    );

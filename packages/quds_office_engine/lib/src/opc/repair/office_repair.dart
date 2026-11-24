@@ -358,7 +358,10 @@ abstract final class OfficeRepair {
         continue;
       }
       try {
-        parts[entry.fileName] = zip.read(entry.fileName);
+        parts[entry.fileName] = zip.read(
+          entry.fileName,
+          maxBytes: OpcPackage.maxPartBytes,
+        );
       } on Object {
         final OfficeIssue corrupt = OfficeIssue(
           code: OfficeIssueCode.corruptZipEntry,

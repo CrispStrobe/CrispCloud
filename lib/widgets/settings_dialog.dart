@@ -35,6 +35,7 @@ import 'biometric_vault_settings_tile.dart';
 import '../services/biometric_vault_unlock.dart';
 import '../services/secure_storage_web.dart';
 import '../providers/quick_search_provider.dart';
+import '../providers/panel_cache_provider.dart';
 import '../providers/folder_sort_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -128,6 +129,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             const CredentialStorageSettingsSection(),
           ],
           _SettingsPage.storage => [
+            _PanelCacheSection(),
             _CacheSection(),
             _AdvancedSection(),
             const StorageToolsSettings(),
@@ -468,6 +470,17 @@ class _QuickSearchSection extends ConsumerWidget {
           ),
         ),
         SwitchListTile(
+          key: const Key('settings_space_advances'),
+          value: settings.spaceAdvancesCursor,
+          onChanged: notifier.setSpaceAdvancesCursor,
+          title: Text(s.text('Space advances to the next item')),
+          subtitle: Text(
+            s.text('Off: Space only selects or deselects the current item'),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        SwitchListTile(
           key: const Key('settings_quick_search_prefix'),
           value: settings.matchFromStart,
           onChanged: notifier.setMatchFromStart,
@@ -605,6 +618,61 @@ class _LanguageSection extends ConsumerWidget {
           child: Text(
             s.text(
               'The selected language is stored locally and restored on the next launch.',
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: in-memory folder listing cache
+// ---------------------------------------------------------------------------
+
+class _PanelCacheSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
+    final settings = ref.watch(panelCacheSettingsProvider);
+    final notifier = ref.read(panelCacheSettingsProvider.notifier);
+    return _Section(
+      title: s.text('Folder listing cache'),
+      icon: Icons.folder_copy_outlined,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.speed),
+          title: Text(s.text('File rows kept in memory')),
+          subtitle: Text(
+            settings.maxItems == 0
+                ? s.text('Off: every visit reads the folder again')
+                : s.text(
+                    'Total across all cached folders. A listing larger than the budget is not cached.',
+                  ),
+          ),
+          trailing: DropdownButton<int>(
+            key: const Key('settings_panel_cache_items'),
+            value: settings.maxItems,
+            onChanged: (value) {
+              if (value != null) notifier.setMaxItems(value);
+            },
+            items: const [
+              DropdownMenuItem(value: 0, child: Text('Off')),
+              DropdownMenuItem(value: 1000, child: Text('1,000')),
+              DropdownMenuItem(value: 5000, child: Text('5,000')),
+              DropdownMenuItem(value: 10000, child: Text('10,000')),
+              DropdownMenuItem(value: 20000, child: Text('20,000')),
+              DropdownMenuItem(value: 50000, child: Text('50,000')),
+              DropdownMenuItem(value: 100000, child: Text('100,000')),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(
+            s.text(
+              'This cache is in memory only. It never changes files or survives an app restart.',
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),

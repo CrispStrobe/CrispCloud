@@ -200,6 +200,15 @@ void main() {
     },
   );
 
+  test('Space selects without advancing when requested', () async {
+    final panel = await remote();
+    final row = folder(panel);
+    panel.setCursorToItem(row);
+    panel.spaceSelectAndAdvance(advance: false);
+    expect(panel.selection, contains(row));
+    expect(panel.cursorItem, same(row));
+  });
+
   test(
     'Space marks a verified folder and deduplicates its pending measurement',
     () async {

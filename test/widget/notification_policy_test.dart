@@ -104,10 +104,10 @@ void main() {
       );
       expect(
         tester.widget<SnackBar>(find.byType(SnackBar)).duration,
-        const Duration(seconds: 30),
+        const Duration(seconds: 10),
       );
       expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isFalse);
-      await tester.pump(const Duration(seconds: 29));
+      await tester.pump(const Duration(seconds: 9));
       expect(find.text('Saved: report.docx'), findsOneWidget);
       await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
@@ -123,7 +123,7 @@ void main() {
       expect(find.byType(SnackBar), findsNothing);
     },
   );
-  testWidgets('Undo notification closes at 30 seconds and stays in history', (
+  testWidgets('Undo notification closes at 10 seconds and stays in history', (
     tester,
   ) async {
     final container = ProviderContainer();
@@ -141,7 +141,7 @@ void main() {
             body: Builder(
               builder: (context) => TextButton(
                 onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  TransientSnackBar(
                     content: const Text('Folder created'),
                     action: SnackBarAction(
                       label: 'Undo',
@@ -161,8 +161,8 @@ void main() {
     final bar = tester.widget<SnackBar>(find.byType(SnackBar));
     expect(bar.showCloseIcon, isTrue);
     expect(bar.persist, isFalse);
-    expect(bar.duration, const Duration(seconds: 30));
-    await tester.pump(const Duration(seconds: 29));
+    expect(bar.duration, const Duration(seconds: 10));
+    await tester.pump(const Duration(seconds: 9));
     expect(find.text('Folder created'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();

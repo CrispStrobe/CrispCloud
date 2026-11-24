@@ -690,7 +690,12 @@ class ArchiveCreationService {
       return mode & 0xfff;
     }
 
-    Future<void> walk(FileItem selected, String name, int depth) async {
+    Future<void> walk(
+      FileItem selected,
+      String name,
+      int depth, {
+      required String rootPath,
+    }) async {
       await checkpoint();
       final path = selected.path;
       if (path == null || !source.paths.isAbsolute(path)) {
@@ -711,20 +716,70 @@ class ArchiveCreationService {
           path,
         );
       }
-      if (current.isSymlink == true ||
-          !current.isFolder && (current.size == null || current.size! < 0)) {
+      var effective = current;
+      if (current.isSymlink == true) {
+        // Archive writers do not model symbolic links yet. Dereference only
+        // when the complete target remains inside the selected root; this
+        // packs normal macOS app bundles without allowing a link to leak an
+        // arbitrary file outside the selection. Cycles are bounded by hops and
+        // by the per-path visited set.
+        var targetPath = path;
+        var link = current;
+        for (var hops = 0; link.isSymlink == true; hops++) {
+          if (hops >= 16) {
+            throw ArchiveCreationException(
+              ArchiveCreationError.unsupportedEntry,
+              path,
+            );
+          }
+          final rawTarget = link.symlinkTarget;
+          if (rawTarget == null || rawTarget.isEmpty) {
+            throw ArchiveCreationException(
+              ArchiveCreationError.unsupportedEntry,
+              path,
+            );
+          }
+          targetPath = source.paths.normalize(
+            source.paths.isAbsolute(rawTarget)
+                ? rawTarget
+                : source.paths.join(
+                    source.paths.dirname(targetPath),
+                    rawTarget,
+                  ),
+          );
+          if (!source.isWithin(rootPath, targetPath)) {
+            throw ArchiveCreationException(
+              ArchiveCreationError.unsupportedEntry,
+              path,
+            );
+          }
+          final target = await source.stat(targetPath);
+          check();
+          if (target == null) {
+            throw ArchiveCreationException(
+              ArchiveCreationError.sourceChanged,
+              path,
+            );
+          }
+          link = target;
+        }
+        effective = link;
+      }
+      if (!effective.isFolder &&
+          (effective.size == null || effective.size! < 0)) {
         throw ArchiveCreationException(
           ArchiveCreationError.unsupportedEntry,
           path,
         );
       }
-      if (!_sameVersion(selected, current, requireKnown: false)) {
+      if (selected.isSymlink != true &&
+          !_sameVersion(selected, effective, requireKnown: false)) {
         throw ArchiveCreationException(
           ArchiveCreationError.sourceChanged,
           path,
         );
       }
-      if (!options.format.supportsDirectories && current.isFolder) {
+      if (!options.format.supportsDirectories && effective.isFolder) {
         throw ArchiveCreationException(
           ArchiveCreationError.unsupportedEntry,
           path,
@@ -748,35 +803,43 @@ class ArchiveCreationService {
       if (utf8.encode(name).length > 65535 || nameBytes > maxNameBytes) {
         throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
       }
+      final effectivePath = effective.path ?? path;
       if (source.identity == destination.identity &&
-          (source.pathKey(path) == source.pathKey(output) ||
-              current.isFolder && source.isWithin(path, output))) {
+          (source.pathKey(effectivePath) == source.pathKey(output) ||
+              effective.isFolder && source.isWithin(effectivePath, output))) {
         throw const ArchiveCreationException(
           ArchiveCreationError.invalidDestination,
         );
       }
-      entries.add(_CreationEntry(current, name, mode: await sourceMode(path)));
+      entries.add(
+        _CreationEntry(effective, name, mode: await sourceMode(effectivePath)),
+      );
       progress(ArchiveCreationPhase.scanning, entries.length, 0, name);
-      if (current.isFolder) {
-        final children = await source.list(path);
+      if (effective.isFolder) {
+        final children = await source.list(effectivePath);
         check();
-        folderChildren[path] = List.unmodifiable(children);
+        folderChildren[effectivePath] = List.unmodifiable(children);
         children.sort((a, b) => (a.path ?? '').compareTo(b.path ?? ''));
         for (final child in children) {
           if (child.path == null ||
               source.paths.dirname(child.path!) !=
-                  source.paths.normalize(path) ||
-              !source.isWithin(path, child.path!)) {
+                  source.paths.normalize(effectivePath) ||
+              !source.isWithin(effectivePath, child.path!)) {
             throw ArchiveCreationException(
               ArchiveCreationError.unsupportedEntry,
               path,
             );
           }
-          await walk(child, '$name/${child.name}', depth + 1);
+          await walk(
+            child,
+            '$name/${child.name}',
+            depth + 1,
+            rootPath: rootPath,
+          );
         }
       } else {
-        totalBytes += current.size!;
-        if (current.size! > memberLimit || totalBytes > totalLimit) {
+        totalBytes += effective.size!;
+        if (effective.size! > memberLimit || totalBytes > totalLimit) {
           throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
         }
       }
@@ -788,7 +851,19 @@ class ArchiveCreationService {
     final ordered = List<FileItem>.of(files)
       ..sort((a, b) => (a.path ?? '').length.compareTo((b.path ?? '').length));
     for (final file in ordered) {
-      await walk(file, file.name, 0);
+      final rootPath = file.path;
+      if (rootPath == null) {
+        throw ArchiveCreationException(
+          ArchiveCreationError.unsupportedEntry,
+          file.name,
+        );
+      }
+      await walk(
+        file,
+        file.name,
+        0,
+        rootPath: source.paths.normalize(rootPath),
+      );
     }
 
     ArchiveCreationPhase? bytePhase;
@@ -1654,7 +1729,8 @@ class ArchiveCreationService {
       a != null &&
       b != null &&
       a.isFolder == b.isFolder &&
-      (a.isSymlink != true && b.isSymlink != true) &&
+      a.isSymlink == b.isSymlink &&
+      (a.isSymlink != true || a.symlinkTarget == b.symlinkTarget) &&
       (a.uuid == null && !requireKnown || a.uuid == b.uuid) &&
       (a.size == null && !requireKnown || a.size == b.size) &&
       (a.updatedAt == null

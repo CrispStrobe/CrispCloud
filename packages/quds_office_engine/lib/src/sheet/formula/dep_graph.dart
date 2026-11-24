@@ -9,6 +9,13 @@ class FormulaDepGraph {
   /// FormulaDepGraph API.
   FormulaDepGraph(this.workbook);
 
+  /// Maximum cells one formula may add to the dependency graph.
+  ///
+  /// Whole-sheet ranges are common in formulas, but expanding every coordinate
+  /// before evaluation is itself a denial-of-service. A larger range is treated
+  /// as an unmodeled dependency and keeps its imported cache.
+  static const int maxDependencyCells = 1000000;
+
   /// workbook API.
   final SmlWorkbook workbook;
   final Map<String, Set<String>> _deps = <String, Set<String>>{};
@@ -42,12 +49,16 @@ class FormulaDepGraph {
   /// reference syntax or incomplete parsing) keeps its imported value and type.
   /// A dependent formula receives the unsupported marker, never the retained
   /// stale cache. Dynamic references use this same resolver and cycle detector.
-  List<String> recalculate({bool keepCachedOnUnsupported = true}) {
+  List<String> recalculate({
+    bool keepCachedOnUnsupported = true,
+    FormulaBudget? budget,
+  }) {
     rebuild();
     final List<String> order = <String>[];
     final List<String> path = <String>[];
     final Map<String, int> visiting = <String, int>{};
     final Map<String, Object?> results = <String, Object?>{};
+    final FormulaBudget runBudget = budget ?? FormulaBudget();
 
     Object? evaluateCell(SmlWorksheet sheet, SmlCellRef ref) {
       final key = _key(sheet, ref);
@@ -80,6 +91,7 @@ class FormulaDepGraph {
                   sheet: sheet,
                   origin: ref,
                   resolveCell: evaluateCell,
+                  budget: runBudget,
                 ),
               );
         result = FormulaErrorValue.unsupportedIn(result) ?? result;
@@ -126,7 +138,9 @@ class FormulaDepGraph {
 
   Set<String>? _collect(String formula, SmlWorksheet sheet) {
     final Set<String> out = <String>{};
+    var tooLarge = false;
     void walk(FormulaNode node, [Set<String> bindings = const {}]) {
+      if (tooLarge) return;
       switch (node) {
         case ExternalCellNode():
           // A complete stored value is a constant. A missing one makes the
@@ -136,6 +150,7 @@ class FormulaDepGraph {
               workbook: workbook,
               sheet: sheet,
               origin: const SmlCellRef(0, 0),
+              budget: FormulaBudget(),
             ),
           );
         case CellNode(:final SmlCellRef ref, :final String? sheetName):
@@ -148,6 +163,13 @@ class FormulaDepGraph {
               ? sheet
               : workbook.sheetByName(sheetName);
           if (target != null) {
+            final int cells =
+                (range.maxCol - range.minCol + 1) *
+                (range.maxRow - range.minRow + 1);
+            if (cells > maxDependencyCells) {
+              tooLarge = true;
+              return;
+            }
             for (final SmlCellRef ref in range.cells) {
               out.add(_key(target, ref));
             }

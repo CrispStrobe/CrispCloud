@@ -9,6 +9,7 @@ class ArchiveCreationBackend extends FileOperationBackend {
   final contents = <String, Uint8List>{};
   final directories = <String>{'/', '/input', '/output'};
   final links = <String>{};
+  final linkTargets = <String, String>{};
   final advertisedSizes = <String, int>{};
   final writes = <String>[];
   bool current = true;
@@ -44,6 +45,7 @@ class ArchiveCreationBackend extends FileOperationBackend {
       path: path,
       isFolder: false,
       isSymlink: links.contains(path),
+      symlinkTarget: linkTargets[path],
       size: advertisedSizes[path] ?? bytes?.length,
       updatedAt: DateTime.utc(2026, 1, 1),
     );

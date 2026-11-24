@@ -175,7 +175,9 @@ class ReportPackage {
             data[1] != 0x4D ||
             data[2] != 0x41 ||
             data[3] != 0x50) {
-          throw ReportPackageException('${entry.fileName} is not a shape layer');
+          throw ReportPackageException(
+            '${entry.fileName} is not a shape layer',
+          );
         }
         shapes[shapeKey] = data;
         continue;
@@ -491,7 +493,7 @@ class ReportPackage {
 
   static Uint8List _read(ZipReader zip, String name) {
     try {
-      return zip.read(name);
+      return zip.read(name, maxBytes: maxEntryBytes);
     } on Exception catch (e) {
       throw ReportPackageException('Cannot read $name: $e');
     }

@@ -27,6 +27,7 @@ Non-negotiables:
 | **Mail** | Live-account acceptance for saved accounts, restore state and provider sync |
 | **Office** | Sync the CrispCloud vendor pin to the reviewed Quds source; keep format limits explicit |
 | **Credentials** | System-keychain, vault and session-store recovery paths on clean installs |
+| **Security** | Close the parser/archive gaps in the [security register](docs/security-gaps-2026-11.md); keep decompression, extraction and preview bounds load-bearing |
 | **Accessibility** | Larger text, narrow windows and keyboard-only operation for new dialogs |
 
 ## Next
@@ -74,6 +75,7 @@ App Store acceptance.
 
 ## Tracking
 
+- [Security and parser-robustness gaps](docs/security-gaps-2026-11.md)
 - [User guide](docs/USER_GUIDE.md)
 - [Workspace controls](docs/workspace-ux.md)
 - [Transfer queue](docs/transfer-queue.md)
