@@ -64,13 +64,14 @@ WmlDocument _document(List<WmlParagraph> paragraphs) => WmlDocument(
   ],
 );
 
-WmlContentControlData _lock() => WmlContentControlData(
+WmlContentControlData _lock({String value = 'contentLocked'}) => WmlContentControlData(
   xml:
       '<w:sdt xmlns:w="${OfficeNamespaces.w}"><w:sdtPr>'
-      '<w:id w:val="42"/><w:lock w:val="contentLocked"/>'
+      '<w:id w:val="42"/><w:lock w:val="$value"/>'
       '</w:sdtPr><w:sdtContent/></w:sdt>',
   sourcePartUri: '/word/document.xml',
   relationships: [],
+  id: '42',
 );
 
 void main() {
@@ -260,6 +261,32 @@ void main() {
       expect(middle.text, 'Feler inside');
     },
   );
+
+  test('warm capture reads replacement control metadata with the same ID', () {
+    final paragraph = _paragraph('Feler');
+    final h = _Harness(_document([paragraph]));
+    final blocks = h.document.sections.single.blocks;
+    final unlocked = _lock(value: 'unlocked');
+    final locked = _lock();
+    final malformed = WmlContentControlData(
+      xml: '<invalid/>',
+      sourcePartUri: unlocked.sourcePartUri,
+      relationships: [],
+      id: unlocked.id,
+    );
+
+    for (final (control, status) in [
+      (unlocked, WordTextRangeStatus.ready),
+      (locked, WordTextRangeStatus.protectedContent),
+      (malformed, WordTextRangeStatus.protectedContent),
+      (unlocked, WordTextRangeStatus.ready),
+    ]) {
+      blocks[0] = WmlContentControlBlock(control: control, blocks: [paragraph]);
+      for (var capture = 0; capture < 2; capture++) {
+        expect(h.session.captureTextRange(paragraph, 0, 5).status, status);
+      }
+    }
+  });
 
   test(
     'warm capture rechecks parent locks and revision guards on unchanged text',

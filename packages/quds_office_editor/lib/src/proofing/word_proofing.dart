@@ -448,6 +448,7 @@ final class WordProofingSession extends ChangeNotifier {
   final Expando<String> _documentIds = Expando<String>('proofing document id');
   final Expando<_CachedParagraphSnapshot> _snapshotCache =
       Expando<_CachedParagraphSnapshot>('proofing paragraph snapshot');
+  final _controlLocks = Expando<bool>('proofing content control lock');
   final Map<WmlParagraph, _CachedParagraph> _cache = HashMap.identity();
   // Keep one rebound publication per cached report. The raw report's
   // identity prevents reuse after a new provider result replaces it.
@@ -3217,7 +3218,12 @@ final class WordProofingSession extends ChangeNotifier {
     return (skipped: skipped, stopped: false, seen: seen);
   }
 
-  static bool _lockedControl(WmlContentControlData control) {
+  // Control metadata is immutable. Keep its classification for repeated
+  // captures without retaining removed controls or conflating their OOXML IDs.
+  bool _lockedControl(WmlContentControlData control) =>
+      _controlLocks[control] ??= _readControlLock(control);
+
+  static bool _readControlLock(WmlContentControlData control) {
     try {
       final properties = WordContentControls.template(
         control,
