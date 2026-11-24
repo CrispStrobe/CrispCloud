@@ -72,14 +72,14 @@ jobs:
           ruby -c tool/testflight_export_guard.rb
           ruby tool/test_testflight_export_guard.rb
 
-  # ---------- Analyze + Test with coverage ----------
+  # ---------- Analyze + Test ----------
   analyze:
     name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
     # Include native streamed archive regressions and leave time for reports.
     # The deterministic suite alone takes ~55 min on ubuntu-latest (2026-11-23),
-    # run as four file groups with their own 30 min limits.
-    timeout-minutes: 90
+    # run as four file groups (~8 min each) with their own 20 min limits.
+    timeout-minutes: 100
 
     steps:
       - uses: actions/checkout@v5
@@ -257,16 +257,16 @@ jobs:
           dart compile js tool/lrc_portability_smoke.dart -O2 -o "$RUNNER_TEMP/lrc-smoke.js"
           node "$RUNNER_TEMP/lrc-smoke.js"
 
-      - name: Fast deterministic tests with coverage
+      - name: Fast deterministic tests
         env:
           CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
           CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
-        # One flutter test process for the whole suite degrades after ~2200
-        # tests (~650 files): every tester then segfaults on exit and the run
-        # hangs until the job timeout (2026-11-23, also reproduced on macOS).
-        # Run disjoint file groups in fresh processes instead; --total-shards
-        # would still load every file in each shard. A per-group limit turns
-        # any hang into a fast, attributable failure.
+        # With --coverage, flutter test testers began to segfault on exit after
+        # a few hundred files and every later tester crashed, hanging the job
+        # until its timeout (2026-11-23; reproduced on macOS, gone without
+        # coverage). Nothing consumed the lcov artifact, so coverage is off.
+        # Disjoint file groups in fresh processes with per-group limits keep
+        # any future hang short and attributable.
         run: |
           set -uo pipefail
           groups=4
@@ -278,29 +278,21 @@ jobs:
               if [ $((i % groups)) -eq "$g" ]; then batch+=("${files[$i]}"); fi
             done
             echo "Test group $((g + 1))/$groups: ${#batch[@]} files"
+            # A killed group cannot restore the SQLite hook it added.
+            git checkout -- pubspec.yaml
             free -m; df -h / "$RUNNER_TEMP"
-            if ! timeout --signal=INT --kill-after=60 30m \
-              python3 tool/with_ci_system_sqlite.py flutter test --coverage \
-              --coverage-path "coverage/lcov-$g.info" --concurrency=4 \
+            if ! timeout --signal=INT --kill-after=60 20m \
+              python3 tool/with_ci_system_sqlite.py flutter test --concurrency=4 \
               --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden \
               "${batch[@]}"
             then
               failed+=("$((g + 1))")
             fi
           done
-          cat coverage/lcov-*.info > coverage/lcov.info 2>/dev/null || true
           if [ "${#failed[@]}" -gt 0 ]; then
             echo "::error::Test group(s) failed: ${failed[*]}"
             exit 1
           fi
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report
-          path: coverage/lcov.info
-          retention-days: 14
 
   # ---------- Native desktop gate (headless, all three OSes) ----------
   # Standing per-PR gate for the file-crypto stack on Linux, Windows and macOS.

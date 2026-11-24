@@ -19,7 +19,11 @@ String? nativeHomeDirectory(
   for (final candidate in candidates) {
     if (candidate == null || candidate.trim().isEmpty) continue;
     final path = candidate.trim();
-    if (paths.isAbsolute(path)) return paths.normalize(path);
+    // On Windows a POSIX-style HOME such as Git Bash's '/c/Users/x' is only
+    // root-relative (no drive or UNC share) and must not become '\\c\\...'.
+    if (paths.isAbsolute(path) && !(windows && paths.isRootRelative(path))) {
+      return paths.normalize(path);
+    }
   }
   return null;
 }

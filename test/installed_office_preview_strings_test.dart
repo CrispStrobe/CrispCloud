@@ -62,17 +62,18 @@ void main() {
   test(
     'only formats inspected by the installed PDF service are advertised',
     () {
-      for (final name in ['a.doc', 'a.DOT', 'a.docx', 'a.DOCM']) {
+      // Presentations joined the installed PDF preview in 45a98c3c.
+      for (final name in [
+        'a.doc',
+        'a.DOT',
+        'a.docx',
+        'a.DOCM',
+        'a.ppt',
+        'a.PPTX',
+      ]) {
         expect(isInstalledOfficePreviewFileName(name), isTrue);
       }
-      for (final name in [
-        'a.dotx',
-        'a.dotm',
-        'a.ppt',
-        'a.xml',
-        'a.doc.exe',
-        'doc',
-      ]) {
+      for (final name in ['a.dotx', 'a.dotm', 'a.xml', 'a.doc.exe', 'doc']) {
         expect(isInstalledOfficePreviewFileName(name), isFalse);
       }
     },
