@@ -92,6 +92,34 @@ void main() {
         false,
         true,
       ]);
+      final spelling = first.providers.singleWhere(
+        (provider) => provider.id == 'german-spelling',
+      );
+      final otherSpelling = second.providers.singleWhere(
+        (provider) => provider.id == 'german-spelling',
+      );
+      expect((await spelling.check(request)).findings, isEmpty);
+      // Enqueue a return to the current owner behind another document.
+      final queued = await Future.wait([
+        spelling.check(request),
+        otherSpelling.check(request),
+        spelling.check(request),
+      ]);
+      expect(queued.map((result) => result.status), [
+        OfficeProofingStatus.success,
+        OfficeProofingStatus.success,
+        OfficeProofingStatus.success,
+      ]);
+      expect(queued.map((result) => result.findings.length), [0, 1, 0]);
+
+      final stale = spelling.check(request);
+      firstVocabulary.removeWord('Qudsmarke');
+      final fresh = spelling.check(request);
+      expect((await stale).status, OfficeProofingStatus.failed);
+      final afterEdit = await fresh;
+      expect(afterEdit.status, OfficeProofingStatus.success);
+      expect(afterEdit.findings.single.originalText, 'Qudsmarke');
+
       secondVocabulary.addWord('Qudsmarke');
       expect(await flagged(second), isFalse);
       await first.dispose();
