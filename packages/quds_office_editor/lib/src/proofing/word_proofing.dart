@@ -1552,7 +1552,7 @@ final class WordProofingSession extends ChangeNotifier {
         revision + 1 != _revision() ||
         generation + 1 != _generation ||
         configuration != _configurationKey ||
-        !captured.sameAs(_capture(document))) {
+        !_matchesCapture(document, captured)) {
       return;
     }
     // The settled capture had no timer. The single invalidation above is the
@@ -2217,7 +2217,7 @@ final class WordProofingSession extends ChangeNotifier {
           (position == 0 || (position + 1) % progressStride == 0)) {
         // Direct host edits can bypass the revision counter. Validate the
         // complete story/field/guard snapshot before exposing partial results.
-        if (!captured.sameAs(_capture(document))) {
+        if (!_matchesCapture(document, captured)) {
           refresh();
           return _summary;
         }
@@ -2234,7 +2234,7 @@ final class WordProofingSession extends ChangeNotifier {
     if (!current()) return _summary;
     // With no work there was no progress callback or async gap after the
     // current capture, so the settled summary can be published directly.
-    if (hasWork && !captured.sameAs(_capture(document))) {
+    if (hasWork && !_matchesCapture(document, captured)) {
       refresh();
       return _summary;
     }
@@ -2693,16 +2693,54 @@ final class WordProofingSession extends ChangeNotifier {
     return false;
   }
 
+  _DocumentSnapshot _capture(WmlDocument document) {
+    final snapshots = <_ParagraphSnapshot>[];
+    final traversal = _visitParagraphSnapshots(document, (snapshot) {
+      snapshots.add(snapshot);
+      return false;
+    });
+    return _DocumentSnapshot(
+      snapshots,
+      traversal.skipped,
+      attachedParagraphs: traversal.seen,
+    );
+  }
+
   _ParagraphSnapshot? _captureParagraph(
     WmlDocument document,
     WmlParagraph paragraph,
-  ) => _capture(document, onlyParagraph: paragraph).paragraphs.firstOrNull;
+  ) {
+    _ParagraphSnapshot? result;
+    _visitParagraphSnapshots(document, (snapshot) {
+      result = snapshot;
+      return true;
+    }, onlyParagraph: paragraph);
+    return result;
+  }
 
-  _DocumentSnapshot _capture(
-    WmlDocument document, {
+  bool _matchesCapture(WmlDocument document, _DocumentSnapshot expected) {
+    final paragraphs = expected.paragraphs;
+    var index = 0;
+    final traversal = _visitParagraphSnapshots(document, (snapshot) {
+      if (index == paragraphs.length) return true;
+      final previous = paragraphs[index++];
+      return !identical(previous, snapshot) &&
+          (!identical(previous.paragraph, snapshot.paragraph) ||
+              previous.key != snapshot.key);
+    });
+    return !traversal.stopped &&
+        index == paragraphs.length &&
+        traversal.skipped == expected.skipped;
+  }
+
+  /// Visits live snapshots in document order. A true callback result stops
+  /// traversal without reading or rebuilding any later paragraph.
+  ({int skipped, bool stopped, Set<WmlParagraph> seen})
+  _visitParagraphSnapshots(
+    WmlDocument document,
+    bool Function(_ParagraphSnapshot) stopAfter, {
     WmlParagraph? onlyParagraph,
   }) {
-    final snapshots = <_ParagraphSnapshot>[];
     final seen = HashSet<WmlParagraph>.identity();
     var skipped = 0;
     final configuration = _configurationKey;
@@ -2792,8 +2830,7 @@ final class WordProofingSession extends ChangeNotifier {
             previous != null &&
             previous.inputKey == simpleKey &&
             previous.snapshot.text == text) {
-          snapshots.add(previous.snapshot);
-          if (onlyParagraph != null) return true;
+          if (stopAfter(previous.snapshot)) return true;
           continue;
         }
 
@@ -2952,8 +2989,7 @@ final class WordProofingSession extends ChangeNotifier {
             previous.inputKey == inputKey &&
             previous.snapshot.text == text) {
           if (previous.paragraphSkipped) skipped++;
-          snapshots.add(previous.snapshot);
-          if (onlyParagraph != null) return true;
+          if (stopAfter(previous.snapshot)) return true;
           continue;
         }
         final ranges = <({int start, int end, String language})>[];
@@ -3050,8 +3086,7 @@ final class WordProofingSession extends ChangeNotifier {
           snapshot,
           paragraphSkipped,
         );
-        snapshots.add(snapshot);
-        if (onlyParagraph != null) return true;
+        if (stopAfter(snapshot)) return true;
       }
       return false;
     }
@@ -3092,7 +3127,7 @@ final class WordProofingSession extends ChangeNotifier {
       blocks(document.sections.expand((section) => section.blocks)),
       'Body',
     )) {
-      return _DocumentSnapshot(snapshots, skipped);
+      return (skipped: skipped, stopped: true, seen: seen);
     }
     for (var i = 0; i < document.sections.length; i++) {
       final section = document.sections[i];
@@ -3112,7 +3147,7 @@ final class WordProofingSession extends ChangeNotifier {
           ),
           '${entry.key} · section ${i + 1}',
         )) {
-          return _DocumentSnapshot(snapshots, skipped);
+          return (skipped: skipped, stopped: true, seen: seen);
         }
       }
     }
@@ -3121,7 +3156,7 @@ final class WordProofingSession extends ChangeNotifier {
         blocks(note.blocks),
         '${note.endnote ? 'Endnote' : 'Footnote'} ${note.id}',
       )) {
-        return _DocumentSnapshot(snapshots, skipped);
+        return (skipped: skipped, stopped: true, seen: seen);
       }
     }
     for (final comment in document.comments) {
@@ -3131,14 +3166,10 @@ final class WordProofingSession extends ChangeNotifier {
         ),
         'Comment ${comment.id}',
       )) {
-        return _DocumentSnapshot(snapshots, skipped);
+        return (skipped: skipped, stopped: true, seen: seen);
       }
     }
-    return _DocumentSnapshot(
-      snapshots,
-      skipped,
-      attachedParagraphs: onlyParagraph == null ? seen : const {},
-    );
+    return (skipped: skipped, stopped: false, seen: seen);
   }
 
   static bool _lockedControl(WmlContentControlData control) {
@@ -3318,7 +3349,7 @@ final class _DocumentSnapshot {
   const _DocumentSnapshot(
     this.paragraphs,
     this.skipped, {
-    this.attachedParagraphs = const {},
+    required this.attachedParagraphs,
   });
   final List<_ParagraphSnapshot> paragraphs;
   final int skipped;
@@ -3326,27 +3357,6 @@ final class _DocumentSnapshot {
   // Full captures keep the identity set already built while visiting stories.
   // Only full captures are published and used to plan follow-up checks.
   final Set<WmlParagraph> attachedParagraphs;
-  String get key => jsonEncode([
-    skipped,
-    for (final p in paragraphs) [identityHashCode(p.paragraph), p.key],
-  ]);
-
-  /// [key] equality without encoding the whole document.
-  bool sameAs(_DocumentSnapshot other) {
-    if (skipped != other.skipped ||
-        paragraphs.length != other.paragraphs.length) {
-      return false;
-    }
-    for (var index = 0; index < paragraphs.length; index++) {
-      final left = paragraphs[index];
-      final right = other.paragraphs[index];
-      if (!identical(left.paragraph, right.paragraph) ||
-          left.key != right.key) {
-        return false;
-      }
-    }
-    return true;
-  }
 }
 
 final class _CachedParagraph {

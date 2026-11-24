@@ -421,10 +421,13 @@ void main() {
   test(
     'direct structural edits are validated before intermediate publication',
     () async {
-      final h = _Harness(['Feler first', 'Feler second', 'Feler third']);
+      final h = _Harness(['Feler first', 'Feler second']);
+      final offscreen = _CountedParagraph('Feler third');
+      h.document.sections.single.blocks.add(offscreen);
       final gate = h.provider.gate('Feler first');
       final pending = h.session.checkNow();
       await h.provider.started('Feler first');
+      offscreen.reads = 0;
       // The host forgot refresh/revision; pending results must still not expose
       // generated field content at the next progress publication.
       h.paragraphs.first.properties.pageNumberField = true;
@@ -435,6 +438,9 @@ void main() {
       expect(h.session.findingsByParagraph, isEmpty);
       expect(h.session.summary.hasResults, isFalse);
       expect(h.provider.requests, hasLength(1));
+      // The replacement summary reads later paragraphs once. Validation of
+      // the rejected publication stops at the first changed paragraph.
+      expect(offscreen.reads, 1);
     },
   );
 
