@@ -1161,7 +1161,12 @@ class _StyleCascade {
       };
       if (props == null) continue;
       if (props.importedValues != null) {
-        props.sourcePropertiesXml = WordSerializer().runPropertiesXml(props);
+        final xml = WordSerializer().runPropertiesXml(props);
+        // A run imported without rPr keeps none: never invent <w:rPr/>.
+        if (xml != '<w:rPr/>' ||
+            (props.sourcePropertiesXml?.isNotEmpty ?? false)) {
+          props.sourcePropertiesXml = xml;
+        }
       }
       final source = props.sourcePropertiesXml ?? '';
       final key = (id, props.styleId, source);
