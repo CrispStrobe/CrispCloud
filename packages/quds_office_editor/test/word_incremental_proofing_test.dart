@@ -419,6 +419,35 @@ void main() {
   );
 
   test(
+    'warm single-run snapshots track complex-script language inputs',
+    () async {
+      final h = _Harness(['Feler']);
+      h.document.complexScriptLanguage = 'ar-SA';
+      final paragraph = h.paragraphs.single;
+      final run = paragraph.inlines.single as WmlRun;
+      final latin = (await h.session.checkNow()).issues.single;
+      expect(latin.language, 'de-DE');
+
+      run.properties.complexScriptLanguage = 'he-IL';
+      expect(h.session.isCurrent(latin), isTrue);
+      run.properties.complexScript = true;
+      expect(h.session.isCurrent(latin), isFalse);
+      final hebrew = (await h.session.checkNow()).issues.single;
+      expect(hebrew.language, 'he-IL');
+
+      run.properties.complexScriptLanguage = null;
+      expect(h.session.isCurrent(hebrew), isFalse);
+      final inherited = (await h.session.checkNow()).issues.single;
+      expect(inherited.language, 'ar-SA');
+      expect(h.session.isCurrent(inherited), isTrue);
+
+      run.properties.complexScript = false;
+      expect(h.session.isCurrent(inherited), isFalse);
+      expect((await h.session.checkNow()).issues.single.language, 'de-DE');
+    },
+  );
+
+  test(
     'direct structural edits are validated before intermediate publication',
     () async {
       final h = _Harness(['Feler first', 'Feler second']);

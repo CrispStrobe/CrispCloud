@@ -2795,7 +2795,8 @@ final class WordProofingSession extends ChangeNotifier {
             : null;
         final properties = paragraph.properties;
         // Ordinary single-run text has no field or control state to rebuild.
-        // Check its live text and effective language on every capture.
+        // Compare the inputs to language routing before scanning the text for
+        // complex-script letters or normalizing the effective language.
         final simpleKey =
             single is WmlRun &&
                 detection == null &&
@@ -2814,16 +2815,10 @@ final class WordProofingSession extends ChangeNotifier {
                 properties.proofingLanguage,
                 documentLanguage,
                 document.complexScriptLanguage,
-                single.text.length,
-                normalizeProofingLanguage(
-                  wordRunProofingLanguage(
-                        single,
-                        paragraph,
-                        documentComplexScriptLanguage:
-                            document.complexScriptLanguage,
-                      ) ??
-                      documentLanguage,
-                ),
+                single.text,
+                single.properties.proofingLanguage,
+                single.properties.complexScriptLanguage,
+                single.properties.complexScript,
               )
             : null;
         if (simpleKey != null &&
