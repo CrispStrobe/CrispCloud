@@ -2298,8 +2298,7 @@ final class WordProofingSession extends ChangeNotifier {
     _DocumentSnapshot captured,
     WmlDocument document,
   ) {
-    _known = HashSet<WmlParagraph>.identity()
-      ..addAll(captured.paragraphs.map((snapshot) => snapshot.paragraph));
+    _known = captured.attachedParagraphs;
     _knownDocument = document;
     if (trigger != _Trigger.explicit && trigger != _Trigger.background) {
       _armBackground(captured);
@@ -2504,8 +2503,7 @@ final class WordProofingSession extends ChangeNotifier {
     bool scheduled = false,
     bool finished = false,
   }) {
-    final attached = HashSet<WmlParagraph>.identity()
-      ..addAll(captured.paragraphs.map((snapshot) => snapshot.paragraph));
+    final attached = captured.attachedParagraphs;
     _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
     _pendingPublish = null;
     _clearProvisionalFindings();
@@ -2676,19 +2674,19 @@ final class WordProofingSession extends ChangeNotifier {
   bool _manualProvidersApplyTo(_DocumentSnapshot captured) {
     final manual = _manualService;
     if (manual == null || manual.providers.isEmpty) return false;
-    final languages = <String>{
-      for (final paragraph in captured.paragraphs)
-        for (final segment in paragraph.segments)
-          normalizeProofingLanguage(segment.language),
-    };
-    for (final provider in manual.providers) {
-      for (final language in languages) {
-        try {
-          if (provider.supportsLanguage(language)) return true;
-        } on Object {
-          // An invalid capability declaration is not evidence of coverage.
-          // An explicit check will preserve its operational failure.
-          return true;
+    final seen = <String>{};
+    for (final paragraph in captured.paragraphs) {
+      for (final segment in paragraph.segments) {
+        final language = normalizeProofingLanguage(segment.language);
+        if (!seen.add(language)) continue;
+        for (final provider in manual.providers) {
+          try {
+            if (provider.supportsLanguage(language)) return true;
+          } on Object {
+            // An invalid capability declaration is not evidence of coverage.
+            // An explicit check will preserve its operational failure.
+            return true;
+          }
         }
       }
     }
@@ -3136,7 +3134,11 @@ final class WordProofingSession extends ChangeNotifier {
         return _DocumentSnapshot(snapshots, skipped);
       }
     }
-    return _DocumentSnapshot(snapshots, skipped);
+    return _DocumentSnapshot(
+      snapshots,
+      skipped,
+      attachedParagraphs: onlyParagraph == null ? seen : const {},
+    );
   }
 
   static bool _lockedControl(WmlContentControlData control) {
@@ -3313,9 +3315,17 @@ final class _CachedParagraphSnapshot {
 }
 
 final class _DocumentSnapshot {
-  const _DocumentSnapshot(this.paragraphs, this.skipped);
+  const _DocumentSnapshot(
+    this.paragraphs,
+    this.skipped, {
+    this.attachedParagraphs = const {},
+  });
   final List<_ParagraphSnapshot> paragraphs;
   final int skipped;
+
+  // Full captures keep the identity set already built while visiting stories.
+  // Only full captures are published and used to plan follow-up checks.
+  final Set<WmlParagraph> attachedParagraphs;
   String get key => jsonEncode([
     skipped,
     for (final p in paragraphs) [identityHashCode(p.paragraph), p.key],
