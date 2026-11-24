@@ -16,10 +16,14 @@ final RegExp _internalApostrophe = RegExp(
 );
 
 final RegExp _composableMark = RegExp(r'[\u0300-\u036f]');
+final RegExp _needsWordNormalization = RegExp(
+  r'[\u00ad\u0300-\u036f\u2010\u2011\u2019]',
+);
 
 /// Canonicalizes common decomposed Latin letters and lexical separators.
 /// This comparison helper is deliberately separate from source-offset handling.
 String normalizeGermanWord(String word) {
+  if (!_needsWordNormalization.hasMatch(word)) return word;
   const Map<String, String> composed = <String, String>{
     'a\u0308': 'ä',
     'e\u0308': 'ë',
@@ -403,17 +407,20 @@ class GermanSpellingProvider extends OfficeProofingProvider {
       }
       final String original = token.group(0)!;
       final String word = normalizeGermanWord(original);
+      if (ignored.contains(word) ||
+          lexicon._knownAsWritten(word, swiss, personal)) {
+        continue;
+      }
       final bool sentenceInitial = _isSentenceInitial(
         request.text,
         token.start,
       );
-      if (ignored.contains(word) ||
-          lexicon.contains(
-            word,
-            swiss: swiss,
-            sentenceInitial: sentenceInitial,
-            personal: personal,
-          )) {
+      if (lexicon._containsVariant(
+        word,
+        swiss: swiss,
+        sentenceInitial: sentenceInitial,
+        personal: personal,
+      )) {
         continue;
       }
       final String? preferredParticiple = _preferredParticiple(
@@ -1350,8 +1357,24 @@ class _GermanLexicon {
     required bool swiss,
     required bool sentenceInitial,
     Set<String> personal = const <String>{},
+  }) =>
+      _knownAsWritten(word, swiss, personal) ||
+      _containsVariant(
+        word,
+        swiss: swiss,
+        sentenceInitial: sentenceInitial,
+        personal: personal,
+      );
+
+  bool _knownAsWritten(String word, bool swiss, Set<String> personal) =>
+      personal.contains(word) || exact(word, swiss: swiss);
+
+  bool _containsVariant(
+    String word, {
+    required bool swiss,
+    required bool sentenceInitial,
+    required Set<String> personal,
   }) {
-    if (personal.contains(word) || exact(word, swiss: swiss)) return true;
     final String lower = word.toLowerCase();
     if (word == _upper(word) && word != lower) {
       if ((!swiss && sharpSCapitals.contains(word)) ||
