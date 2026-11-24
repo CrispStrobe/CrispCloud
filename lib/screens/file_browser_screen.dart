@@ -91,6 +91,7 @@ import '../widgets/archive_zip_recovery_actions.dart';
 import '../widgets/archive_png_carving_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
+import '../widgets/diff_viewer_dialog.dart' show showDiffViewerDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
@@ -454,6 +455,99 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         : [if (panel.cursorItem case final file?) file];
   }
 
+  /// Resolves the two files a bytewise comparison should open: two files
+  /// selected in one pane, or one file from each pane.
+  ({
+    PanelSide leftSide,
+    FileItem leftFile,
+    PanelSide rightSide,
+    FileItem rightFile,
+  })?
+  _byteComparisonPair(WidgetRef ref) {
+    final activeSide = ref.read(activePanelProvider);
+    final active = ref.read(panelProvider(activeSide));
+    final selected = active.selection.toList(growable: false);
+    if (selected.length == 2 && selected.every((file) => !file.isFolder)) {
+      return (
+        leftSide: activeSide,
+        leftFile: selected[0],
+        rightSide: activeSide,
+        rightFile: selected[1],
+      );
+    }
+    if (selected.length > 1) return null;
+
+    final FileItem? activeFile;
+    if (selected.length == 1) {
+      if (selected.single.isFolder) return null;
+      activeFile = selected.single;
+    } else {
+      final cursor = active.cursorItem;
+      if (cursor == null || cursor.name == '..' || cursor.isFolder) {
+        return null;
+      }
+      activeFile = cursor;
+    }
+
+    final otherSide = activeSide == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
+    final other = ref.read(panelProvider(otherSide));
+    final otherSelected = other.selection.toList(growable: false);
+    final FileItem? otherFile;
+    if (otherSelected.isNotEmpty) {
+      if (otherSelected.length != 1 || otherSelected.single.isFolder) {
+        return null;
+      }
+      otherFile = otherSelected.single;
+    } else {
+      final cursor = other.cursorItem;
+      if (cursor == null || cursor.name == '..' || cursor.isFolder) {
+        return null;
+      }
+      otherFile = cursor;
+    }
+
+    return activeSide == PanelSide.local
+        ? (
+            leftSide: PanelSide.local,
+            leftFile: activeFile,
+            rightSide: PanelSide.remote,
+            rightFile: otherFile,
+          )
+        : (
+            leftSide: PanelSide.local,
+            leftFile: otherFile,
+            rightSide: PanelSide.remote,
+            rightFile: activeFile,
+          );
+  }
+
+  void _compareSelectedBytes(BuildContext context, WidgetRef ref) {
+    final pair = _byteComparisonPair(ref);
+    if (pair == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.commanderTr(
+              'Select exactly two files in one pane, or one file in each pane.',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    showDiffViewerDialog(
+      context,
+      ref,
+      pair.leftFile,
+      pair.rightFile,
+      leftSide: pair.leftSide,
+      rightSide: pair.rightSide,
+      startBinary: true,
+    );
+  }
+
   /// Prints the active panel's visible listing (current filter and sort).
   Future<void> _printFileList(BuildContext context, WidgetRef ref) async {
     final panel = _activePanel(ref);
@@ -709,6 +803,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     route('columns', context.commanderTr('Columns and view'), 'columns');
     route('customCommands', context.commanderTr('Custom commands'), 'commands');
+    add(
+      'compareSelectedBytes',
+      context.commanderTr('Compare by Content (byte-for-byte)…'),
+      () => _compareSelectedBytes(context, ref),
+      available: () => _byteComparisonPair(ref) != null,
+    );
     add(
       'externalCompare',
       ExternalComparisonStrings(context).text('compare'),

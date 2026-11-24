@@ -493,6 +493,7 @@ class BrowserMenuLayout {
           'workspaces',
           'columns',
           'customCommands',
+          'compareSelectedBytes',
           'externalCompare',
           'externalComparisonTools',
           'externalEdit',

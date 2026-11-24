@@ -643,25 +643,28 @@ class _PanelCacheSection extends ConsumerWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.speed),
-          title: Text(s.text('Folders kept in memory')),
+          title: Text(s.text('File rows kept in memory')),
           subtitle: Text(
-            settings.maxFolders == 0
+            settings.maxItems == 0
                 ? s.text('Off: every visit reads the folder again')
-                : s.text('Least-recently-used folders are discarded'),
+                : s.text(
+                    'Total across all cached folders. A listing larger than the budget is not cached.',
+                  ),
           ),
           trailing: DropdownButton<int>(
-            key: const Key('settings_panel_cache_folders'),
-            value: settings.maxFolders,
+            key: const Key('settings_panel_cache_items'),
+            value: settings.maxItems,
             onChanged: (value) {
-              if (value != null) notifier.setMaxFolders(value);
+              if (value != null) notifier.setMaxItems(value);
             },
             items: const [
               DropdownMenuItem(value: 0, child: Text('Off')),
-              DropdownMenuItem(value: 50, child: Text('50')),
-              DropdownMenuItem(value: 100, child: Text('100')),
-              DropdownMenuItem(value: 200, child: Text('200')),
-              DropdownMenuItem(value: 500, child: Text('500')),
-              DropdownMenuItem(value: 1000, child: Text('1000')),
+              DropdownMenuItem(value: 1000, child: Text('1,000')),
+              DropdownMenuItem(value: 5000, child: Text('5,000')),
+              DropdownMenuItem(value: 10000, child: Text('10,000')),
+              DropdownMenuItem(value: 20000, child: Text('20,000')),
+              DropdownMenuItem(value: 50000, child: Text('50,000')),
+              DropdownMenuItem(value: 100000, child: Text('100,000')),
             ],
           ),
         ),

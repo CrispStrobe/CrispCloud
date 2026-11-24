@@ -45,6 +45,7 @@ void main() {
     expect(commands, contains('workflow:clearSelection'));
     expect(commands, contains('workflow:archiveCreateZip'));
     expect(commands, contains('workflow:archiveCreate7z'));
+    expect(commands, contains('workflow:compareSelectedBytes'));
   });
 
   test('unknown and unavailable user command IDs remain inert references', () {

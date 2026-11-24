@@ -472,6 +472,35 @@ void main() {
     },
   );
 
+  test(
+    'empty queue durably removes failed, cancelled and completed history',
+    () async {
+      final storage = MemoryTransferJournalStorage();
+      final journal = TransferJournal(storage);
+      final source = _MemoryBackend('source')..file('/a', 'payload');
+      final destination = _MemoryBackend('destination');
+      final plan = await _plan(source, destination);
+      await journal.create('failed', plan);
+      await journal.setStatus('failed', TransferJobStatus.failed);
+      await journal.create('cancelled', plan);
+      await journal.setStatus('cancelled', TransferJobStatus.cancelled);
+      await journal.create('completed', plan);
+      await journal.setStatus('completed', TransferJobStatus.completed);
+
+      final transfers = await _notifier(journal);
+      expect(transfers.savedJobs, hasLength(3));
+      // Failed and cancelled jobs both restore as review rows.
+      expect(transfers.operations, hasLength(2));
+      expect(await transfers.clearQueue(), 3);
+      expect(transfers.savedJobs, isEmpty);
+      expect(transfers.operations, isEmpty);
+
+      final restarted = await _notifier(TransferJournal(storage));
+      expect(restarted.savedJobs, isEmpty);
+      expect(restarted.operations, isEmpty);
+    },
+  );
+
   test('backup restoration rejects active workers and holds queued dispatch through verification', () async {
     final journal = TransferJournal(MemoryTransferJournalStorage());
     final source = _MemoryBackend('source')

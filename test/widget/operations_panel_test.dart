@@ -155,6 +155,30 @@ class _Transfers extends ChangeNotifier implements TransferNotifier {
   }
 
   @override
+  Future<int> clearQueue() async {
+    final ids = <String>{
+      for (final row in rows)
+        if (!isJobLive(row.id)) row.id,
+      for (final id in saved.keys)
+        if (!isJobLive(id)) id,
+    };
+    rows.removeWhere((row) => ids.contains(row.id));
+    saved.removeWhere((id, _) => ids.contains(id));
+    notifyListeners();
+    return ids.length;
+  }
+
+  @override
+  Future<void> dismissOperation(String id) async {
+    if (isJobLive(id)) {
+      throw StateError('Stop this transfer before removing it.');
+    }
+    rows.removeWhere((operation) => operation.id == id);
+    saved.remove(id);
+    notifyListeners();
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -585,6 +609,39 @@ void main() {
       find.byKey(const ValueKey('queue-overall-progress')),
     );
     expect(progress.value, .25);
+  });
+
+  testWidgets('empty queue removes settled history but keeps live work', (
+    tester,
+  ) async {
+    final transfers = _Transfers(
+      rows: [
+        _operation('running'),
+        _operation('completed', status: OperationStatus.completed),
+        _operation('review', status: OperationStatus.failed),
+        _operation('cancelled', status: OperationStatus.failed)..cancel(),
+      ],
+      pending: {'running'},
+      saved: {
+        'completed': _savedJob(
+          'completed',
+          status: TransferJobStatus.completed,
+        ),
+        'review': _savedJob('review', status: TransferJobStatus.failed),
+        'cancelled': _savedJob(
+          'cancelled',
+          status: TransferJobStatus.cancelled,
+        ),
+      },
+    );
+    await show(tester, transfers);
+    await tapKey(tester, 'queue-empty');
+    await tester.pumpAndSettle();
+    expect(find.text('Empty the queue?'), findsOneWidget);
+    await tester.tap(find.text('Empty queue').last);
+    await tester.pumpAndSettle();
+    expect(transfers.rows.map((row) => row.id), ['running']);
+    expect(transfers.saved, isEmpty);
   });
 
   testWidgets('hide finished keeps attention rows and all recovery records', (

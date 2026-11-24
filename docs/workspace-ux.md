@@ -99,12 +99,15 @@ the current control reference.
 ## Folder listing cache
 
 Folder listings are kept in memory so revisiting a large directory is instant.
-The cache is bounded by a least-recently-used entry count:
+The cache is bounded by the total number of cached file rows, not by folder
+count: a single folder can contain millions of entries.
 
-- desktop default: 200 folders;
-- web default: 50 folders;
-- configurable in Settings → Storage → Folder listing cache (Off–2000).
+- desktop default: 20,000 rows;
+- web default: 5,000 rows;
+- configurable in Settings → Storage → Folder listing cache
+  (Off, 1k, 5k, 10k, 20k, 50k or 100k rows).
 
-The cache never reads or writes files, never survives an app restart, and is
-replaced by a fresh verified listing after navigation, refresh or a file
-operation.
+A listing larger than the whole budget is not cached at all, so one huge
+directory cannot defeat the bound. The cache never reads or writes files,
+never survives an app restart, and is replaced by a fresh verified listing
+after navigation, refresh or a file operation.

@@ -36,7 +36,7 @@ final localFileServiceProvider = Provider<LocalFileService>((ref) {
 /// In-memory directory listing cache for instant source switching.
 final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
   return DirectoryCacheService(
-    maxEntries: ref.watch(panelCacheSettingsProvider).maxFolders,
+    maxItems: ref.watch(panelCacheSettingsProvider).maxItems,
   );
 });
 

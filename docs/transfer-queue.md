@@ -19,6 +19,11 @@ inform the behavior; this feature does not install or invoke either executable.
    individual pause, capacity and conflicting paths still apply.
 5. **History and recovery** reviews stopped work, resolves deferred conflicts,
    and resumes remaining entries using the existing reconciliation service.
+6. **Empty queue** permanently removes all settled rows — completed, failed,
+   cancelled and interrupted — together with their saved recovery history.
+   Active transfers must be stopped first. Files, staging files and backup
+   copies are not deleted. A stopped row's menu offers the same durable
+   removal for one job.
 
 ### Two different pause controls
 
