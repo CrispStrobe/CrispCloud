@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../l10n/office_plural.dart';
 import 'background_proofing.dart';
+import 'word_proofing_findings.dart';
 
 /// A finding together with its exact paragraph, story and input snapshot.
 final class WordProofingIssue {
@@ -630,7 +631,7 @@ final class WordProofingSession extends ChangeNotifier {
   ) {
     if (before == null) return null;
     if (before == now) return findings;
-    return List.unmodifiable(_remapFindings(findings, before, now));
+    return WordProofingFindings.freeze(_remapFindings(findings, before, now));
   }
 
   /// [findings] of [before] that lie in text [now] left unchanged, moved to
@@ -2577,7 +2578,9 @@ final class WordProofingSession extends ChangeNotifier {
         }
       }
       if (paragraphFindings.isNotEmpty) {
-        findings[snapshot.paragraph] = List.unmodifiable(paragraphFindings);
+        findings[snapshot.paragraph] = WordProofingFindings.freeze(
+          paragraphFindings,
+        );
         _findingTexts[snapshot.paragraph] = snapshot.text;
       }
     }

@@ -11,6 +11,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import '../core/virtual_viewport.dart';
 import '../embed/office_context_menu.dart';
 import '../embed/office_theme.dart';
+import '../proofing/word_proofing_findings.dart';
 import '../ui_components/office_chrome.dart';
 import '../visual/paint_office_visual.dart';
 import '../visual/paint_drawing_line.dart';
@@ -4123,15 +4124,15 @@ class RenderWordCanvas extends RenderBox
     // For a handful of findings, a separate glyph scan is unlikely to pay off.
     final canCull = line.proofingOffsets == null && findings.length >= 4;
     late final span = geometry?.span ?? CaretEngine.logicalSpan(line);
-    for (final finding in findings) {
-      // Most findings in a wrapped paragraph belong to other lines. Keep
-      // boundary matches for discretionary hyphens and preserve zero-length
-      // findings. Note and field offsets need mapping.
-      if (canCull &&
-          finding.start != finding.end &&
-          (finding.end < span.min || finding.start > span.max)) {
-        continue;
-      }
+    final candidates = !canCull
+        ? findings
+        : findings is WordProofingFindings
+        ? geometry?.findingsFor(findings) ??
+              findings.affecting(span.min, span.max)
+        : findings.where(
+            (mark) => WordProofingFindings.mayAffect(mark, span.min, span.max),
+          );
+    for (final finding in candidates) {
       for (final range in WordProofingGeometry.displayRanges(
         line,
         finding.start,
@@ -5940,6 +5941,22 @@ final class _LineProofingGeometry {
   final LaidOutLine _line;
   late final span = CaretEngine.logicalSpan(_line);
   final _rects = <TextRange, List<Rect>>{};
+
+  ({Object publication, List<OfficeProofingFinding> marks})? _visibleFindings;
+
+  List<OfficeProofingFinding> findingsFor(WordProofingFindings findings) {
+    final cached = _visibleFindings;
+    if (cached != null && identical(cached.publication, findings.publication)) {
+      return cached.marks;
+    }
+    final marks = findings
+        .affecting(span.min, span.max)
+        .toList(growable: false);
+    _visibleFindings = marks.length <= 24
+        ? (publication: findings.publication, marks: marks)
+        : null;
+    return marks;
+  }
 
   List<Rect> rectsFor(TextRange range) {
     final cached = _rects[range];

@@ -1876,7 +1876,7 @@
     "packages/quds_office_editor/lib/src/editor_word/page_text_hit_index.dart": "4ad8bf98b9e9b7d6a1a5a4b54e9dd6af4f29a975051e4670efcfb32d3fcc0802",
     "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "ff70e2703c0fed7af9c5a2b4b49785ad317612ce14ca4eb0b1b0765700f6a7d5",
     "packages/quds_office_editor/lib/src/editor_word/proofing_geometry.dart": "8210a778704748cd52783e32832949d1c6e69010139eaef1bedaf3bde26970ea",
-    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "97efd07737be22a128780ee4cd0a93a865e8cc5964b1c65c68e3645b9604792d",
+    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "94ce7c66eabb1f888870b7206a0ab6d26821b6059dc42380a167a169bf093a8f",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "5bfeea71be0da417a0e164614f172ce7848a6ce0cdef6a53170a801bdcfdf07b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
@@ -1928,7 +1928,8 @@
     "packages/quds_office_editor/lib/src/l10n/office_plural.dart": "ab03d9167712b77dc8d6fd2c0b23b4db41d4882286f8ae4ac17be17c05ec1aaa",
     "packages/quds_office_editor/lib/src/proofing/background_proofing.dart": "9b640d8eb0f70a22f96e794d0c4bb77bd5ce60ee1e1c21863cf9bd7c7d9ea40d",
     "packages/quds_office_editor/lib/src/proofing/platform_spelling_provider.dart": "cb44920bf146d07cd8901683a98f1d51b89893276b3e9a3ca0c4aa725d07ed3d",
-    "packages/quds_office_editor/lib/src/proofing/word_proofing.dart": "1ea15df3cec63bf156c17196046fbed5786b2a47f50dd28bd053e1aeb4aaf0d2",
+    "packages/quds_office_editor/lib/src/proofing/word_proofing.dart": "f8234fbb9d80495af3a814e399977151a2663b0dc32b1fc29d5953553c5bb061",
+    "packages/quds_office_editor/lib/src/proofing/word_proofing_findings.dart": "11ce711934693cb0dc61814f8a7e3a59cdbd079fd433f1d12d08fe2d76edceca",
     "packages/quds_office_editor/lib/src/thesaurus/bundled_thesaurus.dart": "079256791293d85c3c34e6aca04f50f2e973917993de6753ec2c83d015021ae9",
     "packages/quds_office_editor/lib/src/thesaurus/bundled_thesaurus_manifest.dart": "147e0114e547226ae3b6f0e1bc02354385a7dfa99084fb35e5d9768578009cde",
     "packages/quds_office_editor/lib/src/ui_components/office_chrome.dart": "d3be67712a86c1daa718ce29c62e06c151d4ebdb488f67034c9afb74dfa61cf0",
@@ -2128,7 +2129,7 @@
     "packages/quds_office_editor/test/word_proofing_context_test.dart": "e5ef405d387001191ec46bf6a57a89494f3de5fa417d3e80b341bc47c318b8e4",
     "packages/quds_office_editor/test/word_proofing_correction_test.dart": "97ff02bafff82ad46be47643a341595fd579e7d5027a6586358f4f14fd044910",
     "packages/quds_office_editor/test/word_proofing_dialog_test.dart": "1d88dc424e3887e591129e78ef0942c23cf7b8c8c146e89954e0aabe5e7f36e0",
-    "packages/quds_office_editor/test/word_proofing_geometry_test.dart": "9f29c01a1cf33c10dc7de85e424707f3c48115cb28888222d08e25f81be3d0c1",
+    "packages/quds_office_editor/test/word_proofing_geometry_test.dart": "a30916bf54f05e0b96bdf201fe20d05390d59e8487a55ac0c054826b75caf69b",
     "packages/quds_office_editor/test/word_proofing_navigation_test.dart": "04bb1507322e70aabc4a4e1812fc6e0ec3a418d2d6d85d5349eb1b46f55a676e",
     "packages/quds_office_editor/test/word_proofing_priority_test.dart": "e63f94f430d20b00a1c4422547f24c4d435b1e338cbac7706bb14558beb9141f",
     "packages/quds_office_editor/test/word_proofing_session_test.dart": "a22d35f1f76f27c69319ec59cca028d5bc2419f26e31b8bd301710487e322329",
@@ -3485,7 +3486,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "0c1c1476b3ae208209d84118120338a25f1b52bb",
+  "source_commit": "89a6adaa1035960736b990f520387426b5e16ea7",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

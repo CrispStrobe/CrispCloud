@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:quds_office_editor/src/editor_word/proofing_geometry.dart';
+import 'package:quds_office_editor/src/proofing/word_proofing_findings.dart';
 
 const _boundaryKey = ValueKey<String>('proofing-geometry-image');
 
@@ -192,6 +193,39 @@ class _WordProvider extends OfficeProofingProvider {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
+
+  test(
+    'published ranges preserve order, overlaps and zero-length findings',
+    () {
+      final paragraph = _paragraph('x' * 220);
+      final marks = [
+        for (var offset = 0; offset < 210; offset += 3)
+          _finding(paragraph, offset, offset + 2),
+        _finding(paragraph, 5, 190),
+        _finding(paragraph, 6, 6),
+        _finding(paragraph, 170, 170),
+      ];
+      final published =
+          WordProofingFindings.freeze(marks) as WordProofingFindings;
+      for (var min = 0; min < 220; min += 5) {
+        final max = min + 2;
+        expect(
+          published.affecting(min, max),
+          orderedEquals(
+            marks.where(
+              (finding) =>
+                  finding.start == finding.end ||
+                  (finding.start <= max && finding.end >= min),
+            ),
+          ),
+        );
+      }
+      final first = marks.first;
+      marks.clear();
+      expect(published.first, same(first));
+      expect(() => published.clear(), throwsUnsupportedError);
+    },
+  );
 
   testWidgets('proofing lookup follows visible table rows when scrolling', (
     tester,
@@ -415,48 +449,60 @@ void main() {
     },
   );
 
-  testWidgets('reused proofing geometry follows refreshed source ranges', (
-    tester,
-  ) async {
-    final paragraph = _paragraph('Fehler korrekt');
-    final document = _document([paragraph]);
-    final layout = _layout(document);
-    final findings = [_finding(paragraph, 0, 6)];
-    final canvas = await _mount(
-      tester,
-      document,
-      layout,
-      bodyLayoutIsCurrent: true,
-      proofingLookup: (_) => findings,
+  for (final indexed in [false, true]) {
+    testWidgets(
+      '${indexed ? 'Indexed' : 'Mutable'} findings follow refreshed source ranges',
+      (tester) async {
+        final paragraph = _paragraph('Fehler korrekt');
+        final document = _document([paragraph]);
+        final layout = _layout(document);
+        List<OfficeProofingFinding> publication(OfficeProofingFinding mark) =>
+            indexed
+            ? WordProofingFindings.freeze(List.filled(17, mark))
+            : [mark];
+        var findings = publication(_finding(paragraph, 0, 6));
+        final canvas = await _mount(
+          tester,
+          document,
+          layout,
+          bodyLayoutIsCurrent: true,
+          proofingLookup: (_) => findings,
+        );
+        final line = layout.pages.single.lines.single;
+        Rect strip(int start, int end) {
+          final rect = CaretEngine.rangeRectsOnLine(
+            line,
+            line.y,
+            line.height,
+            start,
+            end,
+          ).single;
+          return Rect.fromPoints(
+            canvas.windowForPagePoint(0, rect.topLeft),
+            canvas.windowForPagePoint(0, rect.bottomRight + const Offset(0, 2)),
+          );
+        }
+
+        final left = strip(0, 6);
+        final right = strip(7, 14);
+        final before = await _pixels(tester);
+        expect(_redPixels(before, left), greaterThan(0));
+        expect(_redPixels(before, right), 0);
+
+        final moved = _finding(paragraph, 7, 14);
+        if (indexed) {
+          findings = publication(moved);
+        } else {
+          findings[0] = moved;
+        }
+        canvas.markNeedsPaint();
+        await tester.pump();
+        final after = await _pixels(tester);
+        expect(_redPixels(after, left), 0);
+        expect(_redPixels(after, right), greaterThan(0));
+      },
     );
-    final line = layout.pages.single.lines.single;
-    Rect strip(int start, int end) {
-      final rect = CaretEngine.rangeRectsOnLine(
-        line,
-        line.y,
-        line.height,
-        start,
-        end,
-      ).single;
-      return Rect.fromPoints(
-        canvas.windowForPagePoint(0, rect.topLeft),
-        canvas.windowForPagePoint(0, rect.bottomRight + const Offset(0, 2)),
-      );
-    }
-
-    final left = strip(0, 6);
-    final right = strip(7, 14);
-    final before = await _pixels(tester);
-    expect(_redPixels(before, left), greaterThan(0));
-    expect(_redPixels(before, right), 0);
-
-    findings[0] = _finding(paragraph, 7, 14);
-    canvas.markNeedsPaint();
-    await tester.pump();
-    final after = await _pixels(tester);
-    expect(_redPixels(after, left), 0);
-    expect(_redPixels(after, right), greaterThan(0));
-  });
+  }
 
   testWidgets('generated field text receives no findings or squiggles', (
     tester,
@@ -738,11 +784,11 @@ void main() {
       document,
       layout,
       findings: {
-        paragraph: [
+        paragraph: WordProofingFindings.freeze([
           _finding(paragraph, 0, boundary),
-          for (var offset = 20; offset < 23; offset++)
+          for (var offset = 20; offset < 38; offset++)
             _finding(paragraph, offset, offset + 1),
-        ],
+        ]),
       },
     );
 
