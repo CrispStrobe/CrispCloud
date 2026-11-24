@@ -1,0 +1,108 @@
+import 'dart:math';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quds_office_editor/src/editor_word/page_cell_index.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
+
+LaidOutBox _box(
+  int? start,
+  int? end,
+  double width, {
+  double height = 30,
+  WmlTable? table,
+  LaidOutBoxKind kind = LaidOutBoxKind.tableCell,
+}) => LaidOutBox(
+  x: 0,
+  y: 0,
+  width: width,
+  height: height,
+  kind: kind,
+  paragraphIndex: start,
+  paragraphEnd: end,
+  table: table,
+);
+
+LaidOutBox? _scan(List<LaidOutBox> boxes, int paragraph, WmlFrame? frame) {
+  LaidOutBox? best;
+  var bestArea = double.infinity;
+  for (final box in boxes) {
+    final start = box.paragraphIndex;
+    if (box.kind != LaidOutBoxKind.tableCell ||
+        box.height <= 0 ||
+        start == null ||
+        paragraph < start ||
+        paragraph > (box.paragraphEnd ?? start)) {
+      continue;
+    }
+    if (frame != null &&
+        !WordTree.descendants(frame.blocks).contains(box.table)) {
+      continue;
+    }
+    final area = box.width * box.height;
+    if (area < bestArea) {
+      best = box;
+      bestArea = area;
+    }
+  }
+  return best;
+}
+
+void main() {
+  test(
+    'nested ranges preserve original tie order and absolute-frame ownership',
+    () {
+      final outer = WmlTable();
+      final inner = WmlTable();
+      final frame = WmlFrame(blocks: [inner]);
+      final tiedFirst = _box(3, 7, 70, table: outer);
+      final tiedSecond = _box(2, 8, 70, table: inner);
+      final nested = _box(4, 5, 40, table: inner);
+      final boxes = [
+        tiedFirst,
+        _box(null, null, 1),
+        _box(4, 5, 1, height: 0),
+        tiedSecond,
+        nested,
+      ];
+      final index = WordPageCellIndex(boxes);
+      expect(index.smallestAt(1), isNull);
+      expect(index.smallestAt(3), same(tiedFirst));
+      expect(index.smallestAt(3, containingFrame: frame), same(tiedSecond));
+      expect(index.smallestAt(4), same(nested));
+      expect(index.smallestAt(5), same(nested));
+      expect(index.smallestAt(6), same(tiedFirst));
+      expect(index.smallestAt(8), same(tiedSecond));
+      expect(index.smallestAt(9), isNull);
+    },
+  );
+
+  test('indexed results match a linear scan for overlapping ranges', () {
+    final random = Random(804);
+    final tables = [WmlTable(), WmlTable(), WmlTable()];
+    final frame = WmlFrame(blocks: tables.take(2).toList());
+    for (var sample = 0; sample < 30; sample++) {
+      final boxes = [
+        for (var index = 0; index < 160; index++)
+          _box(
+            random.nextInt(160) - 10,
+            random.nextInt(180),
+            40.0 + random.nextInt(5),
+            height: random.nextBool() ? 25 : 0,
+            table: tables[random.nextInt(tables.length)],
+          ),
+        _box(3, 7, double.infinity),
+        _box(3, 7, double.nan),
+        _box(3, 7, 1, kind: LaidOutBoxKind.tocEntry),
+      ];
+      final index = WordPageCellIndex(boxes);
+      for (var paragraph = -12; paragraph < 190; paragraph++) {
+        for (final owner in [null, frame]) {
+          expect(
+            index.smallestAt(paragraph, containingFrame: owner),
+            same(_scan(boxes, paragraph, owner)),
+          );
+        }
+      }
+    }
+  });
+}

@@ -17,6 +17,7 @@ import '../visual/paint_drawing_line.dart';
 import '../editor_slide/transform_handles.dart';
 import 'caret_engine.dart';
 import 'office_ruler.dart';
+import 'page_cell_index.dart';
 import 'paint_equation.dart';
 import 'paint_run_text.dart';
 import 'proofing_geometry.dart';
@@ -879,6 +880,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   Map<WmlParagraph, int>? _paragraphIndicesCache;
   final Map<LaidOutPage, Map<int, WmlFrame>> _frameOwnersCache =
       <LaidOutPage, Map<int, WmlFrame>>{};
+  final _pageCellIndices = <LaidOutPage, WordPageCellIndex>{};
 
   @override
   bool get isRepaintBoundary => true;
@@ -909,6 +911,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     _paragraphIndicesFor = null;
     _paragraphIndicesCache = null;
     _frameOwnersCache.clear();
+    _pageCellIndices.clear();
   }
 
   LaidOutDocument? _fittedLayout;
@@ -3534,27 +3537,18 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     LaidOutLine line, {
     WmlFrame? containingFrame,
   }) {
-    LaidOutBox? best;
-    var bestArea = double.infinity;
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell ||
-          box.height <= 0 ||
-          !_lineInCell(line, box)) {
-        continue;
+    if (page.frames.isEmpty) return null;
+    var index = _pageCellIndices[page];
+    if (index == null) {
+      if (_pageCellIndices.length >= _maxTextPicturePages) {
+        _pageCellIndices.remove(_pageCellIndices.keys.first);
       }
-      if (containingFrame != null &&
-          !WordTree.descendants(containingFrame.blocks).contains(box.table)) {
-        // An absolute frame is its own story. Its ancestor cell must not
-        // clip frame text, including when the frame is outside that cell.
-        continue;
-      }
-      final double area = box.width * box.height;
-      if (area < bestArea) {
-        bestArea = area;
-        best = box;
-      }
+      index = _pageCellIndices[page] = WordPageCellIndex(page.frames);
     }
-    return best;
+    return index.smallestAt(
+      line.paragraphIndex,
+      containingFrame: containingFrame,
+    );
   }
 
   int _hitOffsetOnLine(LaidOutLine line, Offset local) {
