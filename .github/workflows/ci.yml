@@ -887,6 +887,22 @@ jobs:
           flutter build macos --release \
             --dart-define=APP_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
+      # pod install rewrites the trailing COCOAPODS: line when the runner's
+      # CocoaPods differs from the one that wrote the lock. That line is not a
+      # dependency change, but macos/Podfile.lock is a reviewed crypto source,
+      # so restore it. Any other lock change fails here, with the diff shown.
+      - name: Keep the reviewed macOS Podfile.lock
+        run: |
+          if ! git diff --quiet -- macos/Podfile.lock; then
+            git diff -- macos/Podfile.lock
+            if git diff -U0 -- macos/Podfile.lock | grep '^[-+][^-+]' | grep -qv '^[-+]COCOAPODS: '; then
+              echo '::error::pod install changed macos/Podfile.lock dependencies; commit the updated lock after review'
+              exit 1
+            fi
+            git checkout -- macos/Podfile.lock
+          fi
+          git status --short --untracked-files=no
+
       - name: Launch release bundle
         run: tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 12
 
