@@ -61,6 +61,8 @@ class BrowserMenuStore extends ChangeNotifier {
           'browser_menu_documents_migrated_v1': (l) => l.withDocumentCommands(),
           'browser_menu_print_file_list_migrated_v1': (l) =>
               l.withPrintFileListCommand(),
+          'browser_menu_selection_pack_v1': (l) =>
+              l.withSelectionAndPackCommands(),
         };
         if (!recovered) {
           final markers = <String>[];

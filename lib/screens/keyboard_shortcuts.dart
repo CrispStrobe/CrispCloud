@@ -275,7 +275,9 @@ KeyEventResult handleKeyEvent(
       if (panel.isTypeahead && key == LogicalKeyboardKey.space) {
         panel.typeaheadAppend(' ');
       } else {
-        panel.spaceSelectAndAdvance();
+        panel.spaceSelectAndAdvance(
+          advance: ref.read(quickSearchSettingsProvider).spaceAdvancesCursor,
+        );
       }
       return KeyEventResult.handled;
     }

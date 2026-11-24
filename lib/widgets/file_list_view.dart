@@ -339,7 +339,11 @@ class FileListView extends ConsumerWidget {
                 p.typeaheadAppend(' ');
                 return KeyEventResult.handled;
               }
-              p.spaceSelectAndAdvance();
+              p.spaceSelectAndAdvance(
+                advance: ref
+                    .read(quickSearchSettingsProvider)
+                    .spaceAdvancesCursor,
+              );
               return KeyEventResult.handled;
             }
             if ((event.logicalKey == LogicalKeyboardKey.enter ||

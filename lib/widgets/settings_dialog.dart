@@ -468,6 +468,17 @@ class _QuickSearchSection extends ConsumerWidget {
           ),
         ),
         SwitchListTile(
+          key: const Key('settings_space_advances'),
+          value: settings.spaceAdvancesCursor,
+          onChanged: notifier.setSpaceAdvancesCursor,
+          title: Text(s.text('Space advances to the next item')),
+          subtitle: Text(
+            s.text('Off: Space only selects or deselects the current item'),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        SwitchListTile(
           key: const Key('settings_quick_search_prefix'),
           value: settings.matchFromStart,
           onChanged: notifier.setMatchFromStart,

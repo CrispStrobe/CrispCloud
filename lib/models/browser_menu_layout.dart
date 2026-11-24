@@ -319,6 +319,57 @@ class BrowserMenuLayout {
     );
   }
 
+  /// One-time upgrade adding Clear selection and direct ZIP/7z packing to a
+  /// saved layout without disturbing the user's existing groups.
+  BrowserMenuLayout withSelectionAndPackCommands() {
+    final used = nodes.map((e) => e.id).toSet();
+    String fresh(String base) {
+      var id = base;
+      for (var n = 1; used.contains(id); n++) {
+        id = '$base-$n';
+      }
+      used.add(id);
+      return id;
+    }
+
+    BrowserMenuNode command(String id) => BrowserMenuNode(
+      id: fresh(id.replaceAll(':', '-')),
+      kind: BrowserMenuNodeKind.command,
+      commandId: id,
+    );
+    var updated = menus;
+    final selectionIndex = updated.indexWhere(
+      (e) => e.id == 'selection-submenu',
+    );
+    if (selectionIndex >= 0 &&
+        !updated[selectionIndex].children.any(
+          (e) => e.commandId == 'workflow:clearSelection',
+        )) {
+      final selection = updated[selectionIndex];
+      updated = updated.toList()
+        ..[selectionIndex] = selection.withChildren([
+          command('workflow:clearSelection'),
+          ...selection.children,
+        ]);
+    }
+    final fileIndex = updated.indexWhere((e) => e.labelKey == 'file');
+    if (fileIndex >= 0) {
+      final file = updated[fileIndex];
+      final additions = <BrowserMenuNode>[
+        for (final id in [
+          'workflow:archiveCreateZip',
+          'workflow:archiveCreate7z',
+        ])
+          if (!file.children.any((e) => e.commandId == id)) command(id),
+      ];
+      if (additions.isNotEmpty) {
+        updated = updated.toList()
+          ..[fileIndex] = file.withChildren([...file.children, ...additions]);
+      }
+    }
+    return identical(updated, menus) ? this : BrowserMenuLayout(updated);
+  }
+
   factory BrowserMenuLayout.defaults() {
     var serial = 0;
     BrowserMenuNode command(String id) => BrowserMenuNode(
@@ -359,6 +410,8 @@ class BrowserMenuLayout {
         ]),
         ...workflows(['properties']),
         separator(),
+        ...workflows(['archiveCreateZip', 'archiveCreate7z']),
+        separator(),
         ...workflows(['printFileList']),
         separator(),
         ...actions(['connect']),
@@ -373,7 +426,9 @@ class BrowserMenuLayout {
           kind: BrowserMenuNodeKind.submenu,
           labelKey: 'selection',
           children: [
-            ...actions(['selectAll', 'findPattern']),
+            ...actions(['selectAll']),
+            ...workflows(['clearSelection']),
+            ...actions(['findPattern']),
             ...workflows([
               'deselectPattern',
               'sameExtension',

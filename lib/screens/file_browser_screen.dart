@@ -18,7 +18,6 @@ import '../widgets/directory_selection_actions.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
-import 'dart:io' show Platform;
 import 'dart:async';
 
 import '../l10n/pdf_workspace_strings.dart';
@@ -42,6 +41,7 @@ import '../services/platform_diagnostics_service.dart';
 import '../services/mac_browser_toolbar.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/panel_source_service.dart';
 import '../services/code_editor_menu.dart';
 import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
@@ -78,7 +78,10 @@ import '../widgets/integrity_dialogs.dart';
 import '../widgets/integrity_recovery_dialog.dart';
 import '../widgets/archive_endpoint_actions.dart';
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_creation_strings.dart';
+import '../services/archive_creation_service.dart';
 import '../l10n/archive_job_strings.dart';
+import '../widgets/archive_creation_dialog.dart';
 import '../widgets/archive_jobs_dialog.dart';
 import '../widgets/archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
@@ -309,7 +312,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final scaffold = Scaffold(
       // Windows keeps its application menus even when the optional toolbar is
       // hidden. They share the same row as the primary window actions.
-      appBar: (isWindowsDesktop && officeEditor == null) ||
+      appBar:
+          (isWindowsDesktop && officeEditor == null) ||
               (!isWindowsDesktop && showTopToolbar && !_nativeToolbarReady)
           ? AppBar(
               toolbarHeight: isWindowsDesktop ? 48 : null,
@@ -322,7 +326,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                         ? ConfigurableBrowserMenu(
                             layout: menuStore.layout,
                             commands: _browserMenuBindings(context, ref),
-                            fixedCommands: _fixedBrowserMenuBindings(context, ref),
+                            fixedCommands: _fixedBrowserMenuBindings(
+                              context,
+                              ref,
+                            ),
                             inToolbar: true,
                           )
                         : WindowsPlatformMenuBar(
@@ -339,8 +346,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                             ),
                           ))
                   : isNarrow
-                      ? Text(l.appTitle)
-                      : null,
+                  ? Text(l.appTitle)
+                  : null,
               actions: isWindowsDesktop
                   ? _buildWindowsActions(
                       context,
@@ -349,13 +356,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       showToolbar: showTopToolbar && browserMenusVisible,
                     )
                   : isNarrow
-                      ? _buildNarrowActions(context, auth)
-                      : _buildWideActions(
-                          context,
-                          auth,
-                          showPreview,
-                          isDesktopPlatform,
-                        ),
+                  ? _buildNarrowActions(context, auth)
+                  : _buildWideActions(
+                      context,
+                      auth,
+                      showPreview,
+                      isDesktopPlatform,
+                    ),
             )
           : null,
       body: Focus(
@@ -768,6 +775,49 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       () => showArchiveBatchExtractionForSelection(context, ref),
       available: () => canExtractArchiveSelection(ref),
     );
+    add('clearSelection', context.commanderTr('Clear'), () {
+      ref.read(panelProvider(ref.read(activePanelProvider))).clearSelection();
+    }, available: () => _activePanel(ref).selection.isNotEmpty);
+    for (final (id, format, label) in <(String, ArchiveCreationFormat, String)>[
+      ('archiveCreateZip', ArchiveCreationFormat.zip, 'Compress to ZIP'),
+      ('archiveCreate7z', ArchiveCreationFormat.sevenZip, 'Compress to 7z'),
+    ]) {
+      add(
+        id,
+        archiveCreationText(context, label),
+        () {
+          final side = ref.read(activePanelProvider);
+          final panel = ref.read(panelProvider(side));
+          final files = panel.selection.isNotEmpty
+              ? panel.selection.toList()
+              : <FileItem>[
+                  if (panel.cursorItem case final file? when file.name != '..')
+                    file,
+                ];
+          if (files.isEmpty || kIsWeb || panel.isInArchive) return;
+          final origin = panel.captureOperationOrigin(files);
+          if (origin.source is! LocalPanelSource || !origin.isCurrent) return;
+          unawaited(
+            showArchiveCreationDialog(
+              context,
+              ref,
+              side,
+              files,
+              sourceOrigin: origin,
+              initialFormat: format,
+              autoStart: true,
+            ),
+          );
+        },
+        available: () {
+          final panel = _activePanel(ref);
+          final hasFiles =
+              panel.selection.isNotEmpty ||
+              (panel.cursorItem != null && panel.cursorItem!.name != '..');
+          return !kIsWeb && !panel.isInArchive && hasFiles;
+        },
+      );
+    }
     add(
       'gatherSelection',
       GatheringStackStrings(context).text('gather'),
@@ -1495,7 +1545,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     // macOS already adds Help in some contexts. Reuse it instead of showing
     // two Help menus or duplicating About/keyboard shortcut entries.
-    final helpItems = existingHelp?.menus ??
+    final helpItems =
+        existingHelp?.menus ??
         <PlatformMenuItem>[
           PlatformMenuItem(
             label: HelpGuideStrings(context).text('title'),

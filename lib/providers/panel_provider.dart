@@ -5029,7 +5029,7 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Space / Insert toggles the cursor's mark and advances. Marking a verified
   /// folder also queues a bounded size scan through its original storage.
-  void spaceSelectAndAdvance() {
+  void spaceSelectAndAdvance({bool advance = true}) {
     final displayed = filteredFiles;
     if (displayed == null || displayed.isEmpty) return;
     final current = cursorItem;
@@ -5052,8 +5052,10 @@ class PanelNotifier extends ChangeNotifier {
         unawaited(calculateFolderSize(item));
       }
     }
-    final next = (idx + 1).clamp(0, displayed.length - 1);
-    _setCursorToItem(displayed[next]);
+    if (advance) {
+      final next = (idx + 1).clamp(0, displayed.length - 1);
+      _setCursorToItem(displayed[next]);
+    }
     notifyListeners();
   }
 
@@ -5858,12 +5860,12 @@ class PanelNotifier extends ChangeNotifier {
         final remote =
             selectedSource.isRemote ||
             (_remoteSourceForListing() != null &&
-            (knownSource?.isRemote ??
-                (selectedSource.isRemote ||
-                    (side == PanelSide.remote &&
-                        _currentDirectoryOrigin == null &&
-                        !_sourceWasSelected &&
-                        selectedSource == const LocalPanelSource('/')))));
+                (knownSource?.isRemote ??
+                    (selectedSource.isRemote ||
+                        (side == PanelSide.remote &&
+                            _currentDirectoryOrigin == null &&
+                            !_sourceWasSelected &&
+                            selectedSource == const LocalPanelSource('/')))));
         if (remote) {
           await _loadRemoteFiles();
         } else {
@@ -5999,7 +6001,10 @@ class PanelNotifier extends ChangeNotifier {
     }
     final home = kIsWeb
         ? null
-        : nativeHomeDirectory(Platform.environment, windows: Platform.isWindows);
+        : nativeHomeDirectory(
+            Platform.environment,
+            windows: Platform.isWindows,
+          );
     if (home != null && home.isNotEmpty) {
       if (path == '~') {
         path = home;
@@ -6334,9 +6339,11 @@ class PanelNotifier extends ChangeNotifier {
     // Either visual pane can browse local or cloud folders. Never infer the
     // filesystem path syntax from PanelSide: right-side local folders need
     // native Windows paths too, and left-side cloud folders use POSIX paths.
-    final local = directoryStorage?.isLocal ??
+    final local =
+        directoryStorage?.isLocal ??
         _ref.read(panelSourceProvider(side)).isLocal;
-    final path = item.path ??
+    final path =
+        item.path ??
         (local
             ? p.join(_localPath, item.name)
             : p.posix.join(_remotePath, item.name));
@@ -6354,13 +6361,18 @@ class PanelNotifier extends ChangeNotifier {
       final initial = kIsWeb || p.isAbsolute(previous)
           ? previous
           : await _localFileService.getSafeFallbackDirectory();
-      if (_isDisposed || tabId != _activeTabId ||
-          revision != _navigationRevision) return;
+      if (_isDisposed ||
+          tabId != _activeTabId ||
+          revision != _navigationRevision)
+        return;
       final chosen = await _localFileService.requestDirectoryAccess(
         initialDirectory: initial,
       );
-      if (_isDisposed || chosen == null || tabId != _activeTabId ||
-          revision != _navigationRevision) return;
+      if (_isDisposed ||
+          chosen == null ||
+          tabId != _activeTabId ||
+          revision != _navigationRevision)
+        return;
       if (!(kIsWeb ? p.posix : p.context).isAbsolute(chosen)) {
         throw FileSystemException('Select an absolute folder path.', chosen);
       }
@@ -8353,7 +8365,8 @@ class PanelNotifier extends ChangeNotifier {
     await _restoreTabs();
     if (_isDisposed ||
         _ref.read(panelSourceProvider(side).notifier).sourceSelectionRevision !=
-            selectionRevision) return;
+            selectionRevision)
+      return;
     final tab = activeTab;
     if (tab == null) return;
     final legacy = tab.storage?.accountKey == 'legacy-unscoped-tab';
@@ -8388,9 +8401,11 @@ class PanelNotifier extends ChangeNotifier {
     if (_isDisposed ||
         tabId != _activeTabId ||
         navigation != _navigationRevision ||
-        selectionRevision != _ref
-            .read(panelSourceProvider(side).notifier)
-            .sourceSelectionRevision) return;
+        selectionRevision !=
+            _ref
+                .read(panelSourceProvider(side).notifier)
+                .sourceSelectionRevision)
+      return;
     if (!p.isAbsolute(path)) return;
     final source = LocalPanelSource(path);
     final origin = resolveStorageReference(

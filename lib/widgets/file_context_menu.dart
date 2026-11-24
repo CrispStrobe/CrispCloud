@@ -100,6 +100,9 @@ bool openLocalFileOnEnter(
 ) {
   final panel = ref.read(panelProvider(side));
   if (kIsWeb || file.isFolder || panel.isInArchive) return false;
+  // Archives follow the same navigation path as folders. Double-click already
+  // calls navigateInto/enterArchive; Enter must not hand them to the OS.
+  if (ArchiveService.isArchive(file.name)) return false;
   final origin = panel.originForOperation(file);
   if (origin == null || origin.source is! LocalPanelSource) return false;
   unawaited(

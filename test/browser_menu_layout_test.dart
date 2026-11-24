@@ -41,6 +41,10 @@ void main() {
           .every((node) => node.label == null),
       isTrue,
     );
+    final commands = decoded.nodes.map((node) => node.commandId).toSet();
+    expect(commands, contains('workflow:clearSelection'));
+    expect(commands, contains('workflow:archiveCreateZip'));
+    expect(commands, contains('workflow:archiveCreate7z'));
   });
 
   test('unknown and unavailable user command IDs remain inert references', () {
