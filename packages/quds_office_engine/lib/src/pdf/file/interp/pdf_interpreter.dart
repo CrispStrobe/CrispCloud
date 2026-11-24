@@ -172,7 +172,7 @@ class PdfInterpreter {
       }
       final part = read(item, remaining);
       if (part != null && part.isNotEmpty) {
-        if (!out.isEmpty) {
+        if (out.isNotEmpty) {
           out.addByte(0x20);
         }
         out.add(part);
