@@ -976,6 +976,7 @@ class WordEditorController extends OfficeController {
     if (identical(value, _document)) return;
     _openGeneration++;
     _document = value;
+    _bodyVisualNavigation = null;
     _documentReplaced = true;
   }
 
@@ -1058,9 +1059,13 @@ class WordEditorController extends OfficeController {
     return _documentLaidOut;
   }
 
-  set documentLaidOut(LaidOutDocument value) => _documentLaidOut = value;
+  set documentLaidOut(LaidOutDocument value) {
+    _documentLaidOut = value;
+    _bodyVisualNavigation = null;
+  }
 
   late LaidOutDocument _documentLaidOut;
+  List<({WmlVisual visual, int after})>? _bodyVisualNavigation;
 
   /// commentLaidOut API.
   LaidOutDocument? commentLaidOut;
@@ -7592,9 +7597,64 @@ class WordEditorController extends OfficeController {
     if (lo == hi) {
       return null;
     }
+    if (!isEditingComment && !isEditingHeaderFooter) {
+      final positions = _bodyVisualNavigation ??= _indexBodyVisualNavigation();
+      for (final (:visual, :after) in positions) {
+        if (after >= lo && after < hi) return visual;
+      }
+      return null;
+    }
     for (final WmlVisual visual in visuals) {
       if (_isVisualBetweenParagraphs(visual, lo, hi)) {
         return visual;
+      }
+    }
+    return null;
+  }
+
+  List<({WmlVisual visual, int after})> _indexBodyVisualNavigation() {
+    final positions = <({WmlVisual visual, int after})>[];
+    final seen = Set<WmlVisual>.identity();
+    Map<WmlParagraph, int> indexParagraphs() {
+      final indices = Map<WmlParagraph, int>.identity();
+      for (final (index, paragraph) in document.paragraphs.indexed) {
+        indices.putIfAbsent(paragraph, () => index);
+      }
+      return indices;
+    }
+
+    late final paragraphIndices = indexParagraphs();
+
+    void visit(List<WmlBlock> blocks) {
+      WmlParagraph? preceding;
+      for (final block in blocks) {
+        if (block is WmlVisual && seen.add(block)) {
+          final after = preceding == null ? -1 : paragraphIndices[preceding];
+          if (after != null) positions.add((visual: block, after: after));
+        } else if (block is WmlParagraph) {
+          preceding = block;
+        } else if (block is WmlTable) {
+          preceding = _lastDirectCellParagraph(block) ?? preceding;
+        }
+        // Each cell, frame, and control starts its own sibling sequence.
+        for (final children in WordTree.childLists(block)) {
+          visit(children);
+        }
+      }
+    }
+
+    for (final section in document.sections) {
+      visit(section.blocks);
+    }
+    return positions;
+  }
+
+  static WmlParagraph? _lastDirectCellParagraph(WmlTable table) {
+    for (final row in table.rows.reversed) {
+      for (final cell in row.cells.reversed) {
+        for (final block in cell.blocks.reversed) {
+          if (block is WmlParagraph) return block;
+        }
       }
     }
     return null;
@@ -7629,16 +7689,7 @@ class WordEditorController extends OfficeController {
         return at >= 0 ? at : null;
       }
       if (block is WmlTable) {
-        WmlParagraph? last;
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            for (final WmlBlock inner in cell.blocks) {
-              if (inner is WmlParagraph) {
-                last = inner;
-              }
-            }
-          }
-        }
+        final last = _lastDirectCellParagraph(block);
         if (last != null) {
           final int at = paras.indexOf(last);
           return at >= 0 ? at : null;

@@ -54,4 +54,62 @@ void main() {
     controller.redo();
     expect(paragraph.text, 'before  after');
   });
+
+  test(
+    'vertical navigation finds pictures after a table through delete and undo',
+    () {
+      WmlVisual picture(String title) => WmlVisual(
+        visual: OfficeVisual(
+          kind: OfficeVisualKind.picture,
+          title: title,
+          width: 20,
+          height: 20,
+        ),
+      );
+      final inline = picture('Inline');
+      final first = picture('First block');
+      final second = picture('Second block');
+      final table = WmlTable(
+        grid: [120],
+        rows: [
+          WmlTableRow(
+            cells: [
+              WmlTableCell(
+                blocks: [
+                  WmlParagraph(
+                    inlines: [WmlRun(text: '￼', inlineVisual: inline)],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      final controller = WordEditorController(
+        document: WmlDocument(
+          sections: [
+            WmlSection(
+              blocks: [
+                table,
+                first,
+                second,
+                WmlParagraph(inlines: [WmlRun(text: 'After')]),
+              ],
+            ),
+          ],
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      controller.moveCaretLine(1);
+      expect(controller.selectedVisual, same(first));
+      controller.deleteSelectedVisual();
+      controller.moveCaretLine(1);
+      expect(controller.selectedVisual, same(second));
+      controller.undo();
+      controller.selectedVisual = null;
+      controller.moveCaretLine(1);
+      expect(controller.selectedVisual, same(first));
+    },
+  );
 }
