@@ -79,6 +79,7 @@ class WordCanvas extends LeafRenderObjectWidget {
     this.selectedTableBand,
     this.onSelectTableBand,
     this.storyParagraphs,
+    this.bodyLayoutIsCurrent = false,
     this.editingHeader = false,
     this.editingFooter = false,
     this.onBeginHeaderFooterEdit,
@@ -268,6 +269,9 @@ class WordCanvas extends LeafRenderObjectWidget {
   /// storyParagraphs API.
   final List<WmlParagraph>? storyParagraphs;
 
+  /// The body layout's source paragraphs are the live document paragraphs.
+  final bool bodyLayoutIsCurrent;
+
   /// editingHeader API.
   final bool editingHeader;
 
@@ -365,6 +369,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       selectedTableBand: selectedTableBand,
       onSelectTableBand: onSelectTableBand,
       storyParagraphs: storyParagraphs,
+      bodyLayoutIsCurrent: bodyLayoutIsCurrent,
       editingHeader: editingHeader,
       editingFooter: editingFooter,
       onBeginHeaderFooterEdit: onBeginHeaderFooterEdit,
@@ -448,6 +453,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..selectedTableBand = selectedTableBand
       ..onSelectTableBand = onSelectTableBand
       ..storyParagraphs = storyParagraphs
+      ..bodyLayoutIsCurrent = bodyLayoutIsCurrent
       ..editingHeader = editingHeader
       ..editingFooter = editingFooter
       ..onBeginHeaderFooterEdit = onBeginHeaderFooterEdit
@@ -580,6 +586,7 @@ class RenderWordCanvas extends RenderBox
     this.selectedTableBand,
     this.onSelectTableBand,
     this.storyParagraphs,
+    this.bodyLayoutIsCurrent = false,
     this.editingHeader = false,
     this.editingFooter = false,
     this.onBeginHeaderFooterEdit,
@@ -768,6 +775,9 @@ class RenderWordCanvas extends RenderBox
 
   /// storyParagraphs API.
   List<WmlParagraph>? storyParagraphs;
+
+  /// Whether the layout's body source paragraphs are authoritative.
+  bool bodyLayoutIsCurrent;
 
   /// editingHeader API.
   bool editingHeader;
@@ -1687,11 +1697,19 @@ class RenderWordCanvas extends RenderBox
   }
 
   _RulerView _rulerView() {
-    final story =
+    final useBodySource =
+        bodyLayoutIsCurrent && !_editingHeaderFooter && storyParagraphs == null;
+    late final story =
         storyParagraphs ?? document.paragraphs.toList(growable: false);
-    final caretParagraph = story.isEmpty
-        ? null
-        : story[caret.paragraphIndex.clamp(0, story.length - 1)];
+    WmlParagraph? paragraphAt(int index) =>
+        story.isEmpty ? null : story[index.clamp(0, story.length - 1)];
+
+    final caretIndex = caret.paragraphIndex;
+    final caretParagraph =
+        (useBodySource && caretIndex >= 0
+            ? laidOut.firstBodyLine(caretIndex)?.line.sourceParagraph
+            : null) ??
+        paragraphAt(caretIndex);
     final caretLine = _lineForParagraph(caretParagraph);
     final pageIndex = _activeRulerPageIndex(caretLine);
     final page = laidOut.pages.isEmpty ? null : laidOut.pages[pageIndex];
@@ -1708,9 +1726,12 @@ class RenderWordCanvas extends RenderBox
                 ? (editingFooter ? page.footer : page.header)
                 : page.lines,
           );
-    final para = focus == null || story.isEmpty
+    final para = focus == null || focus.paragraphIndex == caretIndex
         ? caretParagraph
-        : story[focus.paragraphIndex.clamp(0, story.length - 1)];
+        : (useBodySource && focus.paragraphIndex >= 0
+                  ? focus.sourceParagraph
+                  : null) ??
+              paragraphAt(focus.paragraphIndex);
     final WmlIndent indent =
         _rulerIndent ?? para?.properties.indent ?? const WmlIndent();
     final List<WmlTabStop> tabs =
@@ -1747,12 +1768,22 @@ class RenderWordCanvas extends RenderBox
     required int pageIndex,
   }) {
     final LaidOutLine? line = focus ?? _lineForParagraph(para);
-    final int paraIndex = line?.paragraphIndex ?? caret.paragraphIndex;
-    final LaidOutBox? cell = _cellBoxForParagraph(paraIndex);
-    final WmlFrame? selectedOnPage = _frameOnPage(selectedFrame, pageIndex);
-    final WmlFrame? frame = selectedOnPage ?? _frameContaining(para);
+    final selectedOnPage = _frameOnPage(selectedFrame, pageIndex);
+    final hasLineBox = line != null && line.boxWidth > 0;
+    // The selected frame and actual line box take precedence over fallbacks.
+    // Avoid walking the model and every page's table boxes when either wins.
+    final needsFallback =
+        !hasLineBox && (selectedOnPage == null || !(selectedOnPage.width > 12));
+    final cell = needsFallback
+        ? _cellBoxForParagraph(line?.paragraphIndex ?? caret.paragraphIndex)
+        : null;
+    final frame =
+        selectedOnPage ??
+        (needsFallback && !(cell != null && cell.width > 0)
+            ? _frameContaining(para)
+            : null);
     var columnIndex = 0;
-    if (section.resolvedColumnCount > 1) {
+    if (needsFallback && section.resolvedColumnCount > 1) {
       final double probe = line != null && line.boxWidth > 0
           ? line.boxX
           : line?.x ?? section.margins.left;
@@ -1761,8 +1792,8 @@ class RenderWordCanvas extends RenderBox
     return WordRuler.paragraphContentBox(
       margins: section.margins,
       pageWidth: section.pageSize.width,
-      lineBoxX: line != null && line.boxWidth > 0 ? line.boxX : null,
-      lineBoxWidth: line != null && line.boxWidth > 0 ? line.boxWidth : null,
+      lineBoxX: hasLineBox ? line.boxX : null,
+      lineBoxWidth: hasLineBox ? line.boxWidth : null,
       cellX: cell?.x,
       cellWidth: cell?.width,
       cellInsets: cell?.table?.properties.cellInsets,

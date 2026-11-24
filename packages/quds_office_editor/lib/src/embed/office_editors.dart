@@ -1364,6 +1364,9 @@ class _QudsWordEditorState extends State<QudsWordEditor>
                                 document: _c.document,
                                 proofingLookup: _c.proofing.paintFindingsLookup,
                                 laidOut: _c.documentLaidOut,
+                                bodyLayoutIsCurrent: _c.canUseBodyLineIndex(
+                                  _c.documentLaidOut,
+                                ),
                                 caret: _c.caret,
                                 findHits: _c.findSession.hits,
                                 activeFindIndex: _c.findSession.index,
