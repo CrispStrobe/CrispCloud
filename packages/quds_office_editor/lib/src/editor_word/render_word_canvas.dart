@@ -472,7 +472,8 @@ class WordCanvas extends LeafRenderObjectWidget {
 }
 
 /// Class RenderWordCanvas.
-typedef _RunPaintKey = ({
+typedef _TextPaintKey = ({
+  bool overlay,
   String text,
   String? family,
   double fontSize,
@@ -518,7 +519,9 @@ class _CachedPageText {
   }
 }
 
-class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
+class RenderWordCanvas extends RenderBox
+    with RelayoutWhenSystemFontsChangeMixin
+    implements MouseTrackerAnnotation {
   /// RenderWordCanvas API.
   RenderWordCanvas({
     required this.document,
@@ -852,10 +855,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   // Keep recently reused painters separate from first-use runs. A cold page
   // can contain hundreds of unique runs without evicting the commonly styled
   // words that other pages need. The total native painter budget stays fixed.
-  static const _maxRunPainters = 512;
-  static const _maxReusedRunPainters = 384;
-  final _newRunPainters = <_RunPaintKey, TextPainter>{};
-  final _reusedRunPainters = <_RunPaintKey, TextPainter>{};
+  static const _maxTextPainters = 512;
+  static const _maxReusedTextPainters = 384;
+  final _newTextPainters = <_TextPaintKey, TextPainter>{};
+  final _reusedTextPainters = <_TextPaintKey, TextPainter>{};
+  var _overlayPainterBuildCount = 0;
+
+  @visibleForTesting
+  int get debugOverlayPainterBuildCount => _overlayPainterBuildCount;
   final Map<(int, int, int, int), Path> _proofingPaths =
       <(int, int, int, int), Path>{};
   final Map<(LaidOutPage, int, int, int, int, WmlTable?), Path>
@@ -888,18 +895,29 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   @override
   void dispose() {
     _images.dispose();
-    for (final painter in _newRunPainters.values) {
-      painter.dispose();
-    }
-    for (final painter in _reusedRunPainters.values) {
-      painter.dispose();
-    }
-    _newRunPainters.clear();
-    _reusedRunPainters.clear();
+    _clearTextPainters();
     _proofingPaths.clear();
     _selectionPaths.clear();
     _clearTextPictures();
     super.dispose();
+  }
+
+  @override
+  void systemFontsDidChange() {
+    _clearTextPainters();
+    _clearTextPictures();
+    super.systemFontsDidChange();
+  }
+
+  void _clearTextPainters() {
+    for (final painter in _newTextPainters.values) {
+      painter.dispose();
+    }
+    for (final painter in _reusedTextPainters.values) {
+      painter.dispose();
+    }
+    _newTextPainters.clear();
+    _reusedTextPainters.clear();
   }
 
   void _clearTextPictures() {
@@ -3572,7 +3590,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             Offset(local.dx - x, local.dy - _overlayY(line, painter)),
           )
           .offset;
-      painter.dispose();
       return offset.clamp(0, text.length);
     }
     return PaintRunText.hitLogicalIndexOnLine(
@@ -3830,7 +3847,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
                   marginRight: _marginRightOf(page),
                 );
                 _paintProofingOverlay(canvas, line, painter, x);
-                painter.dispose();
               }
             }
             if (cell != null) canvas.restore();
@@ -4272,7 +4288,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         }
       }
     }
-    painter?.dispose();
     if (band.getBounds().isEmpty) return;
     canvas.save();
     final cell = line.paragraphIndex >= 0 ? _cellForLine(page, line) : null;
@@ -4904,41 +4919,66 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     final family = run == null || text.isEmpty
         ? null
         : OfficeTypeface.familyForRun(run, text.runes.first);
+    return _textPainterFor((
+      overlay: true,
+      text: text,
+      family: family,
+      fontSize: line.overlaySize,
+      bold: line.overlayBold,
+      italic: run?.italic == true,
+      kerning: true,
+      bidiLevel: 0,
+      underline: line.hyperlink == null
+          ? WmlUnderline.none
+          : WmlUnderline.single,
+      ink: _documentInk(
+        line,
+        line.hyperlink != null
+            ? const Color(0xFF0563C1)
+            : _colorFromHex(
+                line.overlayColor == null || line.overlayColor!.isEmpty
+                    ? '444444'
+                    : line.overlayColor!,
+              ),
+      ),
+      themeFamily: _theme.fontFamily,
+    ));
+  }
+
+  TextPainter _createOverlayPainter(_TextPaintKey key) {
+    assert(() {
+      _overlayPainterBuildCount++;
+      return true;
+    }());
     return TextPainter(
       text: TextSpan(
-        text: text,
+        text: key.text,
         style: TextStyle(
-          fontSize: line.overlaySize,
-          fontWeight: line.overlayBold ? FontWeight.w700 : FontWeight.w400,
+          fontSize: key.fontSize,
+          fontWeight: key.bold ? FontWeight.w700 : FontWeight.w400,
           fontFamily: PaintRunText.familyFor(
-            text: text,
-            runFamily: family,
-            themeFamily: _theme.fontFamily,
+            text: key.text,
+            runFamily: key.family,
+            themeFamily: key.themeFamily,
           ),
           fontFamilyFallback: PaintRunText.fallbacksFor(
-            text,
-            runFamily: family,
+            key.text,
+            runFamily: key.family,
           ),
-          fontStyle: run?.italic == true ? FontStyle.italic : FontStyle.normal,
-          color: _documentInk(
-            line,
-            line.hyperlink != null
-                ? const Color(0xFF0563C1)
-                : _colorFromHex(
-                    line.overlayColor == null || line.overlayColor!.isEmpty
-                        ? '444444'
-                        : line.overlayColor!,
-                  ),
-          ),
-          decoration: line.hyperlink != null
-              ? TextDecoration.underline
-              : TextDecoration.none,
+          fontStyle: key.italic ? FontStyle.italic : FontStyle.normal,
+          color: key.ink,
+          decoration: key.underline == WmlUnderline.none
+              ? TextDecoration.none
+              : TextDecoration.underline,
           height: 1.0,
         ),
       ),
-      textDirection: PaintRunText.directionFor(bidiLevel: 0, text: text),
+      textDirection: PaintRunText.directionFor(
+        bidiLevel: key.bidiLevel,
+        text: key.text,
+      ),
       maxLines: 1,
-    )..layout();
+    );
   }
 
   static double _overlayY(LaidOutLine line, TextPainter painter) {
@@ -5019,7 +5059,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
     painter.paint(canvas, Offset(x, y));
     if (paintProofing) _paintProofingOverlay(canvas, line, painter, x);
-    painter.dispose();
   }
 
   Map<WmlParagraph, int> _paragraphIndices() {
@@ -5422,7 +5461,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     required LaidOutGlyph first,
     required Color ink,
   }) {
-    final key = (
+    return _textPainterFor((
+      overlay: false,
       text: text,
       family: first.fontFamily,
       fontSize: first.fontSize,
@@ -5433,33 +5473,41 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       underline: first.underline,
       ink: ink,
       themeFamily: _theme.fontFamily,
-    );
+    ), first: first);
+  }
+
+  TextPainter _textPainterFor(_TextPaintKey key, {LaidOutGlyph? first}) {
     final cached =
-        _reusedRunPainters.remove(key) ?? _newRunPainters.remove(key);
+        _reusedTextPainters.remove(key) ?? _newTextPainters.remove(key);
     if (cached != null) {
-      _reusedRunPainters[key] = cached;
-      if (_reusedRunPainters.length > _maxReusedRunPainters) {
-        final oldest = _reusedRunPainters.keys.first;
-        _newRunPainters[oldest] = _reusedRunPainters.remove(oldest)!;
+      _reusedTextPainters[key] = cached;
+      if (_reusedTextPainters.length > _maxReusedTextPainters) {
+        final oldest = _reusedTextPainters.keys.first;
+        _newTextPainters[oldest] = _reusedTextPainters.remove(oldest)!;
       }
       return cached;
     }
-    final painter = PaintRunText.painterFor(
-      text: text,
-      first: first,
-      themeFamily: _theme.fontFamily,
-      color: ink,
-      decoration: first.underline == WmlUnderline.none
-          ? TextDecoration.none
-          : TextDecoration.underline,
-      decorationStyle: underlineStyleFor(first.underline),
-      decorationThickness: first.underline.isHeavy ? 2 : null,
-    )..layout();
-    if (_newRunPainters.length + _reusedRunPainters.length >= _maxRunPainters) {
-      final oldest = _newRunPainters.keys.first;
-      _newRunPainters.remove(oldest)!.dispose();
+    final painter =
+        (first == null
+              ? _createOverlayPainter(key)
+              : PaintRunText.painterFor(
+                  text: key.text,
+                  first: first,
+                  themeFamily: key.themeFamily,
+                  color: key.ink,
+                  decoration: key.underline == WmlUnderline.none
+                      ? TextDecoration.none
+                      : TextDecoration.underline,
+                  decorationStyle: underlineStyleFor(key.underline),
+                  decorationThickness: key.underline.isHeavy ? 2 : null,
+                ))
+          ..layout();
+    if (_newTextPainters.length + _reusedTextPainters.length >=
+        _maxTextPainters) {
+      final oldest = _newTextPainters.keys.first;
+      _newTextPainters.remove(oldest)!.dispose();
     }
-    _newRunPainters[key] = painter;
+    _newTextPainters[key] = painter;
     return painter;
   }
 
@@ -5716,7 +5764,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         1,
         painter.height,
       );
-      painter.dispose();
       return rect;
     }
     final String paragraph =

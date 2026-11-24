@@ -40,6 +40,56 @@ int _differentBytes(Uint8List actual, Uint8List expected) {
 }
 
 void main() {
+  testWidgets(
+    'overlay painters are reused until their effective style changes',
+    (tester) async {
+      final header = _paragraph('Header text');
+      final document = WmlDocument(
+        sections: [
+          WmlSection(
+            pageSize: const WmlPageSize(width: 300, height: 300),
+            header: [header],
+            footer: [_paragraph('Footer text')],
+            blocks: [_paragraph('Body text')],
+          ),
+        ],
+      );
+      final layout = WordLayoutEngine(font: null).layout(document);
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: WordCanvas(
+            document: document,
+            laidOut: layout,
+            caret: CaretEngine(),
+            config: const OfficeSurfaceConfig(showRulers: false),
+          ),
+        ),
+      );
+      final canvas = tester.renderObject<RenderWordCanvas>(
+        find.byType(WordCanvas),
+      );
+      final initial = canvas.debugOverlayPainterBuildCount;
+      expect(initial, 2);
+      for (var frame = 0; frame < 4; frame++) {
+        canvas.markNeedsPaint();
+        await tester.pump();
+      }
+      expect(canvas.debugOverlayPainterBuildCount, initial);
+
+      // Header edit previews can change the run style before a new layout.
+      header.inlines.whereType<WmlRun>().single.properties.italic = true;
+      canvas.markNeedsPaint();
+      await tester.pump();
+      expect(canvas.debugOverlayPainterBuildCount, initial + 1);
+
+      canvas.systemFontsDidChange();
+      await tester.pump();
+      expect(canvas.debugOverlayPainterBuildCount, initial + 3);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final transition in _InkTransition.values) {
     testWidgets(
       '${transition.description} repaints the same ink as a fresh canvas',
