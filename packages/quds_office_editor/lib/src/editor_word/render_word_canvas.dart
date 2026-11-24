@@ -384,11 +384,14 @@ class WordCanvas extends LeafRenderObjectWidget {
   @override
   /// updateRenderObject API.
   void updateRenderObject(BuildContext context, RenderWordCanvas renderObject) {
-    var needsLayout =
-        !identical(renderObject.laidOut, laidOut) ||
-        renderObject.compact != compact;
-    if (!identical(renderObject.laidOut, laidOut) ||
-        !identical(renderObject.document, document) ||
+    final layoutChanged = !identical(renderObject.laidOut, laidOut);
+    final documentChanged = !identical(renderObject.document, document);
+    var needsLayout = layoutChanged || renderObject.compact != compact;
+    if (layoutChanged || documentChanged) {
+      renderObject._selectionPaths.clear();
+    }
+    if (layoutChanged ||
+        documentChanged ||
         !identical(renderObject.config, config) ||
         !identical(renderObject.config.theme, config.theme) ||
         renderObject.selectedCommentId != selectedCommentId) {
@@ -867,8 +870,10 @@ class RenderWordCanvas extends RenderBox
   int get debugOverlayPainterBuildCount => _overlayPainterBuildCount;
   final Map<(int, int, int, int), Path> _proofingPaths =
       <(int, int, int, int), Path>{};
-  final Map<(LaidOutPage, int, int, int, int, WmlTable?), Path>
-  _selectionPaths = <(LaidOutPage, int, int, int, int, WmlTable?), Path>{};
+  // Null records a page whose selection has no text band, such as when
+  // the selection is off-page or painted entirely as whole table cells.
+  final _selectionPaths =
+      <(LaidOutPage, int, int, int, int, WmlTable?), Path?>{};
   final _textPictures = <LaidOutPage, _CachedPageText>{};
   static const int _maxTextPicturePages = 8;
   static const int _maxTextPictureBytes = 24 * 1024 * 1024;
@@ -908,6 +913,7 @@ class RenderWordCanvas extends RenderBox
 
   @override
   void systemFontsDidChange() {
+    _selectionPaths.clear();
     _clearTextPainters();
     _clearTextPictures();
     super.systemFontsDidChange();
@@ -4302,10 +4308,8 @@ class RenderWordCanvas extends RenderBox
       selectedTableBand?.table,
     );
     var band = _selectionPaths[key];
-    if (band == null) {
+    if (band == null && !_selectionPaths.containsKey(key)) {
       late final bodyParagraphs = document.paragraphs.toList(growable: false);
-      band = Path();
-      var any = false;
       for (final LaidOutLine line in page.lines) {
         if (!_paintsLineSelection(line, page)) {
           continue;
@@ -4325,16 +4329,15 @@ class RenderWordCanvas extends RenderBox
             bodyParagraphs: () => bodyParagraphs,
           ),
         )) {
-          band.addRect(r);
-          any = true;
+          (band ??= Path()).addRect(r);
         }
       }
-      if (!any) return;
       if (_selectionPaths.length >= 16) {
         _selectionPaths.remove(_selectionPaths.keys.first);
       }
       _selectionPaths[key] = band;
     }
+    if (band == null) return;
     canvas.drawPath(
       band,
       Paint()

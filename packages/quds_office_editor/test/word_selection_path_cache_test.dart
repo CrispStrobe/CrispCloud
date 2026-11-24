@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -5,6 +6,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
+
+class _CountedLines extends ListBase<LaidOutLine> {
+  _CountedLines(this._lines);
+
+  final List<LaidOutLine> _lines;
+  var reads = 0;
+
+  @override
+  int get length => _lines.length;
+
+  @override
+  set length(int value) => throw UnsupportedError('Read-only lines');
+
+  @override
+  LaidOutLine operator [](int index) {
+    reads++;
+    return _lines[index];
+  }
+
+  @override
+  void operator []=(int index, LaidOutLine value) =>
+      throw UnsupportedError('Read-only lines');
+}
 
 void main() {
   testWidgets('table-band repaint matches a fresh selection canvas', (
@@ -44,7 +68,26 @@ void main() {
         ),
       ],
     );
-    final layout = WordLayoutEngine(font: null).layout(document);
+    final measured = WordLayoutEngine(font: null).layout(document);
+    final page = measured.pages.single;
+    final lines = _CountedLines(page.lines);
+    final layout = LaidOutDocument(
+      pageSize: measured.pageSize,
+      pages: [
+        LaidOutPage(
+          index: page.index,
+          width: page.width,
+          height: page.height,
+          lines: lines,
+          frames: page.frames,
+          header: page.header,
+          footer: page.footer,
+          notes: page.notes,
+          headerBand: page.headerBand,
+          footerBand: page.footerBand,
+        ),
+      ],
+    );
     final caret = CaretEngine()
       ..selectionAnchorParagraph = 0
       ..selectionAnchor = 1
@@ -109,6 +152,25 @@ void main() {
       cachedPixels,
       orderedEquals(freshPixels),
       reason: 'Switching to a table band must not reuse the old text fill.',
+    );
+
+    final fresh = tester.renderObject<RenderWordCanvas>(
+      find.byType(WordCanvas),
+    );
+    Future<int> repaintAndCountLines() async {
+      lines.reads = 0;
+      fresh.markNeedsPaint();
+      await tester.pump();
+      return lines.reads;
+    }
+
+    final heldSelectionReads = await repaintAndCountLines();
+    caret.logicalIndex = caret.selectionAnchor;
+    final collapsedReads = await repaintAndCountLines();
+    expect(
+      heldSelectionReads,
+      collapsedReads,
+      reason: 'A cached empty text band should cause no extra line reads.',
     );
   });
 }
