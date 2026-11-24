@@ -49,17 +49,22 @@ void main() {
   test(
     'cached corrections preserve each occurrence and source offsets',
     () async {
-      const text = "🙂 Gru\u0308ße draf's draf’s";
+      const text = "🙂 Gru\u0308ße draf's draf’s draf's draf’s";
       final result = await provider.check(input(text));
       expect(result.status, OfficeProofingStatus.success);
-      expect(result.findings, hasLength(2));
-      expect(result.findings[0].originalText, "draf's");
-      expect(result.findings[0].replacements, contains("darf's"));
-      expect(result.findings[1].originalText, 'draf’s');
-      expect(result.findings[1].replacements, contains('darf’s'));
-      expect(result.findings[0].start, 20 + text.indexOf("draf's"));
-      expect(result.findings[1].start, 20 + text.indexOf('draf’s'));
-      expect(result.findings[1].end, 20 + text.length);
+      expect(result.findings, hasLength(4));
+      var start = 0;
+      for (var index = 0; index < result.findings.length; index++) {
+        final original = index.isEven ? "draf's" : 'draf’s';
+        final replacement = index.isEven ? "darf's" : 'darf’s';
+        start = text.indexOf(original, start);
+        final finding = result.findings[index];
+        expect(finding.originalText, original);
+        expect(finding.replacements, contains(replacement));
+        expect(finding.start, 20 + start);
+        start += original.length;
+        expect(finding.end, 20 + start);
+      }
       for (final finding in result.findings) {
         expect(finding.replacements.length, lessThanOrEqualTo(5));
       }

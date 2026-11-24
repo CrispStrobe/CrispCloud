@@ -268,7 +268,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   int _cachedVocabularyRevision = -1;
   var _knownWordsByLanguage = <String, Set<String>>{};
   static const _maxCachedWordsPerLanguage = 1024;
-  var _suggestions = <(String, String, bool, String?), List<String>>{};
+  var _suggestions = <(String, String, bool, String?), _SpellingSuggestions>{};
   static const _maxCachedSuggestions = 1024;
 
   bool _disposed = false;
@@ -451,15 +451,18 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         sentenceInitial,
         preferredParticiple,
       );
-      List<String>? replacements = suggestions.remove(suggestionKey);
-      if (replacements == null) {
-        replacements = _suggest(
-          word,
-          lexicon,
-          swiss,
-          personal: personal,
-          sentenceInitial: sentenceInitial,
-          preferredParticiple: preferredParticiple,
+      final cached = suggestions.remove(suggestionKey);
+      var suggestionsForWord = cached;
+      if (suggestionsForWord == null) {
+        suggestionsForWord = _SpellingSuggestions(
+          _suggest(
+            word,
+            lexicon,
+            swiss,
+            personal: personal,
+            sentenceInitial: sentenceInitial,
+            preferredParticiple: preferredParticiple,
+          ),
         );
         // Keep the cooperative path responsive even during a full indexed
         // suggestion search. Worker requests do not block the UI isolate.
@@ -478,9 +481,12 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           );
         }
       }
-      if (word.length <= 128 &&
-          replacements.every((replacement) => replacement.length <= 128)) {
-        suggestions[suggestionKey] = replacements;
+      if (cached != null ||
+          word.length <= 128 &&
+              suggestionsForWord.values.every(
+                (replacement) => replacement.length <= 128,
+              )) {
+        suggestions[suggestionKey] = suggestionsForWord;
         if (suggestions.length > _maxCachedSuggestions) {
           suggestions.remove(suggestions.keys.first);
         }
@@ -496,7 +502,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
               ? 'Die Schweizer Schreibweise verwendet ss statt ß.'
               : 'Dieses Wort ist nicht im deutschen Wörterverzeichnis enthalten.',
           category: OfficeProofingCategory.spelling,
-          replacements: _withSourceSeparators(original, replacements),
+          replacements: suggestionsForWord.forSource(original),
         ),
       );
     }
@@ -1144,49 +1150,70 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     return matches.take(maximumSuggestions).map((match) => match.$1).toList();
   }
 
-  static final _styledSeparators = RegExp(r'[\u2010\u2011\u2019]');
-
-  static List<String> _withSourceSeparators(
-    String source,
-    List<String> replacements,
-  ) {
-    if (replacements.isEmpty || !_styledSeparators.hasMatch(source)) {
-      return replacements;
-    }
-    final List<String> hyphens = RegExp(
-      r'[-\u2010\u2011]',
-    ).allMatches(source).map((RegExpMatch match) => match.group(0)!).toList();
-    final List<String> apostrophes = RegExp(
-      r"['\u2019]",
-    ).allMatches(source).map((RegExpMatch match) => match.group(0)!).toList();
-    return List<String>.unmodifiable(
-      replacements.map((String replacement) {
-        // Restore each separator kind independently, only when the proposed
-        // correction retains its count. A correction that removes/adds one
-        // must not invent a source-to-replacement positional correspondence.
-        String styled = replacement;
-        if ('-'.allMatches(styled).length == hyphens.length) {
-          int index = 0;
-          styled = styled.replaceAllMapped(
-            RegExp('-'),
-            (Match _) => hyphens[index++],
-          );
-        }
-        if ("'".allMatches(styled).length == apostrophes.length) {
-          int index = 0;
-          styled = styled.replaceAllMapped(
-            RegExp("'"),
-            (Match _) => apostrophes[index++],
-          );
-        }
-        return styled;
-      }),
-    );
-  }
-
   @override
   Future<void> dispose() async {
     _disposed = true;
+  }
+}
+
+final class _SpellingSuggestions {
+  _SpellingSuggestions(this.values);
+
+  final List<String> values;
+  ({String source, List<String> replacements})? _lastStyled;
+
+  static final _styledSeparators = RegExp(r'[\u2010\u2011\u2019]');
+  static final _sourceSeparators = RegExp(r"[-\u2010\u2011'\u2019]");
+
+  List<String> forSource(String source) {
+    final last = _lastStyled;
+    if (last != null && last.source == source) return last.replacements;
+    if (values.isEmpty || !_styledSeparators.hasMatch(source)) return values;
+    final hyphens = <String>[];
+    final apostrophes = <String>[];
+    var styledHyphens = false;
+    var styledApostrophes = false;
+    for (final match in _sourceSeparators.allMatches(source)) {
+      final separator = match.group(0)!;
+      if (separator == "'" || separator == '’') {
+        apostrophes.add(separator);
+        styledApostrophes |= separator != "'";
+      } else {
+        hyphens.add(separator);
+        styledHyphens |= separator != '-';
+      }
+    }
+    final styled = <String>[];
+    for (final replacement in values) {
+      var value = replacement;
+      if (styledHyphens) {
+        value = _restoreSeparators(value, '-', hyphens);
+      }
+      if (styledApostrophes) {
+        value = _restoreSeparators(value, "'", apostrophes);
+      }
+      styled.add(value);
+    }
+    // Keep one projection per canonical result, so retaining alternate
+    // typographic spellings cannot grow the suggestion cache without bound.
+    if (source.length <= 128) {
+      _lastStyled = (source: source, replacements: styled);
+    }
+    return styled;
+  }
+
+  static String _restoreSeparators(
+    String replacement,
+    String canonical,
+    List<String> source,
+  ) {
+    // Only restore a separator kind when its count is unchanged, so the
+    // correction has a positional correspondence with the original word.
+    if (canonical.allMatches(replacement).length != source.length) {
+      return replacement;
+    }
+    var index = 0;
+    return replacement.replaceAllMapped(canonical, (_) => source[index++]);
   }
 }
 

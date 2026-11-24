@@ -2406,7 +2406,7 @@
     "packages/quds_office_engine/lib/src/proofing/german_grammar.dart": "41fa47fead7d433c27b1d0ce5edc16400fb423fac2a83976827d8de2f650c870",
     "packages/quds_office_engine/lib/src/proofing/german_literal_ranges.dart": "c975a512605f7c0b2d9251547492253319c80a37a9829e04de48ff2a4e271f23",
     "packages/quds_office_engine/lib/src/proofing/german_morphology.dart": "b87a9873de8ad8b7ee9f3881971739c2a112098fa3491f43560302b055224183",
-    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart": "f623fcdc101d832d67c75c485e4dd9ebf0fbf9d35fb0016f6ffaa121c2ef9a32",
+    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart": "6df1bf8f495f17c2ab943ca9e464b53b898cc043558081f3eb99890e572122de",
     "packages/quds_office_engine/lib/src/proofing/german_suggestion_distance.dart": "a799e1802a75cfa4b21c4255df35b7579908d2b28bc98b4fc28e95a5961dce11",
     "packages/quds_office_engine/lib/src/proofing/german_writing_rules.dart": "dc9e4938fed65acf006a5dde47e80da8f730798771392e9c10feaf7c08c527aa",
     "packages/quds_office_engine/lib/src/proofing/language_identification.dart": "103e50943c845e4a422faa0ed54c62f1f8392df3df57a90f198d8a9d1ede3c6b",
@@ -2988,7 +2988,7 @@
     "packages/quds_office_engine/test/proofing/german_noun_agreement_test.dart": "8279325bdf0f22d4614730a3baae14050537a3295215a82a9fdac2322dec216e",
     "packages/quds_office_engine/test/proofing/german_participle_suggestions_test.dart": "b99efef2eb3fe3a82531f89226a752bbf9dee569d88b672789d504e8e6f64cfc",
     "packages/quds_office_engine/test/proofing/german_release_context_test.dart": "8413fcbe3b9fe995bff06107ad70d27b222369ccc27fc95a89690ef398ede26b",
-    "packages/quds_office_engine/test/proofing/german_spelling_apostrophes_test.dart": "dd380d36ac93a63b3a7165d10efb1075f69ea01834cc17116e4ac1805b2781cb",
+    "packages/quds_office_engine/test/proofing/german_spelling_apostrophes_test.dart": "7138024cb57f79c71404e270a389424a471af7a48684af9dc07a2fa5fd16ee50",
     "packages/quds_office_engine/test/proofing/german_spelling_compounds_test.dart": "23d26fd136797049668ac5f08bec58aa0233d478a9f6aa1ac778353c8a98eab9",
     "packages/quds_office_engine/test/proofing/german_spelling_continuation_test.dart": "386a454354d01d1fc0ae1d950bd9d0a03857d45018c8d1685991e0904f34abb5",
     "packages/quds_office_engine/test/proofing/german_spelling_projection_test.dart": "ffe595b2cbc3d02030a43a4edc6bc84ed5e5c31cd6797d5351b077552d364370",
@@ -3486,7 +3486,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "6d29a57c0d8948a874ba523e91da575a9fde390e",
+  "source_commit": "11cd3b8589ced51cb09d03686d3d59422cc86bac",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
