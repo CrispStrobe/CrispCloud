@@ -448,6 +448,9 @@ final class WordProofingSession extends ChangeNotifier {
   final Expando<_CachedParagraphSnapshot> _snapshotCache =
       Expando<_CachedParagraphSnapshot>('proofing paragraph snapshot');
   final Map<WmlParagraph, _CachedParagraph> _cache = HashMap.identity();
+  // Keep one rebound publication per cached report. The raw report's
+  // identity prevents reuse after a new provider result replaces it.
+  final _reboundReports = Expando<OfficeProofingReport>();
   Map<WmlParagraph, List<OfficeProofingFinding>> _findings = HashMap.identity();
   int _nextId = 0;
   int _generation = 0;
@@ -2453,6 +2456,35 @@ final class WordProofingSession extends ChangeNotifier {
     ];
   }
 
+  OfficeProofingReport _reportForPublication(
+    OfficeProofingReport cached,
+    _ParagraphSnapshot snapshot,
+    _Segment segment, {
+    required String documentId,
+    required int revision,
+  }) {
+    final language = normalizeProofingLanguage(segment.language);
+    final blockId = _ids[snapshot.paragraph];
+    bool matches(OfficeProofingRequest request) =>
+        request.documentId == documentId &&
+        request.blockId == blockId &&
+        request.revision == revision &&
+        request.text == segment.text &&
+        request.startOffset == segment.start &&
+        request.language == language &&
+        setEquals(request.ignoredRuleIds, _ignoredRules);
+
+    if (matches(cached.request)) return cached;
+    // An edit advances the revision of unchanged reports as well. The first
+    // publication rebinds them; later progress can use those same results.
+    final rebound = _reboundReports[cached];
+    if (rebound != null && matches(rebound.request)) return rebound;
+    return _reboundReports[cached] = _retarget(
+      cached,
+      _request(snapshot, segment, documentId: documentId, revision: revision),
+    );
+  }
+
   void _publishCached(
     _DocumentSnapshot captured, {
     required String documentId,
@@ -2510,29 +2542,13 @@ final class WordProofingSession extends ChangeNotifier {
       final issueStart = issues.length;
       for (var index = 0; index < snapshot.segments.length; index++) {
         final segment = snapshot.segments[index];
-        final cachedReport = cached[index];
-        final request = cachedReport.request;
-        // Progress repeatedly publishes the same requests. A later document
-        // revision still needs fresh request and finding coordinates.
-        final report =
-            request.documentId == documentId &&
-                request.blockId == _ids[snapshot.paragraph] &&
-                request.revision == revision &&
-                request.text == segment.text &&
-                request.startOffset == segment.start &&
-                request.language ==
-                    normalizeProofingLanguage(segment.language) &&
-                setEquals(request.ignoredRuleIds, _ignoredRules)
-            ? cachedReport
-            : _retarget(
-                cachedReport,
-                _request(
-                  snapshot,
-                  segment,
-                  documentId: documentId,
-                  revision: revision,
-                ),
-              );
+        final report = _reportForPublication(
+          cached[index],
+          snapshot,
+          segment,
+          documentId: documentId,
+          revision: revision,
+        );
         reports.add(report);
         final previouslyPublished = previousReports.contains(report);
         for (final finding in report.findings) {

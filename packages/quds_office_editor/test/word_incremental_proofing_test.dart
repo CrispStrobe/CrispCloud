@@ -107,6 +107,43 @@ class _Harness {
 
 void main() {
   test(
+    'progress reuses reports rebound to the current document revision',
+    () async {
+      final h = _Harness(['Feler stable', 'Feler initial']);
+      final initial = await h.session.checkNow();
+      var previous = initial.reports.first;
+
+      for (final text in ['Feler edited', 'Feler edited again']) {
+        h.edit(1, text);
+        final gate = h.provider.gate(text);
+        final pending = h.session.checkNow();
+        await h.provider.started(text);
+        final partial = h.session.summary;
+        final rebound = partial.reports.first;
+        expect(partial.checking, isTrue);
+        expect(rebound, isNot(same(previous)));
+        expect(rebound.request.revision, h.revision);
+        expect(rebound.results.single.request, same(rebound.request));
+        expect(rebound.findings.single.revision, h.revision);
+
+        gate.complete();
+        final finished = await pending;
+        expect(finished.reports.first, same(rebound));
+        expect(finished.issues.first, same(partial.issues.first));
+        expect(h.session.canCorrect(finished.issues.first), isTrue);
+        previous = rebound;
+      }
+
+      expect(h.provider.requests.map((request) => request.text), [
+        'Feler stable',
+        'Feler initial',
+        'Feler edited',
+        'Feler edited again',
+      ]);
+    },
+  );
+
+  test(
     'local issue lookups follow edits, ignore and document replacement',
     () async {
       final h = _Harness(['Feler first', 'Feler and Feler', 'Feler last']);
