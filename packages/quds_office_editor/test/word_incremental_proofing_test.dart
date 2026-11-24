@@ -275,6 +275,26 @@ void main() {
   );
 
   test(
+    'cached single-run snapshots check live language and no-proof changes',
+    () async {
+      final h = _Harness(['Feler single run']);
+      final german = (await h.session.checkNow()).issues.single;
+      expect(h.session.isCurrent(german), isTrue);
+
+      h.document.proofingLanguage = 'en-GB';
+      expect(h.session.isCurrent(german), isFalse);
+      final english = (await h.session.checkNow()).issues.single;
+      expect(h.provider.requests.last.language, 'en-GB');
+      expect(h.session.isCurrent(english), isTrue);
+
+      final run = h.paragraphs.single.inlines.single as WmlRun;
+      run.properties = WmlRunProps(noProof: true);
+      expect(h.session.isCurrent(english), isFalse);
+      expect((await h.session.checkNow()).issues, isEmpty);
+    },
+  );
+
+  test(
     'direct structural edits are validated before intermediate publication',
     () async {
       final h = _Harness(['Feler first', 'Feler second', 'Feler third']);

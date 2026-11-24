@@ -2682,6 +2682,52 @@ final class WordProofingSession extends ChangeNotifier {
         final paragraph = entry.paragraph;
         if (!seen.add(paragraph)) continue;
         final text = paragraph.text;
+        final detection = _detectionForCapture(paragraph, text);
+        final previous = _snapshotCache[paragraph];
+        final single = paragraph.inlines.length == 1
+            ? paragraph.inlines.single
+            : null;
+        final properties = paragraph.properties;
+        // Ordinary single-run text has no field or control state to rebuild.
+        // Check its live text and effective language on every capture.
+        final simpleKey =
+            single is WmlRun &&
+                detection == null &&
+                fieldDepth == 0 &&
+                revisionsByParagraph[paragraph] == null &&
+                !entry.locked &&
+                !entry.generated &&
+                paragraph.contentControlWrappers.isEmpty &&
+                properties.fieldInstruction == null &&
+                !properties.pageNumberField &&
+                !single.isAtomic &&
+                single.properties.noProof != true
+            ? (
+                configuration,
+                name,
+                properties.proofingLanguage,
+                documentLanguage,
+                document.complexScriptLanguage,
+                single.text.length,
+                normalizeProofingLanguage(
+                  wordRunProofingLanguage(
+                        single,
+                        paragraph,
+                        documentComplexScriptLanguage:
+                            document.complexScriptLanguage,
+                      ) ??
+                      documentLanguage,
+                ),
+              )
+            : null;
+        if (simpleKey != null &&
+            previous != null &&
+            previous.inputKey == simpleKey &&
+            previous.snapshot.text == text) {
+          snapshots.add(previous.snapshot);
+          continue;
+        }
+
         List<({int start, int end})>? pending;
         final exclusions = <({int start, int end})>[];
         for (final revision
@@ -2706,7 +2752,6 @@ final class WordProofingSession extends ChangeNotifier {
                 ({String? language, bool isDefault}) complex,
               })
             >[];
-        final detection = _detectionForCapture(paragraph, text);
         var hasField = fieldDepth > 0;
         var hasInlineControl = false;
         var offset = 0;
@@ -2813,32 +2858,35 @@ final class WordProofingSession extends ChangeNotifier {
         if (pending != null) guards.addAll(pending);
         // Scan current structure first: fields can start in a previous
         // paragraph, and a parent or inline control can change protection
-        // without changing text. Only grapheme segmentation is memoized.
-        final inputKey = jsonEncode([
-          configuration,
-          name,
-          locked,
-          paragraph.properties.fieldInstruction,
-          paragraph.properties.pageNumberField,
-          paragraph.properties.proofingLanguage,
-          document.complexScriptLanguage,
-          generated,
-          emptyField,
-          structure,
-          [
-            for (final range in exclusions) [range.start, range.end],
-          ],
-          [
-            for (final range in guards) [range.start, range.end],
-          ],
-          barriers.toList(growable: false),
-          insertionBarriers.toList(growable: false),
-          [
-            for (final run in languageRuns) [run.start, run.end, run.language],
-          ],
-          detection?.key,
-        ]);
-        final previous = _snapshotCache[paragraph];
+        // without changing text. Compare those inputs before reusing a snapshot.
+        final inputKey =
+            simpleKey ??
+            jsonEncode([
+              configuration,
+              name,
+              documentLanguage,
+              locked,
+              paragraph.properties.fieldInstruction,
+              paragraph.properties.pageNumberField,
+              paragraph.properties.proofingLanguage,
+              document.complexScriptLanguage,
+              generated,
+              emptyField,
+              structure,
+              [
+                for (final range in exclusions) [range.start, range.end],
+              ],
+              [
+                for (final range in guards) [range.start, range.end],
+              ],
+              barriers.toList(growable: false),
+              insertionBarriers.toList(growable: false),
+              [
+                for (final run in languageRuns)
+                  [run.start, run.end, run.language],
+              ],
+              detection?.key,
+            ]);
         if (previous != null &&
             previous.inputKey == inputKey &&
             previous.snapshot.text == text) {
@@ -3185,7 +3233,7 @@ final class _CachedParagraphSnapshot {
     this.paragraphSkipped,
   );
 
-  final String inputKey;
+  final Object inputKey;
   final _ParagraphSnapshot snapshot;
   final bool paragraphSkipped;
 }
