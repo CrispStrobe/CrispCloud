@@ -82,6 +82,55 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
 
+  testWidgets('arrow navigation keeps input on the live paragraph', (_) async {
+    final document = WmlDocument.empty(text: 'First');
+    document.sections.single.blocks.add(
+      WmlParagraph(inlines: [WmlRun(text: 'Second')]),
+    );
+    final detached = WordLayoutEngine(
+      font: null,
+    ).layout(WmlDocument.empty(text: 'Other'));
+    final controller = WordEditorController(
+      document: document,
+      initialLayout: detached,
+    );
+    addTearDown(controller.dispose);
+    controller.caret.logicalIndex = 1;
+    controller.attachInput();
+
+    controller.moveCaretVisual(toRight: true);
+    expect(
+      controller.input.value,
+      const TextEditingValue(
+        text: 'First',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+
+    controller.relayout();
+    controller.caret.logicalIndex = 'First'.length;
+    controller.moveCaretVisual(toRight: true);
+    expect(controller.caret.paragraphIndex, 1);
+    expect(
+      controller.input.value,
+      const TextEditingValue(
+        text: 'Second',
+        selection: TextSelection.collapsed(offset: 0),
+      ),
+    );
+
+    controller.input.updateEditingValue(
+      const TextEditingValue(
+        text: 'XSecond',
+        selection: TextSelection.collapsed(offset: 1),
+      ),
+    );
+    expect(document.paragraphs.map((paragraph) => paragraph.text), [
+      'First',
+      'XSecond',
+    ]);
+  });
+
   testWidgets(
     'modal text input retains ownership over stale Word IME traffic',
     (tester) async {

@@ -1060,11 +1060,20 @@ class WordEditorController extends OfficeController {
   }
 
   set documentLaidOut(LaidOutDocument value) {
+    _publishDocumentLayout(value, sourceParagraphsAreLive: false);
+  }
+
+  void _publishDocumentLayout(
+    LaidOutDocument value, {
+    bool sourceParagraphsAreLive = true,
+  }) {
     _documentLaidOut = value;
+    _layoutSourceParagraphsAreLive = sourceParagraphsAreLive;
     _bodyVisualNavigation = null;
   }
 
   late LaidOutDocument _documentLaidOut;
+  var _layoutSourceParagraphsAreLive = false;
   List<({WmlVisual visual, int after})>? _bodyVisualNavigation;
 
   /// commentLaidOut API.
@@ -1662,7 +1671,7 @@ class WordEditorController extends OfficeController {
     equationSlot = 0;
     equationCaret = 0;
     pictureCropMode = false;
-    documentLaidOut = layout;
+    _publishDocumentLayout(layout);
     _documentReplaced = false;
     _layoutComment();
     _dirty = false;
@@ -1755,7 +1764,7 @@ class WordEditorController extends OfficeController {
     // header band. Force a full layout while editing a header or footer.
     final bool incremental = localEdit && !isEditingHeaderFooter;
     if (!incremental) {
-      documentLaidOut = _layoutWordDocument(document);
+      _publishDocumentLayout(_layoutWordDocument(document));
       _layoutComment();
       return;
     }
@@ -1767,27 +1776,35 @@ class WordEditorController extends OfficeController {
       // be reused line by line (the new layout is unfitted, as a full
       // relayout after an edit is).
       _FittedLines.restore(previous);
-      documentLaidOut = previous.supportsIncrementalReuse
-          ? engine.layout(
-              document,
-              updateFields: false,
-              fromSectionIndex: fromSection,
-              reuse: previous,
-              dirtyParagraphs: Set<WmlParagraph>.identity()
-                ..addAll(dirty ?? _localEditParagraphs()),
-            )
-          : engine.layout(document, updateFields: false);
+      _publishDocumentLayout(
+        previous.supportsIncrementalReuse
+            ? engine.layout(
+                document,
+                updateFields: false,
+                fromSectionIndex: fromSection,
+                reuse: previous,
+                dirtyParagraphs: Set<WmlParagraph>.identity()
+                  ..addAll(dirty ?? _localEditParagraphs()),
+              )
+            : engine.layout(document, updateFields: false),
+        sourceParagraphsAreLive:
+            !previous.supportsIncrementalReuse ||
+            _layoutSourceParagraphsAreLive,
+      );
     } else {
       // The section-level path reuses earlier pages as they are (fitted),
       // without recording incremental state from them.
       if (_FittedLines.of(documentLaidOut) != null) {
         documentLaidOut.discardIncrementalState();
       }
-      documentLaidOut = engine.layout(
-        document,
-        updateFields: false,
-        fromSectionIndex: fromSection,
-        reuse: documentLaidOut,
+      _publishDocumentLayout(
+        engine.layout(
+          document,
+          updateFields: false,
+          fromSectionIndex: fromSection,
+          reuse: documentLaidOut,
+        ),
+        sourceParagraphsAreLive: _layoutSourceParagraphsAreLive,
       );
     }
     if (isEditingComment) {
@@ -1962,9 +1979,9 @@ class WordEditorController extends OfficeController {
   }
 
   void _relayoutTocPages() {
-    documentLaidOut = _engine.layout(document);
+    _publishDocumentLayout(_engine.layout(document));
     if (WordToc.syncPageNumbers(document, documentLaidOut)) {
-      documentLaidOut = _engine.layout(document);
+      _publishDocumentLayout(_engine.layout(document));
     }
     _layoutComment();
   }
@@ -2571,9 +2588,11 @@ class WordEditorController extends OfficeController {
     return value.text == text;
   }
 
-  Object get _imeEditingTarget => (
+  Object get _imeEditingTarget => _imeTargetFor(_activeParagraph);
+
+  Object _imeTargetFor(WmlParagraph paragraph) => (
     document: document,
-    paragraph: _activeParagraph,
+    paragraph: paragraph,
     caret: caret,
     paragraphIndex: caret.paragraphIndex,
     offset: caret.logicalIndex,
@@ -2603,7 +2622,12 @@ class WordEditorController extends OfficeController {
     if (paras.isEmpty) {
       return;
     }
-    if (!extend && _selectNeighborVisual(delta, requireEdge: true)) {
+    if (!extend &&
+        _selectNeighborVisual(
+          delta,
+          requireEdge: true,
+          paragraph: paras[caret.paragraphIndex.clamp(0, paras.length - 1)],
+        )) {
       return;
     }
     var remaining = delta;
@@ -2675,10 +2699,16 @@ class WordEditorController extends OfficeController {
       moveCaret(toRight ? 1 : -1, extend: extend);
       return;
     }
-    if (!extend && _selectNeighborVisual(toRight ? 1 : -1, requireEdge: true)) {
+    final line = current.line;
+    final paragraph = _bodyParagraphOf(line);
+    if (!extend &&
+        _selectNeighborVisual(
+          toRight ? 1 : -1,
+          requireEdge: true,
+          paragraph: paragraph,
+        )) {
       return;
     }
-    final line = current.line;
     if (line.glyphs.isEmpty) {
       _crossLaidOutLine(
         layout,
@@ -2712,7 +2742,7 @@ class WordEditorController extends OfficeController {
     }
     caret.resetBlink();
     selectedVisual = null;
-    _syncImeSelection();
+    _syncImeSelection(paragraph: paragraph);
     notifyListeners();
   }
 
@@ -2754,7 +2784,7 @@ class WordEditorController extends OfficeController {
     }
     caret.resetBlink();
     selectedVisual = null;
-    _syncImeSelection();
+    _syncImeSelection(paragraph: _bodyParagraphOf(next));
     notifyListeners();
   }
 
@@ -2771,7 +2801,12 @@ class WordEditorController extends OfficeController {
     if (paras.isEmpty) {
       return;
     }
-    if (!extend && _selectNeighborVisual(delta, requireEdge: false)) {
+    if (!extend &&
+        _selectNeighborVisual(
+          delta,
+          requireEdge: false,
+          paragraph: paras[caret.paragraphIndex.clamp(0, paras.length - 1)],
+        )) {
       return;
     }
     selectedVisual = null;
@@ -5326,11 +5361,11 @@ class WordEditorController extends OfficeController {
     }
   }
 
-  void _syncImeSelection() {
+  void _syncImeSelection({WmlParagraph? paragraph}) {
     if (!input.isAttached) {
       return;
     }
-    _writeImeValue();
+    _writeImeValue(paragraph: paragraph);
   }
 
   /// equationEditingText API.
@@ -5427,8 +5462,9 @@ class WordEditorController extends OfficeController {
     );
   }
 
-  void _writeImeValue() {
-    _imeValueTarget = _imeEditingTarget;
+  void _writeImeValue({WmlParagraph? paragraph}) {
+    final targetParagraph = paragraph ?? _activeParagraph;
+    _imeValueTarget = _imeTargetFor(targetParagraph);
     if (selectedEquation != null) {
       final String text = equationEditingText();
       _applyingIme = true;
@@ -5443,7 +5479,7 @@ class WordEditorController extends OfficeController {
       _applyingIme = false;
       return;
     }
-    final String text = _activeParagraph.text;
+    final String text = targetParagraph.text;
     final bool samePara =
         caret.selectionAnchorParagraph == caret.paragraphIndex;
     _applyingIme = true;
@@ -7347,31 +7383,27 @@ class WordEditorController extends OfficeController {
     updateSelectedVisual(kind: _nextVisualKind(visual.visual.kind));
   }
 
-  bool _selectNeighborVisual(int delta, {required bool requireEdge}) {
-    final WmlParagraph para = _activeParagraph;
-    if (delta > 0 && (!requireEdge || caret.logicalIndex >= para.text.length)) {
-      final WmlBlock? next = _siblingBlock(para, after: true);
-      if (next is WmlVisual) {
-        selectedVisual = next;
-        notifyListeners();
-        return true;
-      }
-      if (next is WmlEquation) {
-        selectEquation(next);
-        return true;
-      }
+  bool _selectNeighborVisual(
+    int delta, {
+    required bool requireEdge,
+    WmlParagraph? paragraph,
+  }) {
+    if (delta == 0 || (delta < 0 && requireEdge && caret.logicalIndex > 0)) {
+      return false;
     }
-    if (delta < 0 && (!requireEdge || caret.logicalIndex <= 0)) {
-      final WmlBlock? prev = _siblingBlock(para, after: false);
-      if (prev is WmlVisual) {
-        selectedVisual = prev;
-        notifyListeners();
-        return true;
-      }
-      if (prev is WmlEquation) {
-        selectEquation(prev);
-        return true;
-      }
+    final para = paragraph ?? _activeParagraph;
+    if (delta > 0 && requireEdge && caret.logicalIndex < para.text.length) {
+      return false;
+    }
+    final neighbor = _siblingBlock(para, after: delta > 0);
+    if (neighbor is WmlVisual) {
+      selectedVisual = neighbor;
+      notifyListeners();
+      return true;
+    }
+    if (neighbor is WmlEquation) {
+      selectEquation(neighbor);
+      return true;
     }
     return false;
   }
@@ -7528,11 +7560,22 @@ class WordEditorController extends OfficeController {
     return last;
   }
 
+  WmlParagraph? _bodyParagraphOf(LaidOutLine line) =>
+      !_layoutSourceParagraphsAreLive ||
+          _documentReplaced ||
+          isEditingComment ||
+          isEditingHeaderFooter
+      ? null
+      : line.sourceParagraph;
+
   double _caretXOnLine(LaidOutLine line) {
-    final List<WmlParagraph> paras = _paragraphs;
-    final WmlParagraph? para = paras.isEmpty
-        ? null
-        : paras[line.paragraphIndex.clamp(0, paras.length - 1)];
+    var para = _bodyParagraphOf(line);
+    if (para == null) {
+      final paras = _paragraphs;
+      if (paras.isNotEmpty) {
+        para = paras[line.paragraphIndex.clamp(0, paras.length - 1)];
+      }
+    }
     final String paragraph = line.sourceText ?? para?.text ?? '';
     return PaintRunText.caretXOnLine(
       line,
@@ -7583,7 +7626,7 @@ class WordEditorController extends OfficeController {
     }
     caret.resetBlink();
     selectedVisual = null;
-    _syncImeSelection();
+    _syncImeSelection(paragraph: _bodyParagraphOf(next));
     notifyListeners();
   }
 
