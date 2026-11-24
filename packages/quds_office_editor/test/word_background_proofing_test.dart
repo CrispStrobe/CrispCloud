@@ -112,10 +112,19 @@ void main() {
       ]);
       expect(queued.map((result) => result.findings.length), [0, 1, 0]);
 
-      final stale = spelling.check(request);
+      final stale = List.generate(8, (_) => spelling.check(request));
+      final otherDocument = otherSpelling.check(request);
       firstVocabulary.removeWord('Qudsmarke');
       final fresh = spelling.check(request);
-      expect((await stale).status, OfficeProofingStatus.failed);
+      for (final result in await Future.wait(stale)) {
+        expect(result.request, same(request));
+        expect(result.status, OfficeProofingStatus.failed);
+        expect(result.findings, isEmpty);
+        expect(result.message, contains('Personal vocabulary changed'));
+      }
+      final unaffected = await otherDocument;
+      expect(unaffected.status, OfficeProofingStatus.success);
+      expect(unaffected.findings.single.originalText, 'Qudsmarke');
       final afterEdit = await fresh;
       expect(afterEdit.status, OfficeProofingStatus.success);
       expect(afterEdit.findings.single.originalText, 'Qudsmarke');
