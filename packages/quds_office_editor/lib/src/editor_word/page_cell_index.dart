@@ -11,9 +11,23 @@ final class WordPageCellIndex {
   late final _paragraphs = _ParagraphCells(_frames);
   late final pointer = WordPagePointerIndex._(_frames);
   late final _paintIndex = WordPagePaintIndex._(_frames);
+  WordPagePaintIndex? _overlayIndex;
 
   WordPagePaintIndex? get paintIndex =>
       _frames.length <= WordPagePaintIndex._batchSize ? null : _paintIndex;
+
+  WordPagePaintIndex? overlayIndexFor(
+    int lineCount,
+    Rect? Function(int) clipForLine,
+  ) {
+    if (lineCount <= WordPagePaintIndex._batchSize || _paragraphs.isEmpty) {
+      return null;
+    }
+    return _overlayIndex ??= WordPagePaintIndex._forClips(
+      lineCount,
+      clipForLine,
+    );
+  }
 
   LaidOutBox? smallestAt(int paragraph, {WmlFrame? containingFrame}) =>
       _paragraphs.smallestAt(paragraph, containingFrame: containingFrame);
@@ -24,10 +38,19 @@ final class WordPageCellIndex {
 
 /// Conservative bounds for consecutive boxes in paint order.
 final class WordPagePaintIndex {
-  WordPagePaintIndex._(List<LaidOutBox> boxes) : _length = boxes.length {
+  WordPagePaintIndex._(List<LaidOutBox> boxes)
+    : this._forClips(boxes.length, (index) {
+        final box = boxes[index];
+        // Non-cells may paint outside their layout box.
+        return box.kind == LaidOutBoxKind.tableCell
+            ? Rect.fromLTWH(box.x, box.y, box.width, box.height)
+            : null;
+      });
+
+  WordPagePaintIndex._forClips(this._length, Rect? Function(int) clipAt) {
     for (var start = 0; start < _length; start += _batchSize) {
       _bounds.add(
-        _cellBounds(boxes, start, math.min(start + _batchSize, _length)),
+        _batchBounds(clipAt, start, math.min(start + _batchSize, _length)),
       );
     }
   }
@@ -36,27 +59,18 @@ final class WordPagePaintIndex {
   final int _length;
   final _bounds = <Rect?>[];
 
-  static Rect? _cellBounds(List<LaidOutBox> boxes, int start, int end) {
+  static Rect? _batchBounds(Rect? Function(int) clipAt, int start, int end) {
     var left = double.infinity;
     var top = double.infinity;
     var right = double.negativeInfinity;
     var bottom = double.negativeInfinity;
     for (var index = start; index < end; index++) {
-      final box = boxes[index];
-      // Non-cells may paint outside their layout box and are always retained.
-      if (box.kind != LaidOutBoxKind.tableCell) return null;
-      final boxRight = box.x + box.width;
-      final boxBottom = box.y + box.height;
-      if (!box.x.isFinite ||
-          !box.y.isFinite ||
-          !boxRight.isFinite ||
-          !boxBottom.isFinite) {
-        return null;
-      }
-      left = math.min(left, box.x);
-      top = math.min(top, box.y);
-      right = math.max(right, boxRight);
-      bottom = math.max(bottom, boxBottom);
+      final clip = clipAt(index);
+      if (clip == null || !clip.isFinite) return null;
+      left = math.min(left, clip.left);
+      top = math.min(top, clip.top);
+      right = math.max(right, clip.right);
+      bottom = math.max(bottom, clip.bottom);
     }
     return Rect.fromLTRB(left, top, right, bottom);
   }
@@ -98,6 +112,8 @@ final class _ParagraphCells {
 
   final _cells = <({int start, int end, int order, LaidOutBox box})>[];
   final _endsThrough = <int>[];
+
+  bool get isEmpty => _cells.isEmpty;
 
   int _afterStart(int paragraph) {
     // Only cells starting at or before this paragraph can own its text.

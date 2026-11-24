@@ -1872,11 +1872,11 @@
     "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart": "540bd70971ef0cd38ec8ab88e76a60772eec3876fc2672ad502e685b5b867dbd",
     "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart": "085b7ef4d4f6c327b53bfa184a3f6d4e5cc225aeb448b60be03284e6d8fe2801",
     "packages/quds_office_editor/lib/src/editor_word/office_ruler.dart": "1b6ddf7206f501ddb5cbadb0427e5a7c16196b692acd462e5651b0c1b85b7df1",
-    "packages/quds_office_editor/lib/src/editor_word/page_cell_index.dart": "82c7c686170fc6f2b66907ef894a2d098bb01e9d375045d096da7d3daff210cc",
+    "packages/quds_office_editor/lib/src/editor_word/page_cell_index.dart": "5716d979d52b4b764563eb95dd75988b051582792328547cc57ac873478ddaa9",
     "packages/quds_office_editor/lib/src/editor_word/page_text_hit_index.dart": "4ad8bf98b9e9b7d6a1a5a4b54e9dd6af4f29a975051e4670efcfb32d3fcc0802",
     "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "ff70e2703c0fed7af9c5a2b4b49785ad317612ce14ca4eb0b1b0765700f6a7d5",
     "packages/quds_office_editor/lib/src/editor_word/proofing_geometry.dart": "8210a778704748cd52783e32832949d1c6e69010139eaef1bedaf3bde26970ea",
-    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "ed68447373300e17dc0af69461f5eb82cfb9920ede680ed39295e0cccfd0fedf",
+    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "e4f28d69ff6c95cce6c12e9605afc472761ea383f404df24c4861fdaf0f9a750",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "5bfeea71be0da417a0e164614f172ce7848a6ce0cdef6a53170a801bdcfdf07b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
@@ -2128,7 +2128,7 @@
     "packages/quds_office_editor/test/word_proofing_context_test.dart": "e5ef405d387001191ec46bf6a57a89494f3de5fa417d3e80b341bc47c318b8e4",
     "packages/quds_office_editor/test/word_proofing_correction_test.dart": "97ff02bafff82ad46be47643a341595fd579e7d5027a6586358f4f14fd044910",
     "packages/quds_office_editor/test/word_proofing_dialog_test.dart": "1d88dc424e3887e591129e78ef0942c23cf7b8c8c146e89954e0aabe5e7f36e0",
-    "packages/quds_office_editor/test/word_proofing_geometry_test.dart": "16c04958b0a5cb7db76ae941589ff5d13e7e4d7417bf5631a824449bd3228d55",
+    "packages/quds_office_editor/test/word_proofing_geometry_test.dart": "1f39c67746e5aee8fcf5fcd4fe7c2bae40f9781b48c38a3cfa002c1ec6032026",
     "packages/quds_office_editor/test/word_proofing_navigation_test.dart": "04bb1507322e70aabc4a4e1812fc6e0ec3a418d2d6d85d5349eb1b46f55a676e",
     "packages/quds_office_editor/test/word_proofing_priority_test.dart": "e63f94f430d20b00a1c4422547f24c4d435b1e338cbac7706bb14558beb9141f",
     "packages/quds_office_editor/test/word_proofing_session_test.dart": "a22d35f1f76f27c69319ec59cca028d5bc2419f26e31b8bd301710487e322329",
@@ -3485,7 +3485,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "e89e1a80fe6ace1cda5e84bc011e51665b996835",
+  "source_commit": "35076530e6e51f395ecbe51c7e2f46493c3d0828",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

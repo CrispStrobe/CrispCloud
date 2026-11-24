@@ -3860,36 +3860,41 @@ class RenderWordCanvas extends RenderBox
             searchOnPage ||
             proofingLookup != null ||
             proofingFindings.isNotEmpty) {
-          for (final LaidOutLine line in page.lines) {
+          final lines = page.lines;
+          final overlays = visibleInk == null || page.frames.isEmpty
+              ? null
+              : _pageCellIndex(page).overlayIndexFor(
+                  lines.length,
+                  (index) => _overlayCellClip(page, lines[index], frameOwners),
+                );
+          var endOfBatch = overlays == null ? lines.length : 0;
+          for (var index = 0; index < lines.length; index++) {
+            if (index == endOfBatch) {
+              final batch = overlays!.nextBatch(index, visibleInk!);
+              if (batch == null) break;
+              index = batch.start;
+              endOfBatch = batch.end;
+            }
+            final line = lines[index];
             final ranges = zoteroRanges[line.sourceParagraph];
-            final hasProofing =
-                _proofingFor(line.sourceParagraph)?.isNotEmpty == true;
+            final findings = _proofingFor(line.sourceParagraph);
+            final hasProofing = findings != null && findings.isNotEmpty;
             final lineHits = searchOnPage && _paintsLineSelection(line, page)
                 ? findHitsByParagraph[line.paragraphIndex]
                 : null;
             if (ranges == null && !hasProofing && lineHits == null) continue;
-            final cell = _cellForLine(
-              page,
-              line,
-              containingFrame: frameOwners[line.paragraphIndex],
-            );
-            if (cell != null) {
-              final bounds = Rect.fromLTWH(
-                cell.x,
-                cell.y,
-                cell.width,
-                cell.height,
-              );
-              // This overlay would be clipped to the cell even if its text
-              // overflows. Plain and floating text can extend beyond its line.
-              if (visibleInk != null && !visibleInk.overlaps(bounds)) continue;
+            final clip = page.frames.isEmpty
+                ? null
+                : _overlayCellClip(page, line, frameOwners);
+            if (clip != null) {
+              if (visibleInk != null && !visibleInk.overlaps(clip)) continue;
               canvas.save();
-              canvas.clipRect(bounds);
+              canvas.clipRect(clip);
             }
             _paintZoteroFieldRanges(canvas, page, line, ranges);
             _paintFindHits(canvas, line, lineHits);
             if (hasProofing) {
-              _paintProofing(canvas, line);
+              _paintProofing(canvas, line, findings: findings);
               if (line.overlayText?.isNotEmpty == true) {
                 final painter = _overlayPainter(line);
                 final x = _overlayOrigin(
@@ -3898,10 +3903,16 @@ class RenderWordCanvas extends RenderBox
                   pageWidth: page.width,
                   marginRight: _marginRightOf(page),
                 );
-                _paintProofingOverlay(canvas, line, painter, x);
+                _paintProofingOverlay(
+                  canvas,
+                  line,
+                  painter,
+                  x,
+                  findings: findings,
+                );
               }
             }
-            if (cell != null) canvas.restore();
+            if (clip != null) canvas.restore();
           }
         }
       }
@@ -4070,8 +4081,29 @@ class RenderWordCanvas extends RenderBox
     return 1;
   }
 
-  void _paintProofing(Canvas canvas, LaidOutLine line) {
-    final findings = _proofingFor(line.sourceParagraph);
+  Rect? _overlayCellClip(
+    LaidOutPage page,
+    LaidOutLine line,
+    Map<int, WmlFrame> frameOwners,
+  ) {
+    final cell = _cellForLine(
+      page,
+      line,
+      containingFrame: frameOwners[line.paragraphIndex],
+    );
+    // Only clipped text has a reliable paint boundary. Unclipped glyphs can
+    // extend beyond their laid-out line.
+    return cell == null
+        ? null
+        : Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height);
+  }
+
+  void _paintProofing(
+    Canvas canvas,
+    LaidOutLine line, {
+    List<OfficeProofingFinding>? findings,
+  }) {
+    findings ??= _proofingFor(line.sourceParagraph);
     if (findings == null || line.glyphs.isEmpty) return;
     for (final finding in findings) {
       for (final range in WordProofingGeometry.displayRanges(
@@ -4124,9 +4156,10 @@ class RenderWordCanvas extends RenderBox
     Canvas canvas,
     LaidOutLine line,
     TextPainter painter,
-    double x,
-  ) {
-    final findings = _proofingFor(line.sourceParagraph);
+    double x, {
+    List<OfficeProofingFinding>? findings,
+  }) {
+    findings ??= _proofingFor(line.sourceParagraph);
     if (findings == null) return;
     final y = _overlayY(line, painter);
     for (final finding in findings) {

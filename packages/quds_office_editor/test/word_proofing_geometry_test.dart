@@ -191,6 +191,75 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
 
+  testWidgets('proofing lookup follows visible table rows when scrolling', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(480, 350);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final paragraphs = [
+      for (var row = 0; row < 80; row++) _paragraph('Fehler'),
+    ];
+    final table = WmlTable(
+      grid: [180],
+      rows: [
+        for (final paragraph in paragraphs)
+          WmlTableRow(
+            cells: [
+              WmlTableCell(blocks: [paragraph]),
+            ],
+          ),
+      ],
+    );
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          pageSize: const WmlPageSize(width: 260, height: 2900),
+          margins: const WmlPageMargins(
+            top: 25,
+            bottom: 25,
+            left: 25,
+            right: 25,
+          ),
+          blocks: [table],
+        ),
+      ],
+    );
+    final layout = _layout(document);
+    final page = layout.pages.single;
+    final seen = <WmlParagraph, int>{};
+    final finding = _finding(paragraphs.first, 0, 6);
+    final canvas = await _mount(
+      tester,
+      document,
+      layout,
+      proofingLookup: (paragraph) {
+        seen.update(paragraph, (count) => count + 1, ifAbsent: () => 1);
+        return [finding];
+      },
+    );
+    Future<void> repaint() async {
+      seen.clear();
+      canvas.markNeedsPaint();
+      await tester.pump();
+    }
+
+    await repaint();
+    expect(seen[paragraphs.first], 1);
+    expect(seen.containsKey(paragraphs.last), isFalse);
+
+    final lastLine = page.lines.last;
+    final lastY = canvas
+        .windowForPagePoint(0, Offset(lastLine.x, lastLine.y))
+        .dy;
+    canvas.viewport.origin = Offset(0, lastY - 100);
+    await repaint();
+    expect(seen[paragraphs.last], 1);
+    expect(seen.containsKey(paragraphs.first), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   test(
     'mixed bidi source ranges have disjoint boxes and span wrapped lines',
     () {
