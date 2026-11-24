@@ -260,16 +260,41 @@ List<OfficeProofingFinding> _mergeAgreeingFindings(
   final ordered = _orderedFindingsFromOneResult(results);
   if (ordered != null) return ordered;
 
-  final order = <OfficeProofingFinding, int>{};
+  final providerOrder = <String, int>{};
   final all = <OfficeProofingFinding>[];
+  Map<OfficeProofingFinding, int>? findingOrder;
   for (var index = 0; index < results.length; index++) {
     final result = results[index];
     if (result.status != OfficeProofingStatus.success) continue;
-    for (final finding in result.findings) {
-      order[finding] = index;
-      all.add(finding);
+    final findings = result.findings;
+    if (findings.isEmpty) continue;
+    if (findingOrder == null) {
+      final provider = result.providerId;
+      // Direct report callers can repeat providers or supply custom findings.
+      // Use the earlier provider indices to recover their per-finding order.
+      if (providerOrder.containsKey(provider) ||
+          findings.any(
+            (finding) =>
+                finding.runtimeType != OfficeProofingFinding ||
+                finding.providerId != provider,
+          )) {
+        findingOrder = {
+          for (final finding in all)
+            finding: providerOrder[finding.providerId]!,
+        };
+      } else {
+        providerOrder[provider] = index;
+      }
     }
+    if (findingOrder != null) {
+      for (final finding in findings) {
+        findingOrder[finding] = index;
+      }
+    }
+    all.addAll(findings);
   }
+
+  final orderByFinding = findingOrder;
   int compare(OfficeProofingFinding a, OfficeProofingFinding b) {
     final int byStart = a.start.compareTo(b.start);
     if (byStart != 0) return byStart;
@@ -279,54 +304,61 @@ List<OfficeProofingFinding> _mergeAgreeingFindings(
       a.category,
     ).compareTo(_categoryPriority(b.category));
     if (byCategory != 0) return byCategory;
-    return order[a]!.compareTo(order[b]!);
+    return orderByFinding == null
+        ? providerOrder[a.providerId]!.compareTo(providerOrder[b.providerId]!)
+        : orderByFinding[a]!.compareTo(orderByFinding[b]!);
   }
 
   all.sort(compare);
-  final merged = <OfficeProofingFinding>[];
-  final absorbed = <OfficeProofingFinding>{};
+  // Compact the sorted scratch list. Only actual merges need bookkeeping.
+  var writeAt = 0;
+  Set<OfficeProofingFinding>? absorbed;
   for (var i = 0; i < all.length; i++) {
     final kept = all[i];
-    if (absorbed.contains(kept)) continue;
+    if (absorbed?.contains(kept) ?? false) continue;
     var replacements = kept.replacements;
-    final providers = {kept.providerId};
+    if (replacements.isEmpty) {
+      all[writeAt++] = kept;
+      continue;
+    }
+    Set<String>? providers;
     for (var j = i + 1; j < all.length; j++) {
       final other = all[j];
       if (other.start != kept.start || other.end != kept.end) break;
-      if (absorbed.contains(other) ||
-          providers.contains(other.providerId) ||
+      if ((absorbed?.contains(other) ?? false) ||
+          other.providerId == kept.providerId ||
+          (providers?.contains(other.providerId) ?? false) ||
           other.category != kept.category ||
           other.originalText != kept.originalText ||
           !other.replacements.any(replacements.contains)) {
         continue;
       }
-      absorbed.add(other);
-      providers.add(other.providerId);
+      (absorbed ??= {}).add(other);
+      (providers ??= {}).add(other.providerId);
       replacements = [
         ...replacements,
         for (final value in other.replacements)
           if (!replacements.contains(value)) value,
       ];
     }
-    merged.add(
-      identical(replacements, kept.replacements)
-          ? kept
-          : OfficeProofingFinding(
-              documentId: kept.documentId,
-              blockId: kept.blockId,
-              revision: kept.revision,
-              providerId: kept.providerId,
-              start: kept.start,
-              end: kept.end,
-              originalText: kept.originalText,
-              ruleId: kept.ruleId,
-              message: kept.message,
-              category: kept.category,
-              replacements: replacements,
-            ),
-    );
+    all[writeAt++] = identical(replacements, kept.replacements)
+        ? kept
+        : OfficeProofingFinding(
+            documentId: kept.documentId,
+            blockId: kept.blockId,
+            revision: kept.revision,
+            providerId: kept.providerId,
+            start: kept.start,
+            end: kept.end,
+            originalText: kept.originalText,
+            ruleId: kept.ruleId,
+            message: kept.message,
+            category: kept.category,
+            replacements: replacements,
+          );
   }
-  return merged;
+  all.length = writeAt;
+  return all;
 }
 
 /// Checked provider results for a single immutable input snapshot.

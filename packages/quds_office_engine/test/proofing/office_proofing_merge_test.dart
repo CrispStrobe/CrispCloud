@@ -154,6 +154,63 @@ void main() {
     expect(report.results.last.findings, hasLength(2));
   });
 
+  test('direct reports can repeat a provider across result lists', () {
+    final report = OfficeProofingReport(
+      request: _request,
+      results: [
+        _result('same', [
+          (4, 7, 'first', spelling, ['إلى']),
+        ]),
+        _result('same', [
+          (4, 7, 'second', spelling, ['إلى']),
+        ]),
+        _result('other', [
+          (4, 7, 'alternate', spelling, ['إلى', 'ألي']),
+        ]),
+      ],
+    );
+
+    expect(report.findings.map((finding) => finding.ruleId), [
+      'first',
+      'second',
+    ]);
+    expect(report.findings.first.replacements, ['إلى', 'ألي']);
+    expect(report.findings.last.replacements, ['إلى']);
+  });
+
+  test('several merged ranges retain adjacent unmerged findings', () {
+    final report = OfficeProofingReport(
+      request: _request,
+      results: [
+        _result('a', [
+          (0, 3, 'uneditable', spelling, []),
+          (4, 7, 'first', spelling, ['إلى']),
+          (8, 13, 'second', spelling, ['البيت']),
+        ]),
+        _result('b', [
+          (4, 7, 'first-alternate', spelling, ['إلى', 'ألي']),
+          (8, 13, 'second-alternate', spelling, ['البيت', 'بيت']),
+          (13, 13, 'insertion', OfficeProofingCategory.style, ['.']),
+        ]),
+        _result('c', [
+          (4, 7, 'first-third', spelling, ['ألي', 'إلي']),
+          (8, 13, 'disagreement', spelling, ['المنزل']),
+        ]),
+      ],
+    );
+
+    expect(report.findings.map((finding) => finding.ruleId), [
+      'uneditable',
+      'first',
+      'second',
+      'disagreement',
+      'insertion',
+    ]);
+    expect(report.findings[1].replacements, ['إلى', 'ألي', 'إلي']);
+    expect(report.findings[2].replacements, ['البيت', 'بيت']);
+    expect(report.findings[3].replacements, ['المنزل']);
+  });
+
   test('agreeing findings of different categories stay separate', () {
     final report = OfficeProofingReport(
       request: _request,
