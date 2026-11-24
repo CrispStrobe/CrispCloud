@@ -1,5 +1,6 @@
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_creation_strings.dart';
+import '../services/archive_creation_service.dart';
 import 'archive_creation_dialog.dart';
 import 'archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
@@ -1067,6 +1068,36 @@ void showFileContextMenu(
     }
   }
 
+  // Binary comparison for exactly two selected files in this pane.
+  if (isMultiSelect &&
+      files.length == 2 &&
+      files.every((candidate) => !candidate.isFolder)) {
+    items.add(
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.compare_arrows),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(context.commanderTr("Compare selected files")),
+            ),
+          ],
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          showDiffViewerDialog(
+            context,
+            ref,
+            files[0],
+            files[1],
+            leftSide: side,
+            rightSide: side,
+          );
+        }),
+      ),
+    );
+  }
+
   // Upload to Remote
   if (origin.source is LocalPanelSource &&
       destination?.source is RemotePanelSource) {
@@ -1753,6 +1784,35 @@ void showFileContextMenu(
     }
 
     if (files.isNotEmpty && files.every((file) => file.path != null)) {
+      for (final (format, label) in <(ArchiveCreationFormat, String)>[
+        (ArchiveCreationFormat.zip, 'Compress to ZIP'),
+        (ArchiveCreationFormat.sevenZip, 'Compress to 7z'),
+      ]) {
+        items.add(
+          PopupMenuItem(
+            child: Row(
+              children: [
+                const Icon(Icons.folder_zip),
+                const SizedBox(width: 8),
+                Expanded(child: Text(archiveCreationText(context, label))),
+              ],
+            ),
+            onTap: () => Future<void>.delayed(Duration.zero, () async {
+              if (context.mounted) {
+                await showArchiveCreationDialog(
+                  context,
+                  ref,
+                  side,
+                  files,
+                  sourceOrigin: origin,
+                  initialFormat: format,
+                  autoStart: true,
+                );
+              }
+            }),
+          ),
+        );
+      }
       items.add(
         PopupMenuItem(
           child: Row(
