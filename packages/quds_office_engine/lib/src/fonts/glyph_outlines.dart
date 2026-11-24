@@ -80,9 +80,28 @@ class GlyphOutlineDecoder {
   final SfntFont font;
 
   static const int _maxCompositeDepth = 16;
+  static const int _maxPoints = 65536;
 
   /// decode API.
-  GlyphOutline decode(int glyphId) => _decode(glyphId, 0, <int>{});
+  ///
+  /// Malformed `glyf` data yields an empty outline instead of escaping a
+  /// `RangeError` from a cursor read. The SFNT directory can be valid while an
+  /// individual glyph's contour/flag lengths are hostile.
+  GlyphOutline decode(int glyphId) {
+    try {
+      return _decode(glyphId, 0, <int>{});
+    } on RangeError {
+      return GlyphOutline(
+        glyphId: glyphId,
+        xMin: 0,
+        yMin: 0,
+        xMax: 0,
+        yMax: 0,
+        commands: const <GlyphPathCommand>[],
+        componentGlyphIds: const <int>[],
+      );
+    }
+  }
 
   GlyphOutline _decode(int glyphId, int depth, Set<int> active) {
     if (!font.hasTable('glyf') ||
@@ -159,10 +178,25 @@ class GlyphOutlineDecoder {
   }
 
   List<GlyphPathCommand> _simple(ByteCursor cursor, int contourCount) {
+    if (contourCount < 0 ||
+        contourCount > _maxPoints ||
+        cursor.remaining < contourCount * 2 + 2) {
+      return const <GlyphPathCommand>[];
+    }
     final List<int> endPts = <int>[
       for (int i = 0; i < contourCount; i++) cursor.u16be(),
     ];
+    var previousEnd = -1;
+    for (final end in endPts) {
+      if (end <= previousEnd || end >= _maxPoints) {
+        return const <GlyphPathCommand>[];
+      }
+      previousEnd = end;
+    }
     final int instructionLen = cursor.u16be();
+    if (instructionLen > cursor.remaining) {
+      return const <GlyphPathCommand>[];
+    }
     cursor.skip(instructionLen);
     if (endPts.isEmpty) {
       return const <GlyphPathCommand>[];
@@ -170,10 +204,19 @@ class GlyphOutlineDecoder {
     final int pointCount = endPts.last + 1;
     final List<int> flags = <int>[];
     while (flags.length < pointCount) {
+      if (cursor.remaining < 1) {
+        return const <GlyphPathCommand>[];
+      }
       final int flag = cursor.u8();
       flags.add(flag);
       if ((flag & 0x08) != 0) {
+        if (cursor.remaining < 1) {
+          return const <GlyphPathCommand>[];
+        }
         final int repeat = cursor.u8();
+        if (repeat > pointCount - flags.length) {
+          return const <GlyphPathCommand>[];
+        }
         for (int i = 0; i < repeat; i++) {
           flags.add(flag);
         }
