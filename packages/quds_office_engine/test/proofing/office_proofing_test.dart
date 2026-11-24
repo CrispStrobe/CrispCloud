@@ -18,6 +18,15 @@ class FakeProvider extends OfficeProofingProvider {
   final bool supported;
   final String name;
   bool disposed = false;
+  int version = 0;
+  bool configurationBlocked = false;
+
+  @override
+  int get configurationRevision {
+    if (configurationBlocked) throw StateError('Configuration unavailable');
+    return version;
+  }
+
   @override
   String get id => name;
   @override
@@ -38,6 +47,24 @@ OfficeProofingResult clean(OfficeProofingRequest r) => OfficeProofingResult(
 );
 
 void main() {
+  test('configuration key recovers after a later provider getter fails', () {
+    final first = FakeProvider((input) async => clean(input), name: 'first');
+    final second = FakeProvider((input) async => clean(input), name: 'second');
+    final service = OfficeProofingService(providers: [first, second]);
+    addTearDown(service.dispose);
+    expect(service.configurationKey, 'first:0|second:0');
+
+    first.version++;
+    second.configurationBlocked = true;
+    expect(() => service.configurationKey, throwsStateError);
+    second.configurationBlocked = false;
+    final revised = service.configurationKey;
+    expect(revised, 'first:1|second:0');
+    expect(identical(service.configurationKey, revised), isTrue);
+    second.version++;
+    expect(service.configurationKey, 'first:1|second:1');
+  });
+
   test('validated provider results can be shared with the report', () async {
     final input = request('Feler, Huas', startOffset: 20);
     final result = OfficeProofingResult(

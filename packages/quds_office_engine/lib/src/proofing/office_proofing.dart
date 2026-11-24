@@ -377,15 +377,21 @@ class OfficeProofingReport {
 
   /// Every applicable configured provider completed. Unsupported providers do
   /// not invalidate another language's checker, but at least one must succeed.
-  bool get complete =>
-      results.any(
-        (OfficeProofingResult r) => r.status == OfficeProofingStatus.success,
-      ) &&
-      results.every(
-        (OfficeProofingResult r) =>
-            r.status == OfficeProofingStatus.success ||
-            r.status == OfficeProofingStatus.unsupported,
-      );
+  late final bool complete = _isComplete();
+
+  bool _isComplete() {
+    var succeeded = false;
+    for (final result in results) {
+      final status = result.status;
+      if (status == OfficeProofingStatus.success) {
+        succeeded = true;
+      } else if (status != OfficeProofingStatus.unsupported) {
+        return false;
+      }
+    }
+    return succeeded;
+  }
+
   bool get isClean => complete && findings.isEmpty;
 }
 
@@ -577,9 +583,27 @@ class OfficeProofingService {
   bool _disposed = false;
   final Set<OfficeProofingProvider> _timedOut = <OfficeProofingProvider>{};
 
-  String get configurationKey => providers
-      .map((OfficeProofingProvider p) => '${p.id}:${p.configurationRevision}')
-      .join('|');
+  late final _providerConfigurations = List<(String, int)?>.filled(
+    providers.length,
+    null,
+  );
+  String? _configurationKey;
+
+  String get configurationKey {
+    for (var index = 0; index < providers.length; index++) {
+      final provider = providers[index];
+      final id = provider.id;
+      final revision = provider.configurationRevision;
+      final previous = _providerConfigurations[index];
+      if (previous?.$1 == id && previous?.$2 == revision) continue;
+      // Invalidate immediately in case a later provider's getter throws.
+      _configurationKey = null;
+      _providerConfigurations[index] = (id, revision);
+    }
+    return _configurationKey ??= [
+      for (final entry in _providerConfigurations) '${entry!.$1}:${entry.$2}',
+    ].join('|');
+  }
 
   /// Checks [request] with every provider, or only with the providers
   /// accepted by [only]. A filtered report omits the other providers'

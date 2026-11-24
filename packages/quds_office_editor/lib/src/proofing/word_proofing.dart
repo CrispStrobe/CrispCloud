@@ -112,15 +112,7 @@ final class WordProofingSummary {
   final List<WordProofingIssue> issues;
   final List<OfficeProofingReport> reports;
 
-  Iterable<OfficeProofingResult> get _supportedResults sync* {
-    for (final report in reports) {
-      for (final result in report.results) {
-        if (result.status != OfficeProofingStatus.unsupported) yield result;
-      }
-    }
-  }
-
-  bool get complete =>
+  late final bool complete =
       hasResults &&
       !checking &&
       !scheduled &&
@@ -132,27 +124,36 @@ final class WordProofingSummary {
       // snapshot cannot borrow coverage from another paragraph's success.
       reports.every((report) => report.complete);
 
-  String get statusMessage {
+  late final String statusMessage = _buildStatusMessage();
+
+  String _buildStatusMessage() {
     if (checking) return 'Checking document…';
     if (scheduled) return 'Waiting for a pause in typing…';
     if (!hasResults) return 'Document has not been checked.';
-    final supported = _supportedResults.toList();
-    final problems = <String>{
-      for (final result in supported)
-        if (result.status != OfficeProofingStatus.success)
-          result.message ?? '${result.providerId}: ${result.status.name}',
-    };
+    var hasSupportedResults = false;
+    Set<String>? problems;
+    for (final report in reports) {
+      for (final result in report.results) {
+        if (result.status == OfficeProofingStatus.unsupported) continue;
+        hasSupportedResults = true;
+        if (result.status != OfficeProofingStatus.success) {
+          (problems ??= {}).add(
+            result.message ?? '${result.providerId}: ${result.status.name}',
+          );
+        }
+      }
+    }
     final coverage =
         '$checkedParagraphCount of ${officeParagraphs(paragraphCount)} checked';
     final excluded = skippedContentCount == 0
         ? ''
         : '; ${officeCount(skippedContentCount, 'excluded or unsupported content range')}';
     if (reports.isEmpty) return '$coverage$excluded. No checkable text.';
-    if (supported.isEmpty) {
+    if (!hasSupportedResults) {
       final language = reports.first.request.language;
       return '$coverage$excluded. No configured checker supports $language.';
     }
-    if (problems.isNotEmpty) return '$coverage$excluded. ${problems.join(' ')}';
+    if (problems != null) return '$coverage$excluded. ${problems.join(' ')}';
     if (manualProvidersSkipped) {
       return '$coverage$excluded. ${officeFindings(issues.length)}; '
           'choose Check document to include the manual grammar check.';
@@ -812,11 +813,30 @@ final class WordProofingSession extends ChangeNotifier {
       result._configuration == draftConfigurationKey &&
       result.sourceText == text;
 
-  String get _configurationKey =>
-      '$_configuration|${_service.configurationKey}|'
-      '${_manualService?.configurationKey ?? ''}|${vocabulary.revision}|'
-      '$language|${_ignoredRules.join(',')}|'
-      '${_detectionActive ? 'lid' : ''}';
+  Object? _lastConfigurationInputs;
+  String _lastConfigurationKey = '';
+  String _ignoredRuleKey = '';
+
+  String get _configurationKey {
+    final inputs = (
+      revision: _configuration,
+      ordinary: _service.configurationKey,
+      manual: _manualService?.configurationKey ?? '',
+      vocabulary: vocabulary.revision,
+      language: _document().proofingLanguage,
+      ignoredRules: _ignoredRuleKey,
+      detection: _detectionActive,
+    );
+    if (inputs != _lastConfigurationInputs) {
+      final language = normalizeProofingLanguage(inputs.language ?? 'de-DE');
+      _lastConfigurationKey =
+          '${inputs.revision}|${inputs.ordinary}|${inputs.manual}|'
+          '${inputs.vocabulary}|$language|${inputs.ignoredRules}|'
+          '${inputs.detection ? 'lid' : ''}';
+      _lastConfigurationInputs = inputs;
+    }
+    return _lastConfigurationKey;
+  }
 
   bool get _detectionActive =>
       !_disposed && _automaticLanguageDetection && _languageDetector != null;
@@ -1480,11 +1500,15 @@ final class WordProofingSession extends ChangeNotifier {
   }
 
   void ignoreRule(String ruleId) {
-    if (_ignoredRules.add(ruleId)) refresh();
+    if (!_ignoredRules.add(ruleId)) return;
+    _ignoredRuleKey = _ignoredRules.join(',');
+    refresh();
   }
 
   void restoreRule(String ruleId) {
-    if (_ignoredRules.remove(ruleId)) refresh();
+    if (!_ignoredRules.remove(ruleId)) return;
+    _ignoredRuleKey = _ignoredRules.join(',');
+    refresh();
   }
 
   /// Results are accepted only for the current document, revision, language,
