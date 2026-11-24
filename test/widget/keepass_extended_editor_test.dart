@@ -11,6 +11,7 @@ import 'package:crisp_cloud/widgets/keepass_editor_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Uint8List _fixture(String name) => base64.decode(
   File('test/fixtures/keepass/$name.b64')
@@ -155,6 +156,9 @@ Future<void> _nameGroup(
 }
 
 void main() {
+  // The editor's providers now read view settings from SharedPreferences.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets(
     'group controls create, rename, move and recycle without changing the original before Save',
     (tester) async {

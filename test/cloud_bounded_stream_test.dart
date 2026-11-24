@@ -418,7 +418,9 @@ void main() {
         () async {
           final adapter = await _adapter(true) as GDriveClientAdapter;
           final metadata = await adapter.readObjectMetadata('exact-doc');
-          expect(metadata['name'], 'Budget/actual');
+          // Drive names may contain '/', shown as the full-width look-alike
+          // (#272) so they stay valid path segments.
+          expect(metadata['name'], 'Budget\uFF0Factual');
           expect(metadata['downloadExtension'], 'docx');
           final children = await adapter.listObjectChildren('exact-folder');
           expect(children.map((f) => f['id']), ['exact-doc', 'second']);

@@ -612,9 +612,11 @@ void main() {
         await _tapSettled(tester, find.byIcon(Icons.format_align_center).first);
         await _tapSettled(tester, find.byTooltip('Paragraph settings…'));
         for (final entry in {
-          'Left indent (pt)': '18',
-          'Space before (pt)': '6',
-          'Space after (pt)': '18',
+          // Lengths display in the millimetre default; the suffix keeps the
+          // entered values exact in points.
+          'Left indent (mm)': '18pt',
+          'Space before (mm)': '6pt',
+          'Space after (mm)': '18pt',
           'Line spacing': '1.5',
         }.entries) {
           await tester.enterText(
@@ -630,7 +632,7 @@ void main() {
             ValueKey<String>('word-tab-position-$index'),
           );
           await tester.ensureVisible(field);
-          await tester.enterText(field, '${72 * (index + 1)}');
+          await tester.enterText(field, '${72 * (index + 1)}pt');
         }
         for (final (key, label) in [
           ('alignment-0', 'Center'),

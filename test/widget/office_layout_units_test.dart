@@ -33,12 +33,12 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       expect(
         await OfficeMeasurementPreferences.read(),
-        OfficeLengthUnit.inches,
+        OfficeLengthUnit.millimeters,
       );
-      await OfficeMeasurementPreferences.write(OfficeLengthUnit.millimeters);
+      await OfficeMeasurementPreferences.write(OfficeLengthUnit.inches);
       expect(
         await OfficeMeasurementPreferences.read(),
-        OfficeLengthUnit.millimeters,
+        OfficeLengthUnit.inches,
       );
     },
   );

@@ -42,10 +42,10 @@ class _Cloud extends WorkflowFakeClient implements FreshCloudDirectoryReader {
 
 class _Auth extends WorkspaceTestAuth {
   _Auth(super.client);
-  void disconnect() {
-    client.current = false;
-    notifyListeners();
-  }
+
+  /// Invalidate the account without the listener-driven refresh, so the
+  /// already listed rows stay on screen with a no-longer-current origin.
+  void invalidateSilently() => client.current = false;
 }
 
 class _Local extends Fake implements LocalFileService {
@@ -263,7 +263,8 @@ void main() {
         await mount(tester, _Layout.list);
         expect(find.byType(FileListTile), findsNWidgets(2));
         expect(find.text('2.0 KB'), findsOneWidget);
-        auth.disconnect();
+        auth.invalidateSilently();
+        panel.clearSelection();
         await tester.pumpAndSettle();
         expect(panel.folderSizeFor(folder('complete'))?.sourceChanged, isTrue);
         expect(find.text('2.0 KB'), findsNothing);

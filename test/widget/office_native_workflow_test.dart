@@ -696,12 +696,12 @@ Future<void> _editWord(WidgetTester tester, WordEditorController word) async {
   await _tap(tester, find.byTooltip('Bold (Ctrl+B)'));
   await _tap(tester, find.byTooltip('Paragraph settings…'));
   await tester.enterText(
-    find.widgetWithText(TextField, 'Left indent (pt)'),
-    '24',
+    find.widgetWithText(TextField, 'Left indent (mm)'),
+    '24pt',
   );
   await tester.enterText(
-    find.widgetWithText(TextField, 'Space after (pt)'),
-    '18',
+    find.widgetWithText(TextField, 'Space after (mm)'),
+    '18pt',
   );
   await _tap(tester, find.widgetWithText(ElevatedButton, 'Apply'));
 }

@@ -59,7 +59,7 @@ void main() {
   }
 
   Future<void> group(WidgetTester tester, String name) async {
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byType(PopupMenuButton<(String?,)>));
     await tester.pumpAndSettle();
     await tester.tap(find.text(name).last);
     await tester.pumpAndSettle();

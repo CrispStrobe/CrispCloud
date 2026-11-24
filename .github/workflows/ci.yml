@@ -77,8 +77,9 @@ jobs:
     name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
     # Include native streamed archive regressions and leave time for reports.
-    # The deterministic suite alone takes ~35 min on ubuntu-latest (2026-11-23).
-    timeout-minutes: 75
+    # The deterministic suite alone takes ~55 min on ubuntu-latest (2026-11-23),
+    # run as four file groups with their own 30 min limits.
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v5
@@ -260,9 +261,38 @@ jobs:
         env:
           CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
           CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
-        run: >-
-          python3 tool/with_ci_system_sqlite.py flutter test --coverage --concurrency=4
-          --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
+        # One flutter test process for the whole suite degrades after ~2200
+        # tests (~650 files): every tester then segfaults on exit and the run
+        # hangs until the job timeout (2026-11-23, also reproduced on macOS).
+        # Run disjoint file groups in fresh processes instead; --total-shards
+        # would still load every file in each shard. A per-group limit turns
+        # any hang into a fast, attributable failure.
+        run: |
+          set -uo pipefail
+          groups=4
+          mapfile -t files < <(find test -name '*_test.dart' | LC_ALL=C sort)
+          failed=()
+          for g in $(seq 0 $((groups - 1))); do
+            batch=()
+            for i in "${!files[@]}"; do
+              if [ $((i % groups)) -eq "$g" ]; then batch+=("${files[$i]}"); fi
+            done
+            echo "Test group $((g + 1))/$groups: ${#batch[@]} files"
+            free -m; df -h / "$RUNNER_TEMP"
+            if ! timeout --signal=INT --kill-after=60 30m \
+              python3 tool/with_ci_system_sqlite.py flutter test --coverage \
+              --coverage-path "coverage/lcov-$g.info" --concurrency=4 \
+              --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden \
+              "${batch[@]}"
+            then
+              failed+=("$((g + 1))")
+            fi
+          done
+          cat coverage/lcov-*.info > coverage/lcov.info 2>/dev/null || true
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Test group(s) failed: ${failed[*]}"
+            exit 1
+          fi
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

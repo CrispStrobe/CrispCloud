@@ -8,8 +8,8 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/screen_dialogs.dart';
-import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
+import 'package:crisp_cloud/widgets/legacy_word_conversion_action.dart';
 import 'package:crisp_cloud/widgets/legacy_word_conversion_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
@@ -181,101 +181,103 @@ void main() {
     },
   );
 
-  testWidgets('F4 DOC creates a sibling and opens its captured rich editor', (
-    tester,
-  ) async {
-    final harness = await WorkspaceTestHarness.create();
-    addTearDown(harness.dispose);
-    final original = legacyWordFixture('Body 世界\rSecond paragraph\r');
-    harness.cloud.put('/one/legacy.doc', original);
-    harness.cloud.directories.add('/other');
-    final panel = harness.container.read(panelProvider(_side));
-    await panel.navigateToPath('/one');
-    final file = panel.displayedFiles!.singleWhere(
-      (file) => file.name == 'legacy.doc',
-    );
-    await _mount(
-      tester,
-      harness,
-      (context, ref) => TextButton(
-        onPressed: () => showFileEditorDialog(context, ref, file, _side),
-        child: const Text('F4'),
-      ),
-    );
-    await tester.tap(find.text('F4'));
-    await tester.pumpAndSettle();
-    expect(find.byType(LegacyWordConversionDialog), findsOneWidget);
-    await tester.runAsync(
-      () => _until(
-        tester,
-        () => find
-            .byKey(const ValueKey('word-conversion-method'))
-            .evaluate()
-            .isNotEmpty,
-      ),
-    );
-    await tester.tap(find.byKey(const ValueKey('word-conversion-method')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Text only (built in)').last);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Formatting, page layout'), findsOneWidget);
-    // A pane navigation during the disclosure must not redirect the output.
-    await panel.navigateToPath('/other');
-    await tester.runAsync(() async {
-      await tester.tap(find.text('Create text-only DOCX'));
-      await _until(
-        tester,
-        () => find.byType(QudsWordEditor).evaluate().isNotEmpty,
+  testWidgets(
+    'Convert to DOCX creates a sibling and opens its captured rich editor',
+    (tester) async {
+      final harness = await WorkspaceTestHarness.create();
+      addTearDown(harness.dispose);
+      final original = legacyWordFixture('Body 世界\rSecond paragraph\r');
+      harness.cloud.put('/one/legacy.doc', original);
+      harness.cloud.directories.add('/other');
+      final panel = harness.container.read(panelProvider(_side));
+      await panel.navigateToPath('/one');
+      final file = panel.displayedFiles!.singleWhere(
+        (file) => file.name == 'legacy.doc',
       );
-    });
-    const output = '/one/legacy (text).docx';
-    expect(harness.cloud.files['/one/legacy.doc'], orderedEquals(original));
-    expect(harness.cloud.files.containsKey(output), isTrue);
-    expect(
-      harness.cloud.files.keys.where((p) => p.startsWith('/other/')),
-      isEmpty,
-    );
-    final editor = tester.widget<OfficeEditorDialog>(
-      find.byType(OfficeEditorDialog),
-    );
-    expect(editor.file.path, output);
-    expect(editor.targetOverride!.reference.path, output);
-    expect(editor.bytesOverride, isNull);
-    expect(panel.currentPath, '/other');
-    expect(find.textContaining('cannot be edited safely'), findsNothing);
-    final controller =
-        tester
-                .widget<OfficeEditorRibbon>(find.byType(OfficeEditorRibbon))
-                .controller
-            as WordEditorController;
-    controller.insertText('Edited copy ');
-    await tester.pump();
-    await tester.runAsync(() async {
-      await tester.tap(find.byTooltip('Save'));
-      await _until(tester, () => !controller.isDirty);
-    });
-    // Inspect the actual captured upload independently of the Quds reader.
-    final saved = archive.ZipDecoder().decodeBytes(
-      Uint8List.fromList(harness.cloud.files[output]!),
-    );
-    final body = xml.XmlDocument.parse(
-      utf8.decode(saved.findFile('word/document.xml')!.content as List<int>),
-    );
-    const wordNs =
-        'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-    final uploadedText = body
-        .findAllElements('t', namespace: wordNs)
-        .map((node) => node.innerText)
-        .join();
-    expect(uploadedText, contains('Edited copy Body 世界'));
-    expect(uploadedText, contains('Second paragraph'));
-    expect(harness.cloud.files['/one/legacy.doc'], orderedEquals(original));
-    expect(
-      harness.cloud.files.keys.where((path) => path.startsWith('/other/')),
-      isEmpty,
-    );
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
+      await _mount(
+        tester,
+        harness,
+        (context, ref) => TextButton(
+          onPressed: () =>
+              showLegacyWordConversionForFile(context, ref, file, _side),
+          child: const Text('F4'),
+        ),
+      );
+      await tester.tap(find.text('F4'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LegacyWordConversionDialog), findsOneWidget);
+      await tester.runAsync(
+        () => _until(
+          tester,
+          () => find
+              .byKey(const ValueKey('word-conversion-method'))
+              .evaluate()
+              .isNotEmpty,
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('word-conversion-method')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Text only (built in)').last);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Formatting, page layout'), findsOneWidget);
+      // A pane navigation during the disclosure must not redirect the output.
+      await panel.navigateToPath('/other');
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Create text-only DOCX'));
+        await _until(
+          tester,
+          () => find.byType(QudsWordEditor).evaluate().isNotEmpty,
+        );
+      });
+      const output = '/one/legacy (text).docx';
+      expect(harness.cloud.files['/one/legacy.doc'], orderedEquals(original));
+      expect(harness.cloud.files.containsKey(output), isTrue);
+      expect(
+        harness.cloud.files.keys.where((p) => p.startsWith('/other/')),
+        isEmpty,
+      );
+      final editor = tester.widget<OfficeEditorDialog>(
+        find.byType(OfficeEditorDialog),
+      );
+      expect(editor.file.path, output);
+      expect(editor.targetOverride!.reference.path, output);
+      expect(editor.bytesOverride, isNull);
+      expect(panel.currentPath, '/other');
+      expect(find.textContaining('cannot be edited safely'), findsNothing);
+      final controller =
+          tester
+                  .widget<OfficeEditorRibbon>(find.byType(OfficeEditorRibbon))
+                  .controller
+              as WordEditorController;
+      controller.insertText('Edited copy ');
+      await tester.pump();
+      await tester.runAsync(() async {
+        await tester.tap(find.byTooltip('Save'));
+        await _until(tester, () => !controller.isDirty);
+      });
+      // Inspect the actual captured upload independently of the Quds reader.
+      final saved = archive.ZipDecoder().decodeBytes(
+        Uint8List.fromList(harness.cloud.files[output]!),
+      );
+      final body = xml.XmlDocument.parse(
+        utf8.decode(saved.findFile('word/document.xml')!.content as List<int>),
+      );
+      const wordNs =
+          'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+      final uploadedText = body
+          .findAllElements('t', namespace: wordNs)
+          .map((node) => node.innerText)
+          .join();
+      expect(uploadedText, contains('Edited copy Body 世界'));
+      expect(uploadedText, contains('Second paragraph'));
+      expect(harness.cloud.files['/one/legacy.doc'], orderedEquals(original));
+      expect(
+        harness.cloud.files.keys.where((path) => path.startsWith('/other/')),
+        isEmpty,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

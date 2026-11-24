@@ -84,6 +84,11 @@ void main() {
     await tester.tap(find.text('Show'));
     await tester.pumpAndSettle();
     expect(find.text('2 elemento(s) seleccionado(s)'), findsOneWidget);
+    // Remote targets have no trash: the dialog offers trash first and only
+    // switches to the unrecoverable wording once permanent delete is chosen.
+    expect(find.text('Mover a la papelera'), findsWidgets);
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
     expect(find.text('Eliminar sin restauración'), findsOneWidget);
     expect(
       find.textContaining('CrispCloud no puede restaurar esta eliminación.'),

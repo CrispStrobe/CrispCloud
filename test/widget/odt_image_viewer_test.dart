@@ -9,6 +9,7 @@ import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Uint8List _odtBytes() {
   const xml = '''
@@ -57,6 +58,9 @@ Future<void> _waitFor(
 }
 
 void main() {
+  // The viewer's pane providers read view settings from SharedPreferences.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('ODT pictures render from bounded package data', (tester) async {
     final bytes = _odtBytes();
     await tester.pumpWidget(
