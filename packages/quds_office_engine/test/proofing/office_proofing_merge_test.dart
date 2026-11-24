@@ -95,6 +95,26 @@ void main() {
     ]);
   });
 
+  test('one provider still sorts unsorted findings and equal starts', () {
+    final report = OfficeProofingReport(
+      request: _request,
+      results: [
+        _result('a', [
+          (8, 12, 'later', spelling, ['Y']),
+          (4, 7, 'spelling', spelling, ['إلى']),
+          (4, 7, 'grammar', OfficeProofingCategory.grammar, ['إلى']),
+          (4, 4, 'insert', OfficeProofingCategory.style, [',']),
+        ]),
+      ],
+    );
+    expect(report.findings.map((finding) => finding.ruleId), [
+      'insert',
+      'grammar',
+      'spelling',
+      'later',
+    ]);
+  });
+
   test('findings of one provider are never merged with each other', () {
     final report = OfficeProofingReport(
       request: _request,

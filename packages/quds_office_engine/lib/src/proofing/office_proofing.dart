@@ -225,6 +225,27 @@ int _categoryPriority(OfficeProofingCategory category) => switch (category) {
   OfficeProofingCategory.style => 2,
 };
 
+// One ordered provider list needs no sorting or cross-provider merge when
+// each finding has a distinct start. Equal starts still need range and
+// category ordering, including zero-width punctuation suggestions.
+List<OfficeProofingFinding>? _orderedFindingsFromOneResult(
+  List<OfficeProofingResult> results,
+) {
+  List<OfficeProofingFinding>? findings;
+  for (final result in results) {
+    if (result.status != OfficeProofingStatus.success) continue;
+    final reported = result.findings;
+    if (reported.isEmpty) continue;
+    if (findings != null) return null;
+    findings = reported;
+  }
+  if (findings == null) return const [];
+  for (var index = 1; index < findings.length; index++) {
+    if (findings[index - 1].start >= findings[index].start) return null;
+  }
+  return findings;
+}
+
 /// Successful findings in source order. Findings of different providers with
 /// the same category for the identical range and text that agree on at least
 /// one replacement are one review item: the first in provider order in
@@ -236,6 +257,9 @@ int _categoryPriority(OfficeProofingCategory category) => switch (category) {
 List<OfficeProofingFinding> _mergeAgreeingFindings(
   List<OfficeProofingResult> results,
 ) {
+  final ordered = _orderedFindingsFromOneResult(results);
+  if (ordered != null) return ordered;
+
   final order = <OfficeProofingFinding, int>{};
   final all = <OfficeProofingFinding>[];
   for (var index = 0; index < results.length; index++) {
@@ -532,6 +556,12 @@ class OfficeProofingService {
         boundaries,
       );
       if (invalid != null) throw FormatException(invalid);
+      // Reuse the built-in immutable result after validation when it needs no
+      // filtering. Custom result implementations still get copied.
+      if (result.runtimeType == OfficeProofingResult &&
+          (result.findings.isEmpty || request.ignoredRuleIds.isEmpty)) {
+        return result;
+      }
       return OfficeProofingResult(
         request: request,
         providerId: provider.id,

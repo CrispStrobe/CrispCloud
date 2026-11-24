@@ -38,6 +38,37 @@ OfficeProofingResult clean(OfficeProofingRequest r) => OfficeProofingResult(
 );
 
 void main() {
+  test('validated provider results can be shared with the report', () async {
+    final input = request('Feler, Huas', startOffset: 20);
+    final result = OfficeProofingResult(
+      request: input,
+      providerId: 'test',
+      status: OfficeProofingStatus.success,
+      findings: [
+        for (final (start, end) in [(0, 5), (7, 11)])
+          OfficeProofingFinding.forRequest(
+            input,
+            providerId: 'test',
+            start: start,
+            end: end,
+            ruleId: 'spelling',
+            message: 'Spelling',
+            category: OfficeProofingCategory.spelling,
+          ),
+      ],
+    );
+    final service = OfficeProofingService(
+      providers: [FakeProvider((_) async => result)],
+    );
+    addTearDown(service.dispose);
+
+    final report = await service.check(input);
+    expect(report.results.single, same(result));
+    expect(report.findings, orderedEquals(result.findings));
+    expect(report.findings.map((finding) => finding.start), [20, 27]);
+    expect(report.findings.clear, throwsUnsupportedError);
+  });
+
   test('missing provider is unavailable, never a clean check', () async {
     final OfficeProofingReport report = await OfficeProofingService(
       providers: <OfficeProofingProvider>[],
