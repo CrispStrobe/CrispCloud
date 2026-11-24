@@ -881,7 +881,11 @@ jobs:
           test/macos_fuse_helper_fixture_test.dart
           test/sftp_operation_localization_test.dart
           test/native_preview_error_localization_test.dart
-      - run: flutter build macos --release
+      # The Apple export preflight requires the compiled Dart runtime to embed
+      # this checkout's version+build and commit, as the release workflows do.
+      - run: |
+          flutter build macos --release \
+            --dart-define=APP_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Launch release bundle
         run: tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 12
@@ -1005,8 +1009,12 @@ jobs:
 
       - run: flutter pub get
 
+      # The Apple export preflight requires the compiled Dart runtime to embed
+      # this checkout's version+build and commit, as the release workflows do.
       - name: Build iOS (no code sign)
-        run: flutter build ios --release --no-codesign
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=APP_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Verify embedded shell framework loading
         run: |

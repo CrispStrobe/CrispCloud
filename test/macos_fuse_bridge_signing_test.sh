@@ -23,6 +23,8 @@ with open(sys.argv[1], 'rb') as source:
     actual = plistlib.load(source)
 expected = {
     'com.apple.security.cs.disable-library-validation': True,
+    # Shared with the File Provider extension; release signing expands the prefix.
+    'com.apple.security.application-groups': ['$(TeamIdentifierPrefix)crispcloud'],
 }
 assert actual == expected, f'Unexpected helper entitlements: {actual}'
 PYENTS
