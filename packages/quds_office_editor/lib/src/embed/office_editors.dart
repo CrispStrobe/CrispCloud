@@ -570,7 +570,8 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     }
     final canvas = _canvasKey.currentContext?.findRenderObject();
     if (canvas is! RenderWordCanvas) return;
-    var hit = canvas.contextHitForCaret();
+    final useBodyLineIndex = _c.canUseBodyLineIndex(canvas.laidOut);
+    var hit = canvas.contextHitForCaret(useBodyLineIndex: useBodyLineIndex);
     if (hit == null) return;
     // A reviewed range ends just after its source. Preserve explicit identity
     // as well as its offset: findings can overlap and revisions can be adjacent.
@@ -600,7 +601,10 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     final sourceOffset =
         preferredIssue?.finding.start ?? preferredRevision?.start;
     if (sourceOffset != null) {
-      hit = canvas.contextHitForCaret(proofingOffset: sourceOffset);
+      hit = canvas.contextHitForCaret(
+        proofingOffset: sourceOffset,
+        useBodyLineIndex: useBodyLineIndex,
+      );
       if (hit == null) return;
     }
     _showWordContext(

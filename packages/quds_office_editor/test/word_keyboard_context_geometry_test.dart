@@ -112,7 +112,10 @@ void main() {
     ];
 
     final normal = canvas.contextHitForCaret()!;
-    final selected = canvas.contextHitForCaret(proofingOffset: 4)!;
+    final selected = canvas.contextHitForCaret(
+      proofingOffset: 4,
+      useBodyLineIndex: true,
+    )!;
 
     expect(normal.paragraph, same(paragraph));
     expect(normal.proofingOffset, 9);
@@ -158,7 +161,7 @@ void main() {
         final caret = CaretEngine()
           ..logicalIndex = CaretEngine.logicalSpan(target).min + 1;
         final canvas = await _mount(tester, document, caret, layout: layout);
-        final hit = canvas.contextHitForCaret()!;
+        final hit = canvas.contextHitForCaret(useBodyLineIndex: true)!;
         final local = canvas.globalToLocal(hit.globalPosition);
         final expectedX = PaintRunText.caretXOnLine(
           target,
@@ -463,7 +466,9 @@ void main() {
       caret.logicalIndex = 0;
       expect(canvas.contextHitForCaret(proofingOffset: -1), isNull);
       expect(canvas.contextHitForCaret(proofingOffset: 99), isNull);
+      expect(canvas.contextHitForCaret(useBodyLineIndex: true), isNotNull);
       document.sections.single.blocks[0] = _paragraph('Source');
+      expect(canvas.contextHitForCaret(useBodyLineIndex: true), isNull);
       expect(canvas.contextHitForCaret(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       expect(canvas.contextHitForCaret(), isNull);

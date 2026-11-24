@@ -1060,6 +1060,12 @@ class WordEditorController extends OfficeController {
     return _documentLaidOut;
   }
 
+  /// Whether [layout] is the controller's current body layout.
+  bool canUseBodyLineIndex(LaidOutDocument layout) =>
+      _layoutSourceParagraphsAreLive &&
+      !_documentReplaced &&
+      identical(layout, _documentLaidOut);
+
   set documentLaidOut(LaidOutDocument value) {
     _publishDocumentLayout(value, sourceParagraphsAreLive: false);
   }

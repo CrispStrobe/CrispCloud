@@ -2117,7 +2117,13 @@ class RenderWordCanvas extends RenderBox
   /// menu remains anchored to the visual caret. Only the menu position is
   /// clamped when the caret is offscreen; the source, selection, viewport and
   /// layout are left unchanged. An unavailable or mismatched story has no hit.
-  OfficeContextHit? contextHitForCaret({int? proofingOffset}) {
+  ///
+  /// [useBodyLineIndex] is for controller-owned layouts whose line lists have
+  /// not been modified since pagination.
+  OfficeContextHit? contextHitForCaret({
+    int? proofingOffset,
+    bool useBodyLineIndex = false,
+  }) {
     if (!attached ||
         !hasSize ||
         size.isEmpty ||
@@ -2127,18 +2133,17 @@ class RenderWordCanvas extends RenderBox
         (editingHeader && editingFooter)) {
       return null;
     }
-    final paragraphs =
-        storyParagraphs ??
-        (_editingHeaderFooter
-            ? null
-            : document.paragraphs.toList(growable: false));
     final paragraphIndex = caret.paragraphIndex;
-    if (paragraphs == null ||
-        paragraphIndex < 0 ||
-        paragraphIndex >= paragraphs.length) {
-      return null;
-    }
-    final paragraph = paragraphs[paragraphIndex];
+    if (paragraphIndex < 0) return null;
+    final story = storyParagraphs;
+    final paragraph = story != null
+        ? paragraphIndex < story.length
+              ? story[paragraphIndex]
+              : null
+        : _editingHeaderFooter
+        ? null
+        : document.paragraphs.skip(paragraphIndex).firstOrNull;
+    if (paragraph == null) return null;
     final textLength = paragraph.text.length;
     final sourceOffset = proofingOffset ?? caret.logicalIndex;
     if (caret.logicalIndex < 0 ||
@@ -2152,55 +2157,63 @@ class RenderWordCanvas extends RenderBox
     LaidOutLine? caretLine;
     Offset? anchor;
     var nearestDistance = double.infinity;
-    for (var pageIndex = 0; pageIndex < laidOut.pages.length; pageIndex++) {
-      final page = laidOut.pages[pageIndex];
-      final lines = editingFooter
-          ? page.footer
-          : editingHeader
-          ? page.header
-          : page.lines;
-      for (final line in lines) {
-        if (line.pageIndex != pageIndex ||
-            line.paragraphIndex != paragraphIndex ||
-            !identical(line.sourceParagraph, paragraph) ||
-            !_caretIsOnLine(
-              line,
-              lastOfParagraph:
-                  line.glyphs.isEmpty ||
-                  CaretEngine.logicalSpan(line).max == textLength,
-            )) {
-          continue;
-        }
-        final stem = _caretPaintRect(
-          line,
-          paragraphRtl: _paragraphRtl(paragraphIndex, line: line),
-        );
-        final position = windowForPagePoint(pageIndex, stem.bottomLeft);
-        if (!position.dx.isFinite || !position.dy.isFinite) continue;
-        final visiblePosition = Offset(
-          position.dx.clamp(0.0, math.max(0.0, size.width - 1)),
-          position.dy.clamp(0.0, math.max(0.0, size.height - 1)),
-        );
-        final distance = (position - visiblePosition).distanceSquared;
-        // Repeated headers/footers share source identity. Prefer the visible
-        // occurrence, without revealing another page or moving its caret.
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          caretPage = page;
-          caretLine = line;
-          anchor = visiblePosition;
-        }
+    for (final (:pageIndex, :line) in _contextLines(
+      paragraphIndex,
+      useBodyLineIndex:
+          useBodyLineIndex && story == null && !_editingHeaderFooter,
+    )) {
+      if (line.pageIndex != pageIndex ||
+          line.paragraphIndex != paragraphIndex ||
+          !identical(line.sourceParagraph, paragraph) ||
+          !_caretIsOnLine(
+            line,
+            lastOfParagraph:
+                line.glyphs.isEmpty ||
+                CaretEngine.logicalSpan(line).max == textLength,
+          )) {
+        continue;
+      }
+      final stem = _caretPaintRect(
+        line,
+        paragraphRtl: _paragraphRtl(
+          paragraphIndex,
+          line: line,
+          sourceParagraph:
+              !_editingHeaderFooter &&
+                  story == null &&
+                  !line.isFooter &&
+                  (line.overlayText == null || line.glyphs.isNotEmpty)
+              ? paragraph
+              : null,
+        ),
+      );
+      final position = windowForPagePoint(pageIndex, stem.bottomLeft);
+      if (!position.dx.isFinite || !position.dy.isFinite) continue;
+      final visiblePosition = Offset(
+        position.dx.clamp(0.0, math.max(0.0, size.width - 1)),
+        position.dy.clamp(0.0, math.max(0.0, size.height - 1)),
+      );
+      final distance = (position - visiblePosition).distanceSquared;
+      // Repeated headers/footers share source identity. Prefer the visible
+      // occurrence, without revealing another page or moving its caret.
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        caretPage = laidOut.pages[pageIndex];
+        caretLine = line;
+        anchor = visiblePosition;
       }
     }
     if (caretPage == null || caretLine == null || anchor == null) return null;
     final globalPosition = localToGlobal(anchor);
     if (!globalPosition.dx.isFinite || !globalPosition.dy.isFinite) return null;
 
-    var cell = _cellForLine(
-      caretPage,
-      caretLine,
-      containingFrame: _frameContaining(paragraph),
-    );
+    var cell = caretPage.frames.isEmpty
+        ? null
+        : _cellForLine(
+            caretPage,
+            caretLine,
+            containingFrame: _frameContaining(paragraph),
+          );
     if (cell != null) {
       final table = cell.table;
       final row = cell.tableRow;
@@ -2252,6 +2265,30 @@ class RenderWordCanvas extends RenderBox
       link: link,
       commentId: commentId,
     );
+  }
+
+  Iterable<({int pageIndex, LaidOutLine line})> _contextLines(
+    int paragraphIndex, {
+    required bool useBodyLineIndex,
+  }) sync* {
+    if (useBodyLineIndex) {
+      for (final entry in laidOut.bodyLineLocationsOf(paragraphIndex)) {
+        yield (pageIndex: entry.position.page, line: entry.line);
+      }
+      return;
+    }
+    for (final (pageIndex, page) in laidOut.pages.indexed) {
+      final lines = editingFooter
+          ? page.footer
+          : editingHeader
+          ? page.header
+          : page.lines;
+      for (final line in lines) {
+        if (line.paragraphIndex == paragraphIndex) {
+          yield (pageIndex: pageIndex, line: line);
+        }
+      }
+    }
   }
 
   (int, Offset) _hitPage(Offset window) {
