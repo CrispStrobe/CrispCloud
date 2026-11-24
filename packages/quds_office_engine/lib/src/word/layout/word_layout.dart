@@ -610,6 +610,9 @@ class LaidOutPage {
   _PageOrigin? _origin;
 }
 
+/// A line's position in the document's ordered pages and body lines.
+typedef WordBodyLinePosition = ({int page, int line});
+
 /// Class LaidOutDocument.
 class LaidOutDocument {
   /// LaidOutDocument API.
@@ -651,12 +654,17 @@ class LaidOutDocument {
     final index = <int, _BodyParagraphLines>{};
     for (var ordinal = 0; ordinal < pages.length; ordinal++) {
       final page = pages[ordinal];
-      for (final line in page.lines) {
+      for (final (lineOffset, line) in page.lines.indexed) {
         final group = index[line.paragraphIndex];
         if (group == null) {
-          index[line.paragraphIndex] = _BodyParagraphLines(ordinal, page, line);
+          index[line.paragraphIndex] = _BodyParagraphLines(
+            ordinal,
+            page,
+            lineOffset,
+            line,
+          );
         } else {
-          group.include(ordinal, page, line);
+          group.include(ordinal, page, lineOffset, line);
         }
       }
     }
@@ -678,16 +686,55 @@ class LaidOutDocument {
   Iterable<({LaidOutPage page, LaidOutLine line})> bodyLinesOf(
     int paragraphIndex,
   ) sync* {
+    for (final entry in bodyLineLocationsOf(paragraphIndex)) {
+      yield (page: pages[entry.position.page], line: entry.line);
+    }
+  }
+
+  /// Positions of a paragraph's lines in document order, including the last
+  /// line in that order for caret movement across wraps.
+  Iterable<
+    ({WordBodyLinePosition position, LaidOutLine line, bool lastOfParagraph})
+  >
+  bodyLineLocationsOf(int paragraphIndex) sync* {
     final group = _bodyLinesAt(paragraphIndex);
     if (group == null) return;
-    for (var ordinal = group.firstPage; ordinal <= group.lastPage; ordinal++) {
-      final page = pages[ordinal];
-      for (final line in page.lines) {
-        if (line.paragraphIndex == paragraphIndex) {
-          yield (page: page, line: line);
-        }
+    for (var page = group.firstPage; page <= group.lastPage; page++) {
+      final lines = pages[page].lines;
+      final first = page == group.firstPage ? group.firstLineOffset : 0;
+      final end = page == group.lastPage
+          ? group.lastLineOffset + 1
+          : lines.length;
+      for (var offset = first; offset < end; offset++) {
+        final line = lines[offset];
+        if (line.paragraphIndex != paragraphIndex) continue;
+        yield (
+          position: (page: page, line: offset),
+          line: line,
+          lastOfParagraph:
+              page == group.lastPage && offset == group.lastLineOffset,
+        );
       }
     }
+  }
+
+  /// Steps through ordered body lines, skipping pages with no body text.
+  LaidOutLine? bodyLineAtOffset(WordBodyLinePosition position, int delta) {
+    var page = position.page;
+    var line = position.line + delta;
+    while (page >= 0 && page < pages.length) {
+      final lines = pages[page].lines;
+      if (line < 0) {
+        page--;
+        if (page >= 0) line += pages[page].lines.length;
+      } else if (line >= lines.length) {
+        line -= lines.length;
+        page++;
+      } else {
+        return lines[line];
+      }
+    }
+    return null;
   }
 
   /// Body line that owns the selection's trailing paragraph mark.
@@ -704,7 +751,8 @@ class LaidOutDocument {
     if (identical(latest, page)) return group.maxY > line.y + 0.01;
     return page.lines.any(
       (other) =>
-          other.paragraphIndex == line.paragraphIndex && other.y > line.y + 0.01,
+          other.paragraphIndex == line.paragraphIndex &&
+          other.y > line.y + 0.01,
     );
   }
 
@@ -751,21 +799,29 @@ class LaidOutDocument {
 }
 
 class _BodyParagraphLines {
-  _BodyParagraphLines(this.firstPage, LaidOutPage page, this.firstLine)
-    : lastPage = firstPage,
+  _BodyParagraphLines(
+    this.firstPage,
+    LaidOutPage page,
+    this.firstLineOffset,
+    this.firstLine,
+  ) : lastPage = firstPage,
+      lastLineOffset = firstLineOffset,
       lastLine = firstLine,
       pageWithMaxY = page,
       maxY = firstLine.y;
 
   final int firstPage;
+  final int firstLineOffset;
   final LaidOutLine firstLine;
   int lastPage;
+  int lastLineOffset;
   LaidOutLine lastLine;
   LaidOutPage pageWithMaxY;
   double maxY;
 
-  void include(int ordinal, LaidOutPage page, LaidOutLine line) {
+  void include(int ordinal, LaidOutPage page, int offset, LaidOutLine line) {
     lastPage = ordinal;
+    lastLineOffset = offset;
     if (line.pageIndex > lastLine.pageIndex ||
         (line.pageIndex == lastLine.pageIndex && line.y > lastLine.y + 0.01)) {
       lastLine = line;

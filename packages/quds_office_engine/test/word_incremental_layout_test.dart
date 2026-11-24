@@ -88,6 +88,19 @@ void main() {
           for (final line in page.lines)
             if (line.paragraphIndex == index) (page: page, line: line),
       ];
+      final locations = layout.bodyLineLocationsOf(index).toList();
+      expect(
+        locations.map(
+          (entry) => (
+            page: layout.pages[entry.position.page],
+            line: layout.bodyLineAtOffset(entry.position, 0),
+          ),
+        ),
+        expected,
+      );
+      expect(locations.map((entry) => entry.lastOfParagraph), [
+        for (var i = 0; i < expected.length; i++) i == expected.length - 1,
+      ]);
       expect(layout.bodyLinesOf(index), expected);
       expect(layout.firstBodyLine(index), expected.firstOrNull);
       if (expected.isEmpty) {
@@ -131,6 +144,29 @@ void main() {
       check(previous, index);
       check(laid, index);
     }
+  });
+
+  test('body line offsets cross empty pages in either direction', () {
+    final first = laid.pages.first.lines.first;
+    final second = laid.pages.first.lines[1];
+    final third = laid.pages.first.lines[2];
+    final layout = LaidOutDocument(
+      pages: [
+        for (final (index, lines) in [
+          [first],
+          <LaidOutLine>[],
+          [second, third],
+        ].indexed)
+          LaidOutPage(index: index, width: 300, height: 400, lines: lines),
+      ],
+      pageSize: const WmlPageSize(width: 300, height: 400),
+    );
+    expect(layout.bodyLineAtOffset((page: 0, line: 0), 1), same(second));
+    expect(layout.bodyLineAtOffset((page: 0, line: 0), 2), same(third));
+    expect(layout.bodyLineAtOffset((page: 2, line: 1), -2), same(first));
+    expect(layout.bodyLineAtOffset((page: 2, line: 0), -1), same(first));
+    expect(layout.bodyLineAtOffset((page: 2, line: 1), 1), isNull);
+    expect(layout.bodyLineAtOffset((page: 0, line: 0), -1), isNull);
   });
 
   test('typing converges after the edited paragraph', () {

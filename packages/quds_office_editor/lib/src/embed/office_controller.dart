@@ -2664,18 +2664,24 @@ class WordEditorController extends OfficeController {
       _leaveSelectedVisual(forward: toRight);
       return;
     }
-    final List<LaidOutLine> lines = _contentLines();
-    final int index = _lineIndexOfCaret(lines);
-    if (index < 0) {
+    final layout = laidOut;
+    final current = _contentLineOfCaret(layout);
+    if (current == null) {
       moveCaret(toRight ? 1 : -1, extend: extend);
       return;
     }
     if (!extend && _selectNeighborVisual(toRight ? 1 : -1, requireEdge: true)) {
       return;
     }
-    final LaidOutLine line = lines[index];
+    final line = current.line;
     if (line.glyphs.isEmpty) {
-      _crossLaidOutLine(lines, index, toRight: toRight, extend: extend);
+      _crossLaidOutLine(
+        layout,
+        current.position,
+        line,
+        toRight: toRight,
+        extend: extend,
+      );
       return;
     }
     final int? next = CaretEngine.visualNeighbor(
@@ -2687,7 +2693,13 @@ class WordEditorController extends OfficeController {
       caret.paragraphIndex = line.paragraphIndex;
       caret.logicalIndex = next;
     } else {
-      _crossLaidOutLine(lines, index, toRight: toRight, extend: extend);
+      _crossLaidOutLine(
+        layout,
+        current.position,
+        line,
+        toRight: toRight,
+        extend: extend,
+      );
       return;
     }
     if (!extend) {
@@ -2712,27 +2724,23 @@ class WordEditorController extends OfficeController {
       _leaveSelectedVisual(forward: delta > 0);
       return;
     }
-    final List<LaidOutLine> lines = _contentLines();
-    final int index = _lineIndexOfCaret(lines);
-    if (index < 0) {
+    final layout = laidOut;
+    final current = _contentLineOfCaret(layout);
+    if (current == null) {
       moveParagraph(delta, extend: extend);
       return;
     }
-    final int nextIndex = index + delta;
-    if (nextIndex < 0 || nextIndex >= lines.length) {
-      return;
-    }
-    final LaidOutLine current = lines[index];
-    final LaidOutLine next = lines[nextIndex];
+    final next = layout.bodyLineAtOffset(current.position, delta);
+    if (next == null) return;
     if (!extend) {
-      final WmlVisual? between = _visualBetweenLines(current, next);
+      final WmlVisual? between = _visualBetweenLines(current.line, next);
       if (between != null) {
         selectedVisual = between;
         notifyListeners();
         return;
       }
     }
-    final double x = _stickyCaretX ?? _caretXOnLine(current);
+    final double x = _stickyCaretX ?? _caretXOnLine(current.line);
     _stickyCaretX = x;
     caret.paragraphIndex = next.paragraphIndex;
     caret.logicalIndex = _logicalAtX(next, x);
@@ -7502,39 +7510,17 @@ class WordEditorController extends OfficeController {
     return null;
   }
 
-  List<LaidOutLine> _contentLines() {
-    return <LaidOutLine>[
-      for (final LaidOutPage page in laidOut.pages)
-        for (final LaidOutLine line in page.lines) line,
-    ];
-  }
-
-  int _lineIndexOfCaret(List<LaidOutLine> lines) {
-    for (int i = 0; i < lines.length; i++) {
-      if (caret.isOnLine(
-        lines[i],
-        lastOfParagraph: _isLastContentLine(lines, i),
-      )) {
-        return i;
+  ({WordBodyLinePosition position, LaidOutLine line})? _contentLineOfCaret(
+    LaidOutDocument layout,
+  ) {
+    ({WordBodyLinePosition position, LaidOutLine line})? last;
+    for (final entry in layout.bodyLineLocationsOf(caret.paragraphIndex)) {
+      last = (position: entry.position, line: entry.line);
+      if (caret.isOnLine(entry.line, lastOfParagraph: entry.lastOfParagraph)) {
+        return last;
       }
     }
-    var found = -1;
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].paragraphIndex == caret.paragraphIndex) {
-        found = i;
-      }
-    }
-    return found;
-  }
-
-  static bool _isLastContentLine(List<LaidOutLine> lines, int index) {
-    final int paragraph = lines[index].paragraphIndex;
-    for (int i = index + 1; i < lines.length; i++) {
-      if (lines[i].paragraphIndex == paragraph) {
-        return false;
-      }
-    }
-    return true;
+    return last;
   }
 
   double _caretXOnLine(LaidOutLine line) {
@@ -7561,20 +7547,19 @@ class WordEditorController extends OfficeController {
   }
 
   void _crossLaidOutLine(
-    List<LaidOutLine> lines,
-    int index, {
+    LaidOutDocument layout,
+    WordBodyLinePosition position,
+    LaidOutLine current, {
     required bool toRight,
     required bool extend,
   }) {
-    final int nextIndex = toRight ? index + 1 : index - 1;
-    if (nextIndex < 0 || nextIndex >= lines.length) {
+    final next = layout.bodyLineAtOffset(position, toRight ? 1 : -1);
+    if (next == null) {
       if (!extend) {
         _selectNeighborVisual(toRight ? 1 : -1, requireEdge: true);
       }
       return;
     }
-    final LaidOutLine current = lines[index];
-    final LaidOutLine next = lines[nextIndex];
     if (!extend) {
       final WmlVisual? between = _visualBetweenLines(current, next);
       if (between != null) {
