@@ -242,12 +242,15 @@ class PdfFile {
         pageDict: rec.dict,
         hotspots: spots,
       );
-    } catch (_) {
+    } on Exception catch (error) {
+      // Keep already-painted ops and expose the failure instead of silently
+      // turning a malformed page into an unexplained blank page.
       return PdfDisplayList(
         page: rec.info,
         ops: const <PdfPaintOp>[],
         runs: const <PdfTextRun>[],
         hotspots: spots,
+        error: error.toString(),
       );
     }
   }

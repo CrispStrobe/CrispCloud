@@ -79,9 +79,17 @@ class GlyphOutlineDecoder {
   /// font API.
   final SfntFont font;
 
+  static const int _maxCompositeDepth = 16;
+
   /// decode API.
-  GlyphOutline decode(int glyphId) {
-    if (!font.hasTable('glyf') || glyphId < 0 || glyphId >= font.numGlyphs) {
+  GlyphOutline decode(int glyphId) => _decode(glyphId, 0, <int>{});
+
+  GlyphOutline _decode(int glyphId, int depth, Set<int> active) {
+    if (!font.hasTable('glyf') ||
+        glyphId < 0 ||
+        glyphId >= font.numGlyphs ||
+        depth > _maxCompositeDepth ||
+        !active.add(glyphId)) {
       return GlyphOutline(
         glyphId: glyphId,
         xMin: 0,
@@ -106,6 +114,17 @@ class GlyphOutlineDecoder {
       );
     }
     final Uint8List glyf = font.tableBytes('glyf');
+    if (start < 0 || end > glyf.length || end <= start) {
+      return GlyphOutline(
+        glyphId: glyphId,
+        xMin: 0,
+        yMin: 0,
+        xMax: 0,
+        yMax: 0,
+        commands: const <GlyphPathCommand>[],
+        componentGlyphIds: const <int>[],
+      );
+    }
     final ByteCursor cursor = ByteCursor(
       Uint8List.sublistView(glyf, start, end),
     );
@@ -127,7 +146,7 @@ class GlyphOutlineDecoder {
     }
     final List<int> components = <int>[];
     final List<GlyphPathCommand> commands = <GlyphPathCommand>[];
-    _composite(cursor, commands, components, 1, 0, 0, 1, 0, 0);
+    _composite(cursor, commands, components, 1, 0, 0, 1, 0, 0, depth, active);
     return GlyphOutline(
       glyphId: glyphId,
       xMin: xMin,
@@ -236,6 +255,8 @@ class GlyphOutlineDecoder {
     double yy,
     double dx,
     double dy,
+    int depth,
+    Set<int> active,
   ) {
     var more = true;
     while (more) {
@@ -266,7 +287,7 @@ class GlyphOutlineDecoder {
       }
       final double odx = (flags & 0x0002) != 0 ? arg1 : 0;
       final double ody = (flags & 0x0002) != 0 ? arg2 : 0;
-      final GlyphOutline child = decode(glyphIndex);
+      final GlyphOutline child = _decode(glyphIndex, depth + 1, active);
       for (final GlyphPathCommand cmd in child.commands) {
         if (cmd.op == GlyphPathOp.close) {
           commands.add(cmd);

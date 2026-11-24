@@ -4,15 +4,23 @@ import 'dart:typed_data';
 ///
 /// No `dart:io` dependency — safe on CLI, server, web, and native.
 abstract final class RawDeflate {
-  /// Inflates a raw stream, optionally limiting the bytes produced.
+  /// Output bound used when a caller does not supply a tighter one.
   ///
   /// The limit is checked before growing the output, including backreferences
   /// and stored blocks. It does not depend on an untrusted ZIP size header.
+  static const int defaultMaxOutputBytes = 256 * 1024 * 1024;
+
+  /// Inflates a raw stream, limiting the bytes produced.
+  ///
+  /// A caller can pass a tighter bound from its format or allocation budget.
+  /// Omitting it still applies [defaultMaxOutputBytes], so a future caller
+  /// cannot reintroduce an unbounded expansion path by accident.
   static Uint8List inflate(List<int> data, {int? maxOutputBytes}) {
-    if (maxOutputBytes != null && maxOutputBytes < 0) {
+    final int limit = maxOutputBytes ?? defaultMaxOutputBytes;
+    if (limit < 0) {
       throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
     }
-    return _Inflater(data, maxOutputBytes: maxOutputBytes).run();
+    return _Inflater(data, maxOutputBytes: limit).run();
   }
 
   /// deflate API.
@@ -30,7 +38,7 @@ class _Inflater {
   int _pos = 0;
   int _bitBuf = 0;
   int _bitCount = 0;
-  final List<int> _out = <int>[];
+  final _InflateBuffer _out = _InflateBuffer();
 
   void _checkOutput(int additionalBytes) {
     final limit = maxOutputBytes;
@@ -57,7 +65,7 @@ class _Inflater {
           throw const ZipDeflateException('Invalid DEFLATE block type');
       }
     }
-    return Uint8List.fromList(_out);
+    return _out.take();
   }
 
   void _stored() {
@@ -76,7 +84,7 @@ class _Inflater {
       throw const ZipDeflateException('Stored block overruns input');
     }
     _checkOutput(len);
-    _out.addAll(Uint8List.sublistView(_src, _pos, _pos + len));
+    _out.addAll(_src, _pos, _pos + len);
     _pos += len;
   }
 
@@ -85,7 +93,7 @@ class _Inflater {
       final int sym = lit.decode(this);
       if (sym < 256) {
         _checkOutput(1);
-        _out.add(sym);
+        _out.addByte(sym);
         continue;
       }
       if (sym == 256) {
@@ -107,7 +115,7 @@ class _Inflater {
       _checkOutput(length);
       final int start = _out.length - distance;
       for (int i = 0; i < length; i++) {
-        _out.add(_out[start + i]);
+        _out.addByte(_out[start + i]);
       }
     }
   }
@@ -130,16 +138,28 @@ class _Inflater {
         lengths[index++] = sym;
         prev = sym;
       } else if (sym == 16) {
+        if (prev == 0) {
+          throw const ZipDeflateException('Code-length repeat has no base');
+        }
         final int repeat = 3 + _bits(2);
+        if (repeat > lengths.length - index) {
+          throw const ZipDeflateException('Code-length repeat overruns table');
+        }
         for (int i = 0; i < repeat; i++) {
           lengths[index++] = prev;
         }
       } else if (sym == 17) {
         final int repeat = 3 + _bits(3);
+        if (repeat > lengths.length - index) {
+          throw const ZipDeflateException('Code-length repeat overruns table');
+        }
         index += repeat;
         prev = 0;
       } else if (sym == 18) {
         final int repeat = 11 + _bits(7);
+        if (repeat > lengths.length - index) {
+          throw const ZipDeflateException('Code-length repeat overruns table');
+        }
         index += repeat;
         prev = 0;
       } else {
@@ -185,6 +205,39 @@ class _Inflater {
 
   /// fromLengths API.
   static _Huffman _fixedDist() => _Huffman.fromLengths(List<int>.filled(32, 5));
+}
+
+class _InflateBuffer {
+  Uint8List _bytes = Uint8List(1024);
+  int length = 0;
+
+  int operator [](int index) => _bytes[index];
+
+  void addByte(int value) {
+    _grow(1);
+    _bytes[length++] = value;
+  }
+
+  void addAll(Uint8List source, int start, int end) {
+    final int count = end - start;
+    _grow(count);
+    _bytes.setRange(length, length + count, source, start);
+    length += count;
+  }
+
+  Uint8List take() => Uint8List.sublistView(_bytes, 0, length);
+
+  void _grow(int additional) {
+    final int needed = length + additional;
+    if (needed <= _bytes.length) return;
+    var capacity = _bytes.length;
+    while (capacity < needed) {
+      capacity <<= 1;
+    }
+    final Uint8List next = Uint8List(capacity);
+    next.setRange(0, length, _bytes);
+    _bytes = next;
+  }
 }
 
 class _Deflater {

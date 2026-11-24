@@ -9,6 +9,10 @@ import 'sfnt_parser.dart';
 class GposMarkToBase {
   GposMarkToBase._(this._tables);
 
+  static const int _maxLookups = 4096;
+  static const int _maxSubtablesPerLookup = 4096;
+  static const int _maxCoverageGlyphs = 4096;
+
   final List<_MarkToBaseTable> _tables;
 
   static final Expando<GposMarkToBase> _cache = Expando<GposMarkToBase>();
@@ -137,6 +141,9 @@ class GposMarkToBase {
     }
     gpos.seek(lookupListOff);
     final int lookupCount = gpos.u16be();
+    if (lookupCount > _maxLookups) {
+      return const <_MarkToBaseTable>[];
+    }
     final List<int> lookupOffs = <int>[
       for (int i = 0; i < lookupCount && gpos.remaining >= 2; i++)
         lookupListOff + gpos.u16be(),
@@ -160,6 +167,9 @@ class GposMarkToBase {
     final int lookupType = cur.u16be();
     final int lookupFlag = cur.u16be();
     final int subCount = cur.u16be();
+    if (subCount > _maxSubtablesPerLookup) {
+      return;
+    }
     final List<int> subOffs = <int>[
       for (int i = 0; i < subCount && cur.remaining >= 2; i++)
         lookupAbs + cur.u16be(),
@@ -266,6 +276,9 @@ class GposMarkToBase {
           continue;
         }
         for (int g = start; g <= end; g++) {
+          if (map.length >= _maxCoverageGlyphs) {
+            return map;
+          }
           map[g] = index++;
         }
       }
@@ -292,11 +305,7 @@ class GposMarkToBase {
           ? null
           : _anchor(bytes, abs + anchorOff);
       if (anchor != null) {
-        byIndex[i] = _MarkRec(
-          markClass: markClass,
-          x: anchor.x,
-          y: anchor.y,
-        );
+        byIndex[i] = _MarkRec(markClass: markClass, x: anchor.x, y: anchor.y);
       }
     }
     for (final MapEntry<int, int> e in coverage.entries) {

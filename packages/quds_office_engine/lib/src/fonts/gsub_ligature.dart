@@ -11,6 +11,10 @@ import 'sfnt_parser.dart';
 class GsubLigatures {
   GsubLigatures._(this._sets);
 
+  /// Bounds that keep a hostile font table from parser amplification.
+  static const int _maxLookups = 4096;
+  static const int _maxSubtablesPerLookup = 4096;
+
   final Map<int, List<_Ligature>> _sets;
 
   static final Expando<GsubLigatures> _cache = Expando<GsubLigatures>();
@@ -90,7 +94,9 @@ class GsubLigatures {
     if (_sets.isEmpty || glyphs.length < 2) {
       return glyphs;
     }
-    final List<int> ids = apply(<int>[for (final ShapedGlyph g in glyphs) g.glyphId]);
+    final List<int> ids = apply(<int>[
+      for (final ShapedGlyph g in glyphs) g.glyphId,
+    ]);
     if (ids.length == glyphs.length) {
       return glyphs;
     }
@@ -109,8 +115,8 @@ class GsubLigatures {
       var end = src + 1;
       while (end < glyphs.length &&
           apply(<int>[
-            for (int k = src; k <= end; k++) glyphs[k].glyphId,
-          ]).length !=
+                for (int k = src; k <= end; k++) glyphs[k].glyphId,
+              ]).length !=
               1) {
         advance += glyphs[end].advance;
         end++;
@@ -151,6 +157,9 @@ class GsubLigatures {
     }
     final ByteCursor list = ByteCursor(bytes, offset: lookupList);
     final int count = list.u16be();
+    if (count > _maxLookups) {
+      return const <int, List<_Ligature>>{};
+    }
     final Map<int, List<_Ligature>> sets = <int, List<_Ligature>>{};
     for (int i = 0; i < count; i++) {
       if (list.remaining < 2) {
@@ -174,7 +183,7 @@ class GsubLigatures {
     final int type = c.u16be();
     c.u16be();
     final int subCount = c.u16be();
-    if (type != 4) {
+    if (type != 4 || subCount > _maxSubtablesPerLookup) {
       return;
     }
     for (int i = 0; i < subCount; i++) {
@@ -209,9 +218,9 @@ class GsubLigatures {
         ? coverage.length
         : setOffsets.length;
     for (int i = 0; i < n; i++) {
-      sets.putIfAbsent(coverage[i], () => <_Ligature>[]).addAll(
-        _ligatureSet(bytes, setOffsets[i]),
-      );
+      sets
+          .putIfAbsent(coverage[i], () => <_Ligature>[])
+          .addAll(_ligatureSet(bytes, setOffsets[i]));
     }
   }
 
@@ -252,7 +261,9 @@ class GsubLigatures {
     final int format = c.u16be();
     final int count = c.u16be();
     if (format == 1) {
-      return <int>[for (int i = 0; i < count && c.remaining >= 2; i++) c.u16be()];
+      return <int>[
+        for (int i = 0; i < count && c.remaining >= 2; i++) c.u16be(),
+      ];
     }
     if (format == 2) {
       final List<int> glyphs = <int>[];

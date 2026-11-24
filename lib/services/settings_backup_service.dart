@@ -62,6 +62,7 @@ class SettingsBackup {
     'quick_search_arrow_navigation': bool,
     'quick_search_reset_seconds': int,
     'panel.spaceAdvancesCursor.v1': bool,
+    'panel.cache.maxFolders.v1': int,
     'file_type_color_rules_v1': String,
     'file_type_color_enabled_v1': bool,
     'accessibility_high_contrast': bool,

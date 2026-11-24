@@ -7,10 +7,12 @@
 import '../models/file_item.dart';
 
 class DirectoryCacheService {
+  DirectoryCacheService({this.maxEntries = 200});
+
   // Key: "source_type:provider_or_local:path"
   final Map<String, _CachedListing> _cache = {};
 
-  static const _maxEntries = 200;
+  int maxEntries;
 
   /// Build a cache key from source descriptor + path.
   static String key(String sourceKey, String path) => '$sourceKey:$path';
@@ -25,6 +27,7 @@ class DirectoryCacheService {
 
   /// Store a listing in the cache.
   void put(String cacheKey, List<FileItem> files) {
+    if (maxEntries <= 0) return;
     _cache[cacheKey] = _CachedListing(
       files: List.of(files),
       cachedAt: DateTime.now(),
@@ -40,11 +43,15 @@ class DirectoryCacheService {
   void clear() => _cache.clear();
 
   void _evictIfNeeded() {
-    if (_cache.length <= _maxEntries) return;
+    if (maxEntries <= 0) {
+      _cache.clear();
+      return;
+    }
+    if (_cache.length <= maxEntries) return;
     // Evict least recently accessed entries.
     final sorted = _cache.entries.toList()
       ..sort((a, b) => a.value.lastAccessed.compareTo(b.value.lastAccessed));
-    final toRemove = sorted.take(_cache.length - _maxEntries);
+    final toRemove = sorted.take(_cache.length - maxEntries);
     for (final e in toRemove) {
       _cache.remove(e.key);
     }

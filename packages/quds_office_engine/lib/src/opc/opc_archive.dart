@@ -20,6 +20,12 @@ enum OpcPackageKind { word, sheet, slide, unknown }
 /// Part payloads are loaded lazily from the source ZIP the first time they
 /// are read. Mutations stay in heap until [save] rebuilds the archive.
 class OpcPackage {
+  /// Maximum decoded bytes for one package part loaded lazily.
+  static const int maxPartBytes = 256 * 1024 * 1024;
+
+  /// Maximum central-directory entries accepted for a package.
+  static const int maxEntries = 100000;
+
   OpcPackage._({
     required this.contentTypes,
     required this._packageRelationships,
@@ -57,10 +63,12 @@ class OpcPackage {
         OfficeCrypto.unlock(source.read(0, source.length), password: password),
       );
     }
-    final ZipReader zip = ZipReader.open(zipSource);
+    final ZipReader zip = ZipReader.open(zipSource, maxEntries: maxEntries);
     final ContentTypes types;
     if (zip.contains('[Content_Types].xml')) {
-      types = ContentTypes.parse(utf8.decode(zip.read('[Content_Types].xml')));
+      types = ContentTypes.parse(
+        utf8.decode(zip.read('[Content_Types].xml', maxBytes: maxPartBytes)),
+      );
     } else {
       types = ContentTypes.standard();
     }
@@ -70,7 +78,7 @@ class OpcPackage {
     );
     if (zip.contains('_rels/.rels')) {
       packageRels = RelationshipCollection.parse(
-        utf8.decode(zip.read('_rels/.rels')),
+        utf8.decode(zip.read('_rels/.rels', maxBytes: maxPartBytes)),
         '/',
       );
     }
@@ -93,7 +101,7 @@ class OpcPackage {
         final String? owner = OpcUris.sourcePartForRelationships(opcUri);
         if (owner != null && owner != '/') {
           package._partRels[owner] = RelationshipCollection.parse(
-            utf8.decode(zip.read(entry.fileName)),
+            utf8.decode(zip.read(entry.fileName, maxBytes: maxPartBytes)),
             owner,
           );
         }
@@ -403,7 +411,7 @@ class OpcPackage {
     if (!zip.contains(zipName)) {
       return;
     }
-    part.loadSourceBytes(zip.read(zipName));
+    part.loadSourceBytes(zip.read(zipName, maxBytes: maxPartBytes));
   }
 }
 

@@ -1128,15 +1128,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
             ],
           ),
-        PlatformMenuItemGroup(
-          members: [
-            for (final command in _fixedBrowserMenuBindings(
-              context,
-              ref,
-            ).where((command) => command.id != 'settings'))
-              command.platform(),
-          ],
-        ),
       ],
     );
 

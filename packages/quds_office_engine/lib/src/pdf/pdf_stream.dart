@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../opc/zip/deflate_codec.dart';
+import 'file/cos/pdf_open_error.dart';
 
 /// FlateDecode wrapper for PDF content and font streams.
 abstract final class PdfFlate {
@@ -11,12 +12,24 @@ abstract final class PdfFlate {
     return _zlibWrap(raw, data);
   }
 
+  /// Maximum decoded bytes for a single Flate stream.
+  ///
+  /// Raw stream data is already capped before it reaches here; this bound is
+  /// the second, ratio-independent guard against a DEFLATE expansion bomb.
+  static const int maxDecodedBytes = 64 * 1024 * 1024;
+
   /// Inflates a FlateDecode stream (zlib, or raw DEFLATE if the wrapper is absent).
   ///
   /// Producers often omit or truncate the Adler-32 trailer. The inflater stops
   /// at BFINAL, so leftover checksum bytes are ignored — they must not be
   /// sliced off before inflate.
-  static Uint8List decompress(Uint8List data) {
+  static Uint8List decompress(
+    Uint8List data, {
+    int maxOutputBytes = maxDecodedBytes,
+  }) {
+    if (maxOutputBytes < 0) {
+      throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
+    }
     if (data.length < 2) {
       throw const FormatException('Truncated Flate stream');
     }
@@ -29,17 +42,29 @@ abstract final class PdfFlate {
         start = 6;
       }
       try {
-        return RawDeflate.inflate(Uint8List.sublistView(data, start));
+        return _inflate(Uint8List.sublistView(data, start), maxOutputBytes);
       } on ZipDeflateException {
         if (data.length > start + 4) {
-          return RawDeflate.inflate(
+          return _inflate(
             Uint8List.sublistView(data, start, data.length - 4),
+            maxOutputBytes,
           );
         }
         rethrow;
       }
     }
-    return RawDeflate.inflate(data);
+    return _inflate(data, maxOutputBytes);
+  }
+
+  static Uint8List _inflate(Uint8List data, int maxOutputBytes) {
+    try {
+      return RawDeflate.inflate(data, maxOutputBytes: maxOutputBytes);
+    } on ZipDeflateLimitException {
+      throw const PdfOpenException(
+        PdfOpenError.limit,
+        'Decoded Flate stream exceeds its limit',
+      );
+    }
   }
 
   static bool _isZlibHeader(int cmf, int flg) {

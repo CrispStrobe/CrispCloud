@@ -15,6 +15,9 @@ import 'pdf_display_list.dart';
 
 /// Interprets a page content stream into a [PdfDisplayList].
 class PdfInterpreter {
+  /// Maximum source pixels for one image XObject or inline image.
+  static const int maxImagePixels = 32 * 1024 * 1024;
+
   /// PdfInterpreter API.
   PdfInterpreter(this.store, {this.maxFormDepth = 32, List<PdfLayer>? layers})
     : layers = layers ?? const <PdfLayer>[];
@@ -604,18 +607,39 @@ class PdfInterpreter {
     final double h = pdfCosNumber(raw.dict['Height']) ?? 1;
     final (double x, double y) = frame.map(0, 0);
     final (double x1, double y1) = frame.map(1, 1);
+    final int pw = w.isFinite ? w.round() : 0;
+    final int ph = h.isFinite ? h.round() : 0;
+    if (pw < 1 ||
+        ph < 1 ||
+        pw > 65535 ||
+        ph > 65535 ||
+        pw * ph > maxImagePixels) {
+      frame.ops.add(
+        PdfDrawImage(
+          x: math.min(x, x1),
+          y: math.min(y, y1),
+          width: (x1 - x).abs().clamp(1, 100000),
+          height: (y1 - y).abs().clamp(1, 100000),
+          bytes: Uint8List(0),
+          jpeg: false,
+          placeholder: true,
+          pixelWidth: 0,
+          pixelHeight: 0,
+          blend: frame.blend,
+        ),
+      );
+      return;
+    }
     final PdfFilterResult decoded = store.streamResult(raw);
     final bool jpeg = _isJpeg(raw.dict);
     var pixels = decoded.bytes ?? Uint8List(0);
-    final int pw = w.round();
-    final int ph = h.round();
     final bool imageMask =
         _flag(raw.dict['ImageMask']) || _flag(raw.dict['IM']);
     final int bpc =
         pdfCosInt(raw.dict['BitsPerComponent']) ?? (imageMask ? 1 : 8);
     final bool invert = _decodeInverts(raw.dict);
     var hasAlpha = false;
-    if (imageMask && !jpeg) {
+    if (imageMask && !jpeg && pixels.isNotEmpty) {
       pixels = _stencilRgba(pixels, pw, ph, bpc, frame.fill, invert);
       hasAlpha = true;
     } else if (!jpeg && pixels.isNotEmpty) {
@@ -1223,7 +1247,14 @@ class PdfInterpreter {
     final int width = pdfCosInt(dict['Width'] ?? dict['W']) ?? 0;
     final int height = pdfCosInt(dict['Height'] ?? dict['H']) ?? 0;
     final int bpc = pdfCosInt(dict['BitsPerComponent'] ?? dict['BPC']) ?? 8;
-    final int row = width <= 0 ? 0 : ((width * bpc + 7) ~/ 8);
+    if (width < 1 ||
+        height < 1 ||
+        width > 65535 ||
+        height > 65535 ||
+        width * height > maxImagePixels) {
+      return;
+    }
+    final int row = ((width * bpc + 7) ~/ 8);
     final int need = row * height;
     final Uint8List raw = lex.take(need);
     lex.skipWs();

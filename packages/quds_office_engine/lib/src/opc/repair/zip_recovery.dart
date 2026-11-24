@@ -116,7 +116,10 @@ abstract final class ZipRecovery {
       Uint8List raw;
       try {
         raw = method == zipMethodDeflate
-            ? RawDeflate.inflate(payload)
+            ? RawDeflate.inflate(
+                payload,
+                maxOutputBytes: ZipReader.maxRelaxedBytes,
+              )
             : Uint8List.fromList(payload);
       } on Object {
         raw = Uint8List.fromList(payload);

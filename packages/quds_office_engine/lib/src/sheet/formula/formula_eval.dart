@@ -631,8 +631,8 @@ class FormulaEvaluator {
   }
 
   /// recalculate API.
-  static List<String> recalculate(SmlWorkbook book) =>
-      FormulaDepGraph(book).recalculate();
+  static List<String> recalculate(SmlWorkbook book, {FormulaBudget? budget}) =>
+      FormulaDepGraph(book).recalculate(budget: budget);
 
   static void _writeSpill(
     SmlWorksheet sheet,

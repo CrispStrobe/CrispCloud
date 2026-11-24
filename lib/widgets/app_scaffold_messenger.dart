@@ -13,7 +13,7 @@ class TransientSnackBar extends SnackBar {
     required super.content,
     super.action,
     super.backgroundColor,
-  }) : super(duration: const Duration(seconds: 30), persist: false);
+  }) : super(duration: const Duration(seconds: 10), persist: false);
 }
 
 /// Applies the same dismissal policy to root and editor-local notifications.
@@ -47,7 +47,9 @@ class _AppScaffoldMessengerState extends ScaffoldMessengerState {
     }
     Timer? timer;
     late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
-    final seconds = snackBar is TransientSnackBar ? 30 : settings.seconds;
+    final seconds = snackBar is TransientSnackBar
+        ? snackBar.duration.inSeconds
+        : settings.seconds;
     final duration = Duration(seconds: seconds == 0 ? 31536000 : seconds);
     final replacement = SnackBar(
       key: snackBar.key,

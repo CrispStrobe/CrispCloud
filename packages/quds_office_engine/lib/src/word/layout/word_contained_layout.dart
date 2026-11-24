@@ -17,6 +17,11 @@ part of 'word_layout.dart';
   required double originX,
   required double maxWidth,
 }) {
+  if (owner._containedTableDepth > 64 || owner._containedMeasureDepth > 128) {
+    throw const FormatException(
+      'Word contained-block nesting exceeds the safe limit',
+    );
+  }
   var cursor = y;
   var nextParagraph = paragraphIndex;
   switch (block) {

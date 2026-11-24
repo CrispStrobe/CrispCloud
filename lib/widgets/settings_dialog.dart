@@ -35,6 +35,7 @@ import 'biometric_vault_settings_tile.dart';
 import '../services/biometric_vault_unlock.dart';
 import '../services/secure_storage_web.dart';
 import '../providers/quick_search_provider.dart';
+import '../providers/panel_cache_provider.dart';
 import '../providers/folder_sort_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -128,6 +129,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             const CredentialStorageSettingsSection(),
           ],
           _SettingsPage.storage => [
+            _PanelCacheSection(),
             _CacheSection(),
             _AdvancedSection(),
             const StorageToolsSettings(),
@@ -616,6 +618,58 @@ class _LanguageSection extends ConsumerWidget {
           child: Text(
             s.text(
               'The selected language is stored locally and restored on the next launch.',
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: in-memory folder listing cache
+// ---------------------------------------------------------------------------
+
+class _PanelCacheSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
+    final settings = ref.watch(panelCacheSettingsProvider);
+    final notifier = ref.read(panelCacheSettingsProvider.notifier);
+    return _Section(
+      title: s.text('Folder listing cache'),
+      icon: Icons.folder_copy_outlined,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.speed),
+          title: Text(s.text('Folders kept in memory')),
+          subtitle: Text(
+            settings.maxFolders == 0
+                ? s.text('Off: every visit reads the folder again')
+                : s.text('Least-recently-used folders are discarded'),
+          ),
+          trailing: DropdownButton<int>(
+            key: const Key('settings_panel_cache_folders'),
+            value: settings.maxFolders,
+            onChanged: (value) {
+              if (value != null) notifier.setMaxFolders(value);
+            },
+            items: const [
+              DropdownMenuItem(value: 0, child: Text('Off')),
+              DropdownMenuItem(value: 50, child: Text('50')),
+              DropdownMenuItem(value: 100, child: Text('100')),
+              DropdownMenuItem(value: 200, child: Text('200')),
+              DropdownMenuItem(value: 500, child: Text('500')),
+              DropdownMenuItem(value: 1000, child: Text('1000')),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(
+            s.text(
+              'This cache is in memory only. It never changes files or survives an app restart.',
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),

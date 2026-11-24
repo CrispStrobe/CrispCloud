@@ -121,10 +121,11 @@ class WordDeserializer {
   final Map<WmlTable, _TableLook> _tableLooks =
       Map<WmlTable, _TableLook>.identity();
 
-  final _runPropertyCache = <
-    (Map<String, String>, String, bool),
-    ({WmlRunProps props, String xml, bool notBold, bool notItalic})
-  >{};
+  final _runPropertyCache =
+      <
+        (Map<String, String>, String, bool),
+        ({WmlRunProps props, String xml, bool notBold, bool notItalic})
+      >{};
 
   /// read API.
   WmlDocument read(OpcPackage package) {
@@ -2844,7 +2845,12 @@ class WordDeserializer {
     }
   }
 
+  static const int _maxTableXmlDepth = 128;
+
   WmlTable _readTable(XmlPullReader reader, OpcPackage package, String docUri) {
+    if (reader.depth > _maxTableXmlDepth) {
+      throw const FormatException('Word table nesting exceeds the safe limit');
+    }
     final WmlTable table = WmlTable(
       properties: WmlTableProps(borders: false)..sourcePropertiesXml = '',
     );
@@ -3990,8 +3996,7 @@ class WordDeserializer {
         left: indent?.getAttribute('left') == null
             ? base?.left ?? 0
             : twipsToPoints(int.tryParse(indent!.getAttribute('left')!) ?? 0),
-        suffix:
-            node.firstChild('suff')?.getAttribute('val') ?? base?.suffix,
+        suffix: node.firstChild('suff')?.getAttribute('val') ?? base?.suffix,
         hanging: indent?.getAttribute('hanging') == null
             ? base?.hanging ?? 0
             : twipsToPoints(

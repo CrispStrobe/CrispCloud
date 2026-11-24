@@ -36,6 +36,9 @@ class PdfRaster {
 
 /// PNG (IHDR/IDAT) and JPEG embedding helpers. No Flutter / `dart:ui`.
 abstract final class PdfImageCodec {
+  /// Maximum source pixels decoded into an RGB buffer (32 MP ≈ 96 MiB RGB).
+  static const int maxPixels = 32 * 1024 * 1024;
+
   /// decode API.
   static PdfRaster? decode(Uint8List bytes) {
     return decodePng(bytes) ?? decodeJpeg(bytes);
@@ -66,7 +69,11 @@ abstract final class PdfImageCodec {
       final int len = (bytes[i + 2] << 8) | bytes[i + 3];
       i += 2 + len;
     }
-    if (width <= 0 || height <= 0) {
+    if (width <= 0 ||
+        height <= 0 ||
+        width > 65535 ||
+        height > 65535 ||
+        width * height > maxPixels) {
       return null;
     }
     return PdfRaster(
@@ -79,14 +86,46 @@ abstract final class PdfImageCodec {
 
   /// decodePng API.
   static PdfRaster? decodePng(Uint8List bytes) {
+    final ({int width, int height})? size = _pngSize(bytes);
+    if (size == null ||
+        size.width > 65535 ||
+        size.height > 65535 ||
+        size.width * size.height > maxPixels) {
+      return null;
+    }
     final raster = _decodePngCore(bytes);
     return raster ?? _decodePngWithPackage(bytes);
+  }
+
+  static ({int width, int height})? _pngSize(Uint8List bytes) {
+    if (bytes.length < 24 ||
+        bytes[0] != 0x89 ||
+        bytes[1] != 0x50 ||
+        bytes[2] != 0x4E ||
+        bytes[3] != 0x47 ||
+        bytes[12] != 0x49 ||
+        bytes[13] != 0x48 ||
+        bytes[14] != 0x44 ||
+        bytes[15] != 0x52) {
+      return null;
+    }
+    final width =
+        (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+    final height =
+        (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+    if (width <= 0 || height <= 0) return null;
+    return (width: width, height: height);
   }
 
   static PdfRaster? _decodePngWithPackage(Uint8List bytes) {
     try {
       final decoded = img.decodePng(bytes);
-      if (decoded == null) return null;
+      if (decoded == null ||
+          decoded.width <= 0 ||
+          decoded.height <= 0 ||
+          decoded.width * decoded.height > maxPixels) {
+        return null;
+      }
       final rgba = decoded
           .convert(numChannels: 4)
           .getBytes(order: img.ChannelOrder.rgba);
@@ -157,16 +196,37 @@ abstract final class PdfImageCodec {
       }
       offset = dataAt + len + 4;
     }
-    if (width <= 0 || height <= 0 || bitDepth != 8) {
+    if (width <= 0 ||
+        height <= 0 ||
+        bitDepth != 8 ||
+        width > 65535 ||
+        height > 65535 ||
+        width * height > maxPixels) {
       return null;
     }
+    final int channelsForLimit = switch (colorType) {
+      0 => 1,
+      2 => 3,
+      3 => 1,
+      4 => 2,
+      6 => 4,
+      _ => 0,
+    };
+    if (channelsForLimit == 0) return null;
+    final int expectedRaw = width * height * channelsForLimit + height;
     final Uint8List compressed = idat.takeBytes();
     if (compressed.length < 6) {
       return null;
     }
-    final Uint8List raw = RawDeflate.inflate(
-      compressed.sublist(2, compressed.length - 4),
-    );
+    final Uint8List raw;
+    try {
+      raw = RawDeflate.inflate(
+        compressed.sublist(2, compressed.length - 4),
+        maxOutputBytes: expectedRaw,
+      );
+    } on ZipDeflateException {
+      return null;
+    }
     final int channels = switch (colorType) {
       0 => 1,
       2 => 3,

@@ -11,6 +11,7 @@ class PdfDisplayList {
     List<PdfPaintOp>? ops,
     List<PdfTextRun>? runs,
     List<PdfHotspot>? hotspots,
+    this.error,
   }) : ops = ops ?? <PdfPaintOp>[],
        runs = runs ?? <PdfTextRun>[],
        hotspots = hotspots ?? <PdfHotspot>[];
@@ -26,6 +27,17 @@ class PdfDisplayList {
 
   /// hotspots API.
   final List<PdfHotspot> hotspots;
+
+  /// Why the page could not be interpreted completely, or null.
+  ///
+  /// The interpreter keeps unsupported filters scoped to their stream. A
+  /// top-level failure still returns a display list so the host can paint the
+  /// page background and report the problem instead of silently showing an
+  /// unexplained blank page.
+  final String? error;
+
+  /// Whether [error] is set.
+  bool get failed => error != null;
 
   /// plainText API.
   String get plainText {
@@ -160,7 +172,7 @@ final class PdfDrawImage extends PdfPaintOp {
   /// jpeg API.
   final bool jpeg;
 
-  /// Undecoded filter (JPX, arithmetic JBIG2, or another typed-unsupported codec).
+  /// Undecoded, malformed, or unsupported image filter.
   final bool placeholder;
 
   /// Source pixel width from the XObject (`/Width`).
@@ -260,7 +272,15 @@ final class PdfClipPath extends PdfPaintOp {
 /// Class PdfPathVerb.
 class PdfPathVerb {
   /// PdfPathVerb API.
-  const PdfPathVerb(this.kind, this.x, this.y, [this.x2 = 0, this.y2 = 0, this.x3 = 0, this.y3 = 0]);
+  const PdfPathVerb(
+    this.kind,
+    this.x,
+    this.y, [
+    this.x2 = 0,
+    this.y2 = 0,
+    this.x3 = 0,
+    this.y3 = 0,
+  ]);
 
   /// kind API.
   final PdfPathKind kind;
