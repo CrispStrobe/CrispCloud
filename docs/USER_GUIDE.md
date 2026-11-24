@@ -130,6 +130,12 @@ storage identity.
 Choose two folders, compare them and inspect proposed actions before executing.
 One-way and two-way sync require an explicit plan and conflict decisions.
 
+To compare two files byte-for-byte, select two files in one pane, or one file
+in each pane, and choose **Tools → Compare by Content (byte-for-byte)…**. The
+binary comparison opens directly at the first difference and never uploads or
+changes either file. The same comparison is available from the selection
+context menu.
+
 A missing file on one side is not proof that it should be deleted on the other.
 Saved relationships retain location identity, but execution still checks live
 sources.
