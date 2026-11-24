@@ -62,6 +62,7 @@ Future<RenderWordCanvas> _mount(
   ValueChanged<OfficeContextHit>? onContextMenu,
   ValueChanged<OfficeContextHit>? onReviewTap,
   bool compact = false,
+  bool bodyLayoutIsCurrent = false,
 }) async {
   await tester.pumpWidget(
     Directionality(
@@ -70,6 +71,7 @@ Future<RenderWordCanvas> _mount(
         key: _boundaryKey,
         child: WordCanvas(
           compact: compact,
+          bodyLayoutIsCurrent: bodyLayoutIsCurrent,
           document: document,
           laidOut: layout,
           caret: CaretEngine(),
@@ -412,6 +414,49 @@ void main() {
       expect(_redPixels(await _pixels(tester)), 0);
     },
   );
+
+  testWidgets('reused proofing geometry follows refreshed source ranges', (
+    tester,
+  ) async {
+    final paragraph = _paragraph('Fehler korrekt');
+    final document = _document([paragraph]);
+    final layout = _layout(document);
+    final findings = [_finding(paragraph, 0, 6)];
+    final canvas = await _mount(
+      tester,
+      document,
+      layout,
+      bodyLayoutIsCurrent: true,
+      proofingLookup: (_) => findings,
+    );
+    final line = layout.pages.single.lines.single;
+    Rect strip(int start, int end) {
+      final rect = CaretEngine.rangeRectsOnLine(
+        line,
+        line.y,
+        line.height,
+        start,
+        end,
+      ).single;
+      return Rect.fromPoints(
+        canvas.windowForPagePoint(0, rect.topLeft),
+        canvas.windowForPagePoint(0, rect.bottomRight + const Offset(0, 2)),
+      );
+    }
+
+    final left = strip(0, 6);
+    final right = strip(7, 14);
+    final before = await _pixels(tester);
+    expect(_redPixels(before, left), greaterThan(0));
+    expect(_redPixels(before, right), 0);
+
+    findings[0] = _finding(paragraph, 7, 14);
+    canvas.markNeedsPaint();
+    await tester.pump();
+    final after = await _pixels(tester);
+    expect(_redPixels(after, left), 0);
+    expect(_redPixels(after, right), greaterThan(0));
+  });
 
   testWidgets('generated field text receives no findings or squiggles', (
     tester,

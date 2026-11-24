@@ -399,6 +399,7 @@ class WordCanvas extends LeafRenderObjectWidget {
         documentChanged ||
         !identical(renderObject.config, config) ||
         !identical(renderObject.config.theme, config.theme) ||
+        renderObject.bodyLayoutIsCurrent != bodyLayoutIsCurrent ||
         renderObject.selectedCommentId != selectedCommentId) {
       renderObject._clearTextPictures();
     }
@@ -878,6 +879,8 @@ class RenderWordCanvas extends RenderBox
 
   @visibleForTesting
   int get debugOverlayPainterBuildCount => _overlayPainterBuildCount;
+  final _proofingLines = <LaidOutLine, _LineProofingGeometry>{};
+  static const _maxProofingLines = 512;
   final Map<(int, int, int, int), Path> _proofingPaths =
       <(int, int, int, int), Path>{};
   // Null records a page whose selection has no text band, such as when
@@ -947,6 +950,7 @@ class RenderWordCanvas extends RenderBox
       cached.dispose();
     }
     _textPictures.clear();
+    _proofingLines.clear();
     _textPictureBytes = 0;
     _paragraphIndicesFor = null;
     _paragraphIndicesCache = null;
@@ -3638,6 +3642,7 @@ class RenderWordCanvas extends RenderBox
     }
     _fittedLayout = laidOut;
     _fittedPages.clear();
+    _proofingLines.clear();
   }
 
   void _fitPageAt(int pageIndex) {
@@ -4098,16 +4103,26 @@ class RenderWordCanvas extends RenderBox
         : Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height);
   }
 
+  _LineProofingGeometry _proofingGeometryOn(LaidOutLine line) {
+    final cached = _proofingLines[line];
+    if (cached != null) return cached;
+    if (_proofingLines.length >= _maxProofingLines) {
+      _proofingLines.remove(_proofingLines.keys.first);
+    }
+    return _proofingLines[line] = _LineProofingGeometry(line);
+  }
+
   void _paintProofing(
     Canvas canvas,
     LaidOutLine line, {
     List<OfficeProofingFinding>? findings,
   }) {
     findings ??= _proofingFor(line.sourceParagraph);
-    if (findings == null || line.glyphs.isEmpty) return;
+    if (findings == null || findings.isEmpty || line.glyphs.isEmpty) return;
+    final geometry = bodyLayoutIsCurrent ? _proofingGeometryOn(line) : null;
     // For a handful of findings, a separate glyph scan is unlikely to pay off.
     final canCull = line.proofingOffsets == null && findings.length >= 4;
-    late final span = CaretEngine.logicalSpan(line);
+    late final span = geometry?.span ?? CaretEngine.logicalSpan(line);
     for (final finding in findings) {
       // Most findings in a wrapped paragraph belong to other lines. Keep
       // boundary matches for discretionary hyphens and preserve zero-length
@@ -4122,13 +4137,10 @@ class RenderWordCanvas extends RenderBox
         finding.start,
         finding.end,
       )) {
-        final boxes = CaretEngine.rangeRectsOnLine(
-          line,
-          line.y,
-          line.height,
-          range.start,
-          range.end,
-        );
+        final boxes = range.isCollapsed
+            ? const <Rect>[]
+            : geometry?.rectsFor(range) ??
+                  _LineProofingGeometry.rectsOn(line, range);
         for (final box in boxes) {
           _proofingWave(
             canvas,
@@ -5920,6 +5932,32 @@ class RenderWordCanvas extends RenderBox
       height,
     );
   }
+}
+
+final class _LineProofingGeometry {
+  _LineProofingGeometry(this._line);
+
+  final LaidOutLine _line;
+  late final span = CaretEngine.logicalSpan(_line);
+  final _rects = <TextRange, List<Rect>>{};
+
+  List<Rect> rectsFor(TextRange range) {
+    final cached = _rects[range];
+    if (cached != null) return cached;
+    final rects = rectsOn(_line, range);
+    // Keep the common marks without retaining arbitrarily fragmented geometry.
+    if (_rects.length < 8 && rects.length <= 16) _rects[range] = rects;
+    return rects;
+  }
+
+  static List<Rect> rectsOn(LaidOutLine line, TextRange range) =>
+      CaretEngine.rangeRectsOnLine(
+        line,
+        line.y,
+        line.height,
+        range.start,
+        range.end,
+      );
 }
 
 class _TableInsertHit {
