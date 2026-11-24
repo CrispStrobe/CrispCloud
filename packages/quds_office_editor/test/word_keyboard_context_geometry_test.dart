@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
@@ -36,6 +37,7 @@ Future<RenderWordCanvas> _mount(
   bool editingFooter = false,
   int? selectedCommentId,
   VoidCallback? onChanged,
+  ValueChanged<OfficeContextHit>? onContextMenu,
 }) async {
   await tester.pumpWidget(
     Directionality(
@@ -55,6 +57,7 @@ Future<RenderWordCanvas> _mount(
             editingFooter: editingFooter,
             selectedCommentId: selectedCommentId,
             onChanged: onChanged,
+            onContextMenu: onContextMenu,
           ),
         ),
       ),
@@ -280,6 +283,76 @@ void main() {
     expect(local.dy, greaterThan(1));
     expect(local.dy, lessThan(80));
     expect(viewport.origin, before);
+  });
+
+  testWidgets('pointer hits respect TOC stacking and refresh on relayout', (
+    tester,
+  ) async {
+    const link = WmlHyperlink(url: 'https://example.com/source');
+    final document = WmlDocument(
+      sections: [
+        _section([
+          WmlParagraph(
+            inlines: [
+              WmlRun(text: 'Source text', hyperlink: link, commentIds: [7]),
+            ],
+          ),
+          _paragraph('First target'),
+          _paragraph('Last target'),
+        ]),
+      ],
+    );
+    final layout = _layout(document);
+    final page = layout.pages.single;
+    final glyph = page.lines.first.glyphs.first;
+    final point = Offset(glyph.x + 1, page.lines.first.y + 2);
+    LaidOutBox entry(int target) => LaidOutBox(
+      x: point.dx - 2,
+      y: point.dy - 2,
+      width: 4,
+      height: 4,
+      kind: LaidOutBoxKind.tocEntry,
+      paragraphIndex: target,
+    );
+    LaidOutDocument withEntries(List<LaidOutBox> entries) => LaidOutDocument(
+      isPreview: true,
+      pageSize: layout.pageSize,
+      pages: [
+        LaidOutPage(
+          index: 0,
+          width: page.width,
+          height: page.height,
+          lines: page.lines,
+          frames: entries,
+        ),
+      ],
+    );
+    final caret = CaretEngine();
+    final hits = <OfficeContextHit>[];
+    Future<OfficeContextHit> hit(LaidOutDocument current) async {
+      final canvas = await _mount(
+        tester,
+        document,
+        caret,
+        layout: current,
+        onContextMenu: hits.add,
+      );
+      final gesture = await tester.startGesture(
+        canvas.localToGlobal(canvas.windowForPagePoint(0, point)),
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryMouseButton,
+      );
+      await gesture.up();
+      return hits.last;
+    }
+
+    final toc = await hit(withEntries([entry(1), entry(2)]));
+    expect(toc.link?.anchor, 'Last target');
+    expect(toc.commentId, 7);
+    final fallback = await hit(withEntries([entry(1), entry(100)]));
+    expect(fallback.link, same(link));
+    expect(fallback.commentId, 7);
+    expect((await hit(withEntries([]))).link, same(link));
   });
 
   testWidgets('nested cell hit retains link and comment from its source run', (

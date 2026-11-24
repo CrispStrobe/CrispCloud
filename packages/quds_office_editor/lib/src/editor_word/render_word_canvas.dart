@@ -18,6 +18,7 @@ import '../editor_slide/transform_handles.dart';
 import 'caret_engine.dart';
 import 'office_ruler.dart';
 import 'page_cell_index.dart';
+import 'page_text_hit_index.dart';
 import 'paint_equation.dart';
 import 'paint_run_text.dart';
 import 'proofing_geometry.dart';
@@ -889,6 +890,7 @@ class RenderWordCanvas extends RenderBox
   final Map<LaidOutPage, Map<int, WmlFrame>> _frameOwnersCache =
       <LaidOutPage, Map<int, WmlFrame>>{};
   final _pageCellIndices = <LaidOutPage, WordPageCellIndex>{};
+  final _pageTextHitIndices = <LaidOutPage, WordPageTextHitIndex>{};
   final _tableGeometry = <LaidOutPage, List<_TableGeom>>{};
 
   @override
@@ -932,6 +934,7 @@ class RenderWordCanvas extends RenderBox
     _paragraphIndicesCache = null;
     _frameOwnersCache.clear();
     _pageCellIndices.clear();
+    _pageTextHitIndices.clear();
     _tableGeometry.clear();
   }
 
@@ -4397,64 +4400,29 @@ class RenderWordCanvas extends RenderBox
     return preview;
   }
 
-  int? _commentIdAt(LaidOutPage page, Offset local) {
-    for (final LaidOutLine line in <LaidOutLine>[
-      ...page.header,
-      ...page.lines,
-      ...page.footer,
-    ]) {
-      if (local.dy < line.y - 2 || local.dy > line.y + line.height + 2) {
-        continue;
-      }
-      for (final LaidOutGlyph glyph in line.glyphs) {
-        if (glyph.commentIds.isEmpty) {
-          continue;
-        }
-        if (local.dx >= glyph.x - 2 &&
-            local.dx <= glyph.x + glyph.advance + 2) {
-          return glyph.commentIds.last;
-        }
-      }
+  WordPageTextHitIndex _textHitsOn(LaidOutPage page) {
+    final cached = _pageTextHitIndices[page];
+    if (cached != null) return cached;
+    if (_pageTextHitIndices.length >= _maxTextPicturePages) {
+      _pageTextHitIndices.remove(_pageTextHitIndices.keys.first);
     }
-    return null;
+    return _pageTextHitIndices[page] = WordPageTextHitIndex(page);
   }
 
+  int? _commentIdAt(LaidOutPage page, Offset local) =>
+      _textHitsOn(page).commentIdAt(local);
+
   WmlHyperlink? _linkAt(LaidOutPage page, Offset local) {
-    final int? toc = _tocTargetAt(page, local);
-    if (toc != null) {
-      final List<WmlParagraph> paras = document.paragraphs.toList();
-      if (toc >= 0 && toc < paras.length) {
-        final WmlParagraph para = paras[toc];
+    final toc = _tocTargetAt(page, local);
+    if (toc != null && toc >= 0) {
+      final paragraph = document.paragraphs.skip(toc).firstOrNull;
+      if (paragraph != null) {
         return WmlHyperlink(
-          anchor: para.properties.bookmarkName ?? para.text.trim(),
+          anchor: paragraph.properties.bookmarkName ?? paragraph.text.trim(),
         );
       }
     }
-    for (final LaidOutLine line in <LaidOutLine>[
-      ...page.header,
-      ...page.lines,
-      ...page.footer,
-    ]) {
-      if (line.hyperlink != null &&
-          local.dy >= line.y - 2 &&
-          local.dy <= line.y + line.height + 2 &&
-          local.dx >= line.x - 4 &&
-          local.dx <= line.x + line.width + 4) {
-        return line.hyperlink;
-      }
-      if (local.dy < line.y - 2 || local.dy > line.y + line.height + 2) {
-        continue;
-      }
-      for (final LaidOutGlyph glyph in line.glyphs) {
-        if (glyph.hyperlink == null) {
-          continue;
-        }
-        if (local.dx >= glyph.x && local.dx <= glyph.x + glyph.advance) {
-          return glyph.hyperlink;
-        }
-      }
-    }
-    return null;
+    return _textHitsOn(page).linkAt(local);
   }
 
   void _paintLinkHint(Canvas canvas) {
@@ -4514,10 +4482,7 @@ class RenderWordCanvas extends RenderBox
   }
 
   int? _tocTargetAt(LaidOutPage page, Offset local) {
-    for (final LaidOutBox box in page.frames.reversed) {
-      if (box.kind != LaidOutBoxKind.tocEntry || box.paragraphIndex == null) {
-        continue;
-      }
+    for (final box in _pageCellIndex(page).pointer.tocEntriesInHitOrder) {
       if (_boxContains(box, local, pad: 3)) {
         return box.paragraphIndex;
       }

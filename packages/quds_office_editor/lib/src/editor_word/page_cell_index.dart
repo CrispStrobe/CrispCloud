@@ -93,6 +93,9 @@ final class WordPagePointerIndex {
         _frames.add(box);
       }
       if (box.visual != null) _visuals.add(box);
+      if (box.kind == LaidOutBoxKind.tocEntry && box.paragraphIndex != null) {
+        _tocEntries.add(box);
+      }
     }
   }
 
@@ -101,6 +104,7 @@ final class WordPagePointerIndex {
   final _equations = <LaidOutBox>[];
   final _frames = <LaidOutBox>[];
   final _visuals = <LaidOutBox>[];
+  final _tocEntries = <LaidOutBox>[];
 
   List<double> _indexCellBounds() {
     _cells.sort((left, right) => left.box.y.compareTo(right.box.y));
@@ -116,6 +120,7 @@ final class WordPagePointerIndex {
   Iterable<LaidOutBox> get equations => _equations;
   Iterable<LaidOutBox> get frames => _frames;
   Iterable<LaidOutBox> get visuals => _visuals;
+  Iterable<LaidOutBox> get tocEntriesInHitOrder => _tocEntries.reversed;
 
   LaidOutBox? cellAt(double x, double y) {
     final bottomsThrough = _bottomsThrough;
