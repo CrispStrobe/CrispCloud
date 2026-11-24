@@ -2756,10 +2756,7 @@ class RenderWordCanvas extends RenderBox
   }
 
   LaidOutBox? _equationAt(LaidOutPage page, Offset local) {
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.equation || box.equation == null) {
-        continue;
-      }
+    for (final box in _pageCellIndex(page).pointer.equations) {
       if (local.dx >= box.x - 4 &&
           local.dx <= box.x + box.width + 4 &&
           local.dy >= box.y - 4 &&
@@ -2773,10 +2770,7 @@ class RenderWordCanvas extends RenderBox
   LaidOutBox? _frameAt(LaidOutPage page, Offset local) {
     LaidOutBox? best;
     var bestArea = double.infinity;
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.frame || box.frame == null) {
-        continue;
-      }
+    for (final box in _pageCellIndex(page).pointer.frames) {
       if (_boxContains(box, local)) {
         final double area = box.width * box.height;
         if (area < bestArea) {
@@ -2883,10 +2877,7 @@ class RenderWordCanvas extends RenderBox
   LaidOutBox? _visualAt(LaidOutPage page, Offset local) {
     LaidOutBox? best;
     var bestArea = double.infinity;
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind == LaidOutBoxKind.tableCell || box.visual == null) {
-        continue;
-      }
+    for (final box in _pageCellIndex(page).pointer.visuals) {
       if (local.dx >= box.x &&
           local.dx <= box.x + box.width &&
           local.dy >= box.y &&
@@ -3492,26 +3483,8 @@ class RenderWordCanvas extends RenderBox
     );
   }
 
-  LaidOutBox? _cellAt(LaidOutPage page, Offset local) {
-    LaidOutBox? best;
-    var bestArea = double.infinity;
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell || box.height <= 0) {
-        continue;
-      }
-      if (local.dx >= box.x &&
-          local.dx <= box.x + box.width &&
-          local.dy >= box.y &&
-          local.dy <= box.y + box.height) {
-        final double area = box.width * box.height;
-        if (area < bestArea) {
-          bestArea = area;
-          best = box;
-        }
-      }
-    }
-    return best;
-  }
+  LaidOutBox? _cellAt(LaidOutPage page, Offset local) =>
+      _pageCellIndex(page).pointer.cellAt(local.dx, local.dy);
 
   bool _lineInCell(LaidOutLine line, LaidOutBox cell) {
     if (cell.paragraphIndex != null) {
@@ -3530,17 +3503,18 @@ class RenderWordCanvas extends RenderBox
     WmlFrame? containingFrame,
   }) {
     if (page.frames.isEmpty) return null;
-    var index = _pageCellIndices[page];
-    if (index == null) {
-      if (_pageCellIndices.length >= _maxTextPicturePages) {
-        _pageCellIndices.remove(_pageCellIndices.keys.first);
-      }
-      index = _pageCellIndices[page] = WordPageCellIndex(page.frames);
+    return _pageCellIndex(
+      page,
+    ).smallestAt(line.paragraphIndex, containingFrame: containingFrame);
+  }
+
+  WordPageCellIndex _pageCellIndex(LaidOutPage page) {
+    final cached = _pageCellIndices[page];
+    if (cached != null) return cached;
+    if (_pageCellIndices.length >= _maxTextPicturePages) {
+      _pageCellIndices.remove(_pageCellIndices.keys.first);
     }
-    return index.smallestAt(
-      line.paragraphIndex,
-      containingFrame: containingFrame,
-    );
+    return _pageCellIndices[page] = WordPageCellIndex(page.frames);
   }
 
   int _hitOffsetOnLine(LaidOutLine line, Offset local) {

@@ -9,11 +9,13 @@ LaidOutBox _box(
   int? end,
   double width, {
   double height = 30,
+  double x = 0,
+  double y = 0,
   WmlTable? table,
   LaidOutBoxKind kind = LaidOutBoxKind.tableCell,
 }) => LaidOutBox(
-  x: 0,
-  y: 0,
+  x: x,
+  y: y,
   width: width,
   height: height,
   kind: kind,
@@ -47,7 +49,65 @@ LaidOutBox? _scan(List<LaidOutBox> boxes, int paragraph, WmlFrame? frame) {
   return best;
 }
 
+LaidOutBox? _scanPoint(List<LaidOutBox> boxes, double x, double y) {
+  LaidOutBox? best;
+  var bestArea = double.infinity;
+  for (final box in boxes) {
+    if (box.kind != LaidOutBoxKind.tableCell || box.height <= 0) continue;
+    if (x >= box.x &&
+        x <= box.x + box.width &&
+        y >= box.y &&
+        y <= box.y + box.height) {
+      final area = box.width * box.height;
+      if (area < bestArea) {
+        best = box;
+        bestArea = area;
+      }
+    }
+  }
+  return best;
+}
+
 void main() {
+  test('pointer hits include shared edges and cells without text', () {
+    final lower = _box(0, 0, 40, y: 30);
+    final upper = _box(1, 1, 40);
+    final empty = _box(null, null, 10, x: 5, y: 10, height: 10);
+    final hidden = _box(2, 2, 1, x: 10, y: 35, height: 0);
+    final pointer = WordPageCellIndex([lower, upper, empty, hidden]).pointer;
+    expect(pointer.cellAt(40, 30), same(lower));
+    expect(pointer.cellAt(10, 20), same(empty));
+    expect(pointer.cellAt(10, 35), same(lower));
+    expect(pointer.cellAt(10, 61), isNull);
+  });
+
+  test('indexed pointer hits match a linear scan across overlapping boxes', () {
+    final random = Random(805);
+    final boxes = [
+      for (var index = 0; index < 400; index++)
+        _box(
+          null,
+          null,
+          random.nextInt(20).toDouble(),
+          x: random.nextInt(70).toDouble(),
+          y: random.nextInt(190).toDouble(),
+          height: random.nextInt(30).toDouble(),
+        ),
+      _box(2, 2, 5, height: double.nan),
+      _box(2, 2, 5, y: double.nan),
+      _box(2, 2, 5, height: double.infinity),
+      _box(2, 2, 5, kind: LaidOutBoxKind.tocEntry),
+    ];
+    final pointer = WordPageCellIndex(boxes).pointer;
+    for (var row = 0; row < 230; row++) {
+      for (final x in [0.0, 5.0, 34.0, 60.0, 90.0, double.nan]) {
+        final y = row.toDouble();
+        expect(pointer.cellAt(x, y), same(_scanPoint(boxes, x, y)));
+      }
+    }
+    expect(pointer.cellAt(5, double.nan), isNull);
+  });
+
   test(
     'nested ranges preserve original tie order and absolute-frame ownership',
     () {
