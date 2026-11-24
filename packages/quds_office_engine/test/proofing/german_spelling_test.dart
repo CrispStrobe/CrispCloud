@@ -400,6 +400,26 @@ void main() {
     },
   );
 
+  test('memoized membership follows word edits and language aliases', () {
+    final vocabulary = OfficeProofingVocabulary()
+      ..addWord('Fachname', language: 'de-CH');
+    expect(vocabulary.contains('O’Connor', language: 'de-CH'), isFalse);
+    expect(vocabulary.contains('O’Connor', language: 'de_CH'), isFalse);
+
+    vocabulary.addWord("O'Connor", language: 'de_CH');
+    expect(vocabulary.contains('O’Connor', language: 'de-CH'), isTrue);
+    expect(vocabulary.contains('O’Connor', language: 'de_CH'), isTrue);
+    expect(vocabulary.contains('O’Connor'), isFalse);
+
+    vocabulary.removeWord("O'Connor", language: 'de-CH');
+    expect(vocabulary.contains('O’Connor', language: 'de_CH'), isFalse);
+    vocabulary.ignoreWord("O'Connor", language: 'de-CH');
+    expect(vocabulary.contains('O’Connor', language: 'de_CH'), isTrue);
+    vocabulary.clearIgnoredWords();
+    expect(vocabulary.contains('O’Connor', language: 'de_CH'), isFalse);
+    expect(vocabulary.contains('Fachname', language: 'de-CH'), isTrue);
+  });
+
   test('vocabulary snapshots round-trip with revision notification', () {
     int changed = 0;
     final OfficeProofingVocabulary vocabulary = OfficeProofingVocabulary(

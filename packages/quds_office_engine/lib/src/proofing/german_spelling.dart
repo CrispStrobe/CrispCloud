@@ -144,6 +144,7 @@ class OfficeProofingVocabulary {
   final void Function()? onChanged;
   final _words = <String, _VocabularyWords>{};
   final _ignored = <String, _VocabularyWords>{};
+  final _memberships = <String, _VocabularyMembership>{};
   int _revision = 0;
   int get revision => _revision;
 
@@ -156,13 +157,18 @@ class OfficeProofingVocabulary {
 
   bool contains(String word, {String language = 'de-DE'}) {
     if (_words.isEmpty && _ignored.isEmpty) return false;
-    final String key = normalizeProofingLanguage(language);
-    final personal = _words[key]?._values;
-    final ignored = _ignored[key]?._values;
-    if ((personal?.isEmpty ?? true) && (ignored?.isEmpty ?? true)) return false;
-    final String normalized = normalizeGermanWord(word);
-    return (personal?.contains(normalized) ?? false) ||
-        (ignored?.contains(normalized) ?? false);
+    var membership = _memberships[language];
+    if (membership == null) {
+      final key = normalizeProofingLanguage(language);
+      membership = _VocabularyMembership(
+        _words[key]?._values,
+        _ignored[key]?._values,
+      );
+      if (language.length <= 128 && _memberships.length < 8) {
+        _memberships[language] = membership;
+      }
+    }
+    return membership.contains(word);
   }
 
   void _change(
@@ -177,6 +183,7 @@ class OfficeProofingVocabulary {
     if (key.isEmpty) throw ArgumentError.value(language, 'language');
     final values = target.putIfAbsent(key, _VocabularyWords.new);
     if (values.change(normalized, add: add)) {
+      _memberships.clear();
       _revision++;
       onChanged?.call();
     }
@@ -194,6 +201,7 @@ class OfficeProofingVocabulary {
   void clearIgnoredWords() {
     if (_ignored.values.every((words) => words._values.isEmpty)) return;
     _ignored.clear();
+    _memberships.clear();
     _revision++;
     onChanged?.call();
   }
@@ -210,6 +218,32 @@ class OfficeProofingVocabulary {
         entry.key: entry.value._values.toList()..sort(),
     },
   };
+}
+
+/// Resolved word sets for one language tag and vocabulary revision.
+final class _VocabularyMembership {
+  _VocabularyMembership(this._personal, this._ignored);
+
+  final Set<String>? _personal;
+  final Set<String>? _ignored;
+  Map<String, bool>? _matches;
+
+  bool contains(String word) {
+    final cached = _matches?[word];
+    if (cached != null) return cached;
+    if ((_personal?.isEmpty ?? true) && (_ignored?.isEmpty ?? true)) {
+      return false;
+    }
+    final normalized = normalizeGermanWord(word);
+    final matches =
+        (_personal?.contains(normalized) ?? false) ||
+        (_ignored?.contains(normalized) ?? false);
+    // Once full, leave the lookup cost for unique words at normalization.
+    if (word.length <= 128 && (_matches?.length ?? 0) < 256) {
+      (_matches ??= {})[word] = matches;
+    }
+    return matches;
+  }
 }
 
 /// Readers may keep a snapshot across an asynchronous spelling check. Share
