@@ -104,6 +104,80 @@ Future<void> _rightClick(
 
 void main() {
   setUpAll(OfficeHostFonts.ensureRegistered);
+  testWidgets('table resize hit geometry refreshes when a layout is replaced', (
+    tester,
+  ) async {
+    final table = WmlTable(
+      grid: [100, 100],
+      rows: [
+        WmlTableRow(
+          height: 50,
+          cells: [
+            WmlTableCell(width: 100, blocks: [_paragraph('Left')]),
+            WmlTableCell(width: 100, blocks: [_paragraph('Right')]),
+          ],
+        ),
+      ],
+    );
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          pageSize: const WmlPageSize(width: 400, height: 300),
+          margins: const WmlPageMargins(
+            left: 30,
+            right: 30,
+            top: 30,
+            bottom: 30,
+          ),
+          blocks: [table],
+        ),
+      ],
+    );
+    final caret = CaretEngine();
+    final viewport = VirtualViewport();
+    final hits = <OfficeContextHit>[];
+    final engine = WordLayoutEngine(font: null);
+    Offset firstCellEdge(LaidOutDocument layout) {
+      final cell = layout.pages.single.frames.firstWhere(
+        (box) => box.table == table && box.tableCol == 0,
+      );
+      return Offset(cell.x + cell.width, cell.y + cell.height / 2);
+    }
+
+    final before = engine.layout(document);
+    final oldEdge = firstCellEdge(before);
+    final canvas = await _mount(
+      tester,
+      document,
+      before,
+      caret,
+      viewport,
+      hits,
+    );
+    expect(
+      canvas.cursorFor(canvas.windowForPagePoint(0, oldEdge)),
+      SystemMouseCursors.resizeColumn,
+    );
+
+    table.grid[0] = 150;
+    table.rows.single.cells.first.width = 150;
+    final after = engine.layout(document);
+    final newEdge = firstCellEdge(after);
+    expect((newEdge.dx - oldEdge.dx).abs(), greaterThan(10));
+    expect(
+      await _mount(tester, document, after, caret, viewport, hits),
+      same(canvas),
+    );
+    expect(
+      canvas.cursorFor(canvas.windowForPagePoint(0, oldEdge)),
+      isNot(SystemMouseCursors.resizeColumn),
+    );
+    expect(
+      canvas.cursorFor(canvas.windowForPagePoint(0, newEdge)),
+      SystemMouseCursors.resizeColumn,
+    );
+  });
+
   for (final rtl in [false, true]) {
     for (final reopen in [false, true]) {
       testWidgets(

@@ -387,6 +387,7 @@ class WordCanvas extends LeafRenderObjectWidget {
         !identical(renderObject.laidOut, laidOut) ||
         renderObject.compact != compact;
     if (!identical(renderObject.laidOut, laidOut) ||
+        !identical(renderObject.document, document) ||
         !identical(renderObject.config, config) ||
         !identical(renderObject.config.theme, config.theme) ||
         renderObject.selectedCommentId != selectedCommentId) {
@@ -888,6 +889,7 @@ class RenderWordCanvas extends RenderBox
   final Map<LaidOutPage, Map<int, WmlFrame>> _frameOwnersCache =
       <LaidOutPage, Map<int, WmlFrame>>{};
   final _pageCellIndices = <LaidOutPage, WordPageCellIndex>{};
+  final _tableGeometry = <LaidOutPage, List<_TableGeom>>{};
 
   @override
   bool get isRepaintBoundary => true;
@@ -930,6 +932,7 @@ class RenderWordCanvas extends RenderBox
     _paragraphIndicesCache = null;
     _frameOwnersCache.clear();
     _pageCellIndices.clear();
+    _tableGeometry.clear();
   }
 
   LaidOutDocument? _fittedLayout;
@@ -3156,7 +3159,7 @@ class RenderWordCanvas extends RenderBox
       if (table.handleRect.inflate(4).contains(local)) {
         continue;
       }
-      for (final _TableInsertHit hit in _tableInsertHitsFor(table)) {
+      for (final _TableInsertHit hit in table.insertHits) {
         if (hit.button.inflate(3).contains(local)) {
           return null;
         }
@@ -3259,7 +3262,7 @@ class RenderWordCanvas extends RenderBox
     }
     _TableInsertHit? best;
     var bestDist = 8.0;
-    for (final _TableInsertHit hit in _tableInsertHitsFor(table)) {
+    for (final _TableInsertHit hit in table.insertHits) {
       if (hit.button.inflate(4).contains(local)) {
         return hit;
       }
@@ -3290,6 +3293,11 @@ class RenderWordCanvas extends RenderBox
   }
 
   List<_TableGeom> _tablesOn(LaidOutPage page) {
+    final cached = _tableGeometry.remove(page);
+    if (cached != null) {
+      _tableGeometry[page] = cached;
+      return cached;
+    }
     final Map<WmlTable, _TableGeom> groups = <WmlTable, _TableGeom>{};
     for (final LaidOutBox box in page.frames) {
       if (box.kind != LaidOutBoxKind.tableCell || box.table == null) {
@@ -3302,7 +3310,10 @@ class RenderWordCanvas extends RenderBox
       );
       geom.add(box);
     }
-    return groups.values.toList();
+    if (_tableGeometry.length >= _maxTextPicturePages) {
+      _tableGeometry.remove(_tableGeometry.keys.first);
+    }
+    return _tableGeometry[page] = groups.values.toList(growable: false);
   }
 
   void _paintSelectedTables(Canvas canvas, LaidOutPage page) {
@@ -3448,43 +3459,6 @@ class RenderWordCanvas extends RenderBox
         );
       }
     }
-  }
-
-  List<_TableInsertHit> _tableInsertHitsFor(_TableGeom table) {
-    final List<_TableInsertHit> hits = <_TableInsertHit>[];
-    for (final boundary in table.rowInsertionBoundaries) {
-      final double y = boundary.y;
-      hits.add(
-        _TableInsertHit(
-          table: table.table,
-          column: false,
-          index: boundary.index,
-          button: Rect.fromCircle(
-            center: Offset(table.bounds.left - 12, y),
-            radius: 7,
-          ),
-          lineStart: Offset(table.bounds.left - 12, y),
-          lineEnd: Offset(table.bounds.right, y),
-        ),
-      );
-    }
-    for (int i = 0; i <= table.colCount; i++) {
-      final double x = table.colBoundary(i);
-      hits.add(
-        _TableInsertHit(
-          table: table.table,
-          column: true,
-          index: i,
-          button: Rect.fromCircle(
-            center: Offset(x, table.bounds.top - 12),
-            radius: 7,
-          ),
-          lineStart: Offset(x, table.bounds.top - 12),
-          lineEnd: Offset(x, table.bounds.bottom),
-        ),
-      );
-    }
-    return hits;
   }
 
   void _paintPlusButton(Canvas canvas, Rect button, {required bool active}) {
@@ -5906,6 +5880,9 @@ class _TableGeom {
   final Map<int, double> _rowBottom = <int, double>{};
   final Map<int, double> _colLeft = <int, double>{};
   final Map<int, double> _colRight = <int, double>{};
+  int _rowsOnPage = 0;
+  int _columnsOnPage = 0;
+  late final List<_TableInsertHit> insertHits = _buildInsertHits();
 
   /// handleRect API.
   Rect get handleRect =>
@@ -5921,33 +5898,59 @@ class _TableGeom {
     final rowTop = geometry?.y ?? rect.top;
     final rowHeight = geometry?.height ?? rect.height;
     if (rowHeight > 0) {
+      _rowsOnPage = math.max(_rowsOnPage, row + 1);
       _rowTop[row] = _minOr(_rowTop[row], rowTop);
       _rowBottom[row] = _maxOr(_rowBottom[row], rowTop + rowHeight);
     }
+    _columnsOnPage = math.max(_columnsOnPage, col + 1);
     _colLeft[col] = _minOr(_colLeft[col], rect.left);
     _colRight[col] = _maxOr(_colRight[col], rect.right);
   }
 
-  /// rowCount API.
-  int get rowCount {
-    var max = table.rows.length;
-    for (final int key in _rowTop.keys) {
-      if (key + 1 > max) {
-        max = key + 1;
-      }
-    }
-    return max;
-  }
+  int get rowCount => math.max(table.rows.length, _rowsOnPage);
 
-  /// colCount API.
-  int get colCount {
-    var max = WordTable.columnCount(table);
-    for (final int key in _colLeft.keys) {
-      if (key + 1 > max) {
-        max = key + 1;
-      }
+  // Table topology belongs to the published layout. The underlying legacy
+  // grid may be incomplete, so preserve the model's span-aware column count.
+  late final int colCount = math.max(
+    WordTable.columnCount(table),
+    _columnsOnPage,
+  );
+
+  List<_TableInsertHit> _buildInsertHits() {
+    final List<_TableInsertHit> hits = <_TableInsertHit>[];
+    for (final boundary in rowInsertionBoundaries) {
+      final double y = boundary.y;
+      hits.add(
+        _TableInsertHit(
+          table: table,
+          column: false,
+          index: boundary.index,
+          button: Rect.fromCircle(
+            center: Offset(bounds.left - 12, y),
+            radius: 7,
+          ),
+          lineStart: Offset(bounds.left - 12, y),
+          lineEnd: Offset(bounds.right, y),
+        ),
+      );
     }
-    return max;
+    for (int i = 0; i <= colCount; i++) {
+      final double x = colBoundary(i);
+      hits.add(
+        _TableInsertHit(
+          table: table,
+          column: true,
+          index: i,
+          button: Rect.fromCircle(
+            center: Offset(x, bounds.top - 12),
+            radius: 7,
+          ),
+          lineStart: Offset(x, bounds.top - 12),
+          lineEnd: Offset(x, bounds.bottom),
+        ),
+      );
+    }
+    return hits;
   }
 
   /// rowBoundary API.
