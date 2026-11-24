@@ -477,6 +477,9 @@ final class WordProofingSession extends ChangeNotifier {
   int? _observedRevision;
   String? _observedConfiguration;
   WordProofingSummary _published = WordProofingSummary();
+  // Issues are emitted in paragraph order. Store offsets into the summary to
+  // serve local lookups without duplicating the issues or scanning the list.
+  Map<WmlParagraph, ({int start, int end})> _issueRanges = const {};
 
   /// A republish requested by an edit, performed on first read.
   ({bool scheduled})? _pendingPublish;
@@ -544,10 +547,14 @@ final class WordProofingSession extends ChangeNotifier {
 
   bool _flushing = false;
 
-  set _summary(WordProofingSummary value) {
+  void _publishSummary(
+    WordProofingSummary value, {
+    Map<WmlParagraph, ({int start, int end})> issueRanges = const {},
+  }) {
     _pendingPublish = null;
     _clearProvisionalFindings();
     _published = value;
+    _issueRanges = issueRanges;
     if (_flushing) {
       scheduleMicrotask(_updateStatus);
     } else {
@@ -1243,7 +1250,7 @@ final class WordProofingSession extends ChangeNotifier {
     if (_cache.isEmpty) {
       // No verified findings exist yet. Leave the first full capture behind
       // the typing debounce instead of scanning a document on every keystroke.
-      _summary = WordProofingSummary(scheduled: automatic);
+      _publishSummary(WordProofingSummary(scheduled: automatic));
       _findings = HashMap.identity();
       _findingTexts.clear();
     } else {
@@ -1380,17 +1387,20 @@ final class WordProofingSession extends ChangeNotifier {
     refresh();
   }
 
-  List<WordProofingIssue> issuesAt(WmlParagraph paragraph, int offset) =>
-      _summary.issues
-          .where(
-            (issue) =>
-                identical(issue.paragraph, paragraph) &&
-                offset >= issue.finding.start &&
-                (issue.finding.start == issue.finding.end
-                    ? offset == issue.finding.end
-                    : offset < issue.finding.end),
-          )
-          .toList();
+  Iterable<WordProofingIssue> _issuesFor(WmlParagraph paragraph) {
+    final issues = _summary.issues;
+    final range = _issueRanges[paragraph];
+    return range == null ? const [] : issues.getRange(range.start, range.end);
+  }
+
+  List<WordProofingIssue> issuesAt(WmlParagraph paragraph, int offset) => [
+    for (final issue in _issuesFor(paragraph))
+      if (offset >= issue.finding.start &&
+          (issue.finding.start == issue.finding.end
+              ? offset == issue.finding.end
+              : offset < issue.finding.end))
+        issue,
+  ];
 
   _ProofingOccurrence _issueKey(
     OfficeProofingFinding finding,
@@ -1478,7 +1488,7 @@ final class WordProofingSession extends ChangeNotifier {
   /// provider configuration, story membership and complete paragraph snapshot.
   bool isCurrent(WordProofingIssue issue) {
     if (_disposed ||
-        !_summary.issues.contains(issue) ||
+        !_issuesFor(issue.paragraph).contains(issue) ||
         issue.finding.revision != _revision() ||
         issue.finding.documentId != _documentIds[_document()] ||
         issue._snapshot.configuration != _configurationKey) {
@@ -1569,10 +1579,9 @@ final class WordProofingSession extends ChangeNotifier {
       return null;
     }
     WordProofingIssue? currentEquivalent() {
-      for (final candidate in _summary.issues) {
+      for (final candidate in _issuesFor(issue.paragraph)) {
         final finding = candidate.finding;
-        if (identical(candidate.paragraph, issue.paragraph) &&
-            candidate._snapshot.key == issue._snapshot.key &&
+        if (candidate._snapshot.key == issue._snapshot.key &&
             candidate.language == issue.language &&
             finding.documentId == old.documentId &&
             finding.blockId == old.blockId &&
@@ -2458,11 +2467,11 @@ final class WordProofingSession extends ChangeNotifier {
     _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
     _pendingPublish = null;
     _clearProvisionalFindings();
-    final previous = HashMap<WmlParagraph, List<WordProofingIssue>>.identity();
     final previousByFinding =
         HashMap<OfficeProofingFinding, WordProofingIssue>.identity();
-    for (final issue in _published.issues) {
-      previous.putIfAbsent(issue.paragraph, () => []).add(issue);
+    final previousIssues = _published.issues;
+    final previousRanges = _issueRanges;
+    for (final issue in previousIssues) {
       previousByFinding[issue.finding] = issue;
     }
     final findings =
@@ -2471,6 +2480,8 @@ final class WordProofingSession extends ChangeNotifier {
       ..addAll(_published.reports);
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
+    final issueRanges =
+        HashMap<WmlParagraph, ({int start, int end})>.identity();
     final paragraphFindings = <OfficeProofingFinding>[];
     var checked = 0;
     // Where the user is typing, a finding touching the caret is most likely
@@ -2496,6 +2507,7 @@ final class WordProofingSession extends ChangeNotifier {
         checked++;
       }
       paragraphFindings.clear();
+      final issueStart = issues.length;
       for (var index = 0; index < snapshot.segments.length; index++) {
         final segment = snapshot.segments[index];
         final cachedReport = cached[index];
@@ -2552,17 +2564,20 @@ final class WordProofingSession extends ChangeNotifier {
             existing = null;
           }
           if (existing == null && !previouslyPublished) {
-            final candidates = previous[snapshot.paragraph];
-            if (candidates != null &&
-                candidates.first.finding.revision == revision &&
-                candidates.first._snapshot.key == snapshot.key) {
-              existing = candidates
-                  .where(
-                    (issue) =>
-                        issue.language == segment.language &&
-                        _sameFinding(issue.finding, finding),
-                  )
-                  .firstOrNull;
+            final range = previousRanges[snapshot.paragraph];
+            if (range != null) {
+              final first = previousIssues[range.start];
+              if (first.finding.revision == revision &&
+                  first._snapshot.key == snapshot.key) {
+                existing = previousIssues
+                    .getRange(range.start, range.end)
+                    .where(
+                      (issue) =>
+                          issue.language == segment.language &&
+                          _sameFinding(issue.finding, finding),
+                    )
+                    .firstOrNull;
+              }
             }
           }
           final issue =
@@ -2573,6 +2588,10 @@ final class WordProofingSession extends ChangeNotifier {
         }
       }
       if (paragraphFindings.isNotEmpty) {
+        issueRanges[snapshot.paragraph] = (
+          start: issueStart,
+          end: issues.length,
+        );
         final previousFindings = _findings[snapshot.paragraph];
         // The canvas indexes immutable publications. Progress in another
         // paragraph should not invalidate the current paragraph's index.
@@ -2585,16 +2604,19 @@ final class WordProofingSession extends ChangeNotifier {
       }
     }
     _findings = findings;
-    _summary = WordProofingSummary(
-      paragraphCount: captured.paragraphs.length,
-      checkedParagraphCount: checked,
-      skippedContentCount: captured.skipped,
-      hasResults: finished || reports.isNotEmpty,
-      reports: reports,
-      issues: issues,
-      checking: checking,
-      scheduled: scheduled,
-      manualProvidersSkipped: !useManual && _manualProvidersApplyTo(captured),
+    _publishSummary(
+      WordProofingSummary(
+        paragraphCount: captured.paragraphs.length,
+        checkedParagraphCount: checked,
+        skippedContentCount: captured.skipped,
+        hasResults: finished || reports.isNotEmpty,
+        reports: reports,
+        issues: issues,
+        checking: checking,
+        scheduled: scheduled,
+        manualProvidersSkipped: !useManual && _manualProvidersApplyTo(captured),
+      ),
+      issueRanges: issueRanges,
     );
   }
 

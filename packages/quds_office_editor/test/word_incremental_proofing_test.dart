@@ -107,6 +107,36 @@ class _Harness {
 
 void main() {
   test(
+    'local issue lookups follow edits, ignore and document replacement',
+    () async {
+      final h = _Harness(['Feler first', 'Feler and Feler', 'Feler last']);
+      final [first, middle, last] = h.paragraphs;
+      final initial = await h.session.checkNow();
+      expect(h.session.issuesAt(middle, 1), [initial.issues[1]]);
+      expect(h.session.issuesAt(middle, 11), [initial.issues[2]]);
+
+      h.edit(0, 'Fehler first');
+      expect(h.session.issuesAt(first, 1), isEmpty);
+      final retained = h.session.issuesAt(middle, 11).single;
+      expect(retained.finding.revision, h.revision);
+      expect(h.session.isCurrent(initial.issues[2]), isFalse);
+      expect(h.session.isCurrent(retained), isTrue);
+
+      h.session.ignoreOnce(retained);
+      expect(h.session.issuesAt(middle, 11), isEmpty);
+      expect(h.session.issuesAt(middle, 1).single.paragraph, same(middle));
+      expect(h.session.issuesAt(last, 1).single.paragraph, same(last));
+      expect(h.session.isCurrent(retained), isFalse);
+
+      h.document = _document(['Feler replacement']);
+      h.changed();
+      expect(h.session.issuesAt(middle, 1), isEmpty);
+      final replacement = (await h.session.checkNow()).issues.single;
+      expect(h.session.issuesAt(h.paragraphs.single, 1), [replacement]);
+    },
+  );
+
+  test(
     'target validation reads only its paragraph and tracks earlier fields',
     () async {
       final preceding = _CountedParagraph('Field heading');
