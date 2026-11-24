@@ -69,6 +69,24 @@ LaidOutBox? _scanPoint(List<LaidOutBox> boxes, double x, double y) {
 }
 
 void main() {
+  test('selection can inspect every covering cell, including hidden cells', () {
+    final outerTable = WmlTable();
+    final innerTable = WmlTable();
+    final outer = _box(1, 8, 50, table: outerTable);
+    final hidden = _box(2, 5, 25, height: 0, table: innerTable);
+    final bandOnly = _box(null, 12, 4, table: innerTable);
+    final invalid = _box(4, 3, 4, table: innerTable);
+    final index = WordPageCellIndex([outer, hidden, bandOnly, invalid]);
+
+    expect(index.anyAt(3, (box) => identical(box, hidden)), isTrue);
+    expect(index.anyAt(6, (box) => identical(box, hidden)), isFalse);
+    expect(index.anyAt(10, (box) => identical(box.table, innerTable)), isTrue);
+    expect(index.anyAt(3, (box) => identical(box, invalid)), isFalse);
+    expect(index.anyAt(13, (_) => true), isFalse);
+    expect(index.smallestAt(3), same(outer));
+    expect(index.smallestAt(10), isNull);
+  });
+
   test('pointer hits include shared edges and cells without text', () {
     final lower = _box(0, 0, 40, y: 30);
     final upper = _box(1, 1, 40);

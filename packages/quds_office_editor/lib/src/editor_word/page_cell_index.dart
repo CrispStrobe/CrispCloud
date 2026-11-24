@@ -1,6 +1,6 @@
 import 'package:quds_office_engine/quds_office_engine.dart';
 
-/// Resolves the innermost table cell for a paragraph on one laid-out page.
+/// Locates table cells by paragraph range or position on a laid-out page.
 final class WordPageCellIndex {
   WordPageCellIndex(this._frames);
 
@@ -10,14 +10,20 @@ final class WordPageCellIndex {
 
   LaidOutBox? smallestAt(int paragraph, {WmlFrame? containingFrame}) =>
       _paragraphs.smallestAt(paragraph, containingFrame: containingFrame);
+
+  bool anyAt(int paragraph, bool Function(LaidOutBox) matches) =>
+      _paragraphs.anyAt(paragraph, matches);
 }
 
 final class _ParagraphCells {
   _ParagraphCells(List<LaidOutBox> frames) {
     for (var order = 0; order < frames.length; order++) {
       final box = frames[order];
-      final start = box.paragraphIndex;
-      if (box.kind != LaidOutBoxKind.tableCell || start == null) continue;
+      if (box.kind != LaidOutBoxKind.tableCell) continue;
+      if (box.paragraphIndex == null && box.paragraphEnd == null) continue;
+      // Table-band selection can cover an end-only range, even though
+      // the box does not own text for clipping.
+      final start = box.paragraphIndex ?? -1;
       final end = box.paragraphEnd ?? start;
       if (end < start) continue;
       _cells.add((start: start, end: end, order: order, box: box));
@@ -33,7 +39,7 @@ final class _ParagraphCells {
   final _cells = <({int start, int end, int order, LaidOutBox box})>[];
   final _endsThrough = <int>[];
 
-  LaidOutBox? smallestAt(int paragraph, {WmlFrame? containingFrame}) {
+  int _afterStart(int paragraph) {
     // Only cells starting at or before this paragraph can own its text.
     var lower = 0;
     var upper = _cells.length;
@@ -45,6 +51,22 @@ final class _ParagraphCells {
         upper = middle;
       }
     }
+    return lower;
+  }
+
+  bool anyAt(int paragraph, bool Function(LaidOutBox) matches) {
+    for (
+      var index = _afterStart(paragraph) - 1;
+      index >= 0 && _endsThrough[index] >= paragraph;
+      index--
+    ) {
+      final cell = _cells[index];
+      if (cell.end >= paragraph && matches(cell.box)) return true;
+    }
+    return false;
+  }
+
+  LaidOutBox? smallestAt(int paragraph, {WmlFrame? containingFrame}) {
     late final frameTables = WordTree.descendants(
       containingFrame!.blocks,
     ).whereType<WmlTable>().toSet();
@@ -52,13 +74,17 @@ final class _ParagraphCells {
     var bestArea = double.infinity;
     var bestOrder = _cells.length;
     for (
-      var index = lower - 1;
+      var index = _afterStart(paragraph) - 1;
       index >= 0 && _endsThrough[index] >= paragraph;
       index--
     ) {
       final cell = _cells[index];
       final box = cell.box;
-      if (cell.end < paragraph || box.height <= 0) continue;
+      if (cell.end < paragraph ||
+          box.paragraphIndex == null ||
+          box.height <= 0) {
+        continue;
+      }
       if (containingFrame != null && !frameTables.contains(box.table)) {
         // An absolute frame's text must only be clipped by its own tables.
         continue;

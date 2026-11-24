@@ -4350,39 +4350,14 @@ class RenderWordCanvas extends RenderBox
     if (!caret.coversParagraph(line.paragraphIndex)) {
       return false;
     }
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell) {
-        continue;
-      }
-      final int start = box.paragraphIndex ?? -1;
-      final int end = box.paragraphEnd ?? start;
-      if (line.paragraphIndex >= start &&
-          line.paragraphIndex <= end &&
-          _selectionLeavesCell(box)) {
-        // The whole cell is filled instead; a text band on top would
-        // double the tint.
-        return false;
-      }
-    }
-    final ({WmlTable table, bool column, int from, int to})? band =
-        selectedTableBand;
-    if (band == null) {
-      return true;
-    }
-    for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell || box.table == null) {
-        continue;
-      }
-      if (!identical(box.table, band.table)) {
-        continue;
-      }
-      final int start = box.paragraphIndex ?? -1;
-      final int end = box.paragraphEnd ?? start;
-      if (line.paragraphIndex >= start && line.paragraphIndex <= end) {
-        return false;
-      }
-    }
-    return true;
+    if (page.frames.isEmpty) return true;
+    final bandTable = selectedTableBand?.table;
+    return !_pageCellIndex(page).anyAt(
+      line.paragraphIndex,
+      (box) =>
+          _selectionLeavesCell(box) ||
+          (bandTable != null && identical(box.table, bandTable)),
+    );
   }
 
   bool get _ctrlFollow =>
