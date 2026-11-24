@@ -813,11 +813,30 @@ final class WordProofingSession extends ChangeNotifier {
       result._configuration == draftConfigurationKey &&
       result.sourceText == text;
 
-  String get _configurationKey =>
-      '$_configuration|${_service.configurationKey}|'
-      '${_manualService?.configurationKey ?? ''}|${vocabulary.revision}|'
-      '$language|${_ignoredRules.join(',')}|'
-      '${_detectionActive ? 'lid' : ''}';
+  Object? _lastConfigurationInputs;
+  String _lastConfigurationKey = '';
+  String _ignoredRuleKey = '';
+
+  String get _configurationKey {
+    final inputs = (
+      revision: _configuration,
+      ordinary: _service.configurationKey,
+      manual: _manualService?.configurationKey ?? '',
+      vocabulary: vocabulary.revision,
+      language: _document().proofingLanguage,
+      ignoredRules: _ignoredRuleKey,
+      detection: _detectionActive,
+    );
+    if (inputs != _lastConfigurationInputs) {
+      final language = normalizeProofingLanguage(inputs.language ?? 'de-DE');
+      _lastConfigurationKey =
+          '${inputs.revision}|${inputs.ordinary}|${inputs.manual}|'
+          '${inputs.vocabulary}|$language|${inputs.ignoredRules}|'
+          '${inputs.detection ? 'lid' : ''}';
+      _lastConfigurationInputs = inputs;
+    }
+    return _lastConfigurationKey;
+  }
 
   bool get _detectionActive =>
       !_disposed && _automaticLanguageDetection && _languageDetector != null;
@@ -1481,11 +1500,15 @@ final class WordProofingSession extends ChangeNotifier {
   }
 
   void ignoreRule(String ruleId) {
-    if (_ignoredRules.add(ruleId)) refresh();
+    if (!_ignoredRules.add(ruleId)) return;
+    _ignoredRuleKey = _ignoredRules.join(',');
+    refresh();
   }
 
   void restoreRule(String ruleId) {
-    if (_ignoredRules.remove(ruleId)) refresh();
+    if (!_ignoredRules.remove(ruleId)) return;
+    _ignoredRuleKey = _ignoredRules.join(',');
+    refresh();
   }
 
   /// Results are accepted only for the current document, revision, language,
