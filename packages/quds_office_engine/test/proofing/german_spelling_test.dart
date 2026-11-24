@@ -355,11 +355,17 @@ void main() {
         (await provider.check(input('Qudsmarke', language: 'de-CH'))).findings,
         isEmpty,
       );
+      // A known token from the Swiss cache still needs checking in Germany.
+      expect((await provider.check(input('Qudsmarke'))).findings, hasLength(1));
       provider.vocabulary.ignoreWord('Qudsmarke');
-      expect((await provider.check(input('Qudsmarke'))).findings, isEmpty);
+      expect(
+        (await provider.check(input('Qudsmarke Qudsmarke'))).findings,
+        isEmpty,
+      );
       provider.vocabulary.unignoreWord('Qudsmarke');
       expect((await provider.check(input('Qudsmarke'))).findings, hasLength(1));
       provider.vocabulary.addWord('Qudsmarke');
+      expect((await provider.check(input('Qudsmarke'))).findings, isEmpty);
       provider.vocabulary.removeWord('Qudsmarke');
       expect((await provider.check(input('Qudsmarke'))).findings, hasLength(1));
     },

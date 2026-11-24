@@ -265,7 +265,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   /// a paragraph without scheduling timer turns between tokens.
   final bool yieldBetweenChecks;
   late final _distance = GermanSuggestionDistance();
-  int _suggestionRevision = -1;
+  int _cachedVocabularyRevision = -1;
+  var _knownWordsByLanguage = <String, Set<String>>{};
+  static const _maxCachedWordsPerLanguage = 1024;
   var _suggestions = <(String, String, bool, String?), List<String>>{};
   static const _maxCachedSuggestions = 1024;
 
@@ -380,10 +382,15 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final int vocabularyRevision = vocabulary.revision;
     final Set<String> personal = vocabulary.wordsFor(request.language);
     final Set<String> ignored = vocabulary.ignoredWordsFor(request.language);
-    if (_suggestionRevision != vocabularyRevision) {
-      _suggestionRevision = vocabularyRevision;
+    if (_cachedVocabularyRevision != vocabularyRevision) {
+      _cachedVocabularyRevision = vocabularyRevision;
+      _knownWordsByLanguage = {};
       _suggestions = {};
     }
+    final knownWords = _knownWordsByLanguage.putIfAbsent(
+      request.language,
+      () => <String>{},
+    );
     final suggestions = _suggestions;
     final _GermanLexicon lexicon = await _lexicon();
     final bool swiss = request.language == 'de-CH';
@@ -406,9 +413,17 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         continue;
       }
       final String original = token.group(0)!;
+      if (knownWords.contains(original)) continue;
       final String word = normalizeGermanWord(original);
       if (ignored.contains(word) ||
           lexicon._knownAsWritten(word, swiss, personal)) {
+        // Only exact matches and ignored words are independent of context.
+        if (original.length <= 128) {
+          if (knownWords.length == _maxCachedWordsPerLanguage) {
+            knownWords.remove(knownWords.first);
+          }
+          knownWords.add(original);
+        }
         continue;
       }
       final bool sentenceInitial = _isSentenceInitial(
