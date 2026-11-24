@@ -1967,7 +1967,6 @@ final class WordProofingSession extends ChangeNotifier {
           _cache[paragraph] = _CachedParagraph(
             snapshot.key,
             reports,
-            false,
             cached.kinds,
           );
         }
@@ -2158,6 +2157,7 @@ final class WordProofingSession extends ChangeNotifier {
           previous.reports.every(_settled);
       final missing = reusable ? wanted.difference(previous.kinds) : wanted;
       final paragraphReports = <OfficeProofingReport>[];
+      final ordinaryReports = useManual ? <OfficeProofingReport>[] : null;
       // Every available group already has settled results (an empty
       // provider selection must never be sent or cached).
       if (!useManual && missing.isEmpty) return null;
@@ -2183,6 +2183,7 @@ final class WordProofingSession extends ChangeNotifier {
             : _carryOver(previous, snapshot, missing, ordinary) ?? ordinary;
         if (!current()) return null;
         paragraphReports.add(report);
+        ordinaryReports?.add(ordinary);
       }
       final checkedKinds = useManual
           ? _Kind.values.toSet()
@@ -2190,8 +2191,8 @@ final class WordProofingSession extends ChangeNotifier {
       return _CachedParagraph(
         snapshot.key,
         paragraphReports,
-        useManual,
         checkedKinds,
+        ordinaryReports: ordinaryReports,
       );
     }
 
@@ -2468,29 +2469,10 @@ final class WordProofingSession extends ChangeNotifier {
         cached.reports.length != snapshot.segments.length) {
       return null;
     }
-    if (cached.includesManual == useManual ||
-        (useManual && allowOrdinaryPreview)) {
-      return cached.reports;
-    }
-    if (useManual) return null;
-    // A full check contains the ordinary results unchanged. Keep those marks
-    // during typing, but never carry manual findings or coverage into a
-    // background pass, and never start the manual service here.
-    final manualIds = {
-      for (final provider
-          in _manualService?.providers ?? const <OfficeProofingProvider>[])
-        provider.id,
-    };
-    return [
-      for (final report in cached.reports)
-        OfficeProofingReport(
-          request: report.request,
-          results: [
-            for (final result in report.results)
-              if (!manualIds.contains(result.providerId)) result,
-          ],
-        ),
-    ];
+    if (!useManual) return cached.ordinaryReports ?? cached.reports;
+    return cached.includesManual || allowOrdinaryPreview
+        ? cached.reports
+        : null;
   }
 
   OfficeProofingReport _reportForPublication(
@@ -3406,12 +3388,17 @@ final class _CachedParagraph {
   const _CachedParagraph(
     this.key,
     this.reports,
-    this.includesManual, [
-    this.kinds = const {_Kind.spelling, _Kind.grammar},
-  ]);
+    this.kinds, {
+    this.ordinaryReports,
+  });
+
   final String key;
   final List<OfficeProofingReport> reports;
-  final bool includesManual;
+
+  /// Original provider reports before merging manual results. Background
+  /// proofing can reuse these without rebuilding their findings.
+  final List<OfficeProofingReport>? ordinaryReports;
+  bool get includesManual => ordinaryReports != null;
 
   /// The provider groups whose results [reports] contain.
   final Set<_Kind> kinds;

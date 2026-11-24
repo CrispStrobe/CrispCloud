@@ -56,10 +56,28 @@ final class _ManualProbe extends OfficeProofingProvider {
   Future<void> dispose() async => disposals++;
 }
 
+final class _RecordingService extends OfficeProofingService {
+  _RecordingService(OfficeProofingProvider provider)
+    : super(providers: [provider]);
+
+  final reports = <OfficeProofingReport>[];
+
+  @override
+  Future<OfficeProofingReport> check(
+    OfficeProofingRequest request, {
+    bool Function(OfficeProofingProvider provider)? only,
+  }) async {
+    final report = await super.check(request, only: only);
+    reports.add(report);
+    return report;
+  }
+}
+
 void main() {
   late WmlDocument document;
   late int revision;
   late _ManualProbe ordinary;
+  late _RecordingService ordinaryService;
   late _ManualProbe manual;
   late WordProofingSession session;
 
@@ -68,11 +86,12 @@ void main() {
     document.proofingLanguage = 'de-DE';
     revision = 0;
     ordinary = _ManualProbe('rules');
+    ordinaryService = _RecordingService(ordinary);
     manual = _ManualProbe('model', range: (start: 3, end: 6));
     session = WordProofingSession(
       document: () => document,
       revision: () => revision,
-      service: OfficeProofingService(providers: [ordinary]),
+      service: ordinaryService,
       debounce: Duration.zero,
     );
     addTearDown(session.dispose);
@@ -115,7 +134,10 @@ void main() {
     expect(manual.calls, 1);
     await session.checkNow();
     expect(manual.calls, 1);
+    final original = ordinaryService.reports.last;
     final background = await session.checkNow(includeManualProviders: false);
+    expect(background.reports.single, same(original));
+    expect(ordinary.calls, 2);
     expect(background.issues, isEmpty);
     expect(background.manualProvidersSkipped, isTrue);
     await session.checkNow();
