@@ -417,7 +417,9 @@ jobs:
   collection-browser:
     name: Browser storage + terminal (Chrome)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 2026-11-24: all browser tests passed and the job still hit 15 min on a
+    # slow runner, two seconds before the step ended.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - name: Select Xcode 26.3 on macOS
