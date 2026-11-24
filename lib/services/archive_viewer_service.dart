@@ -19,6 +19,7 @@
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as ar;
+import 'package:flutter/foundation.dart' show compute;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_cab_reader.dart';
@@ -536,11 +537,15 @@ Future<ViewerArchive> _openCompressedSource(
   final notices = <String>[];
   final Uint8List decompressed;
   if (compression == 'lz4') {
-    final decoded = decodeArchiveLz4(
-      input,
-      maxOutputBytes: maxMemberBytes < kArchiveReadLimit
-          ? maxMemberBytes
-          : kArchiveReadLimit,
+    final decoded = await compute(
+      (request) => decodeArchiveLz4(request.bytes, maxOutputBytes: request.limit),
+      (
+        bytes: input,
+        limit: maxMemberBytes < kArchiveReadLimit
+            ? maxMemberBytes
+            : kArchiveReadLimit,
+      ),
+      debugLabel: 'archive-preview-lz4',
     );
     decompressed = decoded.bytes;
     notices.add(
@@ -552,11 +557,12 @@ Future<ViewerArchive> _openCompressedSource(
       );
     }
   } else {
-    decompressed = decompressSingleFile(
+    final expanded = await decompressSingleFileForPreview(
       input,
       'payload.$compression',
       maxBytes: maxMemberBytes,
-    ).data;
+    );
+    decompressed = expanded.data;
     if (compression == 'lzma') {
       notices.add(
         'LZMA-alone has no stored content checksum. Stream boundaries, decoded size, dictionary distances and range-coder completion were checked.',
@@ -1558,6 +1564,21 @@ String stripCompressionSuffix(String name) {
 
 /// Decompress a single-file `.gz`/`.bz2`/`.xz`/`.zst` payload, bounded by
 /// [maxBytes] so compression bombs cannot exhaust memory.
+Future<({Uint8List data, String innerName})> decompressSingleFileForPreview(
+  Uint8List bytes,
+  String name, {
+  int maxBytes = kArchiveReadLimit,
+}) => compute(
+  (request) => decompressSingleFile(
+    request.bytes,
+    request.name,
+    maxBytes: request.limit,
+  ),
+  (bytes: bytes, name: name, limit: maxBytes),
+  debugLabel: 'archive-preview-decompress',
+);
+
+/// Decode synchronously for callers already running outside the UI isolate.
 ({Uint8List data, String innerName}) decompressSingleFile(
   Uint8List bytes,
   String name, {

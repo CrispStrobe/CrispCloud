@@ -24,11 +24,13 @@ class LrcPreview extends StatefulWidget {
     required this.document,
     required this.onShowSource,
     this.fontScale = 1,
+    this.scrollController,
   });
 
   final LrcDocument document;
   final VoidCallback onShowSource;
   final double fontScale;
+  final ScrollController? scrollController;
 
   @override
   State<LrcPreview> createState() => _LrcPreviewState();
@@ -56,6 +58,7 @@ class _LrcPreviewState extends State<LrcPreview> {
     final metadataCount = document.metadata.length;
     final theme = Theme.of(context);
     return ListView.builder(
+      controller: widget.scrollController,
       key: ValueKey('lrc-rows-$_timeline'),
       padding: const EdgeInsets.all(12),
       itemCount: 1 + metadataCount + cues.length,

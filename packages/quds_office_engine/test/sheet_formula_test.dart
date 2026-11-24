@@ -37,6 +37,46 @@ void main() {
     expect(evaluateFormula('=VLOOKUP("y",D1:E2,2)', ctx), 9);
   });
 
+  test('unsupported aliases return #NAME? instead of a wrong function', () {
+    final SmlWorkbook book = SmlWorkbook();
+    final SmlWorksheet sheet = book.firstSheet;
+    sheet.cellA1('A1').value = 1;
+    sheet.cellA1('A2').value = 2;
+    final FormulaContext ctx = FormulaContext(
+      workbook: book,
+      sheet: sheet,
+      origin: SmlCellRef.parse('B1'),
+    );
+    expect(
+      FormulaErrorValue.unwrap(evaluateFormula('=SUBTOTAL(9,A1:A2)', ctx)),
+      '#NAME?',
+    );
+    expect(
+      FormulaErrorValue.unwrap(
+        evaluateFormula('=MAXIFS(A1:A2,A1:A2,">0")', ctx),
+      ),
+      '#NAME?',
+    );
+  });
+
+  test('formula budget stops whole-sheet ranges before allocation', () {
+    final SmlWorkbook book = SmlWorkbook();
+    book.firstSheet.cellA1('A1').formula = '=COUNTIF(A1:XFD1048576,1)';
+    // The oversized dependency is refused before expansion. It keeps the
+    // imported cache or becomes an explicit unsupported result; it never
+    // materializes 17 billion cell coordinates.
+    expect(FormulaEvaluator.recalculate(book), ['Sheet1!A1']);
+    expect(book.firstSheet.cellA1('A1').type, SmlCellType.error);
+    expect(book.firstSheet.cellA1('A1').value, isA<String>());
+  });
+
+  test('REPT is capped before building an enormous string', () {
+    final SmlWorkbook book = SmlWorkbook();
+    book.firstSheet.cellA1('A1').formula = '=REPT("x",1000000000)';
+    FormulaEvaluator.recalculate(book);
+    expect(book.firstSheet.cellA1('A1').value, '#VALUE!');
+  });
+
   test('detects circular references and recalculates a workbook', () {
     final SmlWorkbook book = SmlWorkbook();
     book.firstSheet.cellA1('A1').value = 2;
@@ -285,8 +325,10 @@ void main() {
     expect(applyNumberFormat(-3, '[Red]0'), 'RED:-3');
     expect(applyNumberFormat(12.3, '0.00'), '12.30');
     final DateTime sep = DateTime.utc(2026, 9, 9);
-    final double serial =
-        sep.difference(DateTime.utc(1899, 12, 30)).inDays.toDouble();
+    final double serial = sep
+        .difference(DateTime.utc(1899, 12, 30))
+        .inDays
+        .toDouble();
     expect(applyNumberFormat(serial, 'd-mmm'), '9-Sep');
     expect(applyNumberFormat(serial, 'yyyy-mm-dd'), '2026-09-09');
   });
@@ -479,7 +521,12 @@ void main() {
     expect(evaluateFormula('=TEXT(12,"0.00")', ctx), '12.00');
     expect(evaluateFormula('=INDIRECT("A1")', ctx), 2);
     expect(evaluateFormula('=OFFSET(A1,0,0)', ctx), 2);
-    FormulaEvaluator.applyInput(book, sheet, sheet.cellA1('B1'), '=SEQUENCE(2,2,1,1)');
+    FormulaEvaluator.applyInput(
+      book,
+      sheet,
+      sheet.cellA1('B1'),
+      '=SEQUENCE(2,2,1,1)',
+    );
     expect(sheet.cellA1('B1').value, 1);
     expect(sheet.cellA1('C1').value, 2);
     expect(sheet.cellA1('B2').value, 3);
@@ -506,18 +553,20 @@ void main() {
         formula: 'keep',
       ),
     );
-    sheet.comments.add(
-      SmlComment(ref: SmlCellRef.parse('A1'), text: 'Header'),
-    );
-    sheet.tables.add(
-      SmlTable(name: 'T1', range: SmlRange.parse('A1:A3')),
-    );
+    sheet.comments.add(SmlComment(ref: SmlCellRef.parse('A1'), text: 'Header'));
+    sheet.tables.add(SmlTable(name: 'T1', range: SmlRange.parse('A1:A3')));
     sheet.protection = SmlSheetProtection(enabled: true);
     sheet.autoFilter = SmlAutoFilter(range: SmlRange.parse('A1:A3'))
       ..hiddenValues[0] = <String>{'hide'};
     expect(sheet.rowHeightAt(2), 0);
-    expect(SmlAnalysis.validateInput(sheet, SmlCellRef.parse('B1'), 'Nope'), isNotNull);
-    expect(SmlAnalysis.validateInput(sheet, SmlCellRef.parse('B1'), 'Yes'), isNull);
+    expect(
+      SmlAnalysis.validateInput(sheet, SmlCellRef.parse('B1'), 'Nope'),
+      isNotNull,
+    );
+    expect(
+      SmlAnalysis.validateInput(sheet, SmlCellRef.parse('B1'), 'Yes'),
+      isNull,
+    );
     final SmlWorkbook opened = SheetDeserializer().readBytes(
       SheetSerializer().writeBytes(book),
     );
@@ -557,9 +606,7 @@ void main() {
     sheet.cellA1('A1').value = 'Amt';
     sheet.cellA1('A2').value = 2;
     sheet.cellA1('A3').value = 4;
-    sheet.tables.add(
-      SmlTable(name: 'Sales', range: SmlRange.parse('A1:A3')),
-    );
+    sheet.tables.add(SmlTable(name: 'Sales', range: SmlRange.parse('A1:A3')));
     final FormulaContext ctx = FormulaContext(
       workbook: book,
       sheet: sheet,
@@ -600,11 +647,11 @@ void main() {
       sheet: sheet,
       origin: SmlCellRef.parse('B2'),
     );
+    expect(evaluateFormula('=HYPERLINK("https://a.test","A")', ctx), 'A');
     expect(
-      evaluateFormula('=HYPERLINK("https://a.test","A")', ctx),
-      'A',
+      evaluateFormula('=HYPERLINK("https://a.test")', ctx),
+      'https://a.test',
     );
-    expect(evaluateFormula('=HYPERLINK("https://a.test")', ctx), 'https://a.test');
     expect(evaluateFormula('=ADDRESS(2,3)', ctx), r'$C$2');
     expect(evaluateFormula('=ADDRESS(2,3,4)', ctx), 'C2');
     expect(evaluateFormula('=CELL("address",A1)', ctx), 'A1');

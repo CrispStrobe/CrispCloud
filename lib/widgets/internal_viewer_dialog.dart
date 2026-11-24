@@ -120,6 +120,7 @@ import 'binary_structure_dialog.dart';
 import 'disk_partition_dialog.dart';
 import 'lrc_preview.dart';
 import 'internal_viewer_views.dart';
+import 'document_page_navigation.dart';
 import 'office_html_widget_factory.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
@@ -392,6 +393,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   PdfViewerBackend? _pdfBackend;
   final _pdfRendererKey = GlobalKey<PdfRendererViewState>();
   final _nativePdfKey = GlobalKey<PdfPagePanelState>();
+  final _slideViewerKey = GlobalKey<PptxSlideViewerState>();
 
   /// When a plain .gz/.bz2 was expanded, the (decompressed) inner file name.
   String? _expansionName;
@@ -826,11 +828,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Future<bool> _expandSingleCompressed() async {
     try {
       final data = await _ensureFullData();
-      final expanded = decompressSingleFile(
+      final expanded = await decompressSingleFileForPreview(
         data,
         _viewName,
         maxBytes: kViewerFullDataCap,
       );
+      if (!mounted) return false;
       _expansionName = expanded.innerName;
       await _useMemorySource(expanded.data);
       return true;
@@ -1218,7 +1221,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               ? pdfPreferences.secondaryViewer
               : pdfPreferences.viewer;
           if (!mounted || token != _prepareToken) return;
-          if (_pdfBackend != PdfViewerBackend.native) {
+          final usePdfium =
+              useWindowsPdfiumPages && _pdfBackend == PdfViewerBackend.pdfEditor;
+          if (_pdfBackend != PdfViewerBackend.native && !usePdfium) {
             await _ensureFullData();
             if (mounted && token == _prepareToken) {
               setState(() => _preparing = false);
@@ -1254,7 +1259,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (doc == null) {
             final data = await _ensureFullData();
             if (!mounted || token != _prepareToken) return;
-            doc = await PdfDocument.openData(data);
+            try {
+              doc = await PdfDocument.openData(data);
+            } catch (error, stack) {
+              if (!usePdfium) rethrow;
+              _log.warn('PDFium could not open PDF; using portable viewer',
+                  error, stack);
+              if (mounted && token == _prepareToken) {
+                setState(() => _preparing = false);
+              }
+              return;
+            }
           }
           if (!mounted || token != _prepareToken) {
             unawaited(doc.close().catchError((Object _) {}));
@@ -2157,6 +2172,33 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return positions.length == 1 ? positions.first : null;
   }
 
+  KeyEventResult _onPageKey(FocusNode node, KeyEvent event) {
+    final direction = documentPageDirection(event);
+    if (direction == null) return KeyEventResult.ignored;
+    if (FocusManager.instance.primaryFocus == _searchFocus) {
+      return KeyEventResult.ignored;
+    }
+    if (_nativePdfKey.currentState case final pdf?) {
+      pdf.scrollPage(direction);
+    } else if (_pdfRendererKey.currentState case final pdf?) {
+      pdf.scrollPage(direction);
+    } else if (_slideViewerKey.currentState case final slides?) {
+      slides.movePage(direction);
+    } else if (_scrollPosition case final position?) {
+      scrollDocumentViewport(position, direction);
+    } else if (_mode == ViewerMode.office &&
+        _officeView == _OfficeView.pages &&
+        _officePageController is WordEditorController) {
+      scrollOfficeWordViewport(
+        _officePageController as WordEditorController,
+        direction,
+      );
+    } else {
+      return KeyEventResult.ignored;
+    }
+    return KeyEventResult.handled;
+  }
+
   int _topVisibleRow() {
     final position = _scrollPosition;
     if (position == null) return 0;
@@ -2174,8 +2216,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   void _adjustZoom(double delta) {
     if (_mode == ViewerMode.pdf && !_pdfShowText) {
       final factor = delta > 0 ? 1.2 : 1 / 1.2;
-      if (_pdfBackend == PdfViewerBackend.native) {
-        _nativePdfKey.currentState?.zoomBy(factor);
+      if (_nativePdfKey.currentState case final native?) {
+        native.zoomBy(factor);
       } else {
         _pdfRendererKey.currentState?.zoomBy(factor);
       }
@@ -3396,6 +3438,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       child: Focus(
         focusNode: _viewerFocus,
         autofocus: true,
+        onKeyEvent: _onPageKey,
         child: Scaffold(
           backgroundColor: theme.colorScheme.surface,
           appBar: AppBar(
@@ -3882,16 +3925,6 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               ),
             ),
           ),
-          IconButton(
-            tooltip: context.commanderTr('Open secondary PDF viewer'),
-            icon: const Icon(Icons.swap_horiz),
-            onPressed: () async {
-              final prefs = await PdfOpenPreferences.load();
-              if (!mounted) return;
-              _pdfBackend = prefs.secondaryViewer;
-              _selectMode(ViewerMode.pdf);
-            },
-          ),
           SegmentedButton<bool>(
             style: _compactButtonStyle,
             segments: [
@@ -4250,6 +4283,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildImageBody();
       case ViewerMode.markdown:
         return Markdown(
+          controller: _vScroll,
           data: _richText ?? '',
           selectable: true,
           padding: const EdgeInsets.all(12),
@@ -4279,6 +4313,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           document: lyrics,
           fontScale: _zoom,
           onShowSource: () => _selectMode(ViewerMode.text),
+          scrollController: _vScroll,
         );
       case ViewerMode.font:
         final data = _fullData;
@@ -4288,9 +4323,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             theme,
           );
         }
-        return FontPreview(fontBytes: data, filename: _viewName);
+        return FontPreview(
+          fontBytes: data,
+          filename: _viewName,
+          scrollController: _vScroll,
+        );
       case ViewerMode.csv:
-        return CsvTableView(content: _richText ?? '', filename: _viewName);
+        return CsvTableView(
+          content: _richText ?? '',
+          filename: _viewName,
+          scrollController: _vScroll,
+        );
       case ViewerMode.office:
         return _buildOfficeBody(theme);
       case ViewerMode.email:
@@ -4305,6 +4348,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             onShowSource: () => _selectMode(ViewerMode.text),
             fontScale: _zoom,
             onOpenAttachment: _openEmailAttachment,
+            scrollController: _vScroll,
             body: _searchOpen && _previewLines != null
                 ? _buildPreviewSearchBody()
                 : null,
@@ -4324,6 +4368,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           message: message,
           fontScale: _zoom,
           onOpenAttachment: _openEmailAttachment,
+          scrollController: _vScroll,
         );
       case ViewerMode.archive:
         return _buildArchiveList(theme);
@@ -4510,7 +4555,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final capped = text.length > _kRichRenderCap
         ? text.substring(0, _kRichRenderCap)
         : text;
-    return XmlTreeView(xml: capped, fontSize: 12.5 * _zoom);
+    return XmlTreeView(
+      xml: capped,
+      fontSize: 12.5 * _zoom,
+      scrollController: _vScroll,
+    );
   }
 
   Widget _buildMarkupSource(String text) {
@@ -4738,7 +4787,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (deck == null) {
           return _buildOfficeText(document, theme);
         }
-        return PptxSlideViewer(deck: deck, fontScale: _zoom);
+        return PptxSlideViewer(
+          key: _slideViewerKey,
+          deck: deck,
+          fontScale: _zoom,
+        );
       case _OfficeView.pages:
         final pages = _officePageController;
         if (pages is WordEditorController) {
@@ -4796,7 +4849,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           children: [
             if (_officePdfFonts case final report? when report.hasFontNotice)
               OfficePdfFontNotice(report: report),
-            Expanded(child: PdfPagePanel(controller: controller)),
+            Expanded(
+              child: PdfPagePanel(
+                key: _nativePdfKey,
+                controller: controller,
+                document: _pdfDoc,
+              ),
+            ),
           ],
         );
       case _OfficeView.table:
@@ -4806,7 +4865,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           final localized = OfficePreviewStrings(
             locale,
           ).headings(csv, document.csvHeadings, locale);
-          return CsvTableView(content: localized, filename: _viewName);
+          return CsvTableView(
+            content: localized,
+            filename: _viewName,
+            scrollController: _vScroll,
+          );
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
@@ -4847,6 +4910,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           );
         }
         return Markdown(
+          controller: _vScroll,
           data: markdown,
           selectable: true,
           padding: const EdgeInsets.all(12),
@@ -4894,7 +4958,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             theme,
           );
         }
-        return XmlTreeView(xml: raw, fontSize: 12.5 * _zoom);
+        return XmlTreeView(
+          xml: raw,
+          fontSize: 12.5 * _zoom,
+          scrollController: _vScroll,
+        );
     }
   }
 
@@ -4938,6 +5006,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Widget _buildPdfBody(ThemeData theme) {
     if (_pdfShowText) return _buildPdfTextView(theme);
+    if (_pdfController case final native?) {
+      return PdfPagePanel(
+        key: _nativePdfKey,
+        controller: native,
+        document: _pdfDoc,
+      );
+    }
     if (_pdfBackend != null &&
         _pdfBackend != PdfViewerBackend.native &&
         _fullData != null) {
@@ -4954,18 +5029,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         ),
       );
     }
-    final controller = _pdfController;
-    if (controller == null) {
-      return Center(
-        child: Text(
-          context.commanderTr("Rendering PDF…"),
-          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-        ),
-      );
-    }
-    return _pdfShowText
-        ? _buildPdfTextView(theme)
-        : PdfPagePanel(key: _nativePdfKey, controller: controller);
+    return Center(
+      child: Text(
+        context.commanderTr("Rendering PDF…"),
+        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+      ),
+    );
   }
 
   Widget _buildPdfTextView(ThemeData theme) {
@@ -5024,9 +5093,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!current()) return;
       setState(() {
         _pdfTextLoading = false;
-        if (text == null) {
-          _pdfTextError = InternalViewerStrings(context).text('pdfUnsupported');
-        } else if (text.trim().isEmpty) {
+        if (text.trim().isEmpty) {
           _pdfTextError = InternalViewerStrings(context).text('pdfNoText');
         } else {
           _pdfText = text;
@@ -5143,6 +5210,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             theme,
           )
         : ListView.builder(
+            controller: _vScroll,
             itemCount: files.length,
             itemBuilder: (context, index) {
               final member = files[index];

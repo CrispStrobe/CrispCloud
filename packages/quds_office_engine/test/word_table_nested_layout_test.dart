@@ -438,4 +438,30 @@ void main() {
       },
     );
   }
+
+  test('deeply nested tables reject before layout', () {
+    WmlBlock block = WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'deep')]);
+    for (var i = 0; i < 70; i++) {
+      block = WmlTable(
+        properties: WmlTableProps(cellMargin: 0),
+        rows: <WmlTableRow>[
+          WmlTableRow(
+            cells: <WmlTableCell>[
+              WmlTableCell(blocks: <WmlBlock>[block]),
+            ],
+          ),
+        ],
+      );
+    }
+    final WmlDocument document = WmlDocument(
+      sections: <WmlSection>[
+        WmlSection(blocks: <WmlBlock>[block]),
+      ],
+    );
+    final bytes = WordSerializer().writeBytes(document);
+    expect(
+      () => WordDeserializer().readBytes(bytes),
+      throwsA(isA<FormatException>()),
+    );
+  });
 }

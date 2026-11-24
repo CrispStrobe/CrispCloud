@@ -1068,8 +1068,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             )
             .length ??
         0;
+    void dismiss() {
+      if (_busy || _preparing) return;
+      Navigator.pop(
+        context,
+        _finished && !_foregroundReportFailed ? _plan : null,
+      );
+    }
+
     return CallbackShortcuts(
       bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): dismiss,
         const SingleActivator(LogicalKeyboardKey.enter): () =>
             unawaited(_start()),
         const SingleActivator(LogicalKeyboardKey.numpadEnter): () =>
@@ -1919,12 +1928,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               ),
             ] else ...[
               TextButton(
-                onPressed: _preparing
-                    ? null
-                    : () => Navigator.pop(
-                        context,
-                        _finished && !_foregroundReportFailed ? _plan : null,
-                      ),
+                onPressed: _preparing ? null : dismiss,
                 child: Text(
                   _finished
                       ? context.commanderTr("Close")

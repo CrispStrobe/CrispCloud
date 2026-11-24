@@ -4,6 +4,15 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('ZIP rejects central-directory metadata outside the archive', () {
+    final writer = ZipWriter()..addFile('entry.txt', [1, 2, 3]);
+    final bytes = writer.close();
+    ByteData.sublistView(bytes).setUint32(
+      bytes.length - 6, bytes.length + 1, Endian.little,
+    );
+    expect(() => ZipReader.fromBytes(bytes), throwsA(isA<ZipException>()));
+  });
+
   test(
     'duplicate rejection is opt-in and existing reader behavior is retained',
     () {
@@ -70,6 +79,15 @@ void main() {
       },
     );
   }
+
+  test('recovery stream reads cap actual decoded output', () async {
+    final writer = ZipWriter()..addFile('bomb', Uint8List(1024 * 1024));
+    final reader = ZipReader.fromBytes(writer.close());
+    await expectLater(
+      reader.openStream('bomb', maxBytes: 1024).toList(),
+      throwsA(isA<ZipDeflateLimitException>()),
+    );
+  });
 
   test('empty streams can use a zero-byte budget', () {
     expect(

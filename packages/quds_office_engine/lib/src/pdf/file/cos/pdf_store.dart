@@ -114,17 +114,33 @@ class PdfCosStore {
     if (obj.raw.length > 64 * 1024 * 1024) {
       throw const PdfOpenException(PdfOpenError.limit, 'Stream too large');
     }
-    final PdfFilterResult decoded = PdfFilters.decodeResult(obj.raw, obj.dict);
+    final PdfFilterResult decoded = PdfFilters.decodeResult(obj.raw, obj.dict, resolve: deref);
     return decoded.bytes;
   }
 
   /// streamResult API.
-  PdfFilterResult streamResult(PdfCos? value) {
+  PdfFilterResult streamResult(
+    PdfCos? value, {
+    bool decodeDct = false,
+    int maxOutputBytes = PdfFilters.maxDecodedBytes,
+  }) {
     final PdfCos? obj = deref(value);
     if (obj is! PdfCosStream) {
       return const PdfFilterResult.unsupported('NotAStream');
     }
-    return PdfFilters.decodeResult(obj.raw, obj.dict);
+    if (obj.raw.length > 64 * 1024 * 1024) {
+      return const PdfFilterResult.unsupported(
+        'StreamTooLarge',
+        limitExceeded: true,
+      );
+    }
+    return PdfFilters.decodeResult(
+      obj.raw,
+      obj.dict,
+      resolve: deref,
+      decodeDct: decodeDct,
+      maxOutputBytes: maxOutputBytes,
+    );
   }
 
   /// asDict API.

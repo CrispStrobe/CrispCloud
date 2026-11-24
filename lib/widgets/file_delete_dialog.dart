@@ -56,7 +56,11 @@ Future<void> showFileDeleteDialog(
         final l =
             AppLocalizations.of(context) ??
             lookupAppLocalizations(const Locale('en'));
-        return AlertDialog(
+        void dismiss() {
+          if (!busy) Navigator.pop(context);
+        }
+
+        final dialog = AlertDialog(
           title: Text(
             strings.text(permanent ? 'permanentTitle' : 'trashTitle'),
           ),
@@ -97,7 +101,7 @@ Future<void> showFileDeleteDialog(
           actions: [
             TextButton(
               autofocus: !focusConfirm,
-              onPressed: busy ? null : () => Navigator.pop(context),
+              onPressed: busy ? null : dismiss,
               child: Text(l.cancel),
             ),
             FilledButton(
@@ -131,6 +135,10 @@ Future<void> showFileDeleteDialog(
               ),
             ),
           ],
+        );
+        return CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): dismiss},
+          child: PopScope(canPop: !busy, child: dialog),
         );
       },
     ),

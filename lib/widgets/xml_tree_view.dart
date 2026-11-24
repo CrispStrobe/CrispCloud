@@ -11,11 +11,13 @@ import '../l10n/xml_view_strings.dart';
 class XmlTreeView extends StatelessWidget {
   final String xml;
   final double fontSize;
+  final ScrollController? scrollController;
 
   const XmlTreeView({
     super.key,
     required this.xml,
     this.fontSize = 13,
+    this.scrollController,
   });
 
   @override
@@ -39,6 +41,7 @@ class XmlTreeView extends StatelessWidget {
 
     final builder = _XmlTreeBuilder(theme, fontSize);
     return ListView(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       children: [
         for (final node in document.children) builder.build(node, 0),

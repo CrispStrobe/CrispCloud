@@ -5,6 +5,7 @@
 // highlights, and stays independent of dialog state.
 
 import 'dart:typed_data';
+import 'dart:math' as math;
 
 import '../services/pdf_zoom_transform.dart';
 
@@ -561,10 +562,156 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
 // PDF page panel (pdfx)
 // ---------------------------------------------------------------------------
 
+class _WindowsPdfRaster extends StatefulWidget {
+  const _WindowsPdfRaster({
+    super.key,
+    required this.document,
+    required this.pageNumber,
+    required this.viewport,
+    required this.fitWidth,
+    required this.zoom,
+    required this.vertical,
+    required this.horizontal,
+  });
+
+  final PdfDocument document;
+  final int pageNumber;
+  final Size viewport;
+  final bool fitWidth;
+  final double zoom;
+  final ScrollController vertical;
+  final ScrollController horizontal;
+
+  @override
+  State<_WindowsPdfRaster> createState() => _WindowsPdfRasterState();
+}
+
+typedef _PdfRaster = ({int page, Size size, Uint8List bytes});
+
+class _WindowsPdfRasterState extends State<_WindowsPdfRaster> {
+  Object? _request;
+  Future<_PdfRaster?>? _raster;
+  Future<void> _queue = Future<void>.value();
+
+  Future<_PdfRaster?> _render(
+    Object request,
+    PdfDocument document,
+    int number,
+    Size viewport,
+    double deviceRatio,
+    double zoom,
+    bool fitWidth,
+  ) async {
+    if (!mounted || request != _request) return null;
+    final page = await document.getPage(number);
+    try {
+      if (!mounted || request != _request) return null;
+      if (page.width <= 0 || page.height <= 0) {
+        throw const FormatException('Invalid PDF page size');
+      }
+      final widthScale = math.max(1.0, viewport.width - 12) / page.width;
+      final heightScale = math.max(1.0, viewport.height - 12) / page.height;
+      final scale =
+          (fitWidth ? widthScale : math.min(widthScale, heightScale)) * zoom;
+      final size = Size(page.width * scale, page.height * scale);
+      // Bound the allocation and render actual device pixels at each zoom.
+      final density = math.min(
+        deviceRatio,
+        math.min(
+          4096 / size.longestSide,
+          math.sqrt(8 * 1024 * 1024 / (size.width * size.height)),
+        ),
+      );
+      final raster = await page.render(
+        width: math.max(1.0, (size.width * density).floorToDouble()),
+        height: math.max(1.0, (size.height * density).floorToDouble()),
+        format: PdfPageImageFormat.png,
+        backgroundColor: '#FFFFFF',
+      );
+      if (raster == null) throw const FormatException('PDF rendering failed');
+      return (page: number, size: size, bytes: raster.bytes);
+    } finally {
+      await page.close();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deviceRatio = MediaQuery.devicePixelRatioOf(context);
+    final request = (
+      widget.document,
+      widget.pageNumber,
+      widget.viewport,
+      deviceRatio,
+      widget.zoom,
+      widget.fitWidth,
+    );
+    if (_request != request) {
+      _request = request;
+      final next = _queue.then(
+        (_) => _render(
+          request,
+          request.$1,
+          request.$2,
+          request.$3,
+          request.$4,
+          request.$5,
+          request.$6,
+        ),
+      );
+      _queue = next.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+      _raster = next;
+    }
+    return FutureBuilder<_PdfRaster?>(
+      future: _raster,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text(context.commanderTr('Could not open PDF')));
+        }
+        final raster = snapshot.data;
+        if (raster == null || raster.page != widget.pageNumber) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return Scrollbar(
+          controller: widget.horizontal,
+          child: SingleChildScrollView(
+            controller: widget.horizontal,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: math.max(widget.viewport.width, raster.size.width + 12),
+              height: widget.viewport.height,
+              child: Scrollbar(
+                controller: widget.vertical,
+                child: SingleChildScrollView(
+                  controller: widget.vertical,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Image.memory(
+                      raster.bytes,
+                      width: raster.size.width,
+                      height: raster.size.height,
+                      filterQuality: FilterQuality.high,
+                      gaplessPlayback: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+bool get useWindowsPdfiumPages =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+
 class PdfPagePanel extends StatefulWidget {
   final PdfController controller;
+  final PdfDocument? document;
 
-  const PdfPagePanel({super.key, required this.controller});
+  const PdfPagePanel({super.key, required this.controller, this.document});
   @override
   State<PdfPagePanel> createState() => PdfPagePanelState();
 }
@@ -574,8 +721,45 @@ class PdfPagePanelState extends State<PdfPagePanel> {
     document: widget.controller.document,
   );
   Size _viewport = Size.zero;
-  static bool get _usesSimpleViewer =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+  final _pdfVertical = ScrollController();
+  final _pdfHorizontal = ScrollController();
+  double _windowsZoom = 1;
+  bool _windowsFitWidth = false;
+  int _windowsPage = 1;
+  static bool get _usesSimpleViewer => useWindowsPdfiumPages;
+
+  void scrollPage(int direction) {
+    if (_usesSimpleViewer) {
+      if (_pdfVertical.hasClients) {
+        final position = _pdfVertical.position;
+        final target =
+            (position.pixels + direction * position.viewportDimension).clamp(
+              position.minScrollExtent,
+              position.maxScrollExtent,
+            );
+        if (target != position.pixels) {
+          _pdfVertical.jumpTo(target);
+          return;
+        }
+      }
+      _jumpWindowsPage(_windowsPage + direction);
+      return;
+    }
+    final count = controller.pagesCount;
+    if (count == null || count == 0) return;
+    final last = controller.getPageRect(count);
+    if (last == null || _viewport.isEmpty) return;
+    final old = controller.value.getTranslation();
+    final documentHeight = last.bottom * controller.zoomRatio;
+    final maxY = documentHeight > _viewport.height
+        ? documentHeight - _viewport.height
+        : 0.0;
+    final top = (-old.y + direction * _viewport.height).clamp(0.0, maxY);
+    final view = controller.value.clone()
+      ..setTranslationRaw(old.x, -top, old.z);
+    controller.value = view;
+  }
+
   void _scale(double scale, {Offset? sceneCenter}) {
     controller.value = pdfZoomTransform(
       controller.value,
@@ -586,12 +770,23 @@ class PdfPagePanelState extends State<PdfPagePanel> {
   }
 
   void zoomBy(double factor) {
-    if (!_usesSimpleViewer) {
+    if (_usesSimpleViewer) {
+      setState(() => _windowsZoom = (_windowsZoom * factor).clamp(.25, 8));
+    } else {
       _scale(controller.value.getMaxScaleOnAxis() * factor);
     }
   }
 
   void _fit(bool width) {
+    if (_usesSimpleViewer) {
+      setState(() {
+        _windowsFitWidth = width;
+        _windowsZoom = 1;
+      });
+      if (_pdfVertical.hasClients) _pdfVertical.jumpTo(0);
+      if (_pdfHorizontal.hasClients) _pdfHorizontal.jumpTo(0);
+      return;
+    }
     if (controller.pagesCount == null) return;
     final rect = controller.getPageRect(controller.page);
     if (rect == null || rect.isEmpty) return;
@@ -603,6 +798,10 @@ class PdfPagePanelState extends State<PdfPagePanel> {
   @override
   void didUpdateWidget(PdfPagePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_usesSimpleViewer &&
+        !identical(oldWidget.controller, widget.controller)) {
+      _windowsPage = 1;
+    }
     if (!_usesSimpleViewer &&
         !identical(oldWidget.controller, widget.controller)) {
       final old = controller;
@@ -615,8 +814,18 @@ class PdfPagePanelState extends State<PdfPagePanel> {
 
   @override
   void dispose() {
+    _pdfVertical.dispose();
+    _pdfHorizontal.dispose();
     if (!_usesSimpleViewer) controller.dispose();
     super.dispose();
+  }
+
+  void _jumpWindowsPage(int page) {
+    final count = widget.document?.pagesCount ?? 0;
+    if (page == _windowsPage || page < 1 || page > count) return;
+    if (_pdfVertical.hasClients) _pdfVertical.jumpTo(0);
+    if (_pdfHorizontal.hasClients) _pdfHorizontal.jumpTo(0);
+    setState(() => _windowsPage = page);
   }
 
   @override
@@ -627,10 +836,7 @@ class PdfPagePanelState extends State<PdfPagePanel> {
         : controller;
     void jumpToPage(int target) {
       if (_usesSimpleViewer) {
-        final count = widget.controller.pagesCount ?? 0;
-        if (target >= 1 && target <= count) {
-          widget.controller.jumpToPage(target);
-        }
+        _jumpWindowsPage(target);
       } else {
         controller.jumpToPage(target);
       }
@@ -644,16 +850,19 @@ class PdfPagePanelState extends State<PdfPagePanel> {
               _viewport = Size(box.maxWidth, box.maxHeight);
               // The Windows pdfx implementation renders images, not textures.
               if (_usesSimpleViewer) {
-                return PdfView(
-                  key: ObjectKey(widget.controller),
-                  controller: widget.controller,
-                  scrollDirection: Axis.vertical,
-                  builders: const PdfViewBuilders<DefaultBuilderOptions>(
-                    options: DefaultBuilderOptions(
-                      loaderSwitchDuration: Duration.zero,
-                    ),
-                  ),
-                );
+                final doc = widget.document;
+                return doc == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : _WindowsPdfRaster(
+                        key: ObjectKey(doc),
+                        document: doc,
+                        pageNumber: _windowsPage,
+                        viewport: _viewport,
+                        fitWidth: _windowsFitWidth,
+                        zoom: _windowsZoom,
+                        vertical: _pdfVertical,
+                        horizontal: _pdfHorizontal,
+                      );
               }
               return PdfViewPinch(
                 controller: controller,
@@ -683,52 +892,58 @@ class PdfPagePanelState extends State<PdfPagePanel> {
                 tooltip: PageNavigationStrings(context).text('previous'),
                 icon: const Icon(Icons.chevron_left, size: 20),
                 onPressed: () {
-                  final current = pages.page;
+                  final current = _usesSimpleViewer ? _windowsPage : pages.page;
                   if (current > 1) {
                     jumpToPage(current - 1);
                   }
                 },
               ),
-              if (!_usesSimpleViewer) ...[
-                IconButton(
-                  tooltip: context.commanderTr('Zoom out'),
-                  onPressed: () => zoomBy(1 / 1.2),
-                  icon: const Icon(Icons.zoom_out),
-                ),
+              IconButton(
+                tooltip: context.commanderTr('Zoom out'),
+                onPressed: () => zoomBy(1 / 1.2),
+                icon: const Icon(Icons.zoom_out),
+              ),
+              if (_usesSimpleViewer)
+                Text('${(_windowsZoom * 100).round()}%')
+              else
                 ValueListenableBuilder<Matrix4>(
                   valueListenable: controller,
                   builder: (context, value, _) =>
                       Text('${(value.getMaxScaleOnAxis() * 100).round()}%'),
                 ),
-                IconButton(
-                  tooltip: context.commanderTr('Zoom in'),
-                  onPressed: () => zoomBy(1.2),
-                  icon: const Icon(Icons.zoom_in),
-                ),
-                TextButton(
-                  onPressed: () {
-                    _fit(true);
-                  },
-                  child: Text(context.commanderTr('Fit width')),
-                ),
-                TextButton(
-                  onPressed: () => _fit(false),
-                  child: Text(context.commanderTr('Fit page')),
-                ),
-              ],
-              PdfPageNumber(
-                controller: pages,
-                builder: (_, __, page, total) => Text(
-                  '$page / $total',
-                  style: const TextStyle(fontSize: 12),
-                ),
+              IconButton(
+                tooltip: context.commanderTr('Zoom in'),
+                onPressed: () => zoomBy(1.2),
+                icon: const Icon(Icons.zoom_in),
               ),
+              TextButton(
+                onPressed: () {
+                  _fit(true);
+                },
+                child: Text(context.commanderTr('Fit width')),
+              ),
+              TextButton(
+                onPressed: () => _fit(false),
+                child: Text(context.commanderTr('Fit page')),
+              ),
+              if (_usesSimpleViewer)
+                Text('$_windowsPage / ${widget.document?.pagesCount ?? 0}')
+              else
+                PdfPageNumber(
+                  controller: pages,
+                  builder: (_, __, page, total) => Text(
+                    '$page / $total',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
               IconButton(
                 tooltip: PageNavigationStrings(context).text('next'),
                 icon: const Icon(Icons.chevron_right, size: 20),
                 onPressed: () {
-                  final current = pages.page;
-                  final count = pages.pagesCount;
+                  final current = _usesSimpleViewer ? _windowsPage : pages.page;
+                  final count = _usesSimpleViewer
+                      ? widget.document?.pagesCount
+                      : pages.pagesCount;
                   if (count == null || current < count) jumpToPage(current + 1);
                 },
               ),
@@ -736,7 +951,9 @@ class PdfPagePanelState extends State<PdfPagePanel> {
                 tooltip: PageNavigationStrings(context).text('last'),
                 icon: const Icon(Icons.last_page, size: 20),
                 onPressed: () {
-                  final count = pages.pagesCount;
+                  final count = _usesSimpleViewer
+                      ? widget.document?.pagesCount
+                      : pages.pagesCount;
                   if (count != null && count > 0) jumpToPage(count);
                 },
               ),

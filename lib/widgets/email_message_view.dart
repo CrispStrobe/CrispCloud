@@ -12,11 +12,13 @@ class EmailMessageView extends StatefulWidget {
     required this.message,
     this.fontScale = 1,
     this.onOpenAttachment,
+    this.scrollController,
   });
 
   final EmailMessageDocument message;
   final double fontScale;
   final ValueChanged<EmailAttachment>? onOpenAttachment;
+  final ScrollController? scrollController;
 
   @override
   State<EmailMessageView> createState() => _EmailMessageViewState();
@@ -37,6 +39,7 @@ class _EmailMessageViewState extends State<EmailMessageView> {
     final showHtml = _formatted && message.safeHtml != null;
     return SelectionArea(
       child: ListView(
+        controller: widget.scrollController,
         key: const ValueKey('email-message-view'),
         padding: const EdgeInsets.all(20),
         children: [

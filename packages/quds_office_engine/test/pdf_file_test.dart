@@ -33,6 +33,60 @@ void main() {
     return doc.save();
   }
 
+  test('Flate output limits stop expansion bombs with a typed limit error', () {
+    final Uint8List bomb = PdfFlate.compress(Uint8List(1024 * 1024));
+    expect(
+      () => PdfFlate.decompress(bomb, maxOutputBytes: 1024),
+      throwsA(
+        isA<PdfOpenException>().having(
+          (PdfOpenException error) => error.error,
+          'error',
+          PdfOpenError.limit,
+        ),
+      ),
+    );
+    expect(
+      PdfFlate.decompress(bomb, maxOutputBytes: 1024 * 1024),
+      hasLength(1024 * 1024),
+    );
+  });
+
+  test(
+    'JPEG dimensions above the raster budget are rejected before decode',
+    () {
+      // Minimal SOF0 segment with a 100000 × 100000 frame.
+      final Uint8List jpeg = Uint8List.fromList(<int>[
+        0xFF,
+        0xD8,
+        0xFF,
+        0xC0,
+        0x00,
+        0x0B,
+        0x08,
+        0x86,
+        0xA0,
+        0x86,
+        0xA0,
+        0x01,
+        0x01,
+        0x11,
+        0x00,
+        0xFF,
+        0xD9,
+      ]);
+      expect(PdfImageCodec.decodeJpeg(jpeg), isNull);
+    },
+  );
+
+  test('PNG dimensions above the raster budget are rejected before decode', () {
+    final Uint8List png = Uint8List(64);
+    png.setAll(0, <int>[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+    png.setAll(8, <int>[0, 0, 0, 13]);
+    png.setAll(12, <int>[0x49, 0x48, 0x44, 0x52]);
+    png.setAll(16, <int>[0, 0, 0xFF, 0xFF, 0, 0, 0xFF, 0xFF]);
+    expect(PdfImageCodec.decodePng(png), isNull);
+  });
+
   test('opens writer output and reads catalog pages', () {
     final Uint8List bytes = writerPdf();
     final PdfFile file = PdfFile.open(bytes);
@@ -41,6 +95,17 @@ void main() {
     expect(file.pageAt(0).width, closeTo(595.28, 0.5));
     expect(file.info.title, 'PDF file test');
     expect(file.encrypted, isFalse);
+  });
+
+  test('malformed xref tokens exit to bounded repair', () {
+    final original = latin1.decode(writerPdf());
+    final invalid = original.replaceFirst(
+      RegExp(r'xref\r?\n\d+ \d+\r?\n'),
+      'xref\ninvalid\n',
+    );
+    expect(invalid, isNot(original));
+    final reopened = PdfFile.open(Uint8List.fromList(latin1.encode(invalid)));
+    expect(reopened.pageCount, 1);
   });
 
   test('display list paints paths from writer streams', () {
@@ -56,12 +121,39 @@ void main() {
       list.ops.whereType<PdfDrawText>().first.size,
       closeTo(14, 0.6),
     );
+    expect(list.issues, isEmpty);
+  });
+
+  test('content stream failures are distinguishable from a blank page', () {
+    final file = PdfFile.open(writerPdf());
+    final page = file.pageDict(0);
+    final validContent = page['Contents']!;
+    final unreadable = PdfCosStream(
+      PdfCosDict({'Filter': const PdfCosName('FlateDecode')}),
+      Uint8List(0),
+    );
+    page.values.remove('Contents');
+    expect(file.displayList(0).ops, isEmpty);
+    expect(file.displayList(0).issues, isEmpty);
+
+    page['Contents'] = unreadable;
+    expect(file.displayList(0).ops, isEmpty);
+    expect(file.displayList(0).issues, {PdfPageRenderIssue.contentStream});
+
+    page['Contents'] = PdfCosArray([unreadable, validContent]);
+    final partial = file.displayList(0);
+    expect(partial.ops.whereType<PdfFillPath>(), isNotEmpty);
+    expect(partial.plainText, contains('Hello PDF'));
+    expect(partial.issues, {PdfPageRenderIssue.contentStream});
   });
 
   test('text size follows Tm when Tf is 1', () {
     final PdfFile file = PdfFile.open(_tmScalePdf());
-    final List<PdfDrawText> texts =
-        file.displayList(0).ops.whereType<PdfDrawText>().toList();
+    final List<PdfDrawText> texts = file
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawText>()
+        .toList();
     expect(texts, isNotEmpty);
     expect(texts.map((PdfDrawText t) => t.text).join(), contains('Hello'));
     expect(texts.first.size, closeTo(18, 0.3));
@@ -241,9 +333,7 @@ void main() {
       sections: <WmlSection>[
         WmlSection(
           blocks: <WmlBlock>[
-            WmlParagraph(
-              inlines: <WmlInline>[WmlRun(text: 'Phase one')],
-            ),
+            WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Phase one')]),
           ],
         ),
       ],
@@ -259,7 +349,7 @@ void main() {
     expect(PdfExtract.documentText(file), contains('Phase'));
   });
 
-  test('FlateDecode does not strip DEFLATE payload as Adler-32', () {
+  test('FlateDecode rejects a stream with a truncated Adler-32 trailer', () {
     final Uint8List raw = Uint8List.fromList(
       _hexToBytes(
         '4889ecc13101000000c2a0f54fed610da0000000000000000000000000000000'
@@ -271,9 +361,11 @@ void main() {
         '0000000000000000b818000000ffff000000ffff03007a77',
       ),
     );
-    expect(PdfFlate.decompress(raw).length, 162393);
+    expect(() => PdfFlate.decompress(raw), throwsFormatException);
     expect(
-      utf8.decode(PdfFlate.decompress(PdfFlate.compress(utf8.encode('Quds Flate')))),
+      utf8.decode(
+        PdfFlate.decompress(PdfFlate.compress(utf8.encode('Quds Flate'))),
+      ),
       'Quds Flate',
     );
   });
@@ -284,13 +376,18 @@ void main() {
     expect(PdfStd14.unicode(0x80, 'WinAnsiEncoding'), 0x20AC);
     expect(PdfStd14.unicode(0x80, 'MacRomanEncoding'), 0x00C4);
     final PdfFile file = PdfFile.open(_winAnsiPdf());
-    final List<PdfDrawText> texts =
-        file.displayList(0).ops.whereType<PdfDrawText>().toList();
+    final List<PdfDrawText> texts = file
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawText>()
+        .toList();
     expect(texts.map((PdfDrawText t) => t.text).join(), 'A€währendwährend');
     final accents = texts.where((glyph) => glyph.text == 'ä').toList();
     final nextGlyphs = texts.where((glyph) => glyph.text == 'h').toList();
-    expect(nextGlyphs.first.x - accents.first.x,
-        closeTo(nextGlyphs.last.x - accents.last.x, 0.001));
+    expect(
+      nextGlyphs.first.x - accents.first.x,
+      closeTo(nextGlyphs.last.x - accents.last.x, 0.001),
+    );
     expect(texts.first.size, closeTo(10, 0.3));
     final PdfTextRun run = file.displayList(0).runs.first;
     expect(run.width, closeTo(6.67, 0.2));
@@ -318,8 +415,10 @@ void main() {
     expect(g4.length, 8);
     expect(g4.every((int b) => b == 0xFF), isTrue);
     final PdfFile file = PdfFile.open(_jbig2Pdf());
-    final Iterable<PdfDrawImage> images =
-        file.displayList(0).ops.whereType<PdfDrawImage>();
+    final Iterable<PdfDrawImage> images = file
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawImage>();
     expect(images, isNotEmpty);
     expect(images.first.placeholder, isTrue);
   });
@@ -332,7 +431,10 @@ void main() {
     expect(text, contains('Shown'));
     expect(text, isNot(contains('Hidden')));
     final PdfFile shade = PdfFile.open(_axialPdf());
-    expect(shade.displayList(0).ops.whereType<PdfFillPath>().length, greaterThan(4));
+    expect(
+      shade.displayList(0).ops.whereType<PdfFillPath>().length,
+      greaterThan(4),
+    );
   });
 
   test('struct tree and signature ByteRange statuses', () {
@@ -349,6 +451,9 @@ void main() {
     final PdfFile ok = PdfFile.open(_sigPdf(validRange: true));
     expect(ok.signatures.first.status, PdfSignatureStatus.unverified);
     expect(ok.signatures.first.byteRangeLength, greaterThan(0));
+    expect(ok.signatures.first.signatureVerified, isFalse);
+    expect(ok.signatures.first.trusted, isFalse);
+    expect(ok.signatures.first.digestMatches, isFalse);
 
     final PdfFile other = PdfFile.open(
       _sigPdf(validRange: true, filter: 'Unknown.Handler'),
@@ -377,7 +482,16 @@ void main() {
   });
 
   test('CFF FontFile3 wraps as OTTO for the host', () {
-    final Uint8List ottoIn = Uint8List.fromList(<int>[0x4F, 0x54, 0x54, 0x4F, 0, 0, 0, 0]);
+    final Uint8List ottoIn = Uint8List.fromList(<int>[
+      0x4F,
+      0x54,
+      0x54,
+      0x4F,
+      0,
+      0,
+      0,
+      0,
+    ]);
     expect(PdfCffHost.isSfnt(ottoIn), isTrue);
     expect(identical(PdfCffHost.forFlutter(ottoIn), ottoIn), isTrue);
 
@@ -391,8 +505,11 @@ void main() {
     expect(() => SfntFont.parse(otto), returnsNormally);
 
     final PdfFile file = PdfFile.open(_cffFontPdf(cff));
-    final List<PdfDrawText> texts =
-        file.displayList(0).ops.whereType<PdfDrawText>().toList();
+    final List<PdfDrawText> texts = file
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawText>()
+        .toList();
     expect(texts, isNotEmpty);
     expect(texts.first.fontBytes, isNotNull);
     expect(texts.first.fontBytes!.sublist(0, 4), <int>[0x4F, 0x54, 0x54, 0x4F]);
@@ -474,8 +591,9 @@ void main() {
     if (!pdf.existsSync()) {
       return;
     }
-    final PdfDisplayList toc =
-        PdfFile.open(pdf.readAsBytesSync()).displayLists()[2];
+    final PdfDisplayList toc = PdfFile.open(
+      pdf.readAsBytesSync(),
+    ).displayLists()[2];
     final List<PdfDrawText> mediums = toc.ops
         .whereType<PdfDrawText>()
         .where(
@@ -510,65 +628,87 @@ void main() {
 
   test('stroke style, Multiply gs, CMYK and ICCBased images', () {
     final PdfFile stroke = PdfFile.open(_strokeStylePdf());
-    final PdfStrokePath s =
-        stroke.displayList(0).ops.whereType<PdfStrokePath>().first;
+    final PdfStrokePath s = stroke
+        .displayList(0)
+        .ops
+        .whereType<PdfStrokePath>()
+        .first;
     expect(s.width, closeTo(2, 0.05));
     expect(s.cap, 1);
     expect(s.join, 1);
     expect(s.dash, <double>[3, 1]);
 
     final PdfFile mul = PdfFile.open(_multiplyPdf());
-    final PdfFillPath fill =
-        mul.displayList(0).ops.whereType<PdfFillPath>().first;
+    final PdfFillPath fill = mul
+        .displayList(0)
+        .ops
+        .whereType<PdfFillPath>()
+        .first;
     expect(fill.blend, PdfBlendMode.multiply);
     expect((fill.color >> 24) & 0xFF, closeTo(128, 2));
 
     final PdfFile cmyk = PdfFile.open(_cmykImagePdf());
-    final PdfDrawImage img =
-        cmyk.displayList(0).ops.whereType<PdfDrawImage>().first;
+    final PdfDrawImage img = cmyk
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawImage>()
+        .first;
     expect(img.placeholder, isFalse);
     expect(img.bytes.length, 3);
     expect(img.bytes, <int>[255, 255, 255]);
 
     final PdfFile icc = PdfFile.open(_iccBasedPdf());
-    final PdfDrawImage gray =
-        icc.displayList(0).ops.whereType<PdfDrawImage>().first;
+    final PdfDrawImage gray = icc
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawImage>()
+        .first;
     expect(gray.bytes.length, 3);
     expect(gray.bytes[0], 0);
   });
 
-  test('ImageMask is a stencil; Indexed uses the palette; 1-bit gray is not inverted', () {
-    final PdfFile mask = PdfFile.open(_imageMaskPdf());
-    final PdfDrawImage stencil =
-        mask.displayList(0).ops.whereType<PdfDrawImage>().first;
-    expect(stencil.hasAlpha, isTrue);
-    expect(stencil.bytes.length, 8 * 4);
-    expect(stencil.bytes.sublist(0, 4), <int>[255, 255, 255, 255]);
-    expect(stencil.bytes[7], 0);
+  test(
+    'ImageMask is a stencil; Indexed uses the palette; 1-bit gray is not inverted',
+    () {
+      final PdfFile mask = PdfFile.open(_imageMaskPdf());
+      final PdfDrawImage stencil = mask
+          .displayList(0)
+          .ops
+          .whereType<PdfDrawImage>()
+          .first;
+      expect(stencil.hasAlpha, isTrue);
+      expect(stencil.bytes.length, 8 * 4);
+      expect(stencil.bytes.sublist(0, 4), <int>[255, 255, 255, 255]);
+      expect(stencil.bytes[7], 0);
 
-    final PdfFile indexed = PdfFile.open(_indexedPdf());
-    final PdfDrawImage pal =
-        indexed.displayList(0).ops.whereType<PdfDrawImage>().first;
-    expect(pal.hasAlpha, isFalse);
-    expect(pal.bytes, <int>[0, 255, 0, 255, 0, 0]);
+      final PdfFile indexed = PdfFile.open(_indexedPdf());
+      final PdfDrawImage pal = indexed
+          .displayList(0)
+          .ops
+          .whereType<PdfDrawImage>()
+          .first;
+      expect(pal.hasAlpha, isFalse);
+      expect(pal.bytes, <int>[0, 255, 0, 255, 0, 0]);
 
-    final PdfFile gray1 = PdfFile.open(_oneBitGrayPdf());
-    final PdfDrawImage row =
-        gray1.displayList(0).ops.whereType<PdfDrawImage>().first;
-    expect(row.bytes.sublist(0, 3), <int>[255, 255, 255]);
-    expect(row.bytes.sublist(3, 6), <int>[0, 0, 0]);
-  });
+      final PdfFile gray1 = PdfFile.open(_oneBitGrayPdf());
+      final PdfDrawImage row = gray1
+          .displayList(0)
+          .ops
+          .whereType<PdfDrawImage>()
+          .first;
+      expect(row.bytes.sublist(0, 3), <int>[255, 255, 255]);
+      expect(row.bytes.sublist(3, 6), <int>[0, 0, 0]);
+    },
+  );
 
   test('JPEG with DCT SMask attaches softMaskJpeg for the host', () {
     final File pdf = File('/home/mohammed/Desktop/al_tahreer_profile.pdf');
     if (!pdf.existsSync()) {
       return;
     }
-    final PdfDrawImage logo = PdfFile.open(pdf.readAsBytesSync())
-        .displayList(1)
-        .ops
-        .whereType<PdfDrawImage>()
-        .first;
+    final PdfDrawImage logo = PdfFile.open(
+      pdf.readAsBytesSync(),
+    ).displayList(1).ops.whereType<PdfDrawImage>().first;
     expect(logo.jpeg, isTrue);
     expect(logo.softMaskJpeg, isNotNull);
     expect(logo.softMaskJpeg!.length, greaterThan(1000));
@@ -576,65 +716,76 @@ void main() {
     expect(logo.hasAlpha, isTrue);
   });
 
-  test('Identity-H CID strings decode two bytes; ToUnicode skips UTF-32 pad', () {
-    final PdfToUnicode padded = PdfToUnicode.parse(
-      Uint8List.fromList(utf8.encode(
-        '1 beginbfchar\n<0041> <00000041>\nendbfchar\n',
-      )),
-    );
-    expect(padded.mapCid(0x41), 'A');
+  test(
+    'Identity-H CID strings decode two bytes; ToUnicode skips UTF-32 pad',
+    () {
+      final PdfToUnicode padded = PdfToUnicode.parse(
+        Uint8List.fromList(
+          utf8.encode('1 beginbfchar\n<0041> <00000041>\nendbfchar\n'),
+        ),
+      );
+      expect(padded.mapCid(0x41), 'A');
 
-    for (final hex in [false, true]) {
-      final PdfFile file = PdfFile.open(_identityHTextPdf(hex: hex));
-      final texts = file.displayList(0).ops.whereType<PdfDrawText>();
-      expect(texts.map((glyph) => glyph.text), ['A', 'L']);
-    }
-  });
+      for (final hex in [false, true]) {
+        final PdfFile file = PdfFile.open(_identityHTextPdf(hex: hex));
+        final texts = file.displayList(0).ops.whereType<PdfDrawText>();
+        expect(texts.map((glyph) => glyph.text), ['A', 'L']);
+      }
+    },
+  );
 
   test('transparency group Form composites with parent ca', () {
     final PdfFile file = PdfFile.open(_groupFormCaPdf());
-    final PdfDrawImage img =
-        file.displayList(0).ops.whereType<PdfDrawImage>().first;
+    final PdfDrawImage img = file
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawImage>()
+        .first;
     expect(img.hasAlpha, isTrue);
     expect(img.bytes.length, 4);
     // Parent /ca 0.35 over fully opaque white stencil → alpha ≈ 89.
     expect(img.bytes[3], closeTo(89, 2));
   });
 
-  test('ActualText, XFA flag, viewer prefs, layer toggle, reading order, radial', () {
-    final PdfFile marked = PdfFile.open(_actualTextPdf());
-    expect(marked.displayList(0).plainText, contains('CopyMe'));
-    expect(marked.displayList(0).plainText, isNot(contains('xx')));
-    expect(
-      marked.displayList(0).ops
-          .whereType<PdfDrawText>()
-          .map((PdfDrawText t) => t.text)
-          .join(),
-      contains('xx'),
-    );
+  test(
+    'ActualText, XFA flag, viewer prefs, layer toggle, reading order, radial',
+    () {
+      final PdfFile marked = PdfFile.open(_actualTextPdf());
+      expect(marked.displayList(0).plainText, contains('CopyMe'));
+      expect(marked.displayList(0).plainText, isNot(contains('xx')));
+      expect(
+        marked
+            .displayList(0)
+            .ops
+            .whereType<PdfDrawText>()
+            .map((PdfDrawText t) => t.text)
+            .join(),
+        contains('xx'),
+      );
 
-    final PdfFile xfa = PdfFile.open(_xfaPdf());
-    expect(xfa.form.hasXfa, isTrue);
+      final PdfFile xfa = PdfFile.open(_xfaPdf());
+      expect(xfa.form.hasXfa, isTrue);
 
-    final PdfFile prefs = PdfFile.open(_viewerPrefsPdf());
-    expect(prefs.viewerPrefs.direction, 'R2L');
-    expect(prefs.viewerPrefs.fitWindow, isTrue);
-    expect(prefs.viewerPrefs.hideToolbar, isTrue);
+      final PdfFile prefs = PdfFile.open(_viewerPrefsPdf());
+      expect(prefs.viewerPrefs.direction, 'R2L');
+      expect(prefs.viewerPrefs.fitWindow, isTrue);
+      expect(prefs.viewerPrefs.hideToolbar, isTrue);
 
-    final PdfFile ocg = PdfFile.open(_ocgPdf());
-    expect(ocg.displayList(0).plainText, isNot(contains('Hidden')));
-    ocg.setLayerVisibleAt(0, true);
-    expect(ocg.displayList(0).plainText, contains('Hidden'));
+      final PdfFile ocg = PdfFile.open(_ocgPdf());
+      expect(ocg.displayList(0).plainText, isNot(contains('Hidden')));
+      ocg.setLayerVisibleAt(0, true);
+      expect(ocg.displayList(0).plainText, contains('Hidden'));
 
-    final PdfFile tagged = PdfFile.open(_structPdf());
-    expect(PdfExtract.readingOrder(tagged), contains('Para'));
+      final PdfFile tagged = PdfFile.open(_structPdf());
+      expect(PdfExtract.readingOrder(tagged), contains('Para'));
 
-    final PdfFile radial = PdfFile.open(_radialPdf());
-    expect(
-      radial.displayList(0).ops.whereType<PdfFillPath>().length,
-      greaterThan(4),
-    );
-  });
+      final PdfFile radial = PdfFile.open(_radialPdf());
+      expect(
+        radial.displayList(0).ops.whereType<PdfFillPath>().length,
+        greaterThan(4),
+      );
+    },
+  );
 
   test('outline GoTo named destinations resolve via Names/Dests', () {
     final PdfFile file = PdfFile.open(_namedOutlinePdf());
@@ -716,7 +867,8 @@ Uint8List _namedOutlinePdf() {
 }
 
 Uint8List _clipScalePdf() {
-  const String content = 'q 0.5 0 0 0.5 0 0 cm 0 0 100 100 re W* n 0 0 200 200 re f Q\n';
+  const String content =
+      'q 0.5 0 0 0.5 0 0 cm 0 0 100 100 re W* n 0 0 200 200 re f Q\n';
   return _pdfObjects(<String>[
     '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n',
     '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n',
@@ -727,7 +879,8 @@ Uint8List _clipScalePdf() {
 }
 
 Uint8List _winAnsiPdf() {
-  const String content = 'BT /F1 10 Tf 72 400 Td <41> Tj 0 -12 Td <80> Tj '
+  const String content =
+      'BT /F1 10 Tf 72 400 Td <41> Tj 0 -12 Td <80> Tj '
       '0 -12 Td [(w) <E468> (rend)] TJ '
       '0 -12 Td [(w) (\\344h) (rend)] TJ ET\n';
   return _pdfObjects(<String>[
@@ -864,15 +1017,58 @@ Uint8List acroFormPdf() {
 }
 
 const List<int> _pdfPad = <int>[
-  0x28, 0xBF, 0x4E, 0x5E, 0x4E, 0x75, 0x8A, 0x41,
-  0x64, 0x00, 0x4E, 0x56, 0xFF, 0xFA, 0x01, 0x08,
-  0x2E, 0x2E, 0x00, 0xB6, 0xD0, 0x68, 0x3E, 0x80,
-  0x2F, 0x0C, 0xA9, 0xFE, 0x64, 0x53, 0x69, 0x7A,
+  0x28,
+  0xBF,
+  0x4E,
+  0x5E,
+  0x4E,
+  0x75,
+  0x8A,
+  0x41,
+  0x64,
+  0x00,
+  0x4E,
+  0x56,
+  0xFF,
+  0xFA,
+  0x01,
+  0x08,
+  0x2E,
+  0x2E,
+  0x00,
+  0xB6,
+  0xD0,
+  0x68,
+  0x3E,
+  0x80,
+  0x2F,
+  0x0C,
+  0xA9,
+  0xFE,
+  0x64,
+  0x53,
+  0x69,
+  0x7A,
 ];
 
 Uint8List encryptedRev2Pdf(String password) {
   final Uint8List id = Uint8List.fromList(<int>[
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
   ]);
   const int pPerm = -4;
   final Uint8List userPad = _padPassword(password);
@@ -998,16 +1194,50 @@ int _indexOf(Uint8List data, String token) {
 Uint8List _minimalCff() {
   // CFF1: name TestCFF, 2 charstrings (.notdef + space), charset GID1=SID1.
   return Uint8List.fromList(<int>[
-    0x01, 0x00, 0x04, 0x01,
-    0x00, 0x01, 0x01, 0x01, 0x08,
-    0x54, 0x65, 0x73, 0x74, 0x43, 0x46, 0x46,
-    0x00, 0x01, 0x01, 0x01, 0x09,
-    0x1C, 0x00, 0x29, 0x0F,
-    0x1C, 0x00, 0x21, 0x11,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x02, 0x01, 0x01, 0x02, 0x03, 0x0E, 0x0E,
-    0x00, 0x00, 0x01,
+    0x01,
+    0x00,
+    0x04,
+    0x01,
+    0x00,
+    0x01,
+    0x01,
+    0x01,
+    0x08,
+    0x54,
+    0x65,
+    0x73,
+    0x74,
+    0x43,
+    0x46,
+    0x46,
+    0x00,
+    0x01,
+    0x01,
+    0x01,
+    0x09,
+    0x1C,
+    0x00,
+    0x29,
+    0x0F,
+    0x1C,
+    0x00,
+    0x21,
+    0x11,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x02,
+    0x01,
+    0x01,
+    0x02,
+    0x03,
+    0x0E,
+    0x0E,
+    0x00,
+    0x00,
+    0x01,
   ]);
 }
 
@@ -1135,7 +1365,10 @@ Uint8List _cmykImagePdf() {
         '5 0 obj << /Type /XObject /Subtype /Image /Width 1 /Height 1 '
         '/ColorSpace /DeviceCMYK /BitsPerComponent 8 /Length 4 >> stream\n',
       ),
-      0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
       ...utf8.encode('\nendstream\nendobj\n'),
     ],
   ]);
@@ -1311,9 +1544,7 @@ Uint8List _iccBasedPdf() {
       '/ColorSpace [/ICCBased 6 0 R] /BitsPerComponent 8 /Length 1 >> stream\n'
       '\x00\nendstream\nendobj\n',
     ),
-    utf8.encode(
-      '6 0 obj << /N 1 /Length 1 >> stream\nx\nendstream\nendobj\n',
-    ),
+    utf8.encode('6 0 obj << /N 1 /Length 1 >> stream\nx\nendstream\nendobj\n'),
   ]);
 }
 

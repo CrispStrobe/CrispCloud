@@ -23,11 +23,18 @@ class PptxSlideViewer extends StatefulWidget {
   });
 
   @override
-  State<PptxSlideViewer> createState() => _PptxSlideViewerState();
+  State<PptxSlideViewer> createState() => PptxSlideViewerState();
 }
 
-class _PptxSlideViewerState extends State<PptxSlideViewer> {
+class PptxSlideViewerState extends State<PptxSlideViewer> {
   int _index = 0;
+
+  void movePage(int direction) {
+    final count = widget.deck.slides.length;
+    if (count == 0) return;
+    final next = (_index.clamp(0, count - 1) + direction).clamp(0, count - 1);
+    if (next != _index) setState(() => _index = next);
+  }
 
   Color? _color(String? hex) {
     if (hex == null || hex.isEmpty) return null;

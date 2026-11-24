@@ -59,6 +59,7 @@ import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
 import '../services/document_fonts.dart';
 import 'office_editor_find_bar.dart';
+import 'document_page_navigation.dart';
 import 'office_editor_ribbon.dart';
 import 'office_worksheet_bar.dart';
 
@@ -393,6 +394,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       controller?.addListener(_onControllerChanged);
       controller?.onPrintRequested = () =>
           ref.read(documentPrintProvider)?.run();
+      if (controller case final WordEditorController word) {
+        word.onShortcutKeyEvent = (event) {
+          final direction = documentPageDirection(event);
+          if (direction == null) return false;
+          scrollOfficeWordViewport(word, direction);
+          return true;
+        };
+      }
       // Documents with footnotes or endnotes open with the notes pane, the
       // place where their text is edited.
       if (controller is WordEditorController &&

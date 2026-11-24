@@ -2,11 +2,48 @@
 
 import 'package:crisp_cloud/services/editor_highlighting.dart';
 import 'package:crisp_cloud/widgets/code_editor_find_panel.dart';
+import 'package:crisp_cloud/widgets/document_page_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 
 void main() {
+  testWidgets('physical page keys scroll the focused code editor', (
+    tester,
+  ) async {
+    final text = List.generate(160, (i) => 'line $i').join('\n');
+    final controller = CodeLineEditingController.fromText(text);
+    final scroll = CodeScrollController();
+    addTearDown(controller.dispose);
+    addTearDown(scroll.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DocumentPageShortcuts(
+            scrollController: scroll.verticalScroller,
+            child: CodeEditor(
+              controller: controller,
+              scrollController: scroll,
+              autofocus: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final position = scroll.verticalScroller.position;
+    expect(position.pixels, 0);
+    await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+    await tester.pump();
+    expect(position.pixels, closeTo(position.viewportDimension, 1));
+    await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+    await tester.pump();
+    expect(position.pixels, 0);
+    expect(controller.text, text);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'mobile cursor reveal is cancelled when a focused editor is removed immediately',
     (tester) async {

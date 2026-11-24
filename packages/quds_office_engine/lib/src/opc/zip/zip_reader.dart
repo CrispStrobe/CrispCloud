@@ -78,18 +78,30 @@ class ZipReader {
       throw const ZipException('Buffer is too small to be a ZIP archive');
     }
     final _Eocd eocd = _findEocd(source);
+    _checkRange(
+      eocd.centralDirectoryOffset,
+      eocd.centralDirectorySize,
+      source.length,
+    );
+    if (eocd.entryCount < 0 ||
+        eocd.entryCount > eocd.centralDirectorySize ~/ 46) {
+      throw const ZipException('ZIP central directory entry count is invalid');
+    }
     if (maxEntries != null && eocd.entryCount > maxEntries) {
       throw const ZipLimitException('ZIP entry count exceeds its limit');
     }
     final Map<String, ZipEntry> entries = <String, ZipEntry>{};
     int offset = eocd.centralDirectoryOffset;
+    final end = offset + eocd.centralDirectorySize;
     for (int i = 0; i < eocd.entryCount; i++) {
+      final size = _centralEntrySize(source, offset, end);
+      _checkRange(offset, size, end);
       final ZipEntry entry = _readCentralEntry(source, offset);
       if (rejectDuplicateNames && entries.containsKey(entry.fileName)) {
         throw ZipDuplicateEntryException(entry.fileName);
       }
       entries[entry.fileName] = entry;
-      offset += _centralEntrySize(source, offset);
+      offset += size;
     }
     return ZipReader._(source, entries);
   }
@@ -256,6 +268,7 @@ class ZipReader {
   }
 
   _LocalLocation _localData(ZipEntry entry) {
+    _checkRange(entry.localHeaderOffset, 30, _source.length);
     final ByteCursor cursor = ByteCursor.view(
       _source,
       entry.localHeaderOffset,
@@ -271,8 +284,10 @@ class ZipReader {
     cursor.skip(22);
     final int nameLen = cursor.u16le();
     final int extraLen = cursor.u16le();
+    final offset = entry.localHeaderOffset + 30 + nameLen + extraLen;
+    _checkRange(offset, entry.compressedSize, _source.length);
     return _LocalLocation(
-      offset: entry.localHeaderOffset + 30 + nameLen + extraLen,
+      offset: offset,
       compressedSize: entry.compressedSize,
     );
   }
@@ -329,6 +344,7 @@ class ZipReader {
     }
     locator.u32le(); // disk
     final int eocd64Offset = locator.u64le();
+    _checkRange(eocd64Offset, 56, eocdOffset - 20);
     final ByteCursor eocd64 = ByteCursor.view(source, eocd64Offset, 56);
     final int sig = eocd64.u32le();
     if (sig != zipEocd64Sig) {
@@ -419,7 +435,8 @@ class ZipReader {
     );
   }
 
-  static int _centralEntrySize(ByteSource source, int offset) {
+  static int _centralEntrySize(ByteSource source, int offset, int end) {
+    _checkRange(offset, 46, end);
     final ByteCursor header = ByteCursor.view(source, offset, 46);
     header.skip(28);
     final int nameLen = header.u16le();
@@ -440,6 +457,12 @@ class ZipReader {
       final int size = extra[pos + 2] | (extra[pos + 3] << 8);
       pos += 4;
       if (id == 0x0001) {
+        _checkRange(pos, size, extra.length);
+        final required = (needCompressed ? 8 : 0) +
+            (needUncompressed ? 8 : 0) + (needOffset ? 8 : 0);
+        if (size < required) {
+          throw const ZipException('Truncated ZIP64 extra field');
+        }
         final ByteCursor cursor = ByteCursor(
           Uint8List.sublistView(extra, pos, pos + size),
         );
@@ -464,6 +487,12 @@ class ZipReader {
       pos += size;
     }
     return const _Zip64Sizes();
+  }
+
+  static void _checkRange(int offset, int length, int end) {
+    if (offset < 0 || length < 0 || offset > end || length > end - offset) {
+      throw const ZipException('ZIP metadata points outside its data');
+    }
   }
 }
 

@@ -40,11 +40,7 @@ class PdfViewerPrefs {
 /// Optional content group (ISO 32000-1 §8.11).
 class PdfLayer {
   /// PdfLayer API.
-  PdfLayer({
-    required this.name,
-    required this.visible,
-    this.objectId,
-  });
+  PdfLayer({required this.name, required this.visible, this.objectId});
 
   /// name API.
   final String name;
@@ -76,7 +72,12 @@ enum PdfSignatureStatus {
   /// `/ByteRange` covers the file except `/Contents`, but CMS was not compared.
   unverified,
 
-  /// CMS `messageDigest` matches the ByteRange payload (no RSA / trust list).
+  /// CMS `messageDigest` matches the ByteRange payload.
+  ///
+  /// This is a digest check only. It does **not** verify the signer's RSA or
+  /// ECDSA signature, certificate chain, revocation or system trust. Use
+  /// [PdfSignatureInfo.signatureVerified] / [PdfSignatureInfo.trusted] before
+  /// presenting a document as signed.
   valid,
 
   /// CMS parsed, but the digest does not match the ByteRange payload.
@@ -137,6 +138,19 @@ class PdfSignatureInfo {
 
   /// Length of `/ByteRange` when present.
   final int byteRangeLength;
+
+  /// Whether the CMS `messageDigest` matched the covered bytes.
+  bool get digestMatches => status == PdfSignatureStatus.valid;
+
+  /// Whether the signer's public-key signature was cryptographically checked.
+  ///
+  /// Always false in the current engine; digest matching alone is not proof
+  /// that the signer possessed the private key.
+  bool get signatureVerified => false;
+
+  /// Whether the signer certificate chained to a trusted root and was valid
+  /// at signing time. Always false until PKIX trust is implemented.
+  bool get trusted => false;
 }
 
 /// Visual markup vs content-removal redaction (ISO 32000-1 §12.5.6).

@@ -11,6 +11,17 @@ abstract final class PdfEditorStrings {
   }
 
   static const _de = <String, String>{
+    'Some page content could not be displayed.':
+        'Ein Teil des Seiteninhalts konnte nicht dargestellt werden.',
+    'Open in native compatibility viewer':
+        'In der nativen Kompatibilitätsansicht öffnen',
+    'PDF signature information': 'PDF-Signaturinformationen',
+    'Trusted signer': 'Vertrauenswürdiger Unterzeichner',
+    'Signature verified, signer trust unestablished':
+        'Signatur geprüft, Vertrauenswürdigkeit des Unterzeichners ungeklärt',
+    'Digest matches, signer unverified':
+        'Prüfsumme stimmt überein, Unterzeichner ungeprüft',
+    'Signature verification unavailable': 'Signaturprüfung nicht verfügbar',
     'Edit PDF': 'PDF bearbeiten',
     'PDF editor': 'PDF-Editor',
     'Save': 'Speichern',

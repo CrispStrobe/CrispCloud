@@ -215,6 +215,7 @@ class QudsWordEditor extends StatefulWidget {
     this.enableLiveProofing = true,
     this.showReviewStatus = true,
     this.thesaurusService,
+    this.onPasteOverride,
   });
 
   /// controller API.
@@ -250,6 +251,12 @@ class QudsWordEditor extends StatefulWidget {
   final Widget Function(BuildContext context, WordEditorController controller)?
   /// notesPaneBuilder API.
   notesPaneBuilder;
+
+  /// Optional host paste hook. It runs before the editor's text paste; the
+  /// host must perform the normal paste itself when the clipboard has no
+  /// files/images. This lets Mail turn Cmd/Ctrl+V into attachments without
+  /// changing text paste for other editors.
+  final Future<void> Function({required bool keepTextOnly})? onPasteOverride;
 
   /// onSelectionChanged API.
   final VoidCallback? onSelectionChanged;
@@ -1089,9 +1096,16 @@ class _QudsWordEditorState extends State<QudsWordEditor>
       return KeyEventResult.handled;
     }
     if (ctrl && event.logicalKey == LogicalKeyboardKey.keyV) {
-      _c.pasteFromClipboard(
-        mode: shift ? OfficePasteMode.keepTextOnly : OfficePasteMode.keepSource,
-      );
+      final override = widget.onPasteOverride;
+      if (override != null) {
+        unawaited(override(keepTextOnly: shift));
+      } else {
+        _c.pasteFromClipboard(
+          mode: shift
+              ? OfficePasteMode.keepTextOnly
+              : OfficePasteMode.keepSource,
+        );
+      }
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.backspace) {

@@ -1,6 +1,7 @@
 import 'app_scaffold_messenger.dart';
 
 import 'package:quds_office_editor/quds_office_editor.dart' as office;
+import 'pdf_review_status.dart';
 
 import '../services/pdf_open_preferences.dart';
 import '../services/document_printing.dart';
@@ -36,6 +37,7 @@ import '../services/pdf_edit_session.dart';
 import '../services/pdf_device_export.dart';
 import '../services/pdf_editor_menu.dart';
 import '../services/pdf_file_store.dart';
+import 'document_page_navigation.dart';
 
 const _log = Log('PdfEditor');
 final _editingTools = Set<PdfEditTool>.unmodifiable(
@@ -1073,7 +1075,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
 
   Widget _buildSurface() {
     if (_officeController case final c?) {
-      return office.QudsPdfEditor(
+      final editor = office.QudsPdfEditor(
         controller: c,
         config: c.config,
         toolbarBuilder: (context, c) => Wrap(
@@ -1128,6 +1130,12 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             ),
           ],
         ),
+      );
+      return Column(
+        children: [
+          PdfReviewStatus(controller: c),
+          Expanded(child: editor),
+        ],
       );
     }
     return LayoutBuilder(
@@ -1191,6 +1199,23 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         );
       },
     );
+  }
+
+  KeyEventResult _onPageKey(FocusNode node, KeyEvent event) {
+    final direction = documentPageDirection(event);
+    if (direction == null || (ModalRoute.of(context)?.isCurrent == false)) {
+      return KeyEventResult.ignored;
+    }
+    final focus = FocusManager.instance.primaryFocus?.context;
+    if (focus?.findAncestorWidgetOfExactType<EditableText>() != null) {
+      return KeyEventResult.ignored;
+    }
+    if (_officeController case final controller?) {
+      scrollOfficePdfViewport(controller, direction);
+    } else {
+      scrollPdfViewport(_viewer, direction);
+    }
+    return KeyEventResult.handled;
   }
 
   Future<void> _printDocument() async {
@@ -1361,7 +1386,11 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       child: DocumentPrintScope(
         enabled: _controller != null && !_loading && !_busy && !_closing,
         onPrint: _printDocument,
-        child: printContent,
+        child: Focus(
+          autofocus: true,
+          onKeyEvent: _onPageKey,
+          child: printContent,
+        ),
       ),
     );
   }

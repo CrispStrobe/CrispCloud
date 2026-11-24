@@ -426,11 +426,13 @@ class WebMediaPlayer extends StatelessWidget {
 class FontPreview extends StatefulWidget {
   final Uint8List fontBytes;
   final String filename;
+  final ScrollController? scrollController;
 
   const FontPreview({
     super.key,
     required this.fontBytes,
     required this.filename,
+    this.scrollController,
   });
 
   @override
@@ -475,6 +477,7 @@ class _FontPreviewState extends State<FontPreview> {
         : const TextStyle();
 
     return SingleChildScrollView(
+      controller: widget.scrollController,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,11 +526,13 @@ class _FontPreviewState extends State<FontPreview> {
 class CsvTableView extends StatelessWidget {
   final String content;
   final String filename;
+  final ScrollController? scrollController;
 
   const CsvTableView({
     super.key,
     required this.content,
     required this.filename,
+    this.scrollController,
   });
 
   @override
@@ -556,6 +561,7 @@ class CsvTableView extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: SingleChildScrollView(
+          controller: scrollController,
           child: DataTable(
             headingRowHeight: 36,
             dataRowMinHeight: 28,

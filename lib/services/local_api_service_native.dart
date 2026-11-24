@@ -29,11 +29,18 @@ class _ServerHandle {
 /// Bind an HttpServer to localhost:[port] and register the request handler.
 Future<Object> startHttpServer({
   required int port,
+  required Future<ApiResponse?> Function(ApiRequest) authorizeRequest,
   required Future<ApiResponse> Function(ApiRequest) handleRequest,
+  int maxBodyBytes = 100 * 1024 * 1024,
 }) async {
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
   final sub = server.listen((HttpRequest nativeRequest) async {
-    await _handleNativeRequest(nativeRequest, handleRequest);
+    await _handleNativeRequest(
+      nativeRequest,
+      authorizeRequest,
+      handleRequest,
+      maxBodyBytes,
+    );
   });
   return _ServerHandle(server, sub);
 }
@@ -52,7 +59,9 @@ Future<void> stopHttpServer(Object handle) async {
 
 Future<void> _handleNativeRequest(
   HttpRequest nativeRequest,
+  Future<ApiResponse?> Function(ApiRequest) authorize,
   Future<ApiResponse> Function(ApiRequest) handler,
+  int maxBodyBytes,
 ) async {
   // Handle CORS preflight.
   if (nativeRequest.method.toUpperCase() == 'OPTIONS') {
@@ -60,12 +69,51 @@ Future<void> _handleNativeRequest(
     return;
   }
 
-  final apiRequest = await _parseRequest(nativeRequest);
-  final apiResponse = await handler(apiRequest);
-  _writeResponse(nativeRequest.response, apiResponse);
+  final head = _parseHead(nativeRequest);
+  final denied = await authorize(head);
+  if (denied != null) {
+    nativeRequest.response.persistentConnection = false;
+    _writeResponse(nativeRequest.response, denied);
+    return;
+  }
+  final Uint8List body;
+  try {
+    body = await _readBytes(nativeRequest, maxBodyBytes);
+  } on _BodyLimitExceeded {
+    nativeRequest.response.persistentConnection = false;
+    _writeResponse(
+      nativeRequest.response,
+      const ApiResponse(
+        statusCode: 413,
+        body: {'error': 'Request body is too large'},
+      ),
+    );
+    return;
+  } on TimeoutException {
+    nativeRequest.response.persistentConnection = false;
+    _writeResponse(
+      nativeRequest.response,
+      const ApiResponse(
+        statusCode: 408,
+        body: {'error': 'Request body timed out'},
+      ),
+    );
+    return;
+  } on HttpException {
+    return;
+  }
+  final apiRequest = ApiRequest(
+    method: head.method,
+    path: head.path,
+    queryParams: head.queryParams,
+    headers: head.headers,
+    jsonBody: _parseJson(head.headers, body),
+    rawBody: body,
+  );
+  _writeResponse(nativeRequest.response, await handler(apiRequest));
 }
 
-Future<ApiRequest> _parseRequest(HttpRequest req) async {
+ApiRequest _parseHead(HttpRequest req) {
   final uri = req.uri;
   final path = uri.path;
   final queryParams = Map<String, String>.fromEntries(
@@ -79,45 +127,60 @@ Future<ApiRequest> _parseRequest(HttpRequest req) async {
   });
 
   // Add remote address as pseudo-header for rate limiting.
-  headers['x-forwarded-for'] = req.connectionInfo?.remoteAddress.address ?? '127.0.0.1';
-
-  // Read body bytes.
-  Uint8List rawBody = Uint8List(0);
-  Map<String, dynamic> jsonBody = {};
-
-  try {
-    final bodyBytes = await _readBytes(req);
-    rawBody = Uint8List.fromList(bodyBytes);
-
-    final ct = headers['content-type'] ?? '';
-    if (ct.contains('application/json') && rawBody.isNotEmpty) {
-      final decoded = json.decode(utf8.decode(rawBody));
-      if (decoded is Map<String, dynamic>) {
-        jsonBody = decoded;
-      }
-    }
-  } catch (_) {
-    // Body parsing failure — continue with empty body.
-  }
+  headers['x-forwarded-for'] =
+      req.connectionInfo?.remoteAddress.address ?? '127.0.0.1';
 
   return ApiRequest(
     method: req.method,
     path: path,
     queryParams: queryParams,
     headers: headers,
-    jsonBody: jsonBody,
-    rawBody: rawBody,
+    jsonBody: const {},
+    rawBody: Uint8List(0),
   );
 }
 
-Future<List<int>> _readBytes(HttpRequest req) async {
-  final bytes = <int>[];
-  await for (final chunk in req) {
-    bytes.addAll(chunk);
-    // Guard against huge uploads exhausting memory (~100 MB limit).
-    if (bytes.length > 100 * 1024 * 1024) break;
+Map<String, dynamic> _parseJson(Map<String, String> headers, Uint8List bytes) {
+  if (bytes.isNotEmpty &&
+      (headers['content-type'] ?? '').contains('application/json')) {
+    try {
+      final decoded = json.decode(utf8.decode(bytes));
+      if (decoded is Map<String, dynamic>) return decoded;
+    } on FormatException {
+      return {};
+    }
   }
-  return bytes;
+  return {};
+}
+
+class _BodyLimitExceeded implements Exception {}
+
+Future<Uint8List> _readBytes(HttpRequest req, int limit) {
+  if (req.contentLength > limit) throw _BodyLimitExceeded();
+  final bytes = BytesBuilder(copy: false);
+  final result = Completer<Uint8List>();
+  req
+      .timeout(const Duration(seconds: 30))
+      .listen(
+        (chunk) {
+          // Keep draining after a rejected chunk. Cancelling the request stream
+          // here can close the socket before the HTTP 413 reaches the client.
+          if (result.isCompleted) return;
+          if (chunk.length > limit - bytes.length) {
+            bytes.clear();
+            result.completeError(_BodyLimitExceeded());
+            return;
+          }
+          bytes.add(chunk);
+        },
+        onError: (Object error, StackTrace trace) {
+          if (!result.isCompleted) result.completeError(error, trace);
+        },
+        onDone: () {
+          if (!result.isCompleted) result.complete(bytes.takeBytes());
+        },
+      );
+  return result.future;
 }
 
 // ---------------------------------------------------------------------------

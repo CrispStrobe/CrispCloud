@@ -5,6 +5,22 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('PDF Flate limits zlib-wrapped output', () {
+    final data = Uint8List.fromList(utf8.encode('Office stream ' * 200));
+    final compressed = PdfFlate.compress(data);
+    expect(PdfFlate.decompress(compressed, maxOutputBytes: data.length), data);
+    expect(
+      () => PdfFlate.decompress(compressed, maxOutputBytes: data.length - 1),
+      throwsA(
+        isA<PdfOpenException>().having(
+          (error) => error.error,
+          'error',
+          PdfOpenError.limit,
+        ),
+      ),
+    );
+  });
+
   group('RawDeflate', () {
     test('round-trips empty, short, and repetitive payloads', () {
       final List<Uint8List> samples = <Uint8List>[

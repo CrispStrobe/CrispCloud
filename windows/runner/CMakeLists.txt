@@ -10,6 +10,7 @@ add_executable(${BINARY_NAME} WIN32
   "context_menu_registration.cpp"
   "flutter_window.cpp"
   "file_operations.cpp"
+  "pdf_text.cpp"
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"

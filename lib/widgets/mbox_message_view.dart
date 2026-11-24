@@ -20,6 +20,7 @@ class MboxMessageView extends StatelessWidget {
     this.fontScale = 1,
     this.onOpenAttachment,
     this.body,
+    this.scrollController,
   });
 
   final MboxDocument document;
@@ -34,6 +35,7 @@ class MboxMessageView extends StatelessWidget {
   /// An alternate selected-message body, such as its search results.
   /// Mailbox navigation and scope remain visible while this is displayed.
   final Widget? body;
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -147,8 +149,10 @@ class MboxMessageView extends StatelessWidget {
                           message: currentMessage,
                           fontScale: fontScale,
                           onOpenAttachment: onOpenAttachment,
+                          scrollController: scrollController,
                         )
                       : SingleChildScrollView(
+                          controller: scrollController,
                           padding: const EdgeInsets.all(20),
                           child: Text(
                             entries.isEmpty

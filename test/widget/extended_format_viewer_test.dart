@@ -12,6 +12,7 @@ import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_views.dart';
 import 'package:crisp_cloud/widgets/xml_tree_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -26,24 +27,37 @@ Future<void> _open(
   String name,
   Uint8List bytes, {
   Locale? locale,
+  Finder? waitFor,
 }) async {
   if (const ['doc', 'dot', 'rtf'].contains(name.split('.').last)) {
     await tester.runAsync(DocumentFonts.ensureRegistered);
   }
-  await tester.pumpWidget(
-    ProviderScope(
-      child: MaterialApp(
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: InternalViewerDialog(
-          file: FileItem(name: name, isFolder: false, size: bytes.length),
-          side: PanelSide.local,
-          bytesOverride: bytes,
-        ),
+  final viewer = ProviderScope(
+    child: MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: InternalViewerDialog(
+        file: FileItem(name: name, isFolder: false, size: bytes.length),
+        side: PanelSide.local,
+        bytesOverride: bytes,
       ),
     ),
   );
+  if (waitFor == null) {
+    await tester.pumpWidget(viewer);
+  } else {
+    await tester.runAsync(() async {
+      await tester.pumpWidget(viewer);
+      final deadline = Stopwatch()..start();
+      while (waitFor.evaluate().isEmpty &&
+          deadline.elapsed < const Duration(seconds: 5)) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await tester.pump();
+      }
+      expect(waitFor, findsOneWidget);
+    });
+  }
   await tester.pumpAndSettle();
 }
 
@@ -123,6 +137,24 @@ Iterable<(String, TextStyle)> _styledText(
 }
 
 void main() {
+  testWidgets('Page Down and Page Up scroll the F3 text viewport', (
+    tester,
+  ) async {
+    final text = List.generate(160, (i) => 'line $i').join('\n');
+    await _open(tester, 'scroll.txt', _bytes(text));
+    final position = tester
+        .widget<MonoLineListView>(find.byType(MonoLineListView))
+        .controller!
+        .position;
+    expect(position.pixels, 0);
+    await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+    await tester.pump();
+    expect(position.pixels, closeTo(position.viewportDimension, 1));
+    await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+    await tester.pump();
+    expect(position.pixels, 0);
+  });
+
   for (final scenario in [
     ('doc', const Locale('en'), 'Partial preview of a binary Writer document.'),
     (
@@ -352,6 +384,7 @@ void main() {
       tester,
       'message.msg.gz',
       Uint8List.fromList(const GZipEncoder().encode(writer.build())),
+      waitFor: find.byType(EmailMessageView),
     );
     expect(find.byType(EmailMessageView), findsOneWidget);
     expect(find.text('Compressed Outlook subject'), findsOneWidget);

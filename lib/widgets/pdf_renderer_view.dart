@@ -9,6 +9,8 @@ import 'package:quds_office_editor/quds_office_editor.dart' as office;
 
 import '../l10n/commander_strings.dart';
 import '../services/pdf_open_preferences.dart';
+import 'document_page_navigation.dart';
+import 'pdf_review_status.dart';
 
 /// Read-only PDF surfaces. No edit controller, form writer or save callback is
 /// supplied to either engine. Switching engines never writes the source.
@@ -208,6 +210,15 @@ class PdfRendererViewState extends State<PdfRendererView> {
 
   int get _page => _office?.pageIndex ?? _viewer.currentPage;
   int get _count => _office?.pageCount ?? _document?.pageCount ?? 0;
+
+  void scrollPage(int direction) {
+    if (_office case final controller?) {
+      scrollOfficePdfViewport(controller, direction);
+    } else {
+      scrollPdfViewport(_viewer, direction);
+    }
+  }
+
   void _jump(int delta) {
     if (_count == 0) return;
     final page = (_page + delta).clamp(0, _count - 1);
@@ -241,6 +252,11 @@ class PdfRendererViewState extends State<PdfRendererView> {
     }
     return Column(
       children: [
+        if (_office case final controller?)
+          PdfReviewStatus(
+            controller: controller,
+            onCompatibility: widget.onCompatibility,
+          ),
         Expanded(
           child: LayoutBuilder(
             builder: (context, box) {
@@ -331,4 +347,7 @@ class _DeferredOfficePdfPage extends office.PdfDisplayList {
 
   @override
   List<office.PdfHotspot> get hotspots => _content.hotspots;
+
+  @override
+  Set<office.PdfPageRenderIssue> get issues => _content.issues;
 }

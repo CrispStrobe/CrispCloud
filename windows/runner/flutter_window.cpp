@@ -1,5 +1,6 @@
 #include "flutter_window.h"
 #include "file_operations.h"
+#include "pdf_text.h"
 
 #include <flutter/standard_method_codec.h>
 
@@ -29,6 +30,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   RegisterFileOperations(flutter_controller_->engine()->messenger());
+  RegisterPdfText(flutter_controller_->engine()->messenger());
   external_open_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           flutter_controller_->engine()->messenger(),

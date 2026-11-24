@@ -3,6 +3,24 @@ import 'dart:typed_data';
 import '../model/pdf_annot.dart';
 import '../model/pdf_page_info.dart';
 
+/// Why a page's display list may be incomplete.
+enum PdfPageRenderIssue {
+  /// A page content stream could not be read or decoded.
+  contentStream,
+
+  /// The page or one of its streams exceeded the render byte budget.
+  contentLimit,
+
+  /// An inline image could not be read or decoded.
+  inlineImage,
+
+  /// An image XObject could not be decoded.
+  imageStream,
+
+  /// Page interpretation failed before a display list could be produced.
+  interpreterFailure,
+}
+
 /// Device-independent page paint ops (ISO 32000 content stream result).
 class PdfDisplayList {
   /// PdfDisplayList API.
@@ -11,6 +29,7 @@ class PdfDisplayList {
     List<PdfPaintOp>? ops,
     List<PdfTextRun>? runs,
     List<PdfHotspot>? hotspots,
+    this.issues = const <PdfPageRenderIssue>{},
     this.error,
   }) : ops = ops ?? <PdfPaintOp>[],
        runs = runs ?? <PdfTextRun>[],
@@ -28,16 +47,14 @@ class PdfDisplayList {
   /// hotspots API.
   final List<PdfHotspot> hotspots;
 
-  /// Why the page could not be interpreted completely, or null.
-  ///
-  /// The interpreter keeps unsupported filters scoped to their stream. A
-  /// top-level failure still returns a display list so the host can paint the
-  /// page background and report the problem instead of silently showing an
-  /// unexplained blank page.
+  /// Failures observed during interpretation. A valid blank page has none.
+  final Set<PdfPageRenderIssue> issues;
+
+  /// First recoverable interpretation error, when details are available.
   final String? error;
 
-  /// Whether [error] is set.
-  bool get failed => error != null;
+  /// Whether the page may have missing content.
+  bool get failed => issues.isNotEmpty || error != null;
 
   /// plainText API.
   String get plainText {

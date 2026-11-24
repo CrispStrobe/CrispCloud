@@ -56,6 +56,7 @@ import '../utils/file_editability.dart'
 import 'code_editor_context_menu.dart';
 import 'code_editor_find_panel.dart';
 import 'code_editor_status_bar.dart';
+import 'document_page_navigation.dart';
 import 'image_editor_dialog.dart';
 import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
@@ -1313,7 +1314,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       );
     }
 
-    return CallbackShortcuts(
+    final editor = CallbackShortcuts(
       bindings: _closing ? const {} : _shortcuts,
       child: CodeEditor(
         readOnly: _closing,
@@ -1379,6 +1380,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           readOnly: readOnly,
         ),
       ),
+    );
+    return DocumentPageShortcuts(
+      scrollController: _scrollController.verticalScroller,
+      enabled: !_closing,
+      child: editor,
     );
   }
 

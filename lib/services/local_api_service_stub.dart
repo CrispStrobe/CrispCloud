@@ -8,7 +8,9 @@ import 'local_api_service.dart';
 /// Start an HTTP server. On web this always throws [UnsupportedError].
 Future<Object> startHttpServer({
   required int port,
+  required Future<ApiResponse?> Function(ApiRequest) authorizeRequest,
   required Future<ApiResponse> Function(ApiRequest) handleRequest,
+  int maxBodyBytes = 100 * 1024 * 1024,
 }) {
   throw UnsupportedError('HTTP server is not supported on this platform');
 }

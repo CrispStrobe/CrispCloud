@@ -415,7 +415,8 @@ class LocalApiService {
     try {
       _serverHandle = await native.startHttpServer(
         port: port,
-        handleRequest: _handleNativeRequest,
+        authorizeRequest: _authorizeRequest,
+        handleRequest: _dispatchAuthorized,
       );
       _running = true;
       _startTime = DateTime.now();
@@ -475,6 +476,12 @@ class LocalApiService {
 
   /// Called by the native layer for each incoming HTTP request.
   Future<ApiResponse> handleRequest(ApiRequest request) async {
+    final denied = await _authorizeRequest(request);
+    if (denied != null) return denied;
+    return _dispatchAuthorized(request);
+  }
+
+  Future<ApiResponse?> _authorizeRequest(ApiRequest request) async {
     final ip = request.header('x-forwarded-for') ?? '127.0.0.1';
 
     // Rate limiting.
@@ -489,15 +496,15 @@ class LocalApiService {
       if (authResult != null) return authResult;
     }
 
-    _log.debug('API ${request.method} ${request.path}',
-        {'ip': ip, 'query': request.queryParams});
-
-    return _router.dispatch(request);
+    return null;
   }
 
-  /// Wrapper used by the native layer.
-  Future<ApiResponse> _handleNativeRequest(ApiRequest request) =>
-      handleRequest(request);
+  Future<ApiResponse> _dispatchAuthorized(ApiRequest request) {
+    _log.debug('API ${request.method} ${request.path}', {
+      'ip': request.header('x-forwarded-for') ?? '127.0.0.1',
+    });
+    return _router.dispatch(request);
+  }
 
   /// Returns a non-null ApiResponse if authentication fails, null if OK.
   Future<ApiResponse?> _authenticate(ApiRequest request) async {

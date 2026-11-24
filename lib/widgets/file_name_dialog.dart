@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../l10n/commander_strings.dart';
@@ -75,10 +76,13 @@ class _FileNameDialogState extends State<FileNameDialog> {
     }
   }
 
+  void _dismiss() {
+    if (!_busy) Navigator.pop(context);
+  }
+
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !_busy,
-    child: AlertDialog(
+  Widget build(BuildContext context) {
+    final dialog = AlertDialog(
       scrollable: true,
       title: Text(widget.title),
       content: SizedBox(
@@ -128,7 +132,7 @@ class _FileNameDialogState extends State<FileNameDialog> {
             child: Text(context.commanderTr('Cancel operation')),
           ),
         TextButton(
-          onPressed: _busy ? null : () => Navigator.pop(context),
+          onPressed: _busy ? null : _dismiss,
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
         FilledButton(
@@ -137,8 +141,12 @@ class _FileNameDialogState extends State<FileNameDialog> {
           child: Text(widget.confirmLabel),
         ),
       ],
-    ),
-  );
+    );
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _dismiss},
+      child: PopScope(canPop: !_busy, child: dialog),
+    );
+  }
 }
 
 Future<String?> showCapturedRenameDialog(

@@ -44,6 +44,7 @@ import 'ebook_library_actions.dart';
 import 'ebook_reading_data_dialog.dart';
 import 'ebook_kindle_metadata_editor.dart';
 import 'ebook_prose_editor.dart';
+import 'document_page_navigation.dart';
 import 'internal_viewer_dialog.dart'
     show InternalViewerAction, InternalViewerDialog;
 
@@ -134,6 +135,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   final _reader = CrispEbookController();
   final _chapterReader = EbookChapterReaderController();
   final _source = CodeLineEditingController();
+  final _sourceScroll = CodeScrollController();
   final _search = TextEditingController();
   final _title = TextEditingController();
   final _authors = TextEditingController();
@@ -269,6 +271,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     _reader.dispose();
     _chapterReader.dispose();
     _source.dispose();
+    _sourceScroll.dispose();
     _search.dispose();
     _title.dispose();
     _authors.dispose();
@@ -2757,21 +2760,25 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         else if (resource.isText &&
             !(_showProse && xhtml && !_document!.fixedLayout))
           Expanded(
-            child: CodeEditor(
-              controller: _source,
-              wordWrap: true,
-              style: CodeEditorStyle(
-                fontSize: 13,
-                fontFamily: 'AppMono',
-                textColor: Theme.of(context).colorScheme.onSurface,
-                backgroundColor: Theme.of(context).colorScheme.surface,
+            child: DocumentPageShortcuts(
+              scrollController: _sourceScroll.verticalScroller,
+              child: CodeEditor(
+                controller: _source,
+                scrollController: _sourceScroll,
+                wordWrap: true,
+                style: CodeEditorStyle(
+                  fontSize: 13,
+                  fontFamily: 'AppMono',
+                  textColor: Theme.of(context).colorScheme.onSurface,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                ),
+                indicatorBuilder: (context, editing, chunks, notifier) =>
+                    DefaultCodeLineNumber(
+                      controller: editing,
+                      notifier: notifier,
+                    ),
+                padding: const EdgeInsets.all(12),
               ),
-              indicatorBuilder: (context, editing, chunks, notifier) =>
-                  DefaultCodeLineNumber(
-                    controller: editing,
-                    notifier: notifier,
-                  ),
-              padding: const EdgeInsets.all(12),
             ),
           )
         else if (resource.isText)

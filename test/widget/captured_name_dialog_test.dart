@@ -14,6 +14,7 @@ import 'package:crisp_cloud/services/rename_batch_store.dart';
 import 'package:crisp_cloud/widgets/file_context_menu.dart' as menus;
 import 'package:crisp_cloud/widgets/file_name_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -172,6 +173,24 @@ void main() {
     expect(find.text('Created folder "created"'), findsOneWidget);
   });
 
+  testWidgets('Escape cancels F7 with the folder name field focused', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      (context, ref) =>
+          screens.showCreateFolderDialog(context, ref, PanelSide.remote),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('file-name-input')),
+      'unused',
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(FileNameDialog), findsNothing);
+    expect(cloud.created, isEmpty);
+  });
+
   testWidgets(
     'new folder refuses an account switch made while the prompt is open',
     (tester) async {
@@ -217,6 +236,9 @@ void main() {
     input.onSubmitted!('created');
     await tester.pump();
     expect(cloud.created, ['/created']);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(find.byType(FileNameDialog), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.byKey(const ValueKey('file-name-submit')))

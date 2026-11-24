@@ -53,6 +53,9 @@ class PdfXrefTable {
 
 /// Loads xref tables and streams, including incremental `/Prev` chains.
 abstract final class PdfXref {
+  static const int _maxEntries = 1000000;
+  static const int _maxRevisions = 128;
+
   /// parse API.
   static PdfXrefTable parse(Uint8List bytes, PdfCosReader reader) {
     final int start = reader.findLastStartXref();
@@ -61,7 +64,8 @@ abstract final class PdfXref {
     }
     try {
       return _parseFrom(bytes, reader, start, <int>{});
-    } on PdfOpenException {
+    } on PdfOpenException catch (error) {
+      if (error.error == PdfOpenError.limit) rethrow;
       return repair(bytes, reader);
     }
   }
@@ -72,6 +76,9 @@ abstract final class PdfXref {
     int offset,
     Set<int> seen,
   ) {
+    if (seen.length >= _maxRevisions) {
+      throw const PdfOpenException(PdfOpenError.limit, 'Too many xref revisions');
+    }
     if (!seen.add(offset) || offset < 0 || offset >= bytes.length) {
       throw const PdfOpenException(PdfOpenError.badXref, 'Cyclic xref');
     }
@@ -103,6 +110,12 @@ abstract final class PdfXref {
       final int first = _readInt(reader);
       reader.skipWsAndComments();
       final int count = _readInt(reader);
+      if (first < 0 || count <= 0) {
+        throw const PdfOpenException(PdfOpenError.badXref, 'Invalid xref range');
+      }
+      if (count > _maxEntries - entries.length || first > _maxEntries - count) {
+        throw const PdfOpenException(PdfOpenError.limit, 'Too many xref entries');
+      }
       for (int i = 0; i < count; i++) {
         reader.skipWsAndComments();
         final int off = _readInt(reader);
@@ -110,9 +123,10 @@ abstract final class PdfXref {
         final int gen = _readInt(reader);
         reader.skipWsAndComments();
         final int flag = reader.offset < bytes.length ? bytes[reader.offset] : 0;
-        if (flag == 0x6E || flag == 0x66) {
-          reader.offset++;
+        if (flag != 0x6E && flag != 0x66) {
+          throw const PdfOpenException(PdfOpenError.badXref, 'Invalid xref flag');
         }
+        reader.offset++;
         final int id = first + i;
         entries[id] = PdfXrefEntry(
           id: id,
@@ -156,11 +170,21 @@ abstract final class PdfXref {
     final PdfCosDict dict = obj.dict;
     final Uint8List decoded = PdfFilters.decode(obj.raw, dict);
     final List<int> w = _w(dict['W']);
+    final int stride = w[0] + w[1] + w[2];
+    if (stride == 0 || w.any((width) => width < 0 || width > 8)) {
+      throw const PdfOpenException(PdfOpenError.badXref, 'Invalid xref field widths');
+    }
     final int size = pdfCosInt(dict['Size']) ?? 0;
     final List<(int, int)> index = _index(dict['Index'], size);
     final Map<int, PdfXrefEntry> entries = <int, PdfXrefEntry>{};
     var cursor = 0;
     for (final (int first, int count) in index) {
+      if (first < 0 || count < 0 || count > (decoded.length - cursor) ~/ stride) {
+        throw const PdfOpenException(PdfOpenError.badXref, 'Truncated xref range');
+      }
+      if (count > _maxEntries - entries.length || first > _maxEntries - count) {
+        throw const PdfOpenException(PdfOpenError.limit, 'Too many xref entries');
+      }
       for (int i = 0; i < count; i++) {
         final int type = _field(decoded, cursor, w[0], 1);
         cursor += w[0];
@@ -276,10 +300,17 @@ abstract final class PdfXref {
         reader.bytes[reader.offset] <= 0x39) {
       reader.offset++;
     }
-    return int.tryParse(
-          String.fromCharCodes(reader.bytes.sublist(start, reader.offset)),
-        ) ??
-        0;
+    final length = reader.offset - start;
+    if (length == 0 || length > 20) {
+      throw const PdfOpenException(PdfOpenError.badXref, 'Invalid xref integer');
+    }
+    final value = int.tryParse(
+      String.fromCharCodes(reader.bytes.sublist(start, reader.offset)),
+    );
+    if (value == null) {
+      throw const PdfOpenException(PdfOpenError.badXref, 'Invalid xref integer');
+    }
+    return value;
   }
 
   static bool _consume(PdfCosReader reader, Uint8List bytes, String text) {

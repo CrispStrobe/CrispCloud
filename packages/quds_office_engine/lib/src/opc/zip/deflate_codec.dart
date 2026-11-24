@@ -23,6 +23,25 @@ abstract final class RawDeflate {
     return _Inflater(data, maxOutputBytes: limit).run();
   }
 
+  /// Inflates one stream and reports its byte boundary, including bit padding.
+  static ({Uint8List bytes, int consumed}) inflatePrefix(
+    Uint8List data, {
+    required int maxOutputBytes,
+    int windowBytes = 32768,
+  }) {
+    if (maxOutputBytes < 0) {
+      throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
+    }
+    RangeError.checkValueInInterval(windowBytes, 256, 32768, 'windowBytes');
+    final inflater = _Inflater(
+      data,
+      maxOutputBytes: maxOutputBytes,
+      windowBytes: windowBytes,
+    );
+    final bytes = inflater.run();
+    return (bytes: bytes, consumed: inflater._pos);
+  }
+
   /// deflate API.
   static Uint8List deflate(List<int> data, {int level = 6}) {
     return _Deflater(Uint8List.fromList(data), level: level).run();
@@ -30,21 +49,35 @@ abstract final class RawDeflate {
 }
 
 class _Inflater {
-  _Inflater(List<int> data, {this.maxOutputBytes})
+  _Inflater(List<int> data, {required this.maxOutputBytes, this.windowBytes = 32768})
     : _src = data is Uint8List ? data : Uint8List.fromList(data);
 
   final Uint8List _src;
-  final int? maxOutputBytes;
+  final int maxOutputBytes;
+  final int windowBytes;
   int _pos = 0;
   int _bitBuf = 0;
   int _bitCount = 0;
-  final _InflateBuffer _out = _InflateBuffer();
+  Uint8List _out = Uint8List(0);
+  int _length = 0;
 
-  void _checkOutput(int additionalBytes) {
+  void _reserveOutput(int additionalBytes) {
+    final required = _length + additionalBytes;
     final limit = maxOutputBytes;
-    if (limit != null && additionalBytes > limit - _out.length) {
+    if (required > limit) {
       throw const ZipDeflateLimitException('DEFLATE output exceeds its limit');
     }
+    if (required <= _out.length) {
+      return;
+    }
+    var capacity = _out.isEmpty ? 256 : _out.length * 2;
+    if (capacity < required) {
+      capacity = required;
+    }
+    if (capacity > limit) {
+      capacity = limit;
+    }
+    _out = Uint8List(capacity)..setRange(0, _length, _out);
   }
 
   /// run API.
@@ -65,7 +98,7 @@ class _Inflater {
           throw const ZipDeflateException('Invalid DEFLATE block type');
       }
     }
-    return _out.take();
+    return _length == _out.length ? _out : _out.sublist(0, _length);
   }
 
   void _stored() {
@@ -83,8 +116,9 @@ class _Inflater {
     if (_pos + len > _src.length) {
       throw const ZipDeflateException('Stored block overruns input');
     }
-    _checkOutput(len);
-    _out.addAll(_src, _pos, _pos + len);
+    _reserveOutput(len);
+    _out.setRange(_length, _length + len, _src, _pos);
+    _length += len;
     _pos += len;
   }
 
@@ -92,8 +126,8 @@ class _Inflater {
     while (true) {
       final int sym = lit.decode(this);
       if (sym < 256) {
-        _checkOutput(1);
-        _out.addByte(sym);
+        _reserveOutput(1);
+        _out[_length++] = sym;
         continue;
       }
       if (sym == 256) {
@@ -109,13 +143,13 @@ class _Inflater {
         throw ZipDeflateException('Invalid distance symbol $dsym');
       }
       final int distance = _distBase[dsym] + _bits(_distExtra[dsym]);
-      if (distance <= 0 || distance > _out.length) {
+      if (distance <= 0 || distance > _length || distance > windowBytes) {
         throw const ZipDeflateException('Invalid backreference distance');
       }
-      _checkOutput(length);
-      final int start = _out.length - distance;
+      _reserveOutput(length);
+      final int start = _length - distance;
       for (int i = 0; i < length; i++) {
-        _out.addByte(_out[start + i]);
+        _out[_length++] = _out[start + i];
       }
     }
   }
@@ -138,16 +172,12 @@ class _Inflater {
         lengths[index++] = sym;
         prev = sym;
       } else if (sym == 16) {
-        if (prev == 0) {
-          throw const ZipDeflateException('Code-length repeat has no base');
-        }
         final int repeat = 3 + _bits(2);
-        if (repeat > lengths.length - index) {
-          throw const ZipDeflateException('Code-length repeat overruns table');
+        if (index == 0 || repeat > lengths.length - index) {
+          throw const ZipDeflateException('Invalid DEFLATE code-length repeat');
         }
-        for (int i = 0; i < repeat; i++) {
-          lengths[index++] = prev;
-        }
+        lengths.fillRange(index, index + repeat, prev);
+        index += repeat;
       } else if (sym == 17) {
         final int repeat = 3 + _bits(3);
         if (repeat > lengths.length - index) {
@@ -165,6 +195,9 @@ class _Inflater {
       } else {
         throw const ZipDeflateException('Invalid code-length symbol');
       }
+    }
+    if (index != lengths.length) {
+      throw const ZipDeflateException('Invalid DEFLATE code-length repeat');
     }
     return _Tables(
       lit: _Huffman.fromLengths(lengths.sublist(0, hlit)),
@@ -205,39 +238,6 @@ class _Inflater {
 
   /// fromLengths API.
   static _Huffman _fixedDist() => _Huffman.fromLengths(List<int>.filled(32, 5));
-}
-
-class _InflateBuffer {
-  Uint8List _bytes = Uint8List(1024);
-  int length = 0;
-
-  int operator [](int index) => _bytes[index];
-
-  void addByte(int value) {
-    _grow(1);
-    _bytes[length++] = value;
-  }
-
-  void addAll(Uint8List source, int start, int end) {
-    final int count = end - start;
-    _grow(count);
-    _bytes.setRange(length, length + count, source, start);
-    length += count;
-  }
-
-  Uint8List take() => Uint8List.sublistView(_bytes, 0, length);
-
-  void _grow(int additional) {
-    final int needed = length + additional;
-    if (needed <= _bytes.length) return;
-    var capacity = _bytes.length;
-    while (capacity < needed) {
-      capacity <<= 1;
-    }
-    final Uint8List next = Uint8List(capacity);
-    next.setRange(0, length, _bytes);
-    _bytes = next;
-  }
 }
 
 class _Deflater {
