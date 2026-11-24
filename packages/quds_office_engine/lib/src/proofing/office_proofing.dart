@@ -377,15 +377,21 @@ class OfficeProofingReport {
 
   /// Every applicable configured provider completed. Unsupported providers do
   /// not invalidate another language's checker, but at least one must succeed.
-  bool get complete =>
-      results.any(
-        (OfficeProofingResult r) => r.status == OfficeProofingStatus.success,
-      ) &&
-      results.every(
-        (OfficeProofingResult r) =>
-            r.status == OfficeProofingStatus.success ||
-            r.status == OfficeProofingStatus.unsupported,
-      );
+  late final bool complete = _isComplete();
+
+  bool _isComplete() {
+    var succeeded = false;
+    for (final result in results) {
+      final status = result.status;
+      if (status == OfficeProofingStatus.success) {
+        succeeded = true;
+      } else if (status != OfficeProofingStatus.unsupported) {
+        return false;
+      }
+    }
+    return succeeded;
+  }
+
   bool get isClean => complete && findings.isEmpty;
 }
 
