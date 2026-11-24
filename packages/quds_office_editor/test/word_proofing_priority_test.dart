@@ -8,6 +8,7 @@ class _Provider extends OfficeProofingProvider {
   @override
   String get id => 'priority-test';
   final requests = <OfficeProofingRequest>[];
+  final retryFirst = <String>{};
   final gates = <String, Completer<void>>{};
   final starts = <String, Completer<void>>{};
 
@@ -23,6 +24,13 @@ class _Provider extends OfficeProofingProvider {
     final started = starts[request.text] ??= Completer<void>();
     if (!started.isCompleted) started.complete();
     await gates[request.text]?.future;
+    if (retryFirst.remove(request.text)) {
+      return OfficeProofingResult(
+        request: request,
+        providerId: id,
+        status: OfficeProofingStatus.failed,
+      );
+    }
     return OfficeProofingResult(
       request: request,
       providerId: id,
@@ -58,6 +66,53 @@ WordEditorController _controller(WmlDocument document, _Provider provider) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('background prioritizes visible text around a settled caret', (
+    tester,
+  ) async {
+    final paragraphs = [for (var i = 0; i < 9; i++) _paragraph('Paragraph $i')];
+    final document = WmlDocument(sections: [WmlSection(blocks: paragraphs)]);
+    final provider = _Provider()
+      ..retryFirst.addAll([
+        for (var i = 0; i < paragraphs.length; i++)
+          if (i != 4) paragraphs[i].text,
+      ]);
+    final session = WordProofingSession(
+      document: () => document,
+      revision: () => 0,
+      priorityParagraph: () => paragraphs[4],
+      visibleParagraphs: () => [
+        paragraphs[7],
+        paragraphs[1],
+        paragraphs[6],
+        paragraphs[2],
+      ],
+      service: OfficeProofingService(providers: [provider]),
+    );
+    addTearDown(session.dispose);
+    session.enabled = true;
+    await tester.pump(WordProofingTiming.idle);
+    for (
+      var i = 0;
+      i < 20 && (session.checking || !session.summary.hasResults);
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(provider.requests, hasLength(9));
+    expect(session.summary.checkedParagraphCount, 1);
+
+    provider.requests.clear();
+    await tester.pump(WordProofingTiming.backgroundIdle);
+    for (var i = 0; i < 20 && !session.summary.complete; i++) {
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(session.passCountsByTrigger['background'], 1);
+    expect(provider.requests.map((request) => request.text), [
+      for (final i in [2, 6, 1, 7, 3, 5, 0, 8]) paragraphs[i].text,
+    ]);
+    expect(session.summary.complete, isTrue);
+  });
 
   test('active paragraph publishes first even in a long document', () async {
     final paragraphs = [

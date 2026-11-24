@@ -1919,11 +1919,16 @@ final class WordProofingSession extends ChangeNotifier {
     final availableKinds = _available(kinds);
     _ParagraphSnapshot? priority;
     final rest = <_ParagraphSnapshot>[];
+    final positions = trigger == _Trigger.background ? <int>[] : null;
     var priorityIndex = 0;
+    var split = 0;
     for (var index = 0; index < captured.paragraphs.length; index++) {
       final snapshot = captured.paragraphs[index];
       final paragraph = snapshot.paragraph;
-      if (identical(paragraph, priorityParagraph)) priorityIndex = index;
+      if (identical(paragraph, priorityParagraph)) {
+        priorityIndex = index;
+        split = rest.length;
+      }
       if (trigger == _Trigger.word && !identical(paragraph, typing)) continue;
       final reports = _settledReports(
         snapshot,
@@ -1957,9 +1962,10 @@ final class WordProofingSession extends ChangeNotifier {
         priority = snapshot;
       } else {
         rest.add(snapshot);
+        positions?.add(index);
       }
     }
-    if (trigger == _Trigger.background && rest.length > 1) {
+    if (positions != null && rest.length > 1) {
       // Visible text first, then outward from the caret.
       final visible = HashSet<WmlParagraph>.identity();
       try {
@@ -1967,24 +1973,22 @@ final class WordProofingSession extends ChangeNotifier {
       } on Object {
         // Layout may be unavailable; the caret distance still orders.
       }
-      final position = HashMap<WmlParagraph, int>.identity();
-      for (var index = 0; index < captured.paragraphs.length; index++) {
-        position[captured.paragraphs[index].paragraph] = index;
+      final ordered = <_ParagraphSnapshot>[?priority];
+      final offscreen = <_ParagraphSnapshot>[];
+      // Both halves are already ordered by distance when walked outwards.
+      // Choose the earlier paragraph on a tie, including across cache gaps.
+      var before = split - 1;
+      var after = split;
+      while (before >= 0 || after < rest.length) {
+        final takeBefore =
+            after == rest.length ||
+            (before >= 0 &&
+                priorityIndex - positions[before] <=
+                    positions[after] - priorityIndex);
+        final next = takeBefore ? rest[before--] : rest[after++];
+        (visible.contains(next.paragraph) ? ordered : offscreen).add(next);
       }
-      int rank(_ParagraphSnapshot snapshot) {
-        final distance = (position[snapshot.paragraph]! - priorityIndex).abs();
-        return visible.contains(snapshot.paragraph)
-            ? distance
-            : distance + captured.paragraphs.length;
-      }
-
-      // Ties keep document order (List.sort is not stable).
-      rest.sort((a, b) {
-        final byRank = rank(a).compareTo(rank(b));
-        return byRank != 0
-            ? byRank
-            : position[a.paragraph]!.compareTo(position[b.paragraph]!);
-      });
+      return ordered..addAll(offscreen);
     }
     return [?priority, ...rest];
   }
