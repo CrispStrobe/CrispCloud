@@ -2511,17 +2511,38 @@ final class WordProofingSession extends ChangeNotifier {
     _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
     _pendingPublish = null;
     _clearProvisionalFindings();
-    final previousByFinding =
-        HashMap<OfficeProofingFinding, WordProofingIssue>.identity();
-    final previousIssues = _published.issues;
+    final previous = _published;
+    final previousIssues = previous.issues;
     final previousRanges = _issueRanges;
-    for (final issue in previousIssues) {
-      previousByFinding[issue.finding] = issue;
+    HashMap<OfficeProofingFinding, WordProofingIssue>? previousByFinding;
+    HashSet<OfficeProofingReport>? previousReports;
+
+    WordProofingIssue? previousIssue(
+      OfficeProofingFinding finding,
+      ({int start, int end}) range,
+    ) {
+      // Most paragraphs have few findings. Check their existing slice and
+      // only build a document-wide identity index for dense paragraphs.
+      if (range.end - range.start <= 8) {
+        for (var i = range.end - 1; i >= range.start; i--) {
+          final issue = previousIssues[i];
+          if (identical(issue.finding, finding)) return issue;
+        }
+        return null;
+      }
+      var index = previousByFinding;
+      if (index == null) {
+        index = HashMap<OfficeProofingFinding, WordProofingIssue>.identity();
+        for (final issue in previousIssues) {
+          index[issue.finding] = issue;
+        }
+        previousByFinding = index;
+      }
+      return index[finding];
     }
+
     final findings =
         HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
-    final previousReports = HashSet<OfficeProofingReport>.identity()
-      ..addAll(_published.reports);
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
     final issueRanges =
@@ -2552,6 +2573,9 @@ final class WordProofingSession extends ChangeNotifier {
       }
       paragraphFindings.clear();
       final issueStart = issues.length;
+      final range = previousRanges[snapshot.paragraph];
+      final first = range == null ? null : previousIssues[range.start];
+      final sameSnapshot = first?._snapshot.key == snapshot.key;
       for (var index = 0; index < snapshot.segments.length; index++) {
         final segment = snapshot.segments[index];
         final report = _reportForPublication(
@@ -2562,7 +2586,6 @@ final class WordProofingSession extends ChangeNotifier {
           revision: revision,
         );
         reports.add(report);
-        final previouslyPublished = previousReports.contains(report);
         for (final finding in report.findings) {
           // Inside or at the end of the finding (the word being typed);
           // a finding that starts at the caret is the next word.
@@ -2586,26 +2609,23 @@ final class WordProofingSession extends ChangeNotifier {
           }
           // Keep a current finding's identity when only progress changes, so
           // an open suggestion menu remains usable while other text is checked.
-          var existing = previousByFinding[finding];
-          if (existing?._snapshot.key != snapshot.key ||
-              existing?.language != segment.language) {
-            existing = null;
-          }
-          if (existing == null && !previouslyPublished) {
-            final range = previousRanges[snapshot.paragraph];
-            if (range != null) {
-              final first = previousIssues[range.start];
-              if (first.finding.revision == revision &&
-                  first._snapshot.key == snapshot.key) {
-                existing = previousIssues
-                    .getRange(range.start, range.end)
-                    .where(
-                      (issue) =>
-                          issue.language == segment.language &&
-                          _sameFinding(issue.finding, finding),
-                    )
-                    .firstOrNull;
-              }
+          WordProofingIssue? existing;
+          if (range != null && sameSnapshot) {
+            existing = previousIssue(finding, range);
+            if (existing?.language != segment.language) existing = null;
+            if (existing == null &&
+                first!.finding.revision == revision &&
+                !(previousReports ??= HashSet<OfficeProofingReport>.identity()
+                      ..addAll(previous.reports))
+                    .contains(report)) {
+              existing = previousIssues
+                  .getRange(range.start, range.end)
+                  .where(
+                    (issue) =>
+                        issue.language == segment.language &&
+                        _sameFinding(issue.finding, finding),
+                  )
+                  .firstOrNull;
             }
           }
           final issue =

@@ -130,12 +130,13 @@ void main() {
   test(
     'progress reuses reports rebound to the current document revision',
     () async {
-      final h = _Harness(['Feler stable', 'Feler initial']);
+      final dense = List.filled(10, 'Feler').join(' ');
+      final h = _Harness(['Feler stable', dense, 'Feler initial']);
       final initial = await h.session.checkNow();
       var previous = initial.reports.first;
 
       for (final text in ['Feler edited', 'Feler edited again']) {
-        h.edit(1, text);
+        h.edit(2, text);
         final gate = h.provider.gate(text);
         final pending = h.session.checkNow();
         await h.provider.started(text);
@@ -150,13 +151,15 @@ void main() {
         gate.complete();
         final finished = await pending;
         expect(finished.reports.first, same(rebound));
-        expect(finished.issues.first, same(partial.issues.first));
+        expect(partial.issues, hasLength(11));
+        expect(finished.issues.take(11), orderedEquals(partial.issues));
         expect(h.session.canCorrect(finished.issues.first), isTrue);
         previous = rebound;
       }
 
       expect(h.provider.requests.map((request) => request.text), [
         'Feler stable',
+        dense,
         'Feler initial',
         'Feler edited',
         'Feler edited again',
