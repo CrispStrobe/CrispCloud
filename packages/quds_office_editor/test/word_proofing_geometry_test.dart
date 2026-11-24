@@ -673,6 +673,48 @@ void main() {
     );
   }
 
+  testWidgets('wrapped proofing still underlines a discretionary hyphen', (
+    tester,
+  ) async {
+    final paragraph = _paragraph(
+      'Silbentrennung Silbentrennung Silbentrennung',
+    );
+    final document = _document([paragraph], width: 110)..autoHyphenation = true;
+    final layout = _layout(document);
+    final line = layout.pages.first.lines.firstWhere(
+      (line) => line.glyphs.any((glyph) => glyph.glyph.isDiscretionaryHyphen),
+    );
+    final hyphen = line.glyphs.singleWhere(
+      (glyph) => glyph.glyph.isDiscretionaryHyphen,
+    );
+    final boundary = hyphen.glyph.logicalIndex;
+    final canvas = await _mount(
+      tester,
+      document,
+      layout,
+      findings: {
+        paragraph: [
+          _finding(paragraph, 0, boundary),
+          for (var offset = 20; offset < 23; offset++)
+            _finding(paragraph, offset, offset + 1),
+        ],
+      },
+    );
+
+    final pen = hyphen.x - hyphen.paintDx;
+    final region = Rect.fromPoints(
+      canvas.windowForPagePoint(
+        line.pageIndex,
+        Offset(pen + hyphen.advance * 0.4, line.y + line.height - 4),
+      ),
+      canvas.windowForPagePoint(
+        line.pageIndex,
+        Offset(pen + hyphen.advance, line.y + line.height + 4),
+      ),
+    );
+    expect(_redPixels(await _pixels(tester), region), greaterThan(0));
+  });
+
   for (final inHeader in [false, true]) {
     testWidgets(
       'zero-length finding at ${inHeader ? 'header' : 'body'} end remains visible',

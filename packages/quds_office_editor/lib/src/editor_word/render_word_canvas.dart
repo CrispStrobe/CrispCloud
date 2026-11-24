@@ -4105,7 +4105,18 @@ class RenderWordCanvas extends RenderBox
   }) {
     findings ??= _proofingFor(line.sourceParagraph);
     if (findings == null || line.glyphs.isEmpty) return;
+    // For a handful of findings, a separate glyph scan is unlikely to pay off.
+    final canCull = line.proofingOffsets == null && findings.length >= 4;
+    late final span = CaretEngine.logicalSpan(line);
     for (final finding in findings) {
+      // Most findings in a wrapped paragraph belong to other lines. Keep
+      // boundary matches for discretionary hyphens and preserve zero-length
+      // findings. Note and field offsets need mapping.
+      if (canCull &&
+          finding.start != finding.end &&
+          (finding.end < span.min || finding.start > span.max)) {
+        continue;
+      }
       for (final range in WordProofingGeometry.displayRanges(
         line,
         finding.start,
