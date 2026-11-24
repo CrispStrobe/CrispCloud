@@ -1881,7 +1881,7 @@
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "5bfeea71be0da417a0e164614f172ce7848a6ce0cdef6a53170a801bdcfdf07b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
     "packages/quds_office_editor/lib/src/embed/office_context_menu.dart": "d608cbfeae1915ad0154140f6c8f0cec126f8c13b3ed1e4224f60f8e43db378c",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "4a12c550c50f773f367afa53e0fa44215a1f3a75609b41550070356079e60ba9",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "1557c721b844d4d7754ff6fc8f8d57b58978eb2defe840842d2cd32bc4b67172",
     "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart": "2e3e4a904629e2a09746916d3caf15b6a3558d73d226e38ea495e46a056a22c3",
     "packages/quds_office_editor/lib/src/embed/office_editors.dart": "58171e536c04d12852b730ee64d46f22f4b8a646e7d3fda0383be100228cae64",
     "packages/quds_office_editor/lib/src/embed/office_font_pack.dart": "9e88aba90b5180f485660f1b762255b4eed20d53718f3861530ed8222ea210b0",
@@ -2098,7 +2098,7 @@
     "packages/quds_office_editor/test/word_incremental_proofing_menu_test.dart": "9cbc0148174da3b067ff7453bb03fc7d7a426ddf1323ca8f8da0aa90979eecb7",
     "packages/quds_office_editor/test/word_incremental_proofing_test.dart": "5c6ca1eb9683a0a6f725b53af5d1c925e692d43071f2fc1127a76694edc2c160",
     "packages/quds_office_editor/test/word_inline_picture_history_test.dart": "e27a08d8eda1f4c4fa7f5759c3ba7b2baa3d686c1f7cdf973f734d84ac05783c",
-    "packages/quds_office_editor/test/word_input_focus_test.dart": "e84480418d2cef58639c027288cf63835427d6e54a1cabd856f1e38e8e0bc94b",
+    "packages/quds_office_editor/test/word_input_focus_test.dart": "ef5fd2707d180e459cfbbbaafc589751a48a786c7ebf610f536393d90ce205cb",
     "packages/quds_office_editor/test/word_keyboard_context_geometry_test.dart": "e97e97176f3e3f6849696376ac2595e77aedcc7c7852b5ecb4777be7d7af4b95",
     "packages/quds_office_editor/test/word_keyboard_review_identity_test.dart": "772cb9cf67286e43dda0ab50611ec9e2d2fd9eeea29d397aa95075e36515f0f3",
     "packages/quds_office_editor/test/word_keyboard_review_test.dart": "4311a9b227e54b23829b8a43ec112897f024c63cc20780443b7be7c5dce03976",
@@ -3480,12 +3480,12 @@
   "local_patch_bases": {
     "packages/quds_office_editor/lib/src/core/input_bridge.dart": "e053ab3aab15e880abd17cb512f4f80e4c81d21f8818f720382140b38cdbfd5b",
     "packages/quds_office_editor/lib/src/editor_sheet/inline_cell_editor.dart": "9cbb237d30ca4eae3b1fcf3d8ec5036e4e690ca69043b6df76919eac6c830f5d",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "a431c1691b0daffd285fedadf11ea0e87999ca90259c77031acce28cbc2e4ea5",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "25641b7bef2dbb03156f25f5e195da3a2863ff2c2b1f73eea8d5e4fc232f1105",
     "packages/quds_office_editor/lib/src/embed/office_editors.dart": "6e694776d3edbf6aa09d0cf5e3fe5c88d89be308a3a2d9e337a4da11c71a29d5",
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "053a214c9dbcbb94e0260e7d4aba34cfd0a2714b",
+  "source_commit": "a06e87b000d9e256cdcec7e757062c4a735b690d",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

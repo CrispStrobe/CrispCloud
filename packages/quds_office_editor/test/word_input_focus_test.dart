@@ -131,6 +131,31 @@ void main() {
     ]);
   });
 
+  test('caret display tracks live formatting and document replacement', () {
+    final document = WmlDocument.empty(text: 'First');
+    final first = document.paragraphs.single;
+    final controller = WordEditorController(document: document);
+    addTearDown(controller.dispose);
+
+    controller.caret.logicalIndex = 1;
+    controller.moveCaretVisual(toRight: true);
+    expect(controller.input.isAttached, isFalse);
+    expect(controller.semanticsValue, 'Fi');
+    expect(controller.activeParagraphProperties, same(first.properties));
+
+    first.properties.headingLevel = 2;
+    expect(controller.activeHeadingLevel, 2);
+
+    final replacement = WmlDocument.empty(text: 'Second');
+    controller.document = replacement;
+    expect(controller.semanticsValue, 'Se');
+    expect(
+      controller.activeParagraphProperties,
+      same(replacement.paragraphs.single.properties),
+    );
+    expect(controller.activeHeadingLevel, 0);
+  });
+
   testWidgets(
     'modal text input retains ownership over stale Word IME traffic',
     (tester) async {

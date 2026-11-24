@@ -977,6 +977,7 @@ class WordEditorController extends OfficeController {
     _openGeneration++;
     _document = value;
     _bodyVisualNavigation = null;
+    _caretDisplayParagraph = null;
     _documentReplaced = true;
   }
 
@@ -1070,10 +1071,12 @@ class WordEditorController extends OfficeController {
     _documentLaidOut = value;
     _layoutSourceParagraphsAreLive = sourceParagraphsAreLive;
     _bodyVisualNavigation = null;
+    _caretDisplayParagraph = null;
   }
 
   late LaidOutDocument _documentLaidOut;
   var _layoutSourceParagraphsAreLive = false;
+  ({int index, WmlParagraph paragraph})? _caretDisplayParagraph;
   List<({WmlVisual visual, int after})>? _bodyVisualNavigation;
 
   /// commentLaidOut API.
@@ -1275,6 +1278,17 @@ class WordEditorController extends OfficeController {
       return created;
     }
     return paras[caret.paragraphIndex.clamp(0, paras.length - 1)];
+  }
+
+  WmlParagraph get _paragraphForCaretDisplay {
+    final known = _caretDisplayParagraph;
+    if (known != null &&
+        !_editingHeaderFooter &&
+        !isEditingComment &&
+        known.index == documentCaret.paragraphIndex) {
+      return known.paragraph;
+    }
+    return _activeParagraph;
   }
 
   List<WmlParagraph> _ensureCommentParagraphs(WmlComment comment) {
@@ -1840,10 +1854,11 @@ class WordEditorController extends OfficeController {
 
   /// Effective formatting at the active paragraph.
   WmlParagraphProps get activeParagraphProperties =>
-      _activeParagraph.properties;
+      _paragraphForCaretDisplay.properties;
 
   /// activeHeadingLevel API.
-  int get activeHeadingLevel => WordToc.headingLevelOf(_activeParagraph) ?? 0;
+  int get activeHeadingLevel =>
+      WordToc.headingLevelOf(_paragraphForCaretDisplay) ?? 0;
 
   /// applyHeading API.
   void applyHeading(int level) {
@@ -4377,7 +4392,7 @@ class WordEditorController extends OfficeController {
 
   /// activeRunProps API.
   WmlRunProps get activeRunProps =>
-      WmlRunEdit.propsAt(_activeParagraph, caret.logicalIndex);
+      WmlRunEdit.propsAt(_paragraphForCaretDisplay, caret.logicalIndex);
 
   static List<WmlInline> _cloneInlines(WmlParagraph para) =>
       _cloneInlinesFrom(para.inlines);
@@ -5362,6 +5377,14 @@ class WordEditorController extends OfficeController {
   }
 
   void _syncImeSelection({WmlParagraph? paragraph}) {
+    // Formatting and accessibility ask for the same live paragraph after
+    // navigation, even if the surface has no attached text input.
+    if (paragraph != null) {
+      _caretDisplayParagraph = (
+        index: caret.paragraphIndex,
+        paragraph: paragraph,
+      );
+    }
     if (!input.isAttached) {
       return;
     }
@@ -7771,7 +7794,7 @@ class WordEditorController extends OfficeController {
       final OfficeVisual v = visual.visual;
       return '${config.strings.pictureLabel} ${v.width.round()}×${v.height.round()}. ${config.strings.pictureHint}';
     }
-    final String text = _activeParagraph.text;
+    final String text = _paragraphForCaretDisplay.text;
     final int i = caret.logicalIndex.clamp(0, text.length);
     return text.isEmpty ? '' : text.substring(0, i);
   }
