@@ -10,6 +10,14 @@ class _Provider extends OfficeProofingProvider {
   final String id;
   OfficeProofingStatus status;
   int version = 0;
+  int categoryReads = 0;
+
+  @override
+  Set<OfficeProofingCategory> get categories {
+    categoryReads++;
+    return super.categories;
+  }
+
   final requests = <OfficeProofingRequest>[];
   final gates = <String, Completer<void>>{};
   final starts = <String, Completer<void>>{};
@@ -106,6 +114,19 @@ class _Harness {
 }
 
 void main() {
+  test('planning a settled pass reads provider groups once per scan', () async {
+    final h = _Harness(List.generate(100, (index) => 'Feler $index'));
+    final initial = await h.session.checkNow();
+    expect(initial.checkedParagraphCount, 100);
+
+    h.provider.categoryReads = 0;
+    final warm = await h.session.checkNow();
+    expect(warm.checkedParagraphCount, 100);
+    expect(warm.issues, initial.issues);
+    expect(h.provider.requests, hasLength(100));
+    expect(h.provider.categoryReads, inInclusiveRange(1, 8));
+  });
+
   test(
     'progress reuses reports rebound to the current document revision',
     () async {

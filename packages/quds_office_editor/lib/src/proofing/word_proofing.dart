@@ -1290,9 +1290,9 @@ final class WordProofingSession extends ChangeNotifier {
         _completionTimer != null) {
       return;
     }
-    final kinds = _kindsFor(_Trigger.background);
+    final kinds = _available(_kindsFor(_Trigger.background));
     if (!captured.paragraphs.any(
-      (snapshot) => _needsWork(snapshot, kinds, useManual: false),
+      (snapshot) => _settledReports(snapshot, kinds, useManual: false) == null,
     )) {
       return;
     }
@@ -1889,15 +1889,19 @@ final class WordProofingSession extends ChangeNotifier {
     return kinds.intersection(present);
   }
 
-  /// Whether [snapshot] lacks a reusable, settled result for [kinds].
-  bool _needsWork(
+  /// Settled reports covering every requested group available in this pass.
+  List<OfficeProofingReport>? _settledReports(
     _ParagraphSnapshot snapshot,
-    Set<_Kind> kinds, {
+    Set<_Kind> availableKinds, {
     required bool useManual,
   }) {
-    final cached = _cachedReports(snapshot, useManual: useManual);
-    if (cached == null || !cached.every(_settled)) return true;
-    return !_cache[snapshot.paragraph]!.kinds.containsAll(_available(kinds));
+    final reports = _cachedReports(snapshot, useManual: useManual);
+    if (reports == null ||
+        !_cache[snapshot.paragraph]!.kinds.containsAll(availableKinds) ||
+        !reports.every(_settled)) {
+      return null;
+    }
+    return reports;
   }
 
   /// The paragraphs a pass of [trigger] checks, in checking order.
@@ -1912,6 +1916,7 @@ final class WordProofingSession extends ChangeNotifier {
     final typing = _typing?.paragraph;
     final priorityParagraph = typing ?? _priorityParagraph?.call();
     final knownDocument = identical(_knownDocument, document);
+    final availableKinds = _available(kinds);
     _ParagraphSnapshot? priority;
     final rest = <_ParagraphSnapshot>[];
     var priorityIndex = 0;
@@ -1920,14 +1925,19 @@ final class WordProofingSession extends ChangeNotifier {
       final paragraph = snapshot.paragraph;
       if (identical(paragraph, priorityParagraph)) priorityIndex = index;
       if (trigger == _Trigger.word && !identical(paragraph, typing)) continue;
-      if (!_needsWork(snapshot, kinds, useManual: useManual)) {
-        final cached = _cache[paragraph];
+      final reports = _settledReports(
+        snapshot,
+        availableKinds,
+        useManual: useManual,
+      );
+      if (reports != null) {
+        final cached = _cache[paragraph]!;
         // A background pass never carries manual results forward: the next
         // explicit check runs the manual providers again.
-        if (cached != null && !useManual && cached.includesManual) {
+        if (!useManual && cached.includesManual) {
           _cache[paragraph] = _CachedParagraph(
             snapshot.key,
-            _cachedReports(snapshot, useManual: false)!,
+            reports,
             false,
             cached.kinds,
           );
