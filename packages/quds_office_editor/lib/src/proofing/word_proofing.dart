@@ -2534,7 +2534,15 @@ final class WordProofingSession extends ChangeNotifier {
     WordProofingIssue? previousIssue(
       OfficeProofingFinding finding,
       ({int start, int end}) range,
+      int paragraphIndex,
     ) {
+      // Unchanged findings usually keep their position during progress.
+      // Check it before searching a slice or indexing the previous issues.
+      final aligned = range.start + paragraphIndex;
+      if (aligned < range.end) {
+        final issue = previousIssues[aligned];
+        if (identical(issue.finding, finding)) return issue;
+      }
       // Most paragraphs have few findings. Check their existing slice and
       // only build a document-wide identity index for dense paragraphs.
       if (range.end - range.start <= 8) {
@@ -2625,7 +2633,11 @@ final class WordProofingSession extends ChangeNotifier {
           // an open suggestion menu remains usable while other text is checked.
           WordProofingIssue? existing;
           if (range != null && sameSnapshot) {
-            existing = previousIssue(finding, range);
+            existing = previousIssue(
+              finding,
+              range,
+              paragraphFindings.length,
+            );
             if (existing?.language != segment.language) existing = null;
             if (existing == null &&
                 first!.finding.revision == revision &&

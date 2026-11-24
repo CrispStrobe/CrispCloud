@@ -167,6 +167,22 @@ void main() {
     },
   );
 
+  test('dense publications retain issue identity across filtering', () async {
+    final dense = List.filled(12, 'Feler').join(' ');
+    final h = _Harness([dense, 'Feler other']);
+    final initial = (await h.session.checkNow()).issues;
+
+    h.session.ignoreOnce(initial.first);
+    final filtered = h.session.summary.issues;
+    expect(filtered, orderedEquals(initial.skip(1)));
+
+    h.session.clearIgnoredOnce();
+    final restored = h.session.summary.issues;
+    expect(restored.first.finding, same(initial.first.finding));
+    expect(restored.skip(1), orderedEquals(filtered));
+    expect(h.provider.requests, hasLength(2));
+  });
+
   test(
     'local issue lookups follow edits, ignore and document replacement',
     () async {
