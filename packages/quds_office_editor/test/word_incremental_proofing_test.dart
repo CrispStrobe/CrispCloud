@@ -107,6 +107,42 @@ class _Harness {
 
 void main() {
   test(
+    'target validation reads only its paragraph and tracks earlier fields',
+    () async {
+      final preceding = _CountedParagraph('Field heading');
+      final target = _CountedParagraph('Feler target');
+      final following = _CountedParagraph('Later paragraph');
+      final h = _Harness([]);
+      h.document.sections.single.blocks.add(preceding);
+      h.document.sections.add(WmlSection(blocks: [target, following]));
+      final issue = (await h.session.checkNow()).issues.single;
+
+      preceding.reads = 0;
+      target.reads = 0;
+      following.reads = 0;
+      expect(h.session.isCurrent(issue), isTrue);
+      expect(target.reads, 1);
+      final capture = h.session.captureTextRange(target, 0, 5);
+      expect(capture.status, WordTextRangeStatus.ready);
+      expect(h.session.isTextRangeCurrent(capture.target!), isTrue);
+      expect([preceding.reads, following.reads], [0, 0]);
+
+      preceding.inlines.add(WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin));
+      expect(h.session.isCurrent(issue), isFalse);
+      expect(h.session.isTextRangeCurrent(capture.target!), isFalse);
+      expect(
+        h.session.captureTextRange(target, 0, 5).status,
+        WordTextRangeStatus.protectedContent,
+      );
+
+      preceding.inlines.add(WmlFieldBoundary(kind: WmlFieldBoundaryKind.end));
+      expect(h.session.isCurrent(issue), isTrue);
+      expect(h.session.isTextRangeCurrent(capture.target!), isTrue);
+      expect([preceding.reads, following.reads], [0, 0]);
+    },
+  );
+
+  test(
     'paint resolves only requested paragraphs during a pending edit',
     () async {
       final changed = _CountedParagraph('Feler first Feler');

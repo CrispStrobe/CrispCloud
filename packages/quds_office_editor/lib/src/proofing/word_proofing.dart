@@ -1484,9 +1484,7 @@ final class WordProofingSession extends ChangeNotifier {
         issue._snapshot.configuration != _configurationKey) {
       return false;
     }
-    final current = _capture(_document()).paragraphs
-        .where((snapshot) => identical(snapshot.paragraph, issue.paragraph))
-        .firstOrNull;
+    final current = _captureParagraph(_document(), issue.paragraph);
     return current != null &&
         current.key == issue._snapshot.key &&
         issue.finding.end <= current.text.length &&
@@ -1654,9 +1652,7 @@ final class WordProofingSession extends ChangeNotifier {
       );
     }
     final document = _document();
-    final snapshot = _capture(document).paragraphs
-        .where((entry) => identical(entry.paragraph, paragraph))
-        .firstOrNull;
+    final snapshot = _captureParagraph(document, paragraph);
     if (snapshot == null) {
       return const WordTextRangeCapture._(
         WordTextRangeStatus.unsupportedTarget,
@@ -1734,9 +1730,7 @@ final class WordProofingSession extends ChangeNotifier {
         target._snapshot.configuration != _configurationKey) {
       return false;
     }
-    final current = _capture(_document()).paragraphs
-        .where((entry) => identical(entry.paragraph, target.paragraph))
-        .firstOrNull;
+    final current = _captureParagraph(_document(), target.paragraph);
     return current != null &&
         current.key == target._snapshot.key &&
         _richTextKey(target.paragraph) == target._richTextKey;
@@ -2653,7 +2647,15 @@ final class WordProofingSession extends ChangeNotifier {
     return false;
   }
 
-  _DocumentSnapshot _capture(WmlDocument document) {
+  _ParagraphSnapshot? _captureParagraph(
+    WmlDocument document,
+    WmlParagraph paragraph,
+  ) => _capture(document, onlyParagraph: paragraph).paragraphs.firstOrNull;
+
+  _DocumentSnapshot _capture(
+    WmlDocument document, {
+    WmlParagraph? onlyParagraph,
+  }) {
     final snapshots = <_ParagraphSnapshot>[];
     final seen = HashSet<WmlParagraph>.identity();
     var skipped = 0;
@@ -2673,14 +2675,34 @@ final class WordProofingSession extends ChangeNotifier {
         revisionsByParagraph.putIfAbsent(paragraph, () => []).add(revision);
       }
     }
-    void story(
+    bool story(
       Iterable<({WmlParagraph paragraph, bool locked, bool generated})> entries,
       String name,
     ) {
       var fieldDepth = 0;
+      void trackField(WmlFieldBoundary boundary) {
+        switch (boundary.kind) {
+          case WmlFieldBoundaryKind.begin:
+            fieldDepth++;
+          case WmlFieldBoundaryKind.end:
+            if (fieldDepth > 0) fieldDepth--;
+          case WmlFieldBoundaryKind.instruction:
+          case WmlFieldBoundaryKind.separate:
+            break;
+        }
+      }
+
       for (final entry in entries) {
         final paragraph = entry.paragraph;
         if (!seen.add(paragraph)) continue;
+        if (onlyParagraph != null && !identical(paragraph, onlyParagraph)) {
+          // A field can start before the target. Keep its live depth without
+          // reading or rebuilding proofing data for the preceding text.
+          for (final inline in paragraph.inlines) {
+            if (inline is WmlFieldBoundary) trackField(inline);
+          }
+          continue;
+        }
         final text = paragraph.text;
         final detection = _detectionForCapture(paragraph, text);
         final previous = _snapshotCache[paragraph];
@@ -2725,6 +2747,7 @@ final class WordProofingSession extends ChangeNotifier {
             previous.inputKey == simpleKey &&
             previous.snapshot.text == text) {
           snapshots.add(previous.snapshot);
+          if (onlyParagraph != null) return true;
           continue;
         }
 
@@ -2771,15 +2794,7 @@ final class WordProofingSession extends ChangeNotifier {
             barriers.add(offset);
             insertionBarriers.add(offset);
             structure.add(['field', inline.kind.name, inline.text]);
-            switch (inline.kind) {
-              case WmlFieldBoundaryKind.begin:
-                fieldDepth++;
-              case WmlFieldBoundaryKind.end:
-                if (fieldDepth > 0) fieldDepth--;
-              case WmlFieldBoundaryKind.instruction:
-              case WmlFieldBoundaryKind.separate:
-                break;
-            }
+            trackField(inline);
           } else if (inline is WmlRun) {
             final end = offset + inline.text.length;
             if (inline.isAtomic ||
@@ -2892,6 +2907,7 @@ final class WordProofingSession extends ChangeNotifier {
             previous.snapshot.text == text) {
           if (previous.paragraphSkipped) skipped++;
           snapshots.add(previous.snapshot);
+          if (onlyParagraph != null) return true;
           continue;
         }
         final ranges = <({int start, int end, String language})>[];
@@ -2989,7 +3005,9 @@ final class WordProofingSession extends ChangeNotifier {
           paragraphSkipped,
         );
         snapshots.add(snapshot);
+        if (onlyParagraph != null) return true;
       }
+      return false;
     }
 
     Iterable<({WmlParagraph paragraph, bool locked, bool generated})> blocks(
@@ -3024,10 +3042,12 @@ final class WordProofingSession extends ChangeNotifier {
     }
 
     // A complex field can span sections in the main document story.
-    story(
+    if (story(
       blocks(document.sections.expand((section) => section.blocks)),
       'Body',
-    );
+    )) {
+      return _DocumentSnapshot(snapshots, skipped);
+    }
     for (var i = 0; i < document.sections.length; i++) {
       final section = document.sections[i];
       skipped += section.preservedStories.length;
@@ -3040,27 +3060,33 @@ final class WordProofingSession extends ChangeNotifier {
         'Even-page footer': section.evenFooter,
       };
       for (final entry in stories.entries) {
-        story(
+        if (story(
           entry.value.map(
             (p) => (paragraph: p, locked: false, generated: false),
           ),
           '${entry.key} · section ${i + 1}',
-        );
+        )) {
+          return _DocumentSnapshot(snapshots, skipped);
+        }
       }
     }
     for (final note in [...document.footnotes, ...document.endnotes]) {
-      story(
+      if (story(
         blocks(note.blocks),
         '${note.endnote ? 'Endnote' : 'Footnote'} ${note.id}',
-      );
+      )) {
+        return _DocumentSnapshot(snapshots, skipped);
+      }
     }
     for (final comment in document.comments) {
-      story(
+      if (story(
         comment.paragraphs.map(
           (p) => (paragraph: p, locked: false, generated: false),
         ),
         'Comment ${comment.id}',
-      );
+      )) {
+        return _DocumentSnapshot(snapshots, skipped);
+      }
     }
     return _DocumentSnapshot(snapshots, skipped);
   }
