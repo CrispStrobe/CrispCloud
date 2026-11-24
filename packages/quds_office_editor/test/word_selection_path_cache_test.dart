@@ -261,4 +261,56 @@ void main() {
     expect(await repaintWith(hits), greaterThan(await repaintWith(const [])));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('blinking reuses the active paragraph lines', (tester) async {
+    final document = WmlDocument.empty(text: 'First paragraph');
+    document.sections.single.blocks.add(
+      WmlParagraph(inlines: [WmlRun(text: 'Second paragraph')]),
+    );
+    final measured = WordLayoutEngine(font: null).layout(document);
+    final page = measured.pages.single;
+    final lines = _CountedLines(page.lines);
+    final layout = LaidOutDocument(
+      pageSize: measured.pageSize,
+      pages: [
+        LaidOutPage(
+          index: page.index,
+          width: page.width,
+          height: page.height,
+          lines: lines,
+        ),
+      ],
+    );
+    final caret = CaretEngine()..visible = true;
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WordCanvas(
+          document: document,
+          laidOut: layout,
+          caret: caret,
+          hasFocus: true,
+          config: const OfficeSurfaceConfig(showRulers: false),
+        ),
+      ),
+    );
+    final render = tester.renderObject<RenderWordCanvas>(
+      find.byType(WordCanvas),
+    );
+    Future<int> repaint({required bool showCaret}) async {
+      caret.visible = showCaret;
+      lines.reads = 0;
+      render.markNeedsPaint();
+      await tester.pump();
+      return lines.reads;
+    }
+
+    expect(await repaint(showCaret: true), await repaint(showCaret: false));
+    caret
+      ..paragraphIndex = 1
+      ..collapseSelection();
+    expect(await repaint(showCaret: true), greaterThan(0));
+    expect(await repaint(showCaret: true), await repaint(showCaret: false));
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -896,6 +896,7 @@ class RenderWordCanvas extends RenderBox
       <LaidOutPage, Map<int, WmlFrame>>{};
   final _pageCellIndices = <LaidOutPage, WordPageCellIndex>{};
   final _pageTextHitIndices = <LaidOutPage, WordPageTextHitIndex>{};
+  final _bodyCaretLines = <(LaidOutPage, int), List<LaidOutLine>>{};
   final _pageParagraphRanges = <LaidOutPage, ({int first, int last})?>{};
   final _tableGeometry = <LaidOutPage, List<_TableGeom>>{};
 
@@ -943,6 +944,7 @@ class RenderWordCanvas extends RenderBox
     _pageCellIndices.clear();
     _pageTextHitIndices.clear();
     _pageParagraphRanges.clear();
+    _bodyCaretLines.clear();
     _tableGeometry.clear();
   }
 
@@ -3664,6 +3666,7 @@ class RenderWordCanvas extends RenderBox
               hasFocus &&
               caret.visible &&
               line.paragraphIndex >= 0 &&
+              line.paragraphIndex == caret.paragraphIndex &&
               caret.isOnLine(
                 line,
                 lastOfParagraph: _isLastParagraphLine(
@@ -3844,13 +3847,11 @@ class RenderWordCanvas extends RenderBox
           config.showsCaret &&
           hasFocus &&
           caret.visible) {
-        for (final LaidOutLine line in page.lines) {
-          if (line.paragraphIndex < 0 ||
-              line.paragraphIndex != caret.paragraphIndex ||
-              !caret.isOnLine(
-                line,
-                lastOfParagraph: _isLastParagraphLine(page, line),
-              )) {
+        for (final line in _bodyCaretLinesOn(page)) {
+          if (!caret.isOnLine(
+            line,
+            lastOfParagraph: _isLastParagraphLine(page, line),
+          )) {
             continue;
           }
           final cell = _cellForLine(
@@ -3864,7 +3865,7 @@ class RenderWordCanvas extends RenderBox
               Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
             );
           }
-          _paintCaret(canvas, line);
+          _paintCaret(canvas, line, bodyParagraph: line.sourceParagraph);
           if (cell != null) canvas.restore();
         }
       }
@@ -5634,11 +5635,34 @@ class RenderWordCanvas extends RenderBox
     return Color(0xFF000000 | rgb);
   }
 
+  List<LaidOutLine> _bodyCaretLinesOn(LaidOutPage page) {
+    final paragraph = caret.paragraphIndex;
+    if (paragraph < 0) return const [];
+    final key = (page, paragraph);
+    final cached = _bodyCaretLines[key];
+    if (cached != null) return cached;
+    if (_bodyCaretLines.length >= _maxTextPicturePages) {
+      _bodyCaretLines.remove(_bodyCaretLines.keys.first);
+    }
+    return _bodyCaretLines[key] = [
+      for (final line in page.lines)
+        if (line.paragraphIndex == paragraph) line,
+    ];
+  }
+
   bool _isLastParagraphLine(LaidOutPage page, LaidOutLine line) =>
       !laidOut.hasBodyLineAfter(page, line);
 
-  void _paintCaret(Canvas canvas, LaidOutLine line) {
-    final bool paragraphRtl = _paragraphRtl(line.paragraphIndex, line: line);
+  void _paintCaret(
+    Canvas canvas,
+    LaidOutLine line, {
+    WmlParagraph? bodyParagraph,
+  }) {
+    final bool paragraphRtl = _paragraphRtl(
+      line.paragraphIndex,
+      line: line,
+      sourceParagraph: bodyParagraph,
+    );
     final String paragraph =
         line.sourceText ??
         line.sourceParagraph?.text ??
@@ -5659,13 +5683,17 @@ class RenderWordCanvas extends RenderBox
     int paragraphIndex, {
     LaidOutLine? line,
     List<WmlParagraph> Function()? bodyParagraphs,
+    WmlParagraph? sourceParagraph,
   }) {
-    final paras = _storyForLine(line, bodyParagraphs: bodyParagraphs);
-    if (paras.isEmpty) {
-      return config.textDirection == TextDirection.rtl ||
-          CaretEngine.deviceRtl();
+    var para = sourceParagraph;
+    if (para == null) {
+      final paras = _storyForLine(line, bodyParagraphs: bodyParagraphs);
+      if (paras.isEmpty) {
+        return config.textDirection == TextDirection.rtl ||
+            CaretEngine.deviceRtl();
+      }
+      para = paras[paragraphIndex.clamp(0, paras.length - 1)];
     }
-    final WmlParagraph para = paras[paragraphIndex.clamp(0, paras.length - 1)];
     if (para.properties.rightToLeft == true) {
       return true;
     }
