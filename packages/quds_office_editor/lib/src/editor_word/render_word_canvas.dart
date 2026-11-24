@@ -4696,7 +4696,19 @@ class RenderWordCanvas extends RenderBox
   }) {
     const cellBorderWidth = 0.6;
     final visibleCells = visibleInk?.inflate(cellBorderWidth / 2);
-    for (final LaidOutBox box in page.frames) {
+    final boxes = page.frames;
+    final paintIndex = visibleCells == null || boxes.isEmpty
+        ? null
+        : _pageCellIndex(page).paintIndex;
+    var endOfBatch = paintIndex == null ? boxes.length : 0;
+    for (var index = 0; index < boxes.length; index++) {
+      if (index == endOfBatch) {
+        final batch = paintIndex!.nextBatch(index, visibleCells!);
+        if (batch == null) break;
+        index = batch.start;
+        endOfBatch = batch.end;
+      }
+      final box = boxes[index];
       if (box.kind == LaidOutBoxKind.tocEntry) {
         continue;
       }

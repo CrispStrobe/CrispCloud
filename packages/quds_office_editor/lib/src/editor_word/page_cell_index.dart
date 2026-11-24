@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 /// Locates table cells by paragraph range or position on a laid-out page.
@@ -7,12 +10,69 @@ final class WordPageCellIndex {
   final List<LaidOutBox> _frames;
   late final _paragraphs = _ParagraphCells(_frames);
   late final pointer = WordPagePointerIndex._(_frames);
+  late final _paintIndex = WordPagePaintIndex._(_frames);
+
+  WordPagePaintIndex? get paintIndex =>
+      _frames.length <= WordPagePaintIndex._batchSize ? null : _paintIndex;
 
   LaidOutBox? smallestAt(int paragraph, {WmlFrame? containingFrame}) =>
       _paragraphs.smallestAt(paragraph, containingFrame: containingFrame);
 
   bool anyAt(int paragraph, bool Function(LaidOutBox) matches) =>
       _paragraphs.anyAt(paragraph, matches);
+}
+
+/// Conservative bounds for consecutive boxes in paint order.
+final class WordPagePaintIndex {
+  WordPagePaintIndex._(List<LaidOutBox> boxes) : _length = boxes.length {
+    for (var start = 0; start < _length; start += _batchSize) {
+      _bounds.add(
+        _cellBounds(boxes, start, math.min(start + _batchSize, _length)),
+      );
+    }
+  }
+
+  static const _batchSize = 32;
+  final int _length;
+  final _bounds = <Rect?>[];
+
+  static Rect? _cellBounds(List<LaidOutBox> boxes, int start, int end) {
+    var left = double.infinity;
+    var top = double.infinity;
+    var right = double.negativeInfinity;
+    var bottom = double.negativeInfinity;
+    for (var index = start; index < end; index++) {
+      final box = boxes[index];
+      // Non-cells may paint outside their layout box and are always retained.
+      if (box.kind != LaidOutBoxKind.tableCell) return null;
+      final boxRight = box.x + box.width;
+      final boxBottom = box.y + box.height;
+      if (!box.x.isFinite ||
+          !box.y.isFinite ||
+          !boxRight.isFinite ||
+          !boxBottom.isFinite) {
+        return null;
+      }
+      left = math.min(left, box.x);
+      top = math.min(top, box.y);
+      right = math.max(right, boxRight);
+      bottom = math.max(bottom, boxBottom);
+    }
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
+  /// The next batch in drawing order, skipping batches entirely outside
+  /// the viewport. [from] is zero or the end of the previous batch.
+  ({int start, int end})? nextBatch(int from, Rect visibleCells) {
+    if (from >= _length) return null;
+    for (var batch = from ~/ _batchSize; batch < _bounds.length; batch++) {
+      final bounds = _bounds[batch];
+      if (bounds != null && !bounds.overlaps(visibleCells)) continue;
+      final start = batch * _batchSize;
+      return (start: start, end: math.min(start + _batchSize, _length));
+    }
+    return null;
+  }
 }
 
 final class _ParagraphCells {

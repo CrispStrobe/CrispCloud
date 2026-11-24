@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show Rect;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/src/editor_word/page_cell_index.dart';
@@ -69,6 +70,37 @@ LaidOutBox? _scanPoint(List<LaidOutBox> boxes, double x, double y) {
 }
 
 void main() {
+  test('paint batches retain mixed boxes and preserve cell paint order', () {
+    final frames = [
+      for (var index = 0; index < 105; index++)
+        _box(index, index, 35, x: index.isEven ? 0 : 50, y: index * 8.0),
+    ];
+    frames[40] = _box(40, 40, 80, y: 320, kind: LaidOutBoxKind.paragraphShade);
+    // This cell crosses a row boundary and starts well above the viewport.
+    frames[5] = _box(5, 5, 35, y: 40, height: 520);
+    final index = WordPageCellIndex(frames).paintIndex!;
+    for (final clip in [
+      const Rect.fromLTWH(0, 200, 40, 51),
+      const Rect.fromLTWH(45, 540, 50, 30),
+      const Rect.fromLTWH(0, 825, 100, 60),
+    ]) {
+      bool wouldPaint(LaidOutBox box) =>
+          box.kind != LaidOutBoxKind.tableCell ||
+          clip.overlaps(Rect.fromLTWH(box.x, box.y, box.width, box.height));
+      final retained = <LaidOutBox>[];
+      var batch = index.nextBatch(0, clip);
+      while (batch != null) {
+        retained.addAll(frames.getRange(batch.start, batch.end));
+        batch = index.nextBatch(batch.end, clip);
+      }
+      expect(retained.length, lessThan(frames.length));
+      expect(
+        retained.where(wouldPaint),
+        orderedEquals(frames.where(wouldPaint)),
+      );
+    }
+  });
+
   test('selection can inspect every covering cell, including hidden cells', () {
     final outerTable = WmlTable();
     final innerTable = WmlTable();
