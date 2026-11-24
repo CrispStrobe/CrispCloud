@@ -3778,7 +3778,22 @@ class RenderWordCanvas extends RenderBox
       canvas.scale(scale);
       canvas.clipRect(Rect.fromLTWH(0, 0, page.width, page.height));
       _paintWatermark(canvas, page);
-      _paintFrames(canvas, page, paintHandles: false);
+      // Use page-local coordinates and allow for antialiasing at the viewport
+      // edge. Cached page text still records the whole page for later scrolls.
+      final viewportInk = Rect.fromLTWH(
+        (viewport.origin.dx - pageLeft) / scale,
+        (viewport.origin.dy - top) / scale,
+        size.width / scale,
+        size.height / scale,
+      ).inflate(2 / scale);
+      final visibleInk =
+          viewportInk.left <= 0 &&
+              viewportInk.top <= 0 &&
+              viewportInk.right >= page.width &&
+              viewportInk.bottom >= page.height
+          ? null
+          : viewportInk;
+      _paintFrames(canvas, page, paintHandles: false, visibleInk: visibleInk);
       _paintSelectedTables(canvas, page);
       _paintTableBandChrome(canvas, page);
       if (_pageUsesHeaderFooterStory(page)) {
@@ -3829,10 +3844,17 @@ class RenderWordCanvas extends RenderBox
               containingFrame: frameOwners[line.paragraphIndex],
             );
             if (cell != null) {
-              canvas.save();
-              canvas.clipRect(
-                Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height),
+              final bounds = Rect.fromLTWH(
+                cell.x,
+                cell.y,
+                cell.width,
+                cell.height,
               );
+              // This overlay would be clipped to the cell even if its text
+              // overflows. Plain and floating text can extend beyond its line.
+              if (visibleInk != null && !visibleInk.overlaps(bounds)) continue;
+              canvas.save();
+              canvas.clipRect(bounds);
             }
             _paintZoteroFieldRanges(canvas, page, line, ranges);
             _paintFindHits(canvas, line, lineHits);
@@ -4672,7 +4694,10 @@ class RenderWordCanvas extends RenderBox
     Canvas canvas,
     LaidOutPage page, {
     bool paintHandles = true,
+    Rect? visibleInk,
   }) {
+    const cellBorderWidth = 0.6;
+    final visibleCells = visibleInk?.inflate(cellBorderWidth / 2);
     for (final LaidOutBox box in page.frames) {
       if (box.kind == LaidOutBoxKind.tocEntry) {
         continue;
@@ -4828,6 +4853,11 @@ class RenderWordCanvas extends RenderBox
       if (box.height <= 0.5) {
         continue;
       }
+      if (box.kind == LaidOutBoxKind.tableCell &&
+          visibleCells != null &&
+          !visibleCells.overlaps(rect)) {
+        continue;
+      }
       if (box.fillColor != null) {
         canvas.drawRect(rect, Paint()..color = _colorFromHex(box.fillColor!));
       }
@@ -4839,7 +4869,7 @@ class RenderWordCanvas extends RenderBox
         Paint()
           ..color = _colorFromHex(box.strokeColor)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.6,
+          ..strokeWidth = cellBorderWidth,
       );
     }
   }

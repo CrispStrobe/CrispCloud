@@ -40,6 +40,74 @@ int _differentBytes(Uint8List actual, Uint8List expected) {
 }
 
 void main() {
+  testWidgets('cell fills are drawn only while their page region is visible', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(500, 350);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    const pageSize = WmlPageSize(width: 300, height: 1000);
+    final document = WmlDocument(sections: [WmlSection(pageSize: pageSize)]);
+    final layout = LaidOutDocument(
+      pageSize: pageSize,
+      pages: [
+        LaidOutPage(
+          index: 0,
+          width: pageSize.width,
+          height: pageSize.height,
+          lines: [],
+          frames: [
+            LaidOutBox(
+              x: 15,
+              y: 20,
+              width: 200,
+              height: 40,
+              fillColor: '109020',
+            ),
+            LaidOutBox(
+              x: 15,
+              y: 630,
+              width: 200,
+              height: 40,
+              fillColor: 'A02060',
+            ),
+          ],
+        ),
+      ],
+    );
+    final viewport = VirtualViewport();
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WordCanvas(
+          document: document,
+          laidOut: layout,
+          caret: CaretEngine(),
+          viewport: viewport,
+          config: const OfficeSurfaceConfig(showRulers: false),
+        ),
+      ),
+    );
+    final word = find.byType(WordCanvas);
+    PaintPattern fills(Color color) => paints
+      ..something(
+        (method, arguments) =>
+            method == #drawRect &&
+            (arguments[1] as Paint).color.toARGB32() == color.toARGB32(),
+      );
+    const first = Color(0xFF109020);
+    const second = Color(0xFFA02060);
+    expect(word, fills(first));
+    expect(word, isNot(fills(second)));
+
+    viewport.origin = const Offset(0, 570);
+    tester.renderObject<RenderWordCanvas>(word).markNeedsPaint();
+    await tester.pump();
+    expect(word, isNot(fills(first)));
+    expect(word, fills(second));
+  });
+
   testWidgets(
     'overlay painters are reused until their effective style changes',
     (tester) async {
