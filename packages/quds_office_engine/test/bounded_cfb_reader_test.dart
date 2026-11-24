@@ -138,6 +138,30 @@ void main() {
       expect(() => BoundedCfbReader(bytes), throwsFormatException);
     });
 
+    test('an out-of-range stream start sector is a typed rejection', () {
+      final bytes =
+          (CfbfWriter()..addStream(
+                'large',
+                Uint8List.fromList(List<int>.filled(5000, 1)),
+              ))
+              .build();
+      final file = CfbfFile.fromBytes(bytes);
+      final entry = file.entryByName('large')!;
+      ByteData.sublistView(bytes).setUint32(
+        _directoryOffset(file, entry) + 116,
+        0xfffff000,
+        Endian.little,
+      );
+      final reader = BoundedCfbReader(bytes);
+      expect(() => reader.readPath('large'), throwsA(isA<CfbfException>()));
+    });
+
+    test('a FAT sector outside the container is a typed rejection', () {
+      final bytes = (CfbfWriter()..addStream('small', [1, 2, 3])).build();
+      ByteData.sublistView(bytes).setUint32(76, 0x0fffffff, Endian.little);
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
+    });
+
     test('file and individual stream limits are enforced independently', () {
       final bytes = (CfbfWriter()..addStream('small', [1, 2, 3])).build();
       expect(

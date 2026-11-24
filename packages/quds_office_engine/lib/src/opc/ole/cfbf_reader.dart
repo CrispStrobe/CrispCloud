@@ -252,6 +252,9 @@ class CfbfFile {
   }
 
   Uint8List _readFatStream(int startSector, int size) {
+    if (size < 0 || size > source.length) {
+      throw CfbfException('Invalid FAT stream size $size');
+    }
     final Uint8List out = Uint8List(size);
     int remaining = size;
     int written = 0;
@@ -262,14 +265,17 @@ class CfbfFile {
       if (!guard.add(sector)) {
         throw const CfbfException('FAT cycle detected');
       }
+      if (sector < 0 || sector >= fat.length) {
+        throw CfbfException('FAT index $sector out of range (${fat.length})');
+      }
       final int offset = header.sectorOffset(sector);
       final int take = remaining < sectorSize ? remaining : sectorSize;
+      if (offset < 0 || offset + take > source.length) {
+        throw CfbfException('FAT sector $sector is outside the container');
+      }
       out.setRange(written, written + take, source.view(offset, take));
       written += take;
       remaining -= take;
-      if (sector >= fat.length) {
-        throw CfbfException('FAT index $sector out of range (${fat.length})');
-      }
       sector = fat[sector];
     }
     if (remaining != 0) {
@@ -293,9 +299,12 @@ class CfbfFile {
       if (!guard.add(sector)) {
         throw const CfbfException('MiniFAT cycle detected');
       }
+      if (sector < 0 || sector >= miniFat.length) {
+        throw CfbfException('MiniFAT index $sector out of range');
+      }
       final int offset = sector * miniSize;
       final int take = remaining < miniSize ? remaining : miniSize;
-      if (offset + take > miniContainer.length) {
+      if (offset < 0 || offset + take > miniContainer.length) {
         throw const CfbfException('Mini stream exceeds container');
       }
       out.setRange(
@@ -305,15 +314,26 @@ class CfbfFile {
       );
       written += take;
       remaining -= take;
-      if (sector >= miniFat.length) {
-        throw CfbfException('MiniFAT index $sector out of range');
-      }
       sector = miniFat[sector];
     }
     if (remaining != 0) {
       throw CfbfException('Truncated MiniFAT stream: $remaining bytes missing');
     }
     return out;
+  }
+
+  static ByteCursor _sectorCursor(
+    ByteSource source,
+    CfbfHeader header,
+    int sector,
+  ) {
+    final offset = header.sectorOffset(sector);
+    if (sector < 0 ||
+        offset < 0 ||
+        offset + header.sectorSize > source.length) {
+      throw CfbfException('FAT sector $sector is outside the container');
+    }
+    return ByteCursor.view(source, offset, header.sectorSize);
   }
 
   static List<int> _readFat(ByteSource source, CfbfHeader header) {
@@ -324,12 +344,7 @@ class CfbfFile {
       if (!guard.add(difatSector)) {
         throw const CfbfException('DIFAT cycle detected');
       }
-      final int offset = header.sectorOffset(difatSector);
-      final ByteCursor cursor = ByteCursor.view(
-        source,
-        offset,
-        header.sectorSize,
-      );
+      final ByteCursor cursor = _sectorCursor(source, header, difatSector);
       final int entriesPerSector = header.sectorSize ~/ 4;
       for (int i = 0; i < entriesPerSector - 1; i++) {
         difat.add(cursor.u32le());
@@ -344,11 +359,7 @@ class CfbfFile {
         continue;
       }
       fatSectorsSeen++;
-      final ByteCursor cursor = ByteCursor.view(
-        source,
-        header.sectorOffset(fatSector),
-        header.sectorSize,
-      );
+      final ByteCursor cursor = _sectorCursor(source, header, fatSector);
       final int count = header.sectorSize ~/ 4;
       for (int i = 0; i < count; i++) {
         fat.add(cursor.u32le());

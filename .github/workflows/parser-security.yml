@@ -1,0 +1,31 @@
+name: Bounded parser qualification
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  parser-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+      - run: flutter pub get --enforce-lockfile
+      - name: Parser regressions
+        run: |
+          flutter test test/email_message_service_test.dart test/mbox_message_service_test.dart test/archive_viewer_service_test.dart test/archive_streamed_extraction_test.dart
+      - name: Vendored engine CFB regression
+        working-directory: packages/quds_office_engine
+        run: |
+          dart pub get
+          dart test test/bounded_cfb_reader_test.dart
+      - name: Bounded fuzzing
+        run: |
+          dart run tool/fuzz_mail.dart 5000
+          dart run tool/fuzz_archive_codecs.dart 5000
+          dart run tool/fuzz_internal_viewer.dart
