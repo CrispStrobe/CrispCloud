@@ -2641,26 +2641,16 @@ final class WordProofingSession extends ChangeNotifier {
     final documentLanguage = normalizeProofingLanguage(
       document.proofingLanguage ?? 'de-DE',
     );
-    final deletions =
-        HashMap<WmlParagraph, List<({int start, int end})>>.identity();
-    final pending =
-        HashMap<WmlParagraph, List<({int start, int end})>>.identity();
-    for (final revision in document.revisions) {
-      if (revision.accepted != null || revision.kind.isFormatting) continue;
-      final paragraph = WordRevisions.resolveParagraph(document, revision);
-      if (paragraph != null &&
-          revision.start >= 0 &&
-          revision.end <= paragraph.text.length) {
-        pending.putIfAbsent(paragraph, () => []).add((
-          start: revision.start,
-          end: revision.end,
-        ));
-        if (revision.kind.isDeletion) {
-          deletions.putIfAbsent(paragraph, () => []).add((
-            start: revision.start,
-            end: revision.end,
-          ));
-        }
+    final revisionsByParagraph =
+        HashMap<WmlParagraph, List<WmlRevision>>.identity();
+    final pendingRevisions = [
+      for (final revision in document.revisions)
+        if (revision.accepted == null && !revision.kind.isFormatting) revision,
+    ];
+    final targets = WordRevisions.resolveParagraphs(document, pendingRevisions);
+    for (final revision in pendingRevisions) {
+      if (targets[revision] case final paragraph?) {
+        revisionsByParagraph.putIfAbsent(paragraph, () => []).add(revision);
       }
     }
     void story(
@@ -2672,7 +2662,15 @@ final class WordProofingSession extends ChangeNotifier {
         final paragraph = entry.paragraph;
         if (!seen.add(paragraph)) continue;
         final text = paragraph.text;
-        final exclusions = <({int start, int end})>[...?deletions[paragraph]];
+        List<({int start, int end})>? pending;
+        final exclusions = <({int start, int end})>[];
+        for (final revision
+            in revisionsByParagraph[paragraph] ?? const <WmlRevision>[]) {
+          if (revision.start < 0 || revision.end > text.length) continue;
+          final range = (start: revision.start, end: revision.end);
+          (pending ??= []).add(range);
+          if (revision.kind.isDeletion) exclusions.add(range);
+        }
         final guards = <({int start, int end})>[];
         final barriers = <int>{};
         final insertionBarriers = <int>{};
@@ -2792,7 +2790,7 @@ final class WordProofingSession extends ChangeNotifier {
         }
         guards.addAll(exclusions);
         // Existing insert revisions are not rewritten by a second command.
-        guards.addAll(pending[paragraph] ?? const []);
+        if (pending != null) guards.addAll(pending);
         // Scan current structure first: fields can start in a previous
         // paragraph, and a parent or inline control can change protection
         // without changing text. Only grapheme segmentation is memoized.

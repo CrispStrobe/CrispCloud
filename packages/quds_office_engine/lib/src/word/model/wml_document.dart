@@ -514,6 +514,11 @@ class WmlParagraph extends WmlBlock {
 
   /// text API.
   String get text {
+    if (inlines.isEmpty) return '';
+    if (inlines.length == 1) {
+      final inline = inlines.single;
+      return inline is WmlRun ? inline.text : '';
+    }
     final StringBuffer buffer = StringBuffer();
     for (final WmlInline inline in inlines) {
       if (inline is WmlRun) {

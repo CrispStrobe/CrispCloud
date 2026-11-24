@@ -28,7 +28,85 @@ OpcPackage _package(int paragraphs, int perParagraph) {
   return package;
 }
 
+class _CountedDocument extends WmlDocument {
+  _CountedDocument(List<WmlParagraph> body)
+    : super(
+        sections: [
+          WmlSection(blocks: <WmlBlock>[...body]),
+        ],
+      );
+
+  int paragraphsRead = 0;
+
+  @override
+  Iterable<WmlParagraph> get paragraphs sync* {
+    for (final paragraph in super.paragraphs) {
+      paragraphsRead++;
+      yield paragraph;
+    }
+  }
+}
+
 void main() {
+  test(
+    'tracked changes bind and resolve with one body traversal per batch',
+    () {
+      final body = [
+        for (var i = 0; i < 600; i++)
+          WmlParagraph(inlines: [WmlRun(text: 'A')]),
+      ];
+      final document = _CountedDocument(body);
+      final header = WmlParagraph(inlines: [WmlRun(text: 'A')]);
+      document.sections.single.header.add(header);
+      WmlRevision revision(int id, int index, [WmlParagraph? target]) =>
+          WmlRevision(
+            id: id,
+            kind: WmlRevisionKind.insert,
+            paragraphIndex: index,
+            start: 0,
+            end: 1,
+            text: 'A',
+            targetParagraph: target,
+          );
+      final legacy = [for (var i = 0; i < 200; i++) revision(i, i + 200)];
+      final auxiliary = revision(201, 0, header);
+      final missing = revision(202, body.length);
+      document.revisions.addAll([...legacy, auxiliary, missing]);
+
+      final original = WordRevisions.capture(document);
+      expect(document.paragraphsRead, body.length);
+      expect(original.matches(document), isTrue);
+      document.paragraphsRead = 0;
+      WordRevisions.capture(document);
+      expect(document.paragraphsRead, 0);
+
+      final originalTargets = WordRevisions.resolveParagraphs(
+        document,
+        document.revisions,
+      );
+      expect(document.paragraphsRead, body.length);
+      expect(originalTargets[legacy.first], same(body[200]));
+      expect(originalTargets[legacy.last], same(body[399]));
+      expect(originalTargets[auxiliary], same(header));
+      expect(originalTargets[missing], isNull);
+
+      document.sections.single.blocks
+        ..remove(body[200])
+        ..addAll([
+          WmlParagraph(inlines: [WmlRun(text: 'new 1')]),
+          WmlParagraph(inlines: [WmlRun(text: 'new 2')]),
+        ]);
+      final current = WordRevisions.resolveParagraphs(
+        document,
+        document.revisions,
+      );
+      expect(current[legacy.first], isNull);
+      expect(current[legacy.last], same(body[399]));
+      expect(current[auxiliary], same(header));
+      expect(current[missing], isNull);
+    },
+  );
+
   test('many tracked changes import and save in linear-ish time', () {
     final watch = Stopwatch()..start();
     final doc = WordDeserializer().read(_package(300, 3));

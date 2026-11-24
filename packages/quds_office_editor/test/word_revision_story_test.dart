@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
@@ -315,38 +318,56 @@ void main() {
     controller.caret.collapseSelection();
     controller.insertText('New');
     _closeStory(controller, 'header');
-    await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: WordCanvas(
-          document: controller.document,
-          laidOut: controller.documentLaidOut,
-          caret: controller.caret,
+    final boundaryKey = GlobalKey();
+    Future<int> insertionInk() async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: RepaintBoundary(
+            key: boundaryKey,
+            child: WordCanvas(
+              document: controller.document,
+              laidOut: controller.documentLaidOut,
+              caret: controller.caret,
+            ),
+          ),
         ),
-      ),
-    );
-    bool isInsertionHighlight(Symbol method, List<dynamic> arguments) =>
-        method == #drawRect &&
-        (arguments[1] as Paint).color.toARGB32() == 0x3327AE60;
-    expect(
-      find.byType(WordCanvas),
-      isNot(paints..something(isInsertionHighlight)),
-    );
+      );
+      await tester.pump();
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(boundaryKey),
+      );
+      // Revision ink lives inside the recorded page picture. Rasterize it
+      // so the assertion sees the actual underline drawn on the canvas.
+      return (await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 1);
+        try {
+          final data = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          final bytes = data.buffer.asUint8List(
+            data.offsetInBytes,
+            data.lengthInBytes,
+          );
+          var greenPixels = 0;
+          for (var i = 0; i < bytes.length; i += 4) {
+            final red = bytes[i];
+            final green = bytes[i + 1];
+            final blue = bytes[i + 2];
+            if (green > red + 35 && green > blue + 30) greenPixels++;
+          }
+          return greenPixels;
+        } finally {
+          image.dispose();
+        }
+      }))!;
+    }
 
+    expect(await insertionInk(), 0);
     controller.document.revisions.clear();
     controller.caret.logicalIndex = 0;
     controller.caret.collapseSelection();
     controller.insertText('New');
-    await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: WordCanvas(
-          document: controller.document,
-          laidOut: controller.documentLaidOut,
-          caret: controller.caret,
-        ),
-      ),
-    );
-    expect(find.byType(WordCanvas), paints..something(isInsertionHighlight));
+    expect(await insertionInk(), greaterThan(0));
   });
 }

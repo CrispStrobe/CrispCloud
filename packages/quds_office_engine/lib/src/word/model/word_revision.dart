@@ -241,8 +241,12 @@ class _RevisionState {
 abstract final class WordRevisions {
   /// Captures changes before an editor command mutates text or structure.
   static WmlRevisionSnapshot capture(WmlDocument document) {
+    List<WmlParagraph>? body;
     for (final revision in document.revisions) {
-      resolveParagraph(document, revision);
+      if (!revision._targetCaptured && revision.targetParagraph == null) {
+        body ??= document.paragraphs.toList(growable: false);
+      }
+      _captureTarget(document, revision, body: body);
     }
     return WmlRevisionSnapshot._(document);
   }
@@ -514,13 +518,10 @@ abstract final class WordRevisions {
     // Resolve every revision once against one attachment set: validating
     // pairwise with resolveParagraph rescanned the whole document per pair
     // (minutes to save a document with a few hundred tracked changes).
-    final attached = Set<WmlParagraph>.identity()
-      ..addAll(_allParagraphs(document));
-    final resolved = Map<WmlRevision, WmlParagraph?>.identity();
+    final resolved = resolveParagraphs(document, document.revisions);
     final byParagraph = Map<WmlParagraph, List<WmlRevision>>.identity();
     for (final revision in document.revisions) {
-      final paragraph = _resolveIn(document, revision, attached);
-      resolved[revision] = paragraph;
+      final paragraph = resolved[revision];
       if (paragraph != null) {
         byParagraph.putIfAbsent(paragraph, () => []).add(revision);
       }
@@ -734,14 +735,34 @@ abstract final class WordRevisions {
     return null;
   }
 
-  /// [resolveParagraph] with a precomputed attachment set.
-  static WmlParagraph? _resolveIn(
+  /// Resolves a batch against one attachment index. Target identity and
+  /// legacy body-index binding follow [resolveParagraph].
+  static Map<WmlRevision, WmlParagraph?> resolveParagraphs(
     WmlDocument document,
-    WmlRevision revision,
-    Set<WmlParagraph> attached,
+    List<WmlRevision> revisions,
   ) {
-    final target = _captureTarget(document, revision);
-    return target != null && attached.contains(target) ? target : null;
+    if (revisions.isEmpty) return const {};
+    final resolved = Map<WmlRevision, WmlParagraph?>.identity();
+    if (revisions.length == 1) {
+      final revision = revisions.single;
+      resolved[revision] = resolveParagraph(document, revision);
+      return resolved;
+    }
+    final needsLegacyIndices = revisions.any(
+      (revision) =>
+          !revision._targetCaptured && revision.targetParagraph == null,
+    );
+    final body = needsLegacyIndices
+        ? document.paragraphs.toList(growable: false)
+        : null;
+    final attached = Set<WmlParagraph>.identity()
+      ..addAll(body ?? document.paragraphs)
+      ..addAll(_auxiliaryParagraphs(document));
+    for (final revision in revisions) {
+      final target = _captureTarget(document, revision, body: body);
+      resolved[revision] = attached.contains(target) ? target : null;
+    }
+    return resolved;
   }
 
   static WmlParagraph? _captureTarget(
@@ -770,6 +791,12 @@ abstract final class WordRevisions {
 
   static Iterable<WmlParagraph> _allParagraphs(WmlDocument document) sync* {
     yield* document.paragraphs;
+    yield* _auxiliaryParagraphs(document);
+  }
+
+  static Iterable<WmlParagraph> _auxiliaryParagraphs(
+    WmlDocument document,
+  ) sync* {
     for (final WmlSection section in document.sections) {
       yield* section.header;
       yield* section.footer;
