@@ -202,14 +202,16 @@ void main() {
   test(
     'new findings are published before the whole document finishes',
     () async {
-      final h = _Harness(['Feler first', 'Feler second', 'Feler third']);
+      final h = _Harness(['Feler ' * 20, 'Feler second', 'Feler third']);
       final second = h.provider.gate('Feler second');
       final third = h.provider.gate('Feler third');
       final pending = h.session.checkNow();
       await h.provider.started('Feler second');
 
-      final firstIssue = h.session.summary.issues.single;
+      final firstIssue = h.session.summary.issues.first;
       expect(firstIssue.paragraph, same(h.paragraphs.first));
+      final firstMarks = h.session.paintFindingsLookup!(firstIssue.paragraph);
+      expect(firstMarks, hasLength(20));
       expect(h.session.checking, isTrue);
       expect(h.session.summary.hasResults, isTrue);
       expect(h.session.summary.checkedParagraphCount, 1);
@@ -219,7 +221,11 @@ void main() {
 
       second.complete();
       await h.provider.started('Feler third');
-      expect(h.session.summary.issues, hasLength(2));
+      expect(h.session.summary.issues, hasLength(21));
+      expect(
+        h.session.paintFindingsLookup!(firstIssue.paragraph),
+        same(firstMarks),
+      );
       expect(h.session.summary.issues.first, same(firstIssue));
       expect(h.session.isCurrent(firstIssue), isTrue);
       expect(h.session.checkGeneration, generation);
@@ -228,7 +234,12 @@ void main() {
       final complete = await pending;
       expect(complete.complete, isTrue);
       expect(complete.checkedParagraphCount, 3);
+      expect(complete.issues, hasLength(22));
       expect(complete.issues.first, same(firstIssue));
+      expect(
+        h.session.paintFindingsLookup!(firstIssue.paragraph),
+        same(firstMarks),
+      );
       expect(h.session.checkGeneration, generation);
     },
   );

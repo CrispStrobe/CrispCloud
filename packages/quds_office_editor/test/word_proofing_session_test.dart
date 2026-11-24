@@ -979,10 +979,16 @@ void main() {
     () async {
       final h = _Harness(document: WmlDocument.empty(text: 'Feler und Feler'));
       final before = await h.session.checkNow();
+      final paragraph = before.issues.first.paragraph;
+      final initialMarks = h.session.paintFindingsLookup!(paragraph)!;
       h.session.ignoreOnce(before.issues.first);
       final ignored = await h.session.checkNow();
       expect(ignored.issues, hasLength(1));
       expect(ignored.issues.single.finding.start, 10);
+      final visible = h.session.paintFindingsLookup!(paragraph)!;
+      expect(visible, isNot(same(initialMarks)));
+      expect(visible.single, same(ignored.issues.single.finding));
+      expect(initialMarks, hasLength(2));
       expect(h.session.vocabulary.toJson()['words'], isEmpty);
       h.document.paragraphs.first.inlines.add(WmlRun(text: '.'));
       h.changed();

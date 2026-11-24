@@ -2477,6 +2477,7 @@ final class WordProofingSession extends ChangeNotifier {
       ..addAll(_published.reports);
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
+    final paragraphFindings = <OfficeProofingFinding>[];
     var checked = 0;
     // Where the user is typing, a finding touching the caret is most likely
     // an unfinished word or sentence: keep it in the cache but do not flag
@@ -2500,7 +2501,7 @@ final class WordProofingSession extends ChangeNotifier {
           entry.kinds.containsAll(allKinds)) {
         checked++;
       }
-      final paragraphFindings = <OfficeProofingFinding>[];
+      paragraphFindings.clear();
       for (var index = 0; index < snapshot.segments.length; index++) {
         final segment = snapshot.segments[index];
         final cachedReport = cached[index];
@@ -2578,9 +2579,14 @@ final class WordProofingSession extends ChangeNotifier {
         }
       }
       if (paragraphFindings.isNotEmpty) {
-        findings[snapshot.paragraph] = WordProofingFindings.freeze(
-          paragraphFindings,
-        );
+        final previousFindings = _findings[snapshot.paragraph];
+        // The canvas indexes immutable publications. Progress in another
+        // paragraph should not invalidate the current paragraph's index.
+        findings[snapshot.paragraph] =
+            previousFindings != null &&
+                _sameFindingInstances(previousFindings, paragraphFindings)
+            ? previousFindings
+            : WordProofingFindings.freeze(paragraphFindings);
         _findingTexts[snapshot.paragraph] = snapshot.text;
       }
     }
@@ -2596,6 +2602,17 @@ final class WordProofingSession extends ChangeNotifier {
       scheduled: scheduled,
       manualProvidersSkipped: !useManual && _manualProvidersApplyTo(captured),
     );
+  }
+
+  static bool _sameFindingInstances(
+    List<OfficeProofingFinding> before,
+    List<OfficeProofingFinding> after,
+  ) {
+    if (before.length != after.length) return false;
+    for (var index = 0; index < before.length; index++) {
+      if (!identical(before[index], after[index])) return false;
+    }
+    return true;
   }
 
   static bool _sameFinding(
