@@ -54,7 +54,7 @@ High-value pure-Dart/IO surfaces:
 | DMG | `openDmgArchive` | small DMG | chunk headers/zlib |
 | 7z | `openSevenZipArchive` | small 7z | folder/dictionary limits |
 | Mail HTML | safe HTML projection | transactional mail | deep nesting, CRLF, remote URLs |
-| Saved EML/MBOX | reader | small message | header/body limits |
+| Saved EML/MBOX/MSG | `parseEmailMessage`, `parseMboxDocument` | MIME, mbox and CFBF seeds | header/body/MIME/CFBF limits; committed `fuzz_mail.dart` |
 
 Prefer `covfuzz` for blind campaigns and minimized reproducers. Use
 `package:fuzz` only for a specific deep precondition where its libFuzzer
