@@ -364,6 +364,36 @@ void main() {
       expect((await provider.check(input('Qudsmarke'))).findings, hasLength(1));
     },
   );
+  test(
+    'word lists share immutable snapshots until their vocabulary changes',
+    () {
+      final vocabulary = OfficeProofingVocabulary();
+      vocabulary.addWord('Qudsmarke');
+      vocabulary.ignoreWord('Fachname', language: 'de-AT');
+      final words = vocabulary.wordsFor('de-DE');
+      final ignored = vocabulary.ignoredWordsFor('de-AT');
+      expect(vocabulary.wordsFor('de'), same(words));
+      expect(vocabulary.ignoredWordsFor('de-AT'), same(ignored));
+      expect(() => words.add('Anders'), throwsUnsupportedError);
+      expect(() => ignored.clear(), throwsUnsupportedError);
+
+      vocabulary.addWord('Qudsmarke');
+      expect(vocabulary.wordsFor('de'), same(words));
+      vocabulary.removeWord('Qudsmarke');
+      vocabulary.addWord("O'Connor");
+      expect(words, {'Qudsmarke'});
+      expect(vocabulary.wordsFor('de-DE'), {"O'Connor"});
+      expect(vocabulary.contains('O’Connor'), isTrue);
+      expect(vocabulary.contains('O’Connor', language: 'de-AT'), isFalse);
+
+      vocabulary.clearIgnoredWords();
+      vocabulary.ignoreWord('Anders', language: 'de-AT');
+      expect(ignored, {'Fachname'});
+      expect(vocabulary.ignoredWordsFor('de-AT'), {'Anders'});
+      expect(vocabulary.contains('Fachname', language: 'de-AT'), isFalse);
+    },
+  );
+
   test('vocabulary snapshots round-trip with revision notification', () {
     int changed = 0;
     final OfficeProofingVocabulary vocabulary = OfficeProofingVocabulary(

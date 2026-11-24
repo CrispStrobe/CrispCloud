@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import '../bidi/grapheme_clusters.dart';
@@ -98,7 +99,7 @@ class OfficeProofingVocabulary {
     final OfficeProofingVocabulary result = OfficeProofingVocabulary(
       ownerId: json['ownerId']! as String,
     );
-    void restore(Object? value, Map<String, Set<String>> target) {
+    void restore(Object? value, Map<String, _VocabularyWords> target) {
       if (value is! Map<String, Object?>) {
         throw const FormatException('Invalid vocabulary map');
       }
@@ -123,7 +124,10 @@ class OfficeProofingVocabulary {
         }
         // Older hosts may have saved several aliases for the same locale.
         // Restore their union instead of losing the earlier alias's words.
-        target.putIfAbsent(language, () => <String>{}).addAll(words);
+        target
+            .putIfAbsent(language, _VocabularyWords.new)
+            ._values
+            .addAll(words);
       }
     }
 
@@ -134,27 +138,31 @@ class OfficeProofingVocabulary {
 
   final String ownerId;
   final void Function()? onChanged;
-  final Map<String, Set<String>> _words = <String, Set<String>>{};
-  final Map<String, Set<String>> _ignored = <String, Set<String>>{};
+  final _words = <String, _VocabularyWords>{};
+  final _ignored = <String, _VocabularyWords>{};
   int _revision = 0;
   int get revision => _revision;
 
-  Set<String> wordsFor(String language) => Set<String>.unmodifiable(
-    _words[normalizeProofingLanguage(language)] ?? const <String>{},
-  );
-  Set<String> ignoredWordsFor(String language) => Set<String>.unmodifiable(
-    _ignored[normalizeProofingLanguage(language)] ?? const <String>{},
-  );
+  Set<String> wordsFor(String language) =>
+      _words[normalizeProofingLanguage(language)]?.snapshot ?? const <String>{};
+
+  Set<String> ignoredWordsFor(String language) =>
+      _ignored[normalizeProofingLanguage(language)]?.snapshot ??
+      const <String>{};
 
   bool contains(String word, {String language = 'de-DE'}) {
+    if (_words.isEmpty && _ignored.isEmpty) return false;
     final String key = normalizeProofingLanguage(language);
+    final personal = _words[key]?._values;
+    final ignored = _ignored[key]?._values;
+    if ((personal?.isEmpty ?? true) && (ignored?.isEmpty ?? true)) return false;
     final String normalized = normalizeGermanWord(word);
-    return (_words[key]?.contains(normalized) ?? false) ||
-        (_ignored[key]?.contains(normalized) ?? false);
+    return (personal?.contains(normalized) ?? false) ||
+        (ignored?.contains(normalized) ?? false);
   }
 
   void _change(
-    Map<String, Set<String>> target,
+    Map<String, _VocabularyWords> target,
     String word,
     String language,
     bool add,
@@ -163,8 +171,8 @@ class OfficeProofingVocabulary {
     if (normalized.isEmpty) throw ArgumentError.value(word, 'word');
     final String key = normalizeProofingLanguage(language);
     if (key.isEmpty) throw ArgumentError.value(language, 'language');
-    final Set<String> values = target.putIfAbsent(key, () => <String>{});
-    if (add ? values.add(normalized) : values.remove(normalized)) {
+    final values = target.putIfAbsent(key, _VocabularyWords.new);
+    if (values.change(normalized, add: add)) {
       _revision++;
       onChanged?.call();
     }
@@ -180,7 +188,7 @@ class OfficeProofingVocabulary {
       _change(_ignored, word, language, false);
 
   void clearIgnoredWords() {
-    if (_ignored.values.every((Set<String> words) => words.isEmpty)) return;
+    if (_ignored.values.every((words) => words._values.isEmpty)) return;
     _ignored.clear();
     _revision++;
     onChanged?.call();
@@ -190,14 +198,32 @@ class OfficeProofingVocabulary {
     'schemaVersion': 1,
     'ownerId': ownerId,
     'words': <String, Object?>{
-      for (final MapEntry<String, Set<String>> entry in _words.entries)
-        entry.key: entry.value.toList()..sort(),
+      for (final entry in _words.entries)
+        entry.key: entry.value._values.toList()..sort(),
     },
     'ignoredWords': <String, Object?>{
-      for (final MapEntry<String, Set<String>> entry in _ignored.entries)
-        entry.key: entry.value.toList()..sort(),
+      for (final entry in _ignored.entries)
+        entry.key: entry.value._values.toList()..sort(),
     },
   };
+}
+
+/// Readers may keep a snapshot across an asynchronous spelling check. Share
+/// its backing set until a vocabulary change actually needs to modify it.
+final class _VocabularyWords {
+  Set<String> _values = <String>{};
+  Set<String>? _snapshot;
+
+  Set<String> get snapshot => _snapshot ??= UnmodifiableSetView(_values);
+
+  bool change(String word, {required bool add}) {
+    if (_snapshot != null) {
+      if (_values.contains(word) == add) return false;
+      _values = _values.toSet();
+      _snapshot = null;
+    }
+    return add ? _values.add(word) : _values.remove(word);
+  }
 }
 
 /// Pinned finite German word forms; this is not a morphological/compound parser.
