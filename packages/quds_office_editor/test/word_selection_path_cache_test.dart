@@ -173,4 +173,92 @@ void main() {
       reason: 'A cached empty text band should cause no extra line reads.',
     );
   });
+
+  testWidgets('search overlays skip pages outside the selection', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(420, 230);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          pageSize: const WmlPageSize(width: 300, height: 220),
+          margins: const WmlPageMargins(
+            top: 20,
+            bottom: 20,
+            left: 20,
+            right: 20,
+          ),
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'First result')]),
+            WmlParagraph(
+              properties: WmlParagraphProps(pageBreakBefore: true),
+              inlines: [WmlRun(text: 'Second result')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final original = WordLayoutEngine(font: null).layout(document);
+    expect(original.pages, hasLength(2));
+    final first = original.pages.first;
+    final lines = _CountedLines(first.lines);
+    final layout = LaidOutDocument(
+      pageSize: original.pageSize,
+      pages: [
+        LaidOutPage(
+          index: first.index,
+          width: first.width,
+          height: first.height,
+          lines: lines,
+          frames: first.frames,
+        ),
+        original.pages.last,
+      ],
+    );
+    final caret = CaretEngine()
+      ..selectionAnchorParagraph = 1
+      ..paragraphIndex = 1
+      ..logicalIndex = 5;
+    final hits = OfficeFind.inWord(
+      document,
+      const OfficeFindOptions(query: 'result'),
+    );
+    expect(hits, hasLength(2));
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WordCanvas(
+          document: document,
+          laidOut: layout,
+          caret: caret,
+          findHits: hits,
+          config: const OfficeSurfaceConfig(
+            mode: OfficeInteractionMode.selecting,
+            showRulers: false,
+          ),
+        ),
+      ),
+    );
+    final render = tester.renderObject<RenderWordCanvas>(
+      find.byType(WordCanvas),
+    );
+    Future<int> repaintWith(List<OfficeFindHit> results) async {
+      lines.reads = 0;
+      render.findHits = results;
+      render.markNeedsPaint();
+      await tester.pump();
+      return lines.reads;
+    }
+
+    expect(await repaintWith(hits), await repaintWith(const []));
+    caret
+      ..selectionAnchorParagraph = 0
+      ..paragraphIndex = 0;
+    await repaintWith(hits);
+    expect(await repaintWith(hits), greaterThan(await repaintWith(const [])));
+    expect(tester.takeException(), isNull);
+  });
 }

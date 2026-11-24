@@ -896,6 +896,7 @@ class RenderWordCanvas extends RenderBox
       <LaidOutPage, Map<int, WmlFrame>>{};
   final _pageCellIndices = <LaidOutPage, WordPageCellIndex>{};
   final _pageTextHitIndices = <LaidOutPage, WordPageTextHitIndex>{};
+  final _pageParagraphRanges = <LaidOutPage, ({int first, int last})?>{};
   final _tableGeometry = <LaidOutPage, List<_TableGeom>>{};
 
   @override
@@ -941,6 +942,7 @@ class RenderWordCanvas extends RenderBox
     _frameOwnersCache.clear();
     _pageCellIndices.clear();
     _pageTextHitIndices.clear();
+    _pageParagraphRanges.clear();
     _tableGeometry.clear();
   }
 
@@ -3782,16 +3784,16 @@ class RenderWordCanvas extends RenderBox
         // Selection and proofing stay under the cached text layer. The text
         // layer itself is recorded once per page and reused for caret moves,
         // proofing updates and unrelated repaints.
+        final searchOnPage = _searchMayPaintOn(page);
         if (zoteroRanges.isNotEmpty ||
-            findHits.isNotEmpty ||
+            searchOnPage ||
             proofingLookup != null ||
             proofingFindings.isNotEmpty) {
           for (final LaidOutLine line in page.lines) {
             final ranges = zoteroRanges[line.sourceParagraph];
             final hasProofing =
                 _proofingFor(line.sourceParagraph)?.isNotEmpty == true;
-            final lineHits =
-                findHits.isNotEmpty && _paintsLineSelection(line, page)
+            final lineHits = searchOnPage && _paintsLineSelection(line, page)
                 ? findHitsByParagraph[line.paragraphIndex]
                 : null;
             if (ranges == null && !hasProofing && lineHits == null) continue;
@@ -4134,6 +4136,34 @@ class RenderWordCanvas extends RenderBox
           OfficeProofingCategory.style => const Color(0xFF8E5B00),
         },
     );
+  }
+
+  bool _searchMayPaintOn(LaidOutPage page) {
+    if (findHits.isEmpty || !config.allowsSelection || caret.isCollapsed) {
+      return false;
+    }
+    if (!_pageParagraphRanges.containsKey(page)) {
+      if (_pageParagraphRanges.length >= _maxTextPicturePages) {
+        _pageParagraphRanges.remove(_pageParagraphRanges.keys.first);
+      }
+      int? first;
+      int? last;
+      // Body lines in tables and frames need not be in paragraph order.
+      for (final line in page.lines) {
+        final index = line.paragraphIndex;
+        if (index < 0) continue;
+        first = first == null ? index : math.min(first, index);
+        last = last == null ? index : math.max(last, index);
+      }
+      _pageParagraphRanges[page] = first == null
+          ? null
+          : (first: first, last: last!);
+    }
+    final range = _pageParagraphRanges[page];
+    if (range == null) return false;
+    final selection = caret.normalizedRange;
+    return range.first <= selection.endPara &&
+        range.last >= selection.startPara;
   }
 
   Map<int, List<(int, OfficeFindHit)>> _findHitsInSelection() {
