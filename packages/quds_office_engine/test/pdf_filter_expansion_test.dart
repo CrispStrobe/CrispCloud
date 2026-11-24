@@ -129,6 +129,31 @@ void main() {
     expect(corrupt.ops.whereType<PdfFillPath>(), hasLength(1));
   });
 
+  test('inline JPEG framing skips false end markers inside metadata', () {
+    final rgb = base64Decode(_rgbJpeg);
+    final withComment = <int>[
+      ...rgb.take(2),
+      0xff, 0xfe, 0, 8,
+      32, 69, 73, 32, 0xff, 0xd9,
+      ...rgb.skip(2),
+    ];
+    const parameters = '/W 8 /H 8 /CS /RGB /BPC 8 /F /DCT';
+    final page = _inlineDisplayList(parameters, withComment);
+    expect(page.issues, isEmpty);
+    final image = page.ops.whereType<PdfDrawImage>().single;
+    expect(image.jpeg, isFalse);
+    _expectSolid(image.bytes, [221, 40, 91]);
+    expect(page.ops.whereType<PdfFillPath>(), hasLength(2));
+
+    final truncated = _inlineDisplayList(
+      parameters,
+      withComment.sublist(0, withComment.length - 2),
+    );
+    expect(truncated.issues, {PdfPageRenderIssue.inlineImage});
+    expect(truncated.ops.whereType<PdfDrawImage>(), isEmpty);
+    expect(truncated.ops.whereType<PdfFillPath>(), hasLength(1));
+  });
+
   test('ASCII85 inline images reuse the device gray raster path', () {
     final list = _inlineDisplayList('/W 4 /H 1 /CS /G /F /A85', [
       ...ascii.encode('z~>'),

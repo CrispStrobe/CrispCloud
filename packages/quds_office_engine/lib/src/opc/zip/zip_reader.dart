@@ -209,8 +209,12 @@ class ZipReader {
   /// Maximum output for recovery reads that cannot trust ZIP headers.
   static const int maxRelaxedBytes = 256 * 1024 * 1024;
 
-  /// Inflates [name] even when CRC or declared size is wrong.
-  Uint8List readRelaxed(String name) {
+  /// Inflates [name] even when CRC or declared size is wrong, while bounding
+  /// both inflated output and the raw bytes returned for an unreadable member.
+  Uint8List readRelaxed(String name, {int maxBytes = maxRelaxedBytes}) {
+    if (maxBytes < 0) {
+      throw ArgumentError.value(maxBytes, 'maxBytes');
+    }
     final ZipEntry? entry = _entries[name];
     if (entry == null) {
       throw ZipException('ZIP entry not found: $name');
@@ -223,21 +227,24 @@ class ZipReader {
     final int take = loc.compressedSize > 0 && loc.compressedSize <= avail
         ? loc.compressedSize
         : (avail < 0 ? 0 : avail);
+    if (entry.compressionMethod != zipMethodDeflate && take > maxBytes) {
+      throw ZipLimitException('ZIP entry exceeds its limit: $name');
+    }
     final Uint8List payload = take == 0
         ? Uint8List(0)
         : _source.view(loc.offset, take);
-    switch (entry.compressionMethod) {
-      case zipMethodStore:
-        return Uint8List.fromList(payload);
-      case zipMethodDeflate:
-        try {
-          return RawDeflate.inflate(payload, maxOutputBytes: maxRelaxedBytes);
-        } on ZipDeflateException {
-          return Uint8List.fromList(payload);
+    if (entry.compressionMethod == zipMethodDeflate) {
+      try {
+        return RawDeflate.inflate(payload, maxOutputBytes: maxBytes);
+      } on ZipDeflateLimitException {
+        throw ZipLimitException('ZIP entry exceeds its limit: $name');
+      } on ZipDeflateException {
+        if (payload.length > maxBytes) {
+          throw ZipLimitException('ZIP entry exceeds its limit: $name');
         }
-      default:
-        return Uint8List.fromList(payload);
+      }
     }
+    return Uint8List.fromList(payload);
   }
 
   /// Yields inflated chunks for [name] without buffering the whole member
@@ -249,11 +256,18 @@ class ZipReader {
     String name, {
     int maxBytes = maxRelaxedBytes,
   }) async* {
+    if (maxBytes < 0) {
+      throw ArgumentError.value(maxBytes, 'maxBytes');
+    }
     final ZipEntry? entry = _entries[name];
     if (entry == null) {
       throw ZipException('ZIP entry not found: $name');
     }
     final _LocalLocation loc = _localData(entry);
+    if (entry.compressionMethod == zipMethodStore &&
+        loc.compressedSize > maxBytes) {
+      throw ZipLimitException('ZIP entry exceeds its limit: $name');
+    }
     final Uint8List payload = _source.view(loc.offset, loc.compressedSize);
     switch (entry.compressionMethod) {
       case zipMethodStore:
@@ -286,10 +300,7 @@ class ZipReader {
     final int extraLen = cursor.u16le();
     final offset = entry.localHeaderOffset + 30 + nameLen + extraLen;
     _checkRange(offset, entry.compressedSize, _source.length);
-    return _LocalLocation(
-      offset: offset,
-      compressedSize: entry.compressedSize,
-    );
+    return _LocalLocation(offset: offset, compressedSize: entry.compressedSize);
   }
 
   static _Eocd _findEocd(ByteSource source) {
@@ -458,8 +469,10 @@ class ZipReader {
       pos += 4;
       if (id == 0x0001) {
         _checkRange(pos, size, extra.length);
-        final required = (needCompressed ? 8 : 0) +
-            (needUncompressed ? 8 : 0) + (needOffset ? 8 : 0);
+        final required =
+            (needCompressed ? 8 : 0) +
+            (needUncompressed ? 8 : 0) +
+            (needOffset ? 8 : 0);
         if (size < required) {
           throw const ZipException('Truncated ZIP64 extra field');
         }

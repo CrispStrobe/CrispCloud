@@ -22,6 +22,18 @@ abstract final class PdfDct {
   static Never _unsupported() =>
       throw const PdfFilterUnsupported('DCTDecode');
 
+  /// Finds the actual end marker of an inline JPEG, including the marker.
+  static int? inlineLength(Uint8List data) {
+    final bounded = data.length > _maxBytes
+        ? Uint8List.sublistView(data, 0, _maxBytes)
+        : data;
+    try {
+      return _read(bounded, prefixOnly: true).consumed;
+    } on PdfFilterUnsupported {
+      return null;
+    }
+  }
+
   static PdfDctImage? decode(
     Uint8List data,
     PdfCosDict dict,
@@ -91,7 +103,7 @@ abstract final class PdfDct {
         100, 0, 0, 0, 0, adobeTransform,
       ]);
     }
-    normalized.add(header.body);
+    normalized.add(header.body!);
     try {
       if (cmyk) {
         return _decodeCmyk(normalized.takeBytes(), header.width, header.height,
@@ -187,13 +199,14 @@ abstract final class PdfDct {
   /// metadata so EXIF orientation cannot override the PDF CTM. Entropy
   /// decoding is delegated to image, not implemented by this marker walker.
   static ({
-    int width, int height, int components, int? adobe, Uint8List body,
-  }) _read(Uint8List data) {
+    int width, int height, int components, int? adobe, Uint8List? body,
+    int consumed,
+  }) _read(Uint8List data, {bool prefixOnly = false}) {
     if (data.length < 4 || data.length > _maxBytes ||
         data[0] != 0xff || data[1] != 0xd8) {
       _unsupported();
     }
-    final body = BytesBuilder(copy: false);
+    final body = prefixOnly ? null : BytesBuilder(copy: false);
     var width = 0, height = 0, components = 0, scans = 0, markers = 0;
     int? adobe;
     var p = 2;
@@ -221,7 +234,7 @@ abstract final class PdfDct {
             p++;
             continue;
           }
-          body.add(Uint8List.sublistView(data, start, markerStart));
+          body?.add(Uint8List.sublistView(data, start, markerStart));
           p = markerStart;
           found = true;
           break;
@@ -246,9 +259,9 @@ abstract final class PdfDct {
         if (components == 0 || scans == 0) {
           _unsupported();
         }
-        body.add(const [0xff, 0xd9]);
+        body?.add(const [0xff, 0xd9]);
         return (width: width, height: height, components: components,
-            adobe: adobe, body: body.takeBytes());
+            adobe: adobe, body: body?.takeBytes(), consumed: p);
       }
       if (marker == 0 || marker == 1 ||
           (marker >= 0xd0 && marker <= 0xd8) || p + 2 > data.length) {
@@ -305,7 +318,7 @@ abstract final class PdfDct {
         adobe = transform;
       }
       if (!(marker >= 0xe0 && marker <= 0xef) && marker != 0xfe) {
-        body.add(Uint8List.sublistView(data, start, end));
+        body?.add(Uint8List.sublistView(data, start, end));
       }
       if (marker == 0xda) {
         if (components == 0 || ++scans > 128 || length < 6 ||

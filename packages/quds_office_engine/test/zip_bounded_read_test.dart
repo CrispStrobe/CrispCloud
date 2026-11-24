@@ -7,9 +7,9 @@ void main() {
   test('ZIP rejects central-directory metadata outside the archive', () {
     final writer = ZipWriter()..addFile('entry.txt', [1, 2, 3]);
     final bytes = writer.close();
-    ByteData.sublistView(bytes).setUint32(
-      bytes.length - 6, bytes.length + 1, Endian.little,
-    );
+    ByteData.sublistView(
+      bytes,
+    ).setUint32(bytes.length - 6, bytes.length + 1, Endian.little);
     expect(() => ZipReader.fromBytes(bytes), throwsA(isA<ZipException>()));
   });
 
@@ -86,6 +86,47 @@ void main() {
     await expectLater(
       reader.openStream('bomb', maxBytes: 1024).toList(),
       throwsA(isA<ZipDeflateLimitException>()),
+    );
+  });
+
+  test('recovery and stream reads cap stored data', () async {
+    final writer = ZipWriter()..addFile('stored', [1, 2, 3], store: true);
+    final reader = ZipReader.fromBytes(writer.close());
+    expect(reader.readRelaxed('stored', maxBytes: 3), [1, 2, 3]);
+    expect(
+      () => reader.readRelaxed('stored', maxBytes: 2),
+      throwsA(isA<ZipLimitException>()),
+    );
+    await expectLater(
+      reader.openStream('stored', maxBytes: 2).toList(),
+      throwsA(isA<ZipLimitException>()),
+    );
+  });
+
+  test('relaxed recovery reports the decoded size limit', () {
+    final input = List<int>.filled(512, 0x41);
+    final writer = ZipWriter()..addFile('compressed', input);
+    final reader = ZipReader.fromBytes(writer.close());
+    expect(reader.readRelaxed('compressed', maxBytes: 512), input);
+    expect(
+      () => reader.readRelaxed('compressed', maxBytes: 128),
+      throwsA(isA<ZipLimitException>()),
+    );
+  });
+
+  test('relaxed recovery keeps a bounded fallback for damaged data', () {
+    final writer = ZipWriter()
+      ..addFile('damaged', [0xff, 0x12, 0x34], store: true);
+    final bytes = writer.close();
+    final view = ByteData.sublistView(bytes);
+    final directory = view.getUint32(bytes.length - 6, Endian.little);
+    view.setUint16(8, 8, Endian.little);
+    view.setUint16(directory + 10, 8, Endian.little);
+    final reader = ZipReader.fromBytes(bytes);
+    expect(reader.readRelaxed('damaged', maxBytes: 3), [0xff, 0x12, 0x34]);
+    expect(
+      () => reader.readRelaxed('damaged', maxBytes: 2),
+      throwsA(isA<ZipLimitException>()),
     );
   });
 

@@ -38,9 +38,13 @@ abstract final class ZipRecovery {
   }
 
   /// Rebuilds a ZIP by walking local file headers (used when EOCD is gone).
-  static Uint8List? rebuildFromLocalHeaders(Uint8List bytes) {
+  static Uint8List? rebuildFromLocalHeaders(
+    Uint8List bytes, {
+    required int maxOutputBytes,
+  }) {
     final List<({String name, Uint8List data})> members = scanLocalMembers(
       bytes,
+      maxOutputBytes: maxOutputBytes,
     );
     if (members.isEmpty) {
       return null;
@@ -54,11 +58,13 @@ abstract final class ZipRecovery {
 
   /// scanLocalMembers API.
   static List<({String name, Uint8List data})> scanLocalMembers(
-    Uint8List bytes,
-  ) {
+    Uint8List bytes, {
+    required int maxOutputBytes,
+  }) {
     final List<({String name, Uint8List data})> out =
         <({String name, Uint8List data})>[];
     var i = 0;
+    var remaining = maxOutputBytes;
     while (i + 30 <= bytes.length) {
       final int sig =
           bytes[i] |
@@ -113,26 +119,39 @@ abstract final class ZipRecovery {
         dataStart,
         dataStart + comp,
       );
-      Uint8List raw;
-      try {
-        raw = method == zipMethodDeflate
-            ? RawDeflate.inflate(
-                payload,
-                maxOutputBytes: ZipReader.maxRelaxedBytes,
-              )
-            : Uint8List.fromList(payload);
-      } on Object {
-        raw = Uint8List.fromList(payload);
+      i = dataStart + comp;
+      if (name.isEmpty || name.endsWith('/')) {
+        continue;
       }
+      final maxMemberBytes = remaining < ZipReader.maxRelaxedBytes
+          ? remaining
+          : ZipReader.maxRelaxedBytes;
+      Uint8List raw;
+      if (method == zipMethodDeflate) {
+        try {
+          raw = RawDeflate.inflate(payload, maxOutputBytes: maxMemberBytes);
+        } on ZipDeflateLimitException {
+          throw ZipLimitException('ZIP recovery exceeds its limit: $name');
+        } on ZipDeflateException {
+          raw = _boundedCopy(payload, maxMemberBytes, name);
+        }
+      } else {
+        raw = _boundedCopy(payload, maxMemberBytes, name);
+      }
+      remaining -= raw.length;
       if (uncomp > 0 && raw.length > uncomp) {
         raw = Uint8List.sublistView(raw, 0, uncomp);
       }
-      if (name.isNotEmpty && !name.endsWith('/')) {
-        out.add((name: name, data: raw));
-      }
-      i = dataStart + comp;
+      out.add((name: name, data: raw));
     }
     return out;
+  }
+
+  static Uint8List _boundedCopy(Uint8List payload, int limit, String name) {
+    if (payload.length > limit) {
+      throw ZipLimitException('ZIP recovery exceeds its limit: $name');
+    }
+    return Uint8List.fromList(payload);
   }
 
   static int _nextSignature(Uint8List bytes, int from) {

@@ -6,6 +6,7 @@ import '../cos/pdf_cos.dart';
 import '../cos/pdf_cos_reader.dart';
 import '../cos/pdf_open_error.dart';
 import '../cos/pdf_store.dart';
+import '../decode/pdf_dct.dart';
 import '../decode/pdf_filters.dart';
 import '../model/pdf_extra.dart';
 import '../model/pdf_page_info.dart';
@@ -171,7 +172,7 @@ class PdfInterpreter {
       }
       final part = read(item, remaining);
       if (part != null && part.isNotEmpty) {
-        if (out.isNotEmpty) {
+        if (!out.isEmpty) {
           out.addByte(0x20);
         }
         out.add(part);
@@ -2575,6 +2576,7 @@ class _Lexer {
       'ASCIIHexDecode' || 'AHx' => _asciiImageEnd(terminator: 0x3E),
       'ASCII85Decode' || 'A85' => _asciiImageEnd(terminator: 0x3E, prefix: 0x7E),
       'RunLengthDecode' || 'RL' => _runLengthImageEnd(),
+      'DCTDecode' || 'DCT' => _jpegImageEnd(),
       null when (outer == null || outer is PdfCosNull) && sampleBytes != null =>
         start + sampleBytes,
       _ => null,
@@ -2590,6 +2592,11 @@ class _Lexer {
     }
     _i += 2;
     return Uint8List.sublistView(bytes, start, end);
+  }
+
+  int? _jpegImageEnd() {
+    final length = PdfDct.inlineLength(inlineImageBytes);
+    return length == null ? null : _i + length;
   }
 
   int? _asciiImageEnd({required int terminator, int? prefix}) {

@@ -34,6 +34,7 @@ enum OfficeIssueCode {
   illegalXmlCharacters,
   missingWorksheet,
   missingSharedStrings,
+  recoveryLimit,
 }
 
 /// Class OfficeIssue.
@@ -107,7 +108,9 @@ class OfficeDiagnosis {
   );
 
   /// canRepair API.
-  bool get canRepair => issues.any((OfficeIssue i) => i.repairable);
+  bool get canRepair =>
+      !issues.any((i) => i.code == OfficeIssueCode.recoveryLimit) &&
+      issues.any((i) => i.repairable);
 }
 
 /// Class OfficeRepairResult.
@@ -160,14 +163,35 @@ class OfficeRepairException implements Exception {
 /// Diagnoses why an Office file will not open and rebuilds a clean package
 /// when the damage is recoverable.
 abstract final class OfficeRepair {
+  /// Total decoded bytes retained while diagnosing or recovering archive parts.
+  static const int maxRecoveredBytes = OpcPackage.maxPartBytes;
+
   /// diagnose API.
-  static OfficeDiagnosis diagnose(Uint8List bytes, {String? password}) {
-    return _run(bytes, password: password, apply: false).diagnosis;
+  static OfficeDiagnosis diagnose(
+    Uint8List bytes, {
+    String? password,
+    int recoveryBudget = maxRecoveredBytes,
+  }) {
+    return _run(
+      bytes,
+      password: password,
+      apply: false,
+      recoveryBudget: recoveryBudget,
+    ).diagnosis;
   }
 
   /// repair API.
-  static OfficeRepairResult repair(Uint8List bytes, {String? password}) {
-    return _run(bytes, password: password, apply: true);
+  static OfficeRepairResult repair(
+    Uint8List bytes, {
+    String? password,
+    int recoveryBudget = maxRecoveredBytes,
+  }) {
+    return _run(
+      bytes,
+      password: password,
+      apply: true,
+      recoveryBudget: recoveryBudget,
+    );
   }
 
   /// Opens [bytes] strictly, then falls back to [repair] when the package
@@ -190,9 +214,33 @@ abstract final class OfficeRepair {
     Uint8List bytes, {
     String? password,
     required bool apply,
+    required int recoveryBudget,
   }) {
+    if (recoveryBudget < 0) {
+      throw ArgumentError.value(recoveryBudget, 'recoveryBudget');
+    }
     final List<OfficeIssue> issues = <OfficeIssue>[];
     final List<OfficeIssue> repaired = <OfficeIssue>[];
+
+    OfficeRepairResult exceededRecoveryBudget() {
+      issues.add(
+        const OfficeIssue(
+          code: OfficeIssueCode.recoveryLimit,
+          severity: OfficeIssueSeverity.fatal,
+          message: 'Decoded ZIP data exceeds the Office recovery limit',
+        ),
+      );
+      return OfficeRepairResult(
+        diagnosis: OfficeDiagnosis(
+          kind: OpcPackageKind.unknown,
+          encrypted: false,
+          issues: issues,
+        ),
+        repaired: const <OfficeIssue>[],
+        remaining: issues,
+      );
+    }
+
     if (bytes.isEmpty || bytes.length < 8) {
       final OfficeIssue empty = OfficeIssue(
         code: OfficeIssueCode.emptyFile,
@@ -312,7 +360,15 @@ abstract final class OfficeRepair {
         repairable: true,
       );
       issues.add(missingCd);
-      final Uint8List? rebuilt = ZipRecovery.rebuildFromLocalHeaders(working);
+      final Uint8List? rebuilt;
+      try {
+        rebuilt = ZipRecovery.rebuildFromLocalHeaders(
+          working,
+          maxOutputBytes: recoveryBudget,
+        );
+      } on ZipLimitException {
+        return exceededRecoveryBudget();
+      }
       if (rebuilt == null) {
         issues.removeLast();
         issues.add(
@@ -353,16 +409,18 @@ abstract final class OfficeRepair {
     }
 
     final Map<String, Uint8List> parts = <String, Uint8List>{};
+    var remainingBytes = recoveryBudget;
     for (final ZipEntry entry in zip.entries) {
       if (entry.isDirectory) {
         continue;
       }
+      final partLimit = remainingBytes < OpcPackage.maxPartBytes
+          ? remainingBytes
+          : OpcPackage.maxPartBytes;
+      Uint8List part;
       try {
-        parts[entry.fileName] = zip.read(
-          entry.fileName,
-          maxBytes: OpcPackage.maxPartBytes,
-        );
-      } on Object {
+        part = zip.read(entry.fileName, maxBytes: partLimit);
+      } on Exception {
         final OfficeIssue corrupt = OfficeIssue(
           code: OfficeIssueCode.corruptZipEntry,
           severity: OfficeIssueSeverity.warning,
@@ -372,14 +430,18 @@ abstract final class OfficeRepair {
         );
         issues.add(corrupt);
         try {
-          parts[entry.fileName] = zip.readRelaxed(entry.fileName);
+          part = zip.readRelaxed(entry.fileName, maxBytes: partLimit);
           if (apply) {
             repaired.add(corrupt);
           }
-        } on Object {
-          // drop unreadable member
+        } on ZipLimitException {
+          return exceededRecoveryBudget();
+        } on ZipException {
+          continue;
         }
       }
+      parts[entry.fileName] = part;
+      remainingBytes -= part.length;
     }
 
     _repairXmlParts(parts, issues, repaired, apply: apply);

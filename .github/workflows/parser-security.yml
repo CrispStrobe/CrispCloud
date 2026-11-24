@@ -23,7 +23,7 @@ jobs:
         working-directory: packages/quds_office_engine
         run: |
           dart pub get
-          dart test test/bounded_cfb_reader_test.dart test/glyph_outline_bounds_test.dart
+          dart test test/bounded_cfb_reader_test.dart test/glyph_outline_bounds_test.dart test/zip_bounded_read_test.dart test/office_repair_test.dart test/pdf_filter_expansion_test.dart
       - name: Bounded fuzzing
         run: |
           dart run tool/fuzz_mail.dart 5000

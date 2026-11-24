@@ -25,6 +25,27 @@ void main() {
   });
 
   group('OfficeRepair', () {
+    test('shares a decoded-byte budget across recovered ZIP parts', () {
+      final writer = ZipWriter()
+        ..addFile('first.bin', List<int>.filled(64, 1))
+        ..addFile('second.bin', List<int>.filled(64, 2), store: true);
+      final full = writer.close();
+      final withoutDirectory = Uint8List.sublistView(full, 0, full.length - 22);
+      for (final bytes in [full, withoutDirectory]) {
+        final diagnosis = OfficeRepair.diagnose(bytes, recoveryBudget: 100);
+        expect(diagnosis.canOpen, isFalse);
+        expect(diagnosis.issues.last.code, OfficeIssueCode.recoveryLimit);
+        final result = OfficeRepair.repair(bytes, recoveryBudget: 100);
+        expect(result.bytes, isNull);
+        expect(result.remaining.last.code, OfficeIssueCode.recoveryLimit);
+        final exact = OfficeRepair.diagnose(bytes, recoveryBudget: 128);
+        expect(
+          exact.issues.map((issue) => issue.code),
+          isNot(contains(OfficeIssueCode.recoveryLimit)),
+        );
+      }
+    });
+
     test('diagnoses empty and non-office buffers as fatal', () {
       final OfficeDiagnosis empty = OfficeRepair.diagnose(Uint8List(0));
       expect(empty.canOpen, isFalse);
