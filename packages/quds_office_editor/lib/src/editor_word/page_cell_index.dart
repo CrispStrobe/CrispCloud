@@ -101,17 +101,11 @@ final class _ParagraphCells {
   }
 }
 
-/// The boxes pointer events can target, built only when a page is interacted with.
+/// The boxes pointer events or selection handles can target.
 final class WordPagePointerIndex {
-  WordPagePointerIndex._(List<LaidOutBox> boxes) {
-    for (final (order, box) in boxes.indexed) {
-      if (box.kind == LaidOutBoxKind.tableCell) {
-        final bottom = box.y + box.height;
-        if (box.height > 0 && !bottom.isNaN) {
-          _cells.add((bottom: bottom, order: order, box: box));
-        }
-        continue;
-      }
+  WordPagePointerIndex._(this._boxes) {
+    for (final box in _boxes) {
+      if (box.kind == LaidOutBoxKind.tableCell) continue;
       if (box.kind == LaidOutBoxKind.equation && box.equation != null) {
         _equations.add(box);
       }
@@ -125,15 +119,26 @@ final class WordPagePointerIndex {
     }
   }
 
-  final _cells = <({double bottom, int order, LaidOutBox box})>[];
+  final List<LaidOutBox> _boxes;
+  late final _cells = _indexCells();
   late final _bottomsThrough = _indexCellBounds();
   final _equations = <LaidOutBox>[];
   final _frames = <LaidOutBox>[];
   final _visuals = <LaidOutBox>[];
   final _tocEntries = <LaidOutBox>[];
 
+  List<({double bottom, int order, LaidOutBox box})> _indexCells() {
+    final cells = <({double bottom, int order, LaidOutBox box})>[];
+    for (final (order, box) in _boxes.indexed) {
+      if (box.kind != LaidOutBoxKind.tableCell || !(box.height > 0)) continue;
+      final bottom = box.y + box.height;
+      if (!bottom.isNaN) cells.add((bottom: bottom, order: order, box: box));
+    }
+    cells.sort((left, right) => left.box.y.compareTo(right.box.y));
+    return cells;
+  }
+
   List<double> _indexCellBounds() {
-    _cells.sort((left, right) => left.box.y.compareTo(right.box.y));
     var furthestBottom = double.negativeInfinity;
     final bottomsThrough = <double>[];
     for (final cell in _cells) {

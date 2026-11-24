@@ -4568,10 +4568,20 @@ class RenderWordCanvas extends RenderBox
   }
 
   void _paintVisualHandles(Canvas canvas, LaidOutPage page) {
-    for (final LaidOutBox box in page.frames) {
+    final frame = selectedFrame;
+    final picture = selectedVisual?.visual;
+    if (frame == null && picture == null) return;
+    // Preserve layout order when both objects are selected so overlapping
+    // handles are drawn in the same order as the objects themselves.
+    final boxes = frame == null
+        ? _pageCellIndex(page).pointer.visuals
+        : picture == null
+        ? _pageCellIndex(page).pointer.frames
+        : page.frames;
+    for (final box in boxes) {
       if (box.kind == LaidOutBoxKind.frame &&
           box.frame != null &&
-          identical(box.frame, selectedFrame)) {
+          identical(box.frame, frame)) {
         TransformHandles(
           Rect.fromLTWH(box.x, box.y, box.width, box.height),
         ).paint(
@@ -4588,9 +4598,7 @@ class RenderWordCanvas extends RenderBox
       if (visual == null || box.kind == LaidOutBoxKind.tableCell) {
         continue;
       }
-      final bool selected =
-          selectedVisual != null && identical(visual, selectedVisual!.visual);
-      if (!selected) {
+      if (!identical(visual, picture)) {
         // In-range pictures are tinted in [_paintFrames], not handled.
         continue;
       }
