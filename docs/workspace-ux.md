@@ -12,9 +12,12 @@ the [workspace UX archive](workspace-ux-details.md).
 | Shift-click | Mark visible range from the previous cursor anchor |
 | Cmd-click / Ctrl-click | Toggle one item |
 | Shift+arrow | Toggle the departed row, including removing marks |
+| `Space` / `Insert` | Toggle the focused row without moving, by default. Enable *Space advances to the next item* in Settings to restore mark-and-advance |
 | `Ctrl+A` | Select all visible rows |
 | Numpad `+` / `-` | Select/deselect by pattern |
 | `Shift+Numpad +` / `-` | Select/deselect same extension |
+
+`Enter` opens folders and goes inside supported archives; it does not hand a local archive to the system default application. `Edit > Selection > Clear` removes all marks.
 
 Marks apply to the visible filtered scope. File operations use marks; `F3` and
 `F4` use the focused file. Selection memory is per tab and is revalidated
