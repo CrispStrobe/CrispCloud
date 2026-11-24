@@ -84,6 +84,7 @@ void showDiffViewerDialog(
   FileItem rightFile, {
   PanelSide leftSide = PanelSide.local,
   PanelSide rightSide = PanelSide.remote,
+  bool startBinary = false,
 }) {
   showDialog(
     context: context,
@@ -92,6 +93,7 @@ void showDiffViewerDialog(
       rightFile: rightFile,
       leftSide: leftSide,
       rightSide: rightSide,
+      startBinary: startBinary,
     ),
   );
 }
@@ -101,12 +103,14 @@ class _DiffViewerDialog extends ConsumerStatefulWidget {
   final FileItem rightFile;
   final PanelSide leftSide;
   final PanelSide rightSide;
+  final bool startBinary;
 
   const _DiffViewerDialog({
     required this.leftFile,
     required this.rightFile,
     required this.leftSide,
     required this.rightSide,
+    this.startBinary = false,
   });
 
   @override
@@ -158,6 +162,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   void initState() {
     super.initState();
     _binary =
+        widget.startBinary ||
         (_leftFile.size ?? 0) > MergeDocumentSession.maxTextBytes ||
         (_rightFile.size ?? 0) > MergeDocumentSession.maxTextBytes;
     _loadFiles();

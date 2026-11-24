@@ -1092,6 +1092,7 @@ void showFileContextMenu(
             files[1],
             leftSide: side,
             rightSide: side,
+            startBinary: true,
           );
         }),
       ),

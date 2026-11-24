@@ -1232,6 +1232,16 @@ const commanderTranslations = <String, List<String>>{
         "먼저 비교하고 각 행의 작업을 선택한 뒤 적용하세요. 파일이나 연결이 바뀌면 계획이 무효화됩니다.",
         "قارن أولًا، واختر إجراءً لكل صف، ثم طبّق. تغيّر الملفات أو الاتصالات يُبطل الخطة.",
       ],
+  "Compare selected files": [
+    "Ausgewählte Dateien vergleichen",
+    "Comparer les fichiers sélectionnés",
+    "Comparar los archivos seleccionados",
+    "Comparar os ficheiros selecionados",
+    "比较所选文件",
+    "選択したファイルを比較",
+    "선택한 파일 비교",
+    "مقارنة الملفات المحددة",
+  ],
   "Compare text": [
     "Text vergleichen",
     "Comparer le texte",

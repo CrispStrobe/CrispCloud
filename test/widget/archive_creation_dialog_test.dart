@@ -106,6 +106,8 @@ void main() {
     double textScale = 1,
     String selectedPath = '/input/report.txt',
     List<String>? selectedPaths,
+    ArchiveCreationFormat initialFormat = ArchiveCreationFormat.zip,
+    bool autoStart = false,
     Future<void> Function(List<ArchiveCreationBatchItem>)? onQueueBatch,
     Future<void> Function()? onViewJobs,
     VoidCallback? onCreated,
@@ -138,6 +140,8 @@ void main() {
             destination: backend,
             files: files,
             destinationDirectory: '/output',
+            initialFormat: initialFormat,
+            autoStart: autoStart,
             service: service,
             onCreated: onCreated,
             onQueueBatch: onQueueBatch,
@@ -1208,5 +1212,20 @@ void main() {
     expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
     expect(service.requests, isEmpty);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('direct packing starts with the requested format', (
+    tester,
+  ) async {
+    backend.put('/input/second.txt', [4, 5, 6]);
+    await show(
+      tester,
+      selectedPaths: ['/input/report.txt', '/input/second.txt'],
+      initialFormat: ArchiveCreationFormat.sevenZip,
+      autoStart: true,
+    );
+    expect(service.requests, hasLength(1));
+    expect(service.requests.single.format, ArchiveCreationFormat.sevenZip);
+    expect(service.requests.single.name, endsWith('.7z'));
   });
 }
