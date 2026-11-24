@@ -887,19 +887,32 @@ jobs:
           flutter build macos --release \
             --dart-define=APP_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
-      # pod install rewrites the trailing COCOAPODS: line when the runner's
-      # CocoaPods differs from the one that wrote the lock. That line is not a
-      # dependency change, but macos/Podfile.lock is a reviewed crypto source,
-      # so restore it. Any other lock change fails here, with the diff shown.
+      # pod install recomputes SPEC CHECKSUMS for Flutter plugin pods loaded
+      # from local paths, and those values differ between machines with the
+      # same plugin versions (this Mac reproduces the committed ones; the
+      # runner does not). macos/Podfile.lock is a reviewed crypto source, so
+      # restore it when only such checksums (or the COCOAPODS: tool line)
+      # changed. Any change to pod versions, dependencies, sources or trunk
+      # pod checksums fails here, with the diff shown.
       - name: Keep the reviewed macOS Podfile.lock
         run: |
-          if ! git diff --quiet -- macos/Podfile.lock; then
-            git diff -- macos/Podfile.lock
-            if git diff -U0 -- macos/Podfile.lock | grep '^[-+][^-+]' | grep -qv '^[-+]COCOAPODS: '; then
+          lock=macos/Podfile.lock
+          if ! git diff --quiet -- "$lock"; then
+            git diff -- "$lock"
+            local_pods=$(awk '/^EXTERNAL SOURCES:/{f=1;next} /^[A-Z]/{f=0} f && /^  [^ ].*:$/{sub(/^  /,"");sub(/:$/,"");print}' "$lock")
+            unexpected=$(git diff -U0 -- "$lock" | grep '^[-+][^-+]' | grep -v '^[-+]COCOAPODS: ' |
+              while IFS= read -r line; do
+                name=$(printf '%s\n' "$line" | sed -nE 's/^[-+]  ([^ :]+): [0-9a-f]{40}$/\1/p')
+                if [ -z "$name" ] || ! printf '%s\n' "$local_pods" | grep -qxF "$name"; then
+                  printf '%s\n' "$line"
+                fi
+              done)
+            if [ -n "$unexpected" ]; then
+              printf '%s\n' "$unexpected"
               echo '::error::pod install changed macos/Podfile.lock dependencies; commit the updated lock after review'
               exit 1
             fi
-            git checkout -- macos/Podfile.lock
+            git checkout -- "$lock"
           fi
           git status --short --untracked-files=no
 
