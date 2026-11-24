@@ -401,6 +401,25 @@ Readable body'''),
       },
     );
 
+    test('a hostile compound stream sector is a typed MSG rejection', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}))
+        ..addStream('__substg1.0_1000001F', _utf16('Body'));
+      final bytes = writer.build();
+      final header = CfbfHeader.parse(MemoryByteSource(bytes));
+      final rootOffset = header.sectorOffset(header.firstDirectorySector);
+      // Root directory entry, start-sector field at +116.
+      ByteData.sublistView(bytes).setUint32(
+        rootOffset + 116,
+        0xfffff000,
+        Endian.little,
+      );
+      expect(
+        () => parseEmailMessage(bytes, 'hostile.msg'),
+        throwsA(isA<CfbfException>()),
+      );
+    });
+
     test('embedded message cannot supply missing outer subject or sender', () {
       final writer = CfbfWriter()
         ..addStream('__properties_version1.0', _properties(32, {}))
