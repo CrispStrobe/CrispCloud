@@ -95,3 +95,16 @@ the current control reference.
 - [Commander operations](commander-file-operations.md)
 - [Transfer queue](transfer-queue.md)
 - [Gallery](image-gallery.md)
+
+## Folder listing cache
+
+Folder listings are kept in memory so revisiting a large directory is instant.
+The cache is bounded by a least-recently-used entry count:
+
+- desktop default: 200 folders;
+- web default: 50 folders;
+- configurable in Settings → Storage → Folder listing cache (Off–2000).
+
+The cache never reads or writes files, never survives an app restart, and is
+replaced by a fresh verified listing after navigation, refresh or a file
+operation.
