@@ -93,6 +93,30 @@ void main() {
       expect(reader.namespaceUri, 'urn:outer');
     });
 
+    test('closing nested tags restores only the scope declared there', () {
+      final reader = XmlPullReader(
+        '<p:root xmlns:p="urn:root"><p:parent xmlns:p="urn:parent">'
+        '<p:plain><p:child xmlns:p="urn:child"></p:child></p:plain>'
+        '</p:parent></p:root>',
+      );
+      final namespaces = <Map<String, String>>[];
+      while (reader.nextTag()) {
+        namespaces.add(reader.inScopeNamespaces);
+      }
+      expect(namespaces.map((scope) => scope['p']), [
+        'urn:root',
+        'urn:parent',
+        'urn:parent',
+        'urn:child',
+        'urn:parent',
+        'urn:parent',
+        'urn:root',
+        null,
+      ]);
+      expect(identical(namespaces[1], namespaces[2]), isTrue);
+      expect(identical(namespaces[1], namespaces[4]), isTrue);
+    });
+
     test('attribute slots reset when the next tag has fewer attributes', () {
       final many = List.generate(20, (i) => 'a$i="$i"').join(' ');
       final reader = XmlPullReader(

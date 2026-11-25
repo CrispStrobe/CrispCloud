@@ -24,12 +24,10 @@ class XmlPullReader {
   /// XmlPullReader API.
   XmlPullReader(String source, {Map<String, String>? inheritedNamespaces})
     : _source = _stripBom(source),
-      _nsStack = [
-        if (inheritedNamespaces == null || inheritedNamespaces.isEmpty)
-          _NsScope.root()
-        else
-          _NsScope.inherited(inheritedNamespaces),
-      ];
+      _namespaceScope =
+          inheritedNamespaces == null || inheritedNamespaces.isEmpty
+          ? _NsScope.root()
+          : _NsScope.inherited(inheritedNamespaces);
 
   /// fromBytes API.
   factory XmlPullReader.fromBytes(Uint8List bytes) {
@@ -59,8 +57,8 @@ class XmlPullReader {
   int _textEnd = 0;
   bool _textHasEntities = false;
 
-  /// root API.
-  final List<_NsScope> _nsStack;
+  // Only elements that declare a namespace introduce a scope.
+  _NsScope _namespaceScope;
   final List<_AttrSlice> _attrs = <_AttrSlice>[];
   // Most tags need only a few slots. Keep peak attribute counts on
   // unusually wide tags from extending the lifetime of all their slots.
@@ -123,7 +121,7 @@ class XmlPullReader {
   /// The predefined `xml` and `xmlns` bindings are not added implicitly.
   /// Capturing this before advancing retains prefixes that appear only in
   /// QName-valued attributes, such as markup-compatibility requirements.
-  Map<String, String> get inScopeNamespaces => _nsStack.last.snapshot;
+  Map<String, String> get inScopeNamespaces => _namespaceScope.snapshot;
 
   /// text API.
   String get text {
@@ -160,8 +158,8 @@ class XmlPullReader {
         _elementStack.length -= 2;
       }
       _depth = _elementStack.length ~/ 2;
-      if (_nsStack.length > 1) {
-        _nsStack.removeLast();
+      if (_namespaceScope.depth > _depth) {
+        _namespaceScope = _namespaceScope.parent!;
       }
       return true;
     }
@@ -304,7 +302,7 @@ class XmlPullReader {
     _type = XmlEventType.startElement;
     _readQName();
     _skipSpaces();
-    final inherited = _nsStack.last;
+    final inherited = _namespaceScope;
     var scope = inherited;
     while (_pos < _source.length) {
       final int ch = _source.codeUnitAt(_pos);
@@ -321,7 +319,9 @@ class XmlPullReader {
       final attr = _readAttribute();
       _attrs.add(attr);
       if (attr.isXmlns) {
-        if (identical(scope, inherited)) scope = _NsScope(inherited);
+        if (identical(scope, inherited)) {
+          scope = _NsScope(inherited, _depth + 1);
+        }
         final key = attr.prefixEnd == attr.nameStart ? '' : attr.local(_source);
         scope.declare(key, attr.decodedValue(_source));
       } else if (attr.hasEntities) {
@@ -330,7 +330,7 @@ class XmlPullReader {
       }
       _skipSpaces();
     }
-    _nsStack.add(scope);
+    _namespaceScope = scope;
     _elementStack
       ..add(_nameStart)
       ..add(_nameEnd);
@@ -356,8 +356,8 @@ class XmlPullReader {
       );
     }
     _depth = _elementStack.length ~/ 2;
-    if (_nsStack.length > 1) {
-      _nsStack.removeLast();
+    if (_namespaceScope.depth > _depth) {
+      _namespaceScope = _namespaceScope.parent!;
     }
   }
 
@@ -572,7 +572,7 @@ class XmlPullReader {
     if (prefix == 'xmlns') {
       return 'http://www.w3.org/2000/xmlns/';
     }
-    return _nsStack.last.resolve(prefix);
+    return _namespaceScope.resolve(prefix);
   }
 
   void _skipSpaces() {
@@ -785,16 +785,19 @@ class _AttrSlice {
 }
 
 class _NsScope {
-  _NsScope(this.parent);
+  _NsScope(this.parent, this.depth);
 
   /// root API.
-  _NsScope.root() : parent = null;
+  _NsScope.root() : parent = null, depth = 0;
 
-  _NsScope.inherited(Map<String, String> namespaces) : parent = null {
+  _NsScope.inherited(Map<String, String> namespaces)
+    : parent = null,
+      depth = 0 {
     _map.addAll(namespaces);
   }
 
   final _NsScope? parent;
+  final int depth;
   final Map<String, String> _map = <String, String>{};
 
   // Declaration scopes are populated before publishing their start event.
