@@ -247,11 +247,13 @@ class WordDeserializer {
     _readWatermark(document, package);
     WordBibliographyIo.read(document, package, docUri);
     _readSettingsFlags(document, package, docUri);
-    final Map<WmlParagraph, int> bodyIndices = <WmlParagraph, int>{
-      for (final entry in document.paragraphs.indexed) entry.$2: entry.$1,
-    };
-    for (final WmlRevision revision in document.revisions) {
-      revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
+    if (document.revisions.isNotEmpty) {
+      final bodyIndices = <WmlParagraph, int>{
+        for (final entry in document.paragraphs.indexed) entry.$2: entry.$1,
+      };
+      for (final revision in document.revisions) {
+        revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
+      }
     }
     WordContentControls.recordImported(document);
     _paragraphPropertyXml.clear();
@@ -2005,15 +2007,17 @@ class WordDeserializer {
           collapse(children);
         }
       }
-      final List<WmlBlock> collapsed = <WmlBlock>[];
+      // Copy the block list only once a TOC replaces part of it.
+      List<WmlBlock>? collapsed;
       WmlToc? open;
-      for (final WmlBlock block in blocks) {
+      for (var index = 0; index < blocks.length; index++) {
+        final block = blocks[index];
         if (block is! WmlParagraph) {
           if (open != null) {
-            collapsed.add(open);
+            collapsed!.add(open);
             open = null;
           }
-          collapsed.add(block);
+          collapsed?.add(block);
           continue;
         }
         final bool tocInstr = WordToc.isTocInstruction(
@@ -2032,6 +2036,7 @@ class WordDeserializer {
             block.properties.fieldSeparate ||
             block.properties.fieldEnd;
         if (open == null && (tocInstr || tocStyle || tocHeading)) {
+          final output = collapsed ??= blocks.sublist(0, index);
           final (int min, int max) = WordToc.rangeFromInstruction(
             block.properties.fieldInstruction,
           );
@@ -2042,7 +2047,7 @@ class WordDeserializer {
           );
           WordToc.absorbNativeResult(open, block);
           if (block.properties.fieldEnd) {
-            collapsed.add(open);
+            output.add(open);
             open = null;
           }
           continue;
@@ -2061,20 +2066,21 @@ class WordDeserializer {
           }
           WordToc.absorbNativeResult(open, block);
           if (block.properties.fieldEnd) {
-            collapsed.add(open);
+            collapsed!.add(open);
             open = null;
           }
           continue;
         }
         if (open != null) {
-          collapsed.add(open);
+          collapsed!.add(open);
           open = null;
         }
-        collapsed.add(block);
+        collapsed?.add(block);
       }
       if (open != null) {
-        collapsed.add(open);
+        collapsed!.add(open);
       }
+      if (collapsed == null) return;
       blocks
         ..clear()
         ..addAll(collapsed);

@@ -207,7 +207,7 @@ abstract final class WordBookmarks {
   static int repairUnpaired(WmlDocument document) {
     // Frame anchors appear in story lists as synthetic paragraphs that are
     // never written; only close ranges in paragraphs the model owns.
-    final real = Set<WmlParagraph>.identity()
+    late final real = Set<WmlParagraph>.identity()
       ..addAll(document.paragraphs)
       ..addAll(
         WordTree.paragraphs([
