@@ -481,6 +481,15 @@ void main() {
               .firstChild('spacing')!;
           _duplicateAttribute(spacing, 'line', '900');
         }),
+    'ordinary note with a separator ID': (package) =>
+        _rewrite(package, '/word/footnotes.xml', (root) {
+          final notes = root.childrenNamed('footnote');
+          final id = notes.first.getAttribute(
+            'id',
+            namespaceUri: OfficeNamespaces.w,
+          )!;
+          _attribute(notes.last, 'id', id);
+        }),
     'aliased duplicate special note ID': (package) =>
         _rewrite(package, '/word/footnotes.xml', (root) {
           _duplicateAttribute(

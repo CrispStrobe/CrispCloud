@@ -2,6 +2,16 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('pruning an XML subtree still validates its text entities', () {
+    expect(
+      () => XmlDocument.parse(
+        '<root><skip><nested>&undefined;</nested></skip><keep/></root>',
+        keepRootChild: (_, child) => child.localName == 'keep',
+      ),
+      throwsA(isA<XmlParseException>()),
+    );
+  });
+
   group('XmlPullReader', () {
     test('parses namespaced Office-style documents', () {
       const String xml =

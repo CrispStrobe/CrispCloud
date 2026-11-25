@@ -224,7 +224,10 @@ class XmlPullReader {
   }
 
   /// Skips the current start-element and all of its descendants.
-  void skip() {
+  ///
+  /// With [validateTextEntities], validate entity references as a materialized
+  /// XML subtree would, without decoding ordinary character data.
+  void skip({bool validateTextEntities = false}) {
     if (_type != XmlEventType.startElement) {
       return;
     }
@@ -234,6 +237,11 @@ class XmlPullReader {
     }
     final int startDepth = _depth;
     while (next()) {
+      if (validateTextEntities &&
+          _type == XmlEventType.characters &&
+          _textHasEntities) {
+        decodeXmlEntities(_source.substring(_textStart, _textEnd));
+      }
       if (_type == XmlEventType.endElement && _depth < startDepth) {
         return;
       }

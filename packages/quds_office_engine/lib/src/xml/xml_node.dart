@@ -309,8 +309,12 @@ class XmlDocument {
   /// standalone API.
   bool standalone;
 
-  /// parse API.
-  factory XmlDocument.parse(String xml) {
+  /// Parses XML into a tree. [keepRootChild] can reject direct children of the
+  /// root before they are materialized. Rejected subtrees are still validated.
+  factory XmlDocument.parse(
+    String xml, {
+    bool Function(XmlElement root, XmlPullReader child)? keepRootChild,
+  }) {
     final XmlPullReader reader = XmlPullReader(xml);
     final XmlDocument doc = XmlDocument();
     final List<XmlElement> stack = <XmlElement>[];
@@ -321,6 +325,12 @@ class XmlDocument {
             doc.standalone = false;
           }
         case XmlEventType.startElement:
+          if (keepRootChild != null &&
+              stack.length == 1 &&
+              !keepRootChild(stack.single, reader)) {
+            reader.skip(validateTextEntities: true);
+            break;
+          }
           final XmlElement element = XmlElement(
             localName: reader.localName,
             prefix: reader.prefix,

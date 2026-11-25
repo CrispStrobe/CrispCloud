@@ -34,19 +34,15 @@ abstract final class WordFootnoteSeparatorIo {
     final package = document.package;
     if (package == null) return;
     try {
-      final source = _source(document, package);
-      if (source?.localName != 'footnotes' ||
-          source?.namespaceUri != OfficeNamespaces.w ||
-          !_uniqueAttributes(source!)) {
-        return;
-      }
-      final definitions = _definitions(source);
+      final source = _source(package);
+      if (source == null || !_isFootnotesRoot(source.root)) return;
+      final definitions = _definitions(source.root);
       document.sourceBlankFootnoteSeparators = _hasBlankPair(definitions);
       if (!document.sourceBlankFootnoteSeparators) {
         document.footnoteSeparator = _readGeometry(
           document,
           package,
-          source,
+          source.idCounts,
           definitions,
         );
       }
@@ -85,7 +81,7 @@ abstract final class WordFootnoteSeparatorIo {
   static WmlFootnoteSeparator? _readGeometry(
     WmlDocument document,
     OpcPackage package,
-    XmlElement source,
+    Map<int, int> idCounts,
     List<XmlElement> definitions,
   ) {
     if (definitions.length != 2) return null;
@@ -107,14 +103,7 @@ abstract final class WordFootnoteSeparatorIo {
         secondId > 2147483647) {
       return null;
     }
-    final allIds = source
-        .childrenNamed('footnote', namespaceUri: OfficeNamespaces.w)
-        .map((node) => int.tryParse(_attr(node, 'id') ?? ''))
-        .toList();
-    if (allIds.where((id) => id == firstId).length != 1 ||
-        allIds.where((id) => id == secondId).length != 1) {
-      return null;
-    }
+    if (idCounts[firstId] != 1 || idCounts[secondId] != 1) return null;
     final List<int> refs;
     try {
       refs = _specialReferenceIds(package);
@@ -203,14 +192,11 @@ abstract final class WordFootnoteSeparatorIo {
       }
     }
     final package = document.package;
-    final source = package == null ? null : _source(document, package);
-    if (source != null &&
-        (source.localName != 'footnotes' ||
-            source.namespaceUri != OfficeNamespaces.w ||
-            !_uniqueAttributes(source))) {
+    final source = package == null ? null : _source(package);
+    if (source != null && !_isFootnotesRoot(source.root)) {
       throw const FormatException('Invalid native footnote part.');
     }
-    final definitions = _definitions(source);
+    final definitions = _definitions(source?.root);
     if (definitions.isEmpty &&
         package != null &&
         _specialReferenceIds(package).isNotEmpty) {
@@ -221,7 +207,8 @@ abstract final class WordFootnoteSeparatorIo {
     int normalId;
     int continuationId;
     if (definitions.isNotEmpty) {
-      if (_readGeometry(document, package!, source!, definitions) == null) {
+      if (_readGeometry(document, package!, source!.idCounts, definitions) ==
+          null) {
         throw UnsupportedError(
           'An unsupported imported footnote separator cannot be replaced implicitly.',
         );
@@ -243,13 +230,7 @@ abstract final class WordFootnoteSeparatorIo {
     } else {
       final used = <int>{
         for (final note in document.footnotes) note.id,
-        for (final node
-            in source?.childrenNamed(
-                  'footnote',
-                  namespaceUri: OfficeNamespaces.w,
-                ) ??
-                <XmlElement>[])
-          if (int.tryParse(_attr(node, 'id') ?? '') case final int id) id,
+        ...?source?.idCounts.keys,
       };
       int allocate(int preferred) {
         var id = preferred;
@@ -365,14 +346,49 @@ abstract final class WordFootnoteSeparatorIo {
     );
   }
 
-  static XmlElement? _source(WmlDocument document, OpcPackage package) {
+  static bool _isFootnotesRoot(XmlElement root) =>
+      root.localName == 'footnotes' &&
+      root.namespaceUri == OfficeNamespaces.w &&
+      _uniqueAttributes(root);
+
+  static ({XmlElement root, Map<int, int> idCounts})? _source(
+    OpcPackage package,
+  ) {
     final part = _part(
       package,
       _mainUri(package),
       RelationshipTypes.footnotes,
       'footnotes.xml',
     );
-    return part == null ? null : XmlDocument.parse(part.readText()).root;
+    if (part == null) return null;
+
+    // Ordinary notes are imported separately. Only the separator stories need
+    // an XML tree here, but every native ID can collide with a separator ID.
+    final idCounts = <int, int>{};
+    XmlElement? countedRoot;
+    final root = XmlDocument.parse(
+      part.readText(),
+      keepRootChild: (root, child) {
+        if (!identical(root, countedRoot)) {
+          countedRoot = root;
+          idCounts.clear();
+        }
+        if (child.localName != 'footnote' ||
+            child.namespaceUri != OfficeNamespaces.w) {
+          return false;
+        }
+        final id = int.tryParse(
+          child.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
+        );
+        if (id != null) idCounts[id] = (idCounts[id] ?? 0) + 1;
+        return _specialTypes.contains(
+          child.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+        );
+      },
+    ).root;
+    if (root == null) return null;
+    if (!identical(root, countedRoot)) idCounts.clear();
+    return (root: root, idCounts: idCounts);
   }
 
   static List<int> _specialReferenceIds(OpcPackage package) {
