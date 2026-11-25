@@ -390,6 +390,11 @@ final class ParagraphLanguages {
   ];
 }
 
+typedef _PendingLanguageDetection = ({
+  Future<List<ParagraphLanguages>> batch,
+  int index,
+});
+
 /// Runs the policy over paragraphs, batching classifier calls and caching
 /// results by text (least recently used dropped after [cacheSize] texts).
 final class ParagraphLanguageDetector {
@@ -403,7 +408,7 @@ final class ParagraphLanguageDetector {
   final LanguageDetectionPolicy policy;
   final int cacheSize;
   final LinkedHashMap<String, ParagraphLanguages> _cache = LinkedHashMap();
-  final Map<String, Future<ParagraphLanguages>> _running = {};
+  final _running = <String, _PendingLanguageDetection>{};
   int _cacheGeneration = 0;
 
   /// The cached result for [text], if detection already ran.
@@ -421,7 +426,7 @@ final class ParagraphLanguageDetector {
   Future<List<ParagraphLanguages>> detectAll(List<String> texts) async {
     final input = List<String>.of(texts, growable: false);
     final results = <String, ParagraphLanguages>{};
-    final waits = <String, Future<ParagraphLanguages>>{};
+    final waits = <String, _PendingLanguageDetection>{};
     final missing = <String>{};
     for (final text in input) {
       if (results.containsKey(text) || waits.containsKey(text)) continue;
@@ -438,14 +443,8 @@ final class ParagraphLanguageDetector {
     if (missing.isNotEmpty) {
       final pendingTexts = missing.toList(growable: false);
       final work = _run(pendingTexts, _cacheGeneration);
-      final owned = <String, Future<ParagraphLanguages>>{};
       for (var i = 0; i < pendingTexts.length; i++) {
-        final position = i;
-        final pending = work.then((done) => done[position]);
-        // Only concurrent callers listen; an error must not go unhandled.
-        pending.ignore();
-        _running[pendingTexts[i]] = pending;
-        owned[pendingTexts[i]] = pending;
+        _running[pendingTexts[i]] = (batch: work, index: i);
       }
       try {
         final done = await work;
@@ -453,15 +452,15 @@ final class ParagraphLanguageDetector {
           results[pendingTexts[i]] = done[i];
         }
       } finally {
-        for (final entry in owned.entries) {
-          if (identical(_running[entry.key], entry.value)) {
-            _running.remove(entry.key)?.ignore();
-          }
+        for (final text in pendingTexts) {
+          // A cache reset can start a new batch for the same text.
+          if (identical(_running[text]?.batch, work)) _running.remove(text);
         }
       }
     }
     for (final entry in waits.entries) {
-      results[entry.key] = await entry.value;
+      final (:batch, :index) = entry.value;
+      results[entry.key] = (await batch)[index];
     }
     return [for (final text in input) results[text]!];
   }

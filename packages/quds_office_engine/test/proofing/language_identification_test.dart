@@ -257,24 +257,27 @@ void main() {
   });
 
   test(
-    'concurrent callers share a pending classification and freeze their list',
+    'concurrent callers share a pending batch and preserve their input order',
     () async {
+      const later = '$_longLatin Second paragraph.';
       final pending = Completer<List<List<LanguageGuess>>>();
       final identifier = _Identifier((_) => pending.future);
       final detector = ParagraphLanguageDetector(identifier);
-      final inputs = [_longLatin];
+      final inputs = [_longLatin, later];
       final first = detector.detectAll(inputs);
-      final second = detector.detect(_longLatin);
+      final second = detector.detectAll([later, _longLatin, later]);
       inputs[0] = 'changed';
       expect(identifier.calls, [
-        [_longLatin],
+        [_longLatin, later],
       ]);
       pending.complete(const [
         [LanguageGuess('de', 0.99)],
+        [LanguageGuess('en', 0.99)],
       ]);
-      final original = (await first).single;
-      expect(original.text, _longLatin);
-      expect(await second, same(original));
+      final original = await first;
+      final shared = await second;
+      expect(original.map((paragraph) => paragraph.text), [_longLatin, later]);
+      expect(shared, [same(original[1]), same(original[0]), same(original[1])]);
     },
   );
 
