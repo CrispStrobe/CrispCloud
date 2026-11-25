@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import 'archive_path_policy.dart';
 import 'archive_viewer_service.dart';
 import 'archive_viewer_file.dart';
 import 'archive_format_registry.dart';
@@ -512,20 +513,11 @@ class ArchiveService {
   }
 
   static String safeMemberPath(String name) {
-    final path = name.replaceAll('\\', '/');
-    final parts = path
-        .split('/')
-        .where((s) => s.isNotEmpty && s != '.')
-        .toList();
-    if (path.startsWith('/') ||
-        RegExp(r'^[a-zA-Z]:').hasMatch(path) ||
-        path.contains('\u0000') ||
-        parts.isEmpty ||
-        parts.contains('..') ||
-        parts.any((part) => part.contains(':'))) {
-      throw ArchiveViewException('Unsafe archive path: $name');
+    try {
+      return safeArchiveMemberPath(name);
+    } on ArchivePathException catch (error) {
+      throw ArchiveViewException(error.message);
     }
-    return parts.join('/');
   }
 
   static Future<void> _checkDestination(

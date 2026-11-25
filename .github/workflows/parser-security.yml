@@ -27,5 +27,6 @@ jobs:
       - name: Bounded fuzzing
         run: |
           dart run tool/fuzz_mail.dart 5000
+          dart run tool/fuzz_archive_names.dart 5000
           dart run tool/fuzz_archive_codecs.dart 5000
           dart run tool/fuzz_internal_viewer.dart
