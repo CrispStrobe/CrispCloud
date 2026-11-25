@@ -1928,7 +1928,7 @@
     "packages/quds_office_editor/lib/src/l10n/office_plural.dart": "ab03d9167712b77dc8d6fd2c0b23b4db41d4882286f8ae4ac17be17c05ec1aaa",
     "packages/quds_office_editor/lib/src/proofing/background_proofing.dart": "5bda5f39e67ace1bb344879f2b7d9d97bd324302fd77d6975f7f739d17e7f7ad",
     "packages/quds_office_editor/lib/src/proofing/platform_spelling_provider.dart": "cb44920bf146d07cd8901683a98f1d51b89893276b3e9a3ca0c4aa725d07ed3d",
-    "packages/quds_office_editor/lib/src/proofing/word_proofing.dart": "44be9fec4a88bb56bfab94f9cc51c86225b64235c74e444fffc8e7d3b6d7f40c",
+    "packages/quds_office_editor/lib/src/proofing/word_proofing.dart": "bacaacb650b57c333e7261a8b7af6b2be10417099a49087b797a4c2bdd02fead",
     "packages/quds_office_editor/lib/src/proofing/word_proofing_findings.dart": "11ce711934693cb0dc61814f8a7e3a59cdbd079fd433f1d12d08fe2d76edceca",
     "packages/quds_office_editor/lib/src/thesaurus/bundled_thesaurus.dart": "079256791293d85c3c34e6aca04f50f2e973917993de6753ec2c83d015021ae9",
     "packages/quds_office_editor/lib/src/thesaurus/bundled_thesaurus_manifest.dart": "147e0114e547226ae3b6f0e1bc02354385a7dfa99084fb35e5d9768578009cde",
@@ -2103,7 +2103,7 @@
     "packages/quds_office_editor/test/word_keyboard_context_geometry_test.dart": "28f2c84a152db3060f9c2436b90a3d4593f65eb968d4c4664893eabe2a456cac",
     "packages/quds_office_editor/test/word_keyboard_review_identity_test.dart": "772cb9cf67286e43dda0ab50611ec9e2d2fd9eeea29d397aa95075e36515f0f3",
     "packages/quds_office_editor/test/word_keyboard_review_test.dart": "4311a9b227e54b23829b8a43ec112897f024c63cc20780443b7be7c5dce03976",
-    "packages/quds_office_editor/test/word_language_detection_test.dart": "63f311d6008b62637b89957fb46f7f90985a0509c7222c908caec4b3fb204c73",
+    "packages/quds_office_editor/test/word_language_detection_test.dart": "4447c681c79988545ab5a4a5a369cb504479c539eeb9e78bc9e19864b7ba318c",
     "packages/quds_office_editor/test/word_live_proofing_session_test.dart": "c06f61b12e50d7a06489e5dd87fe11d3ab6db3f6bfaa4efd34c1e5933262f2ae",
     "packages/quds_office_editor/test/word_live_review_changes_test.dart": "675b1806b041d5440ebdf0ac9ed663bdc364c2ee5a6738977f8b6e46eac987b7",
     "packages/quds_office_editor/test/word_live_review_selection_test.dart": "68ce71cf8d5b3acae8b091cf6c550800bc604318d063b2e040b59858558278e0",
@@ -3516,7 +3516,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "0a5fceabcda6c674658840a93fc862e4cc4aa5d6",
+  "source_commit": "ed68ff95922f0a3849772f95d464414bd9a83fc8",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

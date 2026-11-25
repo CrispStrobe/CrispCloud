@@ -3040,7 +3040,6 @@ final class WordProofingSession extends ChangeNotifier {
         }
         final segments = <_Segment>[];
         var paragraphSkipped = generated || emptyField;
-        var languageIndex = 0;
         final uniformLanguage =
             languageRuns.firstOrNull?.language ?? documentLanguage;
         if (text.isNotEmpty &&
@@ -3067,6 +3066,15 @@ final class WordProofingSession extends ChangeNotifier {
             );
           }
 
+          // The detector returns script spans in text order. Follow them
+          // alongside the Word runs and resolve each intersection once.
+          final detectedSegments =
+              detection?.segments ?? const <DetectedSegment>[];
+          var detectedIndex = 0;
+          var languageIndex = 0;
+          var routedRun = -1;
+          DetectedSegment? routedDetection;
+          var tag = documentLanguage;
           var nextStart = 0;
           for (final end in GraphemeClusters.endOffsets(text)) {
             final start = nextStart;
@@ -3081,13 +3089,27 @@ final class WordProofingSession extends ChangeNotifier {
                 languageRuns[languageIndex].end <= start) {
               languageIndex++;
             }
-            final tag = languageIndex < languageRuns.length
-                ? _routedLanguage(
-                    languageRuns[languageIndex],
-                    detection?.segmentAt(start),
-                    document,
-                  )
-                : documentLanguage;
+            while (detectedIndex < detectedSegments.length &&
+                detectedSegments[detectedIndex].end <= start) {
+              detectedIndex++;
+            }
+            final detected =
+                detectedIndex < detectedSegments.length &&
+                    detectedSegments[detectedIndex].start <= start
+                ? detectedSegments[detectedIndex]
+                : null;
+            if (languageIndex != routedRun ||
+                !identical(detected, routedDetection)) {
+              routedRun = languageIndex;
+              routedDetection = detected;
+              tag = languageIndex < languageRuns.length
+                  ? _routedLanguage(
+                      languageRuns[languageIndex],
+                      detected,
+                      document,
+                    )
+                  : documentLanguage;
+            }
             if (segmentEnd != start ||
                 segmentLanguage != tag ||
                 barriers.contains(start)) {
