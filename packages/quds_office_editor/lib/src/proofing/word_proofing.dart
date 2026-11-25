@@ -3038,7 +3038,7 @@ final class WordProofingSession extends ChangeNotifier {
           if (stopAfter(previous.snapshot)) return true;
           continue;
         }
-        final ranges = <({int start, int end, String language})>[];
+        final segments = <_Segment>[];
         var paragraphSkipped = generated || emptyField;
         var languageIndex = 0;
         final uniformLanguage =
@@ -3048,10 +3048,25 @@ final class WordProofingSession extends ChangeNotifier {
             exclusions.isEmpty &&
             !barriers.any((offset) => offset > 0 && offset < text.length) &&
             languageRuns.every((run) => run.language == uniformLanguage)) {
-          ranges.add((start: 0, end: text.length, language: uniformLanguage));
+          segments.add(_Segment(0, text.length, text, uniformLanguage));
         } else {
           // A language or noProof boundary inside a Unicode grapheme must never
           // give a provider half a surrogate pair, accent, or joined emoji.
+          var segmentStart = 0;
+          var segmentEnd = 0;
+          var segmentLanguage = documentLanguage;
+          void finishSegment() {
+            if (segmentStart == segmentEnd) return;
+            segments.add(
+              _Segment(
+                segmentStart,
+                segmentEnd,
+                text.substring(segmentStart, segmentEnd),
+                segmentLanguage,
+              ),
+            );
+          }
+
           var nextStart = 0;
           for (final end in GraphemeClusters.endOffsets(text)) {
             final start = nextStart;
@@ -3073,26 +3088,17 @@ final class WordProofingSession extends ChangeNotifier {
                     document,
                   )
                 : documentLanguage;
-            if (!barriers.contains(start) &&
-                ranges.isNotEmpty &&
-                ranges.last.end == start &&
-                ranges.last.language == tag) {
-              final last = ranges.removeLast();
-              ranges.add((start: last.start, end: end, language: tag));
-            } else {
-              ranges.add((start: start, end: end, language: tag));
+            if (segmentEnd != start ||
+                segmentLanguage != tag ||
+                barriers.contains(start)) {
+              finishSegment();
+              segmentStart = start;
+              segmentLanguage = tag;
             }
+            segmentEnd = end;
           }
+          finishSegment();
         }
-        final segments = [
-          for (final range in ranges)
-            _Segment(
-              range.start,
-              range.end,
-              text.substring(range.start, range.end),
-              range.language,
-            ),
-        ];
         if (paragraphSkipped) skipped++;
         if (text.isEmpty && !paragraphSkipped) {
           segments.add(

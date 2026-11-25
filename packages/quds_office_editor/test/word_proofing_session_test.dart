@@ -290,6 +290,48 @@ void main() {
     },
   );
 
+  test('proofing segments preserve offsets at fields, exclusions and language changes', () async {
+    final paragraph = WmlParagraph(
+      inlines: [
+        WmlRun(text: 'Feler'),
+        WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+        WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+        WmlRun(text: ' Feler'),
+        WmlRun(text: ' ignored ', properties: WmlRunProps(noProof: true)),
+        WmlRun(text: 'Feler '),
+        WmlRun(
+          text: 'mistake',
+          properties: WmlRunProps(proofingLanguage: 'en-US'),
+        ),
+        WmlRun(text: ' Feler'),
+      ],
+    );
+    final h = _Harness(
+      document: WmlDocument(
+        proofingLanguage: 'de-DE',
+        sections: [
+          WmlSection(blocks: [paragraph]),
+        ],
+      ),
+    );
+
+    final summary = await h.session.checkNow();
+
+    expect(summary.skippedContentCount, 1);
+    expect(
+      h.provider.requests.map(
+        (request) => (request.text, request.startOffset, request.language),
+      ),
+      [
+        ('Feler', 0, 'de-DE'),
+        (' Feler', 5, 'de-DE'),
+        ('Feler ', 20, 'de-DE'),
+        ('mistake', 26, 'en-US'),
+        (' Feler', 33, 'de-DE'),
+      ],
+    );
+  });
+
   test(
     'language changes inside a combining cluster retain the full cluster and its first language',
     () async {
