@@ -119,6 +119,43 @@ void main() {
     );
   });
 
+  test('Word layout uses uniform run overrides and respects mixed words', () {
+    List<int> breaks(String? secondLanguage, {String? fallback = 'fr-FR'}) {
+      final document = WmlDocument.empty()
+        ..proofingLanguage = fallback
+        ..autoHyphenation = true;
+      document.sections.single
+        ..pageSize = const WmlPageSize(width: 80, height: 180)
+        ..margins = const WmlPageMargins(
+          left: 10,
+          right: 10,
+          top: 10,
+          bottom: 10,
+        );
+      document.paragraphs.single.inlines = [
+        WmlRun(
+          text: 'Silben',
+          properties: WmlRunProps(proofingLanguage: 'de-DE'),
+        ),
+        WmlRun(
+          text: 'trennung',
+          properties: WmlRunProps(proofingLanguage: secondLanguage),
+        ),
+      ];
+      final layout = WordLayoutEngine(font: null).layout(document);
+      return [
+        for (final page in layout.pages)
+          for (final line in page.lines)
+            for (final item in line.glyphs)
+              if (item.glyph.isDiscretionaryHyphen) item.glyph.logicalIndex,
+      ];
+    }
+
+    expect(breaks('de-DE'), isNotEmpty);
+    expect(breaks(null), isEmpty);
+    expect(breaks(null, fallback: null), isEmpty);
+  });
+
   test('Word layout protects German URLs without changing authored text', () {
     const text = 'https://Silbentrennung.example/Schifffahrt';
     final document = WmlDocument.empty(text: text)

@@ -3007,17 +3007,9 @@ class WordLayoutEngine {
         ? const <int>[]
         : _layoutDoc?.autoHyphenation == true &&
               paragraph.properties.suppressAutoHyphens != true
-        ? OfficeHyphenator.breakOffsets(
+        ? runIndex.hyphenationOffsets(
             text,
-            // Native Word can use a later German syllable boundary even
-            // when the source word already has an optional hyphen.
-            allowGermanSoftHyphenAlternatives: true,
-            language:
-                paragraph.properties.proofingLanguage ??
-                _layoutDoc?.proofingLanguage,
-            languageAt: (offset) =>
-                propsAt(offset).proofingLanguage ??
-                paragraph.properties.proofingLanguage ??
+            paragraph.properties.proofingLanguage ??
                 _layoutDoc?.proofingLanguage,
           )
         : const <int>[];

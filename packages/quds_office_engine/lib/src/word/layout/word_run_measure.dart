@@ -161,6 +161,26 @@ class _LayoutRunIndex {
 
   WmlRunProps propsAt(int offset) => at(offset)?.properties ?? _fallback;
 
+  List<int> hyphenationOffsets(String text, String? fallbackLanguage) {
+    final language =
+        _runs.firstOrNull?.properties.proofingLanguage ?? fallbackLanguage;
+    // In a uniform paragraph, every word has one language. Only mixed runs
+    // need to resolve source offsets and reject words crossing a boundary.
+    final mixed = _runs.any(
+      (run) =>
+          (run.properties.proofingLanguage ?? fallbackLanguage) != language,
+    );
+    return OfficeHyphenator.breakOffsets(
+      text,
+      language: mixed ? fallbackLanguage : language,
+      languageAt: mixed
+          ? (offset) => propsAt(offset).proofingLanguage ?? fallbackLanguage
+          : null,
+      // Word can use a later German syllable boundary beside an authored one.
+      allowGermanSoftHyphenAlternatives: true,
+    );
+  }
+
   WmlHyperlink? linkAt(int offset, WmlRun? run) =>
       _ends.isNotEmpty && offset >= _ends.last ? _lastLink : run?.hyperlink;
 
