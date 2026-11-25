@@ -4085,14 +4085,20 @@ class WordDeserializer {
       return '';
     }
     final int depth = reader.depth;
-    final StringBuffer buffer = StringBuffer();
+    var first = '';
+    StringBuffer? buffer;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType == XmlEventType.characters ||
           reader.eventType == XmlEventType.cdata) {
-        buffer.write(reader.text);
+        final text = reader.text;
+        if (first.isEmpty) {
+          first = text;
+        } else if (text.isNotEmpty) {
+          (buffer ??= StringBuffer(first)).write(text);
+        }
       }
     }
-    return buffer.toString();
+    return buffer?.toString() ?? first;
   }
 
   void _readParagraphBorders(XmlPullReader reader, WmlParagraphProps props) {

@@ -2,6 +2,17 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('DOCX keeps split text, entities, and preserved spaces in order', () {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package.getPart('/word/document.xml')!.writeText(
+      '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body><w:p>'
+      '<w:r><w:t/><w:t xml:space="preserve"> A&amp;<![CDATA[ B]]>'
+      '<!-- comment --> C</w:t><w:t>!</w:t></w:r>'
+      '</w:p></w:body></w:document>',
+    );
+    final doc = WordDeserializer().read(package);
+    expect(doc.paragraphs.single.text, ' A& B C!');
+  });
   test('xml:space retains whitespace-only text through DOM copy and write', () {
     final root = XmlDocument.parse(
       '<r><t xml:space="preserve"> \t </t></r>',
