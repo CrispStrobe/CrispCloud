@@ -56,6 +56,20 @@ const String _bulletNumbering =
     '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>';
 
 void main() {
+  test('cached direct properties preserve text on either side of rPr', () {
+    final doc = _open(
+      '<w:p><w:r><w:rPr><w:sz w:val="34"/></w:rPr>'
+      '<w:t>first</w:t></w:r>'
+      '<w:r><w:t>sec</w:t><w:rPr><w:sz w:val="34"/></w:rPr>'
+      '<w:t>ond</w:t></w:r></w:p>',
+    );
+    final runs = doc.paragraphs.single.inlines.whereType<WmlRun>().toList();
+    expect(runs.map((run) => run.text), ['first', 'second']);
+    expect(runs.map((run) => run.properties.fontSizeHalfPoints), [34, 34]);
+    runs.first.properties.fontSizeHalfPoints = 24;
+    expect(runs.last.properties.fontSizeHalfPoints, 34);
+  });
+
   test('cached run snapshots keep hyperlink defaults and edits local', () {
     final doc = _open(
       '<w:p>'

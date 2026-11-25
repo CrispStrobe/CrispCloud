@@ -1167,31 +1167,36 @@ class WordDeserializer {
     String? boundaryRunPropertiesXml;
     var hasOrdinaryRunIdentity = false;
     var hasNonTextContent = false;
-    final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
+    WmlRun? activeRun;
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
+      final name = reader.localName;
       if (reader.depth == depth + 1) {
         final ordinary =
             reader.namespaceUri == OfficeNamespaces.w &&
-            const {'rPr', 't', 'delText'}.contains(reader.localName);
+            const {'rPr', 't', 'delText'}.contains(name);
         hasOrdinaryRunIdentity |= ordinary;
         hasNonTextContent |= !ordinary;
       }
-      if (reader.localName == 'rPr') {
-        if (boundaryRunPropertiesXml == null) {
-          final properties = _readRunProperties(reader, run.properties);
-          run.properties = properties.props;
-          formattingChange = properties.change;
-          boundaryRunPropertiesXml = properties.sourceXml;
-        } else {
-          final properties = _readRPr(reader, run.properties);
-          formattingChange = properties.change;
-          boundaryRunPropertiesXml = properties.sourceXml;
-        }
-      } else if (reader.localName == 't' || reader.localName == 'delText') {
+      if (name == 'rPr' && boundaryRunPropertiesXml == null) {
+        // A first rPr can supply the run's properties before allocating
+        // defaults that would be discarded on a template cache hit.
+        final properties = _readRunProperties(reader, activeRun?.properties);
+        (activeRun ??= WmlRun(properties: properties.props)).properties =
+            properties.props;
+        formattingChange = properties.change;
+        boundaryRunPropertiesXml = properties.sourceXml;
+        continue;
+      }
+      final run = activeRun ??= (WmlRun()..properties.sourcePropertiesXml = '');
+      if (name == 'rPr') {
+        final properties = _readRPr(reader, run.properties);
+        formattingChange = properties.change;
+        boundaryRunPropertiesXml = properties.sourceXml;
+      } else if (name == 't' || name == 'delText') {
         final String text = _elementText(reader);
         // A PAGE instruction elsewhere in this paragraph must not consume a
         // numeric citation cache or ordinary text. Suppress a cached page
@@ -1411,6 +1416,8 @@ class WordDeserializer {
         }
       }
     }
+    final run = activeRun;
+    if (run == null) return;
     // An authored empty text/property packet still owns its insertion style.
     // Keep it through save/reopen, including an empty rPr inheriting a style.
     // Bare runs and structural-only field, note, drawing or comment markers
@@ -2613,7 +2620,7 @@ class WordDeserializer {
   }
 
   ({WmlRunProps props, XmlElement? change, String sourceXml})
-  _readRunProperties(XmlPullReader reader, WmlRunProps props) {
+  _readRunProperties(XmlPullReader reader, WmlRunProps? initial) {
     final namespaces = reader.inScopeNamespaces;
     final projected = reader is WordMarkupCompatibilityReader;
     final fragment = reader.readRawElement();
@@ -2635,6 +2642,7 @@ class WordDeserializer {
           )
         : XmlPullReader(fragment, inheritedNamespaces: namespaces);
     replay.next();
+    final props = initial ?? WmlRunProps();
     final result = _readRPr(replay, props);
     if (cacheable && result.change == null && _runPropertyCache.length < 256) {
       _runPropertyCache[key] = (
