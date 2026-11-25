@@ -8,18 +8,24 @@
 # fresh processes keep any hang short and attributable to one group.
 #
 # Usage: tool/run_test_groups.sh [--groups N] [--limit 20m] [--coverage DIR]
+#                                 [--warn-only]
 #   --coverage DIR  also collect coverage, one lcov file per group in DIR
 #                   (use many small groups, about 50 files each).
+#   --warn-only     report failed groups as warnings and exit 0. For the
+#                   coverage job only: the VM can still crash in some groups
+#                   with --coverage, and correctness is gated by the plain run.
 set -uo pipefail
 
 groups=4
 limit=20m
 coverage_dir=
+warn_only=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --groups) groups=$2; shift 2 ;;
     --limit) limit=$2; shift 2 ;;
     --coverage) coverage_dir=$2; shift 2 ;;
+    --warn-only) warn_only=true; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -55,6 +61,10 @@ done
 git checkout -- pubspec.yaml
 
 if [ "${#failed[@]}" -gt 0 ]; then
+  if [ "$warn_only" = true ]; then
+    echo "::warning::Test group(s) failed: ${failed[*]} of $groups (not gating)"
+    exit 0
+  fi
   echo "::error::Test group(s) failed: ${failed[*]} of $groups"
   exit 1
 fi

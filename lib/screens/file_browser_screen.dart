@@ -1222,6 +1222,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
           ],
         ),
+        // Customize menus, the user guide and the other fixed browser
+        // commands stay in the application menu while an editor or terminal
+        // owns the menu bar (docs/main-menus.md). Quit stays last.
+        PlatformMenuItemGroup(
+          members: [
+            for (final command in _fixedBrowserMenuBindings(
+              context,
+              ref,
+            ).where((command) => command.id != 'settings'))
+              command.platform(),
+          ],
+        ),
         if (defaultTargetPlatform == TargetPlatform.macOS)
           const PlatformMenuItemGroup(
             members: <PlatformMenuItem>[

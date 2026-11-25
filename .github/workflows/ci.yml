@@ -333,7 +333,10 @@ jobs:
       - run: flutter pub get
 
       - name: Tests with coverage in small groups
-        run: bash tool/run_test_groups.sh --groups 20 --limit 15m --coverage coverage/groups
+        # Some groups still crash the VM under --coverage (2026-11-25, even at
+        # ~50 files). Keep the coverage that was collected; the plain test run
+        # in "Analyze + Test" gates correctness.
+        run: bash tool/run_test_groups.sh --groups 20 --limit 15m --coverage coverage/groups --warn-only
 
       - name: Merge coverage
         if: always()

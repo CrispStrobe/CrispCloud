@@ -155,6 +155,9 @@ void main() {
       expect(find.byIcon(Icons.error), findsNothing);
       expect(find.text('1 waiting for a decision'), findsOneWidget);
       expect(find.byTooltip('Pause'), findsNothing);
+      // The header grows with queue controls (Empty queue); rows below the
+      // fold are built lazily, so scroll to the job as a user would.
+      await _scrollTo(tester, find.byTooltip('Resolve conflict'));
       expect(find.byTooltip('Resolve conflict'), findsOneWidget);
       await tester.ensureVisible(find.byTooltip('Resolve conflict'));
       await tester.pumpAndSettle();
@@ -277,6 +280,7 @@ void main() {
     'operations panel retains recovery and concurrency controls after hiding rows',
     (tester) async {
       await show(tester, const OperationsPanel());
+      await _scrollTo(tester, find.byTooltip('Review saved transfer'));
       expect(find.byTooltip('Review saved transfer'), findsOneWidget);
       expect(find.text('History and recovery'), findsOneWidget);
       expect(find.text('Parallel transfers'), findsOneWidget);
@@ -287,4 +291,14 @@ void main() {
       expect(find.text('Saved transfers: 1'), findsOneWidget);
     },
   );
+}
+
+Future<void> _scrollTo(WidgetTester tester, Finder target) async {
+  if (target.evaluate().isNotEmpty) return;
+  await tester.scrollUntilVisible(
+    target,
+    120,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
 }

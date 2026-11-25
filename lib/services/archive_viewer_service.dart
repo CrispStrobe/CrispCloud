@@ -542,6 +542,7 @@ Future<ViewerArchive> _openCompressedSource(
         : kArchiveReadLimit;
     final decoded = await _offUiIsolate(
       () => decodeArchiveLz4(input, maxOutputBytes: limit),
+      inputBytes: input.length,
       debugName: 'archive-preview-lz4',
     );
     decompressed = decoded.bytes;
@@ -1567,14 +1568,25 @@ Future<({Uint8List data, String innerName})> decompressSingleFileForPreview(
   int maxBytes = kArchiveReadLimit,
 }) => _offUiIsolate(
   () => decompressSingleFile(bytes, name, maxBytes: maxBytes),
+  inputBytes: bytes.length,
   debugName: 'archive-preview-decompress',
 );
 
-/// Runs [work] on a background isolate; inline where isolates are absent.
+/// Compressed inputs below this size decode inline: spawning an isolate costs
+/// more than the work, and output stays bounded by the caller's limit.
+const int _inlineDecodeInputBytes = 256 * 1024;
+
+/// Runs [work] on a background isolate; inline for small inputs and where
+/// isolates are absent.
 ///
 /// Uses dart:isolate rather than Flutter's compute so this service stays
 /// pure Dart: the parser fuzzers (`dart run tool/fuzz_*.dart`) import it.
-Future<T> _offUiIsolate<T>(T Function() work, {String? debugName}) async {
+Future<T> _offUiIsolate<T>(
+  T Function() work, {
+  required int inputBytes,
+  String? debugName,
+}) async {
+  if (inputBytes < _inlineDecodeInputBytes) return work();
   try {
     return await Isolate.run(work, debugName: debugName);
   } on UnsupportedError {
