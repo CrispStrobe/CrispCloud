@@ -57,7 +57,8 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Analysis plus four ~7-minute test groups (matches ci.yml).
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@v5
 
@@ -85,23 +86,33 @@ jobs:
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
+      - name: Install trusted distro SQLite for tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
+
       - run: flutter pub get
+
+      # Root analysis includes the vendored packages' tests. Without their own
+      # dependency graphs, package:test is unresolved and every lint built on
+      # its types becomes an error (the nightly failed this way from 11-13).
+      - name: Resolve vendored package development dependencies
+        run: |
+          (cd packages/quds_office_engine && dart pub get)
+          (cd packages/quds_reports && dart pub get)
+          (cd packages/quds_office_editor && flutter pub get)
+          (cd packages/quds_proofing_spacy && dart pub get)
+          (cd packages/dart_pdf_editor && flutter pub get)
+          (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
+          (cd packages/pdf_document && dart pub get)
+          (cd packages/pdf_operations && dart pub get)
 
       - name: Verify reviewed SSH runtime
         run: python3 tool/verify_dartssh2_vendor.py --require-tracked
 
-      - name: Analyze
-        run: |
-          flutter analyze 2>&1 | tee analyze.log || true
-          if grep -q "  error • " analyze.log; then
-            echo "::error::flutter analyze surfaced errors"
-            exit 1
-          fi
+      - name: Analyze (errors fail the build, as in ci.yml)
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: Fast deterministic tests
-        run: >-
-          flutter test --concurrency=4
-          --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
+        run: bash tool/run_test_groups.sh --groups 4 --limit 20m
 
   # ---------- Native hardware crypto (macOS) ----------
   # The headless cross-path correctness tests run in `flutter test` above (Linux

@@ -356,6 +356,8 @@ jobs:
       - name: Record the submitted package's crypto release evidence
         run: |
           set -euo pipefail
+          # Older runner json gems reformat local podspec checksums only.
+          python3 tool/macos_podfile_lock_guard.py
           mkdir -p build/export-compliance
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \

@@ -801,6 +801,7 @@
     "linux/runner/file_operations.h",
     "linux/runner/my_application.cc",
     "macos/Podfile.lock",
+    "tool/macos_podfile_lock_guard.py",
     "macos/Runner/AppDelegate.swift",
     "macos/Runner/CustomKeychainStore.swift",
     "macos/Runner/Info.plist",
