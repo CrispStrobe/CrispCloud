@@ -357,21 +357,22 @@ abstract final class LineBreaker {
       final to = measured.paintedTo;
       final slice = measured.glyphs;
       var width = measured.width;
-      var spaces = 0;
-      for (final ShapedGlyph g in slice) {
-        if (g.isSpace) {
-          spaces++;
-        }
-      }
       var ratio = 0.0;
       final limit = i == 0 ? firstLineWidth ?? maxWidth : maxWidth;
-      if (justify && spaces > 0 && width < limit && i != breaks.length - 2) {
-        ratio = (limit - width) / (spaces * spaceStretch);
-        width = limit;
+      if (justify && width < limit && i != breaks.length - 2) {
+        var spaces = 0;
+        for (final glyph in slice) {
+          if (glyph.isSpace) spaces++;
+        }
+        if (spaces > 0) {
+          ratio = (limit - width) / (spaces * spaceStretch);
+          width = limit;
+        }
       }
       int logStart = 0x7fffffff;
       int logEnd = 0;
-      for (final ShapedGlyph g in logical.sublist(from, to)) {
+      for (var index = from; index < to; index++) {
+        final g = logical[index];
         if (g.logicalIndex < logStart) {
           logStart = g.logicalIndex;
         }
@@ -1282,6 +1283,8 @@ class PreparedLineBreaker {
   );
   double? _plannedWidth;
   final Map<int, int> _plannedBreaks = {};
+  int _scannedFrom = 0;
+  int _scannedHardEnd = -1;
 
   /// Return one line and the exact UTF-16 offset consumed, including a hard
   /// break or soft trailing spaces. A CRLF is one hard break; blank lines remain.
@@ -1304,11 +1307,16 @@ class PreparedLineBreaker {
       }
     }
     final from = low;
-    var hard = from;
-    while (hard < _logical.length &&
-        _logical[hard].codePoint != 0x0A &&
-        _logical[hard].codePoint != 0x0D) {
-      hard++;
+    var hard = _scannedHardEnd;
+    if (from < _scannedFrom || from > hard) {
+      hard = from;
+      while (hard < _logical.length &&
+          _logical[hard].codePoint != 0x0A &&
+          _logical[hard].codePoint != 0x0D) {
+        hard++;
+      }
+      _scannedFrom = from;
+      _scannedHardEnd = hard;
     }
     var chunkEnd = _text.length;
     if (hard < _logical.length) {
@@ -1331,12 +1339,13 @@ class PreparedLineBreaker {
         nextOffset: chunkEnd,
       );
     }
-    final chunk = _logical.sublist(from, hard);
+    final chunkLength = hard - from;
     if (_plannedWidth != maxWidth) {
       _plannedWidth = maxWidth;
       _plannedBreaks.clear();
     }
     if (!_plannedBreaks.containsKey(from)) {
+      final chunk = _logical.sublist(from, hard);
       var points = _balanceLines
           ? LineBreaker._knuthPlass(
               chunk,
@@ -1388,22 +1397,25 @@ class PreparedLineBreaker {
     final painted = measured.paintedTo - from;
     final glyphs = measured.glyphs;
     var width = measured.width;
-    var spaces = 0;
     var logicalStart = _text.length;
     var logicalEnd = start;
-    for (final glyph in glyphs) {
-      if (glyph.isSpace) spaces++;
-    }
-    for (final glyph in chunk.take(painted)) {
+    for (var index = from; index < measured.paintedTo; index++) {
+      final glyph = _logical[index];
       logicalStart = math.min(logicalStart, glyph.logicalIndex);
       final source = _text.codeUnitAt(glyph.logicalIndex);
       final units = source >= 0xD800 && source <= 0xDBFF ? 2 : 1;
       logicalEnd = math.max(logicalEnd, glyph.logicalIndex + units);
     }
     var ratio = 0.0;
-    if (_justify && spaces > 0 && width < maxWidth && consumed < chunk.length) {
-      ratio = (maxWidth - width) / (spaces * _stretch);
-      width = maxWidth;
+    if (_justify && width < maxWidth && consumed < chunkLength) {
+      var spaces = 0;
+      for (final glyph in glyphs) {
+        if (glyph.isSpace) spaces++;
+      }
+      if (spaces > 0) {
+        ratio = (maxWidth - width) / (spaces * _stretch);
+        width = maxWidth;
+      }
     }
     return (
       line: BrokenLine(
@@ -1413,8 +1425,8 @@ class PreparedLineBreaker {
         logicalEnd: logicalEnd,
         justificationRatio: ratio,
       ),
-      nextOffset: consumed < chunk.length
-          ? chunk[consumed].logicalIndex
+      nextOffset: consumed < chunkLength
+          ? _logical[from + consumed].logicalIndex
           : chunkEnd,
     );
   }

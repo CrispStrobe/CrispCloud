@@ -2316,7 +2316,7 @@
     "packages/quds_office_engine/lib/src/bidi/german_hyphenator.dart": "f5a419083210b80a1a00f5d00d77caa04328abdc5b9e4dd010b8ef2b77642496",
     "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "b2a62ffd7f3d97d4f8567fe55b2dfef4435d06e079e44b4c543b2494f8864ead",
     "packages/quds_office_engine/lib/src/bidi/hyphenation_words.dart": "c31b1cf2bcd3a8fe3ba194ff13e88fc6a2f79b4635c2e934ffc132f5c35464ea",
-    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "e13981f3bbbf2a54bf39cf967a84a0b42efe8bd1e6fb22af95581eba507ae974",
+    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "df12cd5f8b0d02fabd7989bd398da48870771a430c525a05ce92e409150b9cd8",
     "packages/quds_office_engine/lib/src/bidi/office_hyphenator.dart": "1af8eed059dfcb9eaa33d9e884ca7c8d073b1b52af22178de9751d9323072a00",
     "packages/quds_office_engine/lib/src/bidi/uax9_bidi.dart": "07d01099f18303258bb99a4d32f343bbeeaeee681d72b3244ca6bebe8c6ec113",
     "packages/quds_office_engine/lib/src/builders/docx_builder.dart": "43a52e550eebd74900bb33d6596326282cb5c3f73e49b64dc8a1c1efd42f1f8b",
@@ -3093,7 +3093,7 @@
     "packages/quds_office_engine/test/support/zotero_converter_fixtures.dart": "be2e4174c13130abe31dd5a101a55d7a9c3404d0594399202632e19000ba421f",
     "packages/quds_office_engine/test/table_border_fidelity_test.dart": "c3372072cf8872f0388a54e9967bab0c49081f48de3d4cb6fc58e43da5df9abb",
     "packages/quds_office_engine/test/table_grid_steps_test.dart": "fed913b1156ec039506047827e671b5b527ed616fbfc11dae93bf03da4a5af0b",
-    "packages/quds_office_engine/test/variable_line_breaker_test.dart": "4507476c9ee73af58560a692b75ce73a47df44365803d1795d33ba0ca20233e7",
+    "packages/quds_office_engine/test/variable_line_breaker_test.dart": "614a705a053b96807f0e5db4576b179be4931bf96e1ff294477d8756b29759bc",
     "packages/quds_office_engine/test/wave4_platform_test.dart": "36f99365f78f4f896e463b50436bbf370f031eae284915620b70928d8d043476",
     "packages/quds_office_engine/test/wml_run_edit_test.dart": "6c324dee3a5797d14dac406d90dde0594d91617e07e4abddecd81ca4acf0f30f",
     "packages/quds_office_engine/test/word_all_caps_test.dart": "675c1f767e3f3246e9fc47e4e15c9b3e5382d06bd95ef03b4bcace14000d3d87",
@@ -3520,7 +3520,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "607e56f7b9368cbd86747da38d30b01508f3376a",
+  "source_commit": "4a2e493a7f616ce1050c2191ef443d17ee843264",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

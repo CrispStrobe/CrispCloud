@@ -21,6 +21,37 @@ List<BrokenLine> _prepared(String text, double Function(int) width) {
 }
 
 void main() {
+  test('prepared lines can revisit earlier chunks after width changes', () {
+    const text = 'First words together\r\nSecond words apart\nThird';
+    PreparedLineBreaker prepare() => LineBreaker.prepare(
+      text: text,
+      widthOf: _width,
+      balanceLines: false,
+    );
+    final reused = prepare();
+    final second = text.indexOf('Second');
+    for (final (offset, width) in [
+      (0, 42.0),
+      (second, 54.0),
+      (second + 7, 54.0),
+      (text.indexOf('Third'), 54.0),
+      (6, 42.0),
+      (text.indexOf('\r'), 42.0),
+      (second, 54.0),
+    ]) {
+      final actual = reused.breakNext(start: offset, maxWidth: width);
+      final fresh = prepare().breakNext(start: offset, maxWidth: width);
+      expect(actual.nextOffset, fresh.nextOffset);
+      expect(actual.line.logicalStart, fresh.line.logicalStart);
+      expect(actual.line.logicalEnd, fresh.line.logicalEnd);
+      expect(actual.line.width, fresh.line.width);
+      expect(
+        actual.line.glyphs.map((glyph) => glyph.logicalIndex),
+        fresh.line.glyphs.map((glyph) => glyph.logicalIndex),
+      );
+    }
+  });
+
   for (final text in [
     'Alpha beta gamma delta epsilon zeta eta theta iota kappa.',
     'First\r\n\r\nSecond\n\nThird\n',
