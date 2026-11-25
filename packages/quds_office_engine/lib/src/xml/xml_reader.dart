@@ -358,8 +358,10 @@ class XmlPullReader {
     _nameStart = _pos;
     _prefixStart = _pos;
     _prefixEnd = _pos;
-    while (_pos < _source.length && _isNameChar(_source.codeUnitAt(_pos))) {
-      if (_source.codeUnitAt(_pos) == _colon && _prefixEnd == _prefixStart) {
+    while (_pos < _source.length) {
+      final ch = _source.codeUnitAt(_pos);
+      if (!_isNameChar(ch)) break;
+      if (ch == _colon && _prefixEnd == _prefixStart) {
         _prefixEnd = _pos;
       }
       _pos++;
@@ -381,8 +383,10 @@ class XmlPullReader {
   _AttrSlice _readAttribute() {
     final int qStart = _pos;
     int prefixEnd = qStart;
-    while (_pos < _source.length && _isNameChar(_source.codeUnitAt(_pos))) {
-      if (_source.codeUnitAt(_pos) == _colon && prefixEnd == qStart) {
+    while (_pos < _source.length) {
+      final ch = _source.codeUnitAt(_pos);
+      if (!_isNameChar(ch)) break;
+      if (ch == _colon && prefixEnd == qStart) {
         prefixEnd = _pos;
       }
       _pos++;
@@ -401,8 +405,10 @@ class XmlPullReader {
     _pos++;
     final int vStart = _pos;
     bool hasEntities = false;
-    while (_pos < _source.length && _source.codeUnitAt(_pos) != quote) {
-      if (_source.codeUnitAt(_pos) == _amp) {
+    while (_pos < _source.length) {
+      final ch = _source.codeUnitAt(_pos);
+      if (ch == quote) break;
+      if (ch == _amp) {
         hasEntities = true;
       }
       _pos++;
@@ -426,8 +432,10 @@ class XmlPullReader {
   void _readText() {
     _type = XmlEventType.characters;
     _textStart = _pos;
-    while (_pos < _source.length && _source.codeUnitAt(_pos) != _lt) {
-      if (_source.codeUnitAt(_pos) == _amp) {
+    while (_pos < _source.length) {
+      final ch = _source.codeUnitAt(_pos);
+      if (ch == _lt) break;
+      if (ch == _amp) {
         _textHasEntities = true;
       }
       _pos++;
