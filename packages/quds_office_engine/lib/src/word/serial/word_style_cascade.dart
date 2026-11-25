@@ -1229,13 +1229,15 @@ class _StyleCascade {
       } else {
         resolved.explicitProperties.remove('shd:highlight');
       }
-      // A copy of a cached run already owns its snapshot. Link and note
-      // defaults depend on the inline, so keep them out of the style template.
-      if (resolved.importedValues == null || hasLinkDefaults || hasNoteBaseline) {
+      // Cached runs share a baseline until edited. Link and note defaults
+      // depend on the inline, so keep them out of the style template.
+      if (resolved.importedValues == null ||
+          hasLinkDefaults ||
+          hasNoteBaseline) {
         final values = WordPropertyIo.runValues(resolved);
         resolved.importedValues = values;
         if (canCache && !hasLinkDefaults && !hasNoteBaseline) {
-          _runStyles[key]?.properties.importedValues = Map.of(values);
+          _runStyles[key]?.properties.captureImportedValues(values);
         }
       }
       if (inline is WmlRun) {

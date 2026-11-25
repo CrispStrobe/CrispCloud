@@ -34,6 +34,47 @@ Map<String, String?> _sizeProperties(String xml) => <String, String?>{
 };
 
 void main() {
+  test('cached run baselines detach on edits and survive sparse export', () {
+    final package = _fontSizeFixture('', defaults: '<w:b/>');
+    final part = package.getPart('/word/document.xml')!;
+    part.writeText(
+      part.readText().replaceFirst(
+        '</w:p>',
+        '<w:r><w:rPr/><w:t> Second</w:t></w:r>'
+            '<w:r><w:rPr/><w:t> Third</w:t></w:r></w:p>',
+      ),
+    );
+    final document = WordDeserializer().read(package);
+    final runs = document.paragraphs.single.inlines
+        .whereType<WmlRun>()
+        .toList();
+    final second = runs[1].properties;
+    final third = runs[2].properties;
+    expect(second.importedValues, third.importedValues);
+    expect(identical(second.importedValues, third.importedValues), isFalse);
+
+    final detached = second.copy().importedValues!;
+    final keys = detached.keys;
+    expect(detached.remove('b'), 'true');
+    expect(keys, isNot(contains('b')));
+    detached['b'] = 'false';
+    expect(keys, contains('b'));
+    expect(second.importedValues!['b'], 'true');
+
+    second.importedValues!.remove('b');
+    second.bold = false;
+    expect(third.importedValues!['b'], 'true');
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(document),
+    );
+    expect(
+      reopened.paragraphs.single.inlines.whereType<WmlRun>().map(
+        (run) => run.properties.bold,
+      ),
+      [true, false, true],
+    );
+  });
+
   group('regular font size projection', () {
     for (final (name, direct, defaults, expected)
         in <(String, String, String, int)>[

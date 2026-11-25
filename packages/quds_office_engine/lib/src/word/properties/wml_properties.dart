@@ -1,6 +1,8 @@
 // WordprocessingML paragraph / run / table properties.
 // Measurements are stored in points (1 twip = 1/20 pt, w:sz is half-points).
 
+import 'dart:collection';
+
 /// Enum WmlJustification.
 enum WmlJustification {
   left,
@@ -679,6 +681,19 @@ class WmlRunProps {
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
 
+  /// Stores a comparison baseline that copies can share until edited.
+  void captureImportedValues(Map<String, String> values) {
+    importedValues = _RunImportedValues(Map.of(values));
+  }
+
+  Map<String, String>? _copyImportedValues() {
+    final values = importedValues;
+    if (values is _RunImportedValues && values._shared) {
+      return _RunImportedValues(values._values);
+    }
+    return values == null ? null : Map.of(values);
+  }
+
   /// A pending native formatting revision on an imported empty run.
   ///
   /// Its complete history remains in the document revision model. This
@@ -814,9 +829,54 @@ class WmlRunProps {
         ..explicitProperties.addAll(explicitProperties)
         ..sourcePropertiesXml = sourcePropertiesXml
         ..hasEmptyFormattingRevision = hasEmptyFormattingRevision
-        ..importedValues = importedValues == null
-            ? null
-            : Map.of(importedValues!);
+        ..importedValues = _copyImportedValues();
+}
+
+// Cached style projections share a frozen comparison map. Each run keeps
+// its own mutable facade so edits cannot alter a sibling run's baseline.
+final class _RunImportedValues extends MapBase<String, String> {
+  _RunImportedValues(this._values);
+
+  Map<String, String> _values;
+  bool _shared = true;
+
+  Map<String, String> _writable() {
+    if (_shared) {
+      _values = Map.of(_values);
+      _shared = false;
+    }
+    return _values;
+  }
+
+  @override
+  String? operator [](Object? key) => _values[key];
+
+  @override
+  void operator []=(String key, String value) {
+    _writable()[key] = value;
+  }
+
+  @override
+  String? remove(Object? key) => _writable().remove(key);
+
+  @override
+  void clear() => _writable().clear();
+
+  @override
+  int get length => _values.length;
+
+  @override
+  bool containsKey(Object? key) => _values.containsKey(key);
+
+  @override
+  void forEach(void Function(String key, String value) action) {
+    _values.forEach(action);
+  }
+
+  @override
+  Iterable<String> get keys sync* {
+    yield* _values.keys;
+  }
 }
 
 /// Physical padding between a table cell border and its content, in points.
