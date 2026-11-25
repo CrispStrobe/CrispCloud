@@ -31,6 +31,7 @@ class _StyleCascade {
   // formatting can depend on cell coordinates and uses the normal path.
   final _runStyles = <(String?, String?, String), _RunStyleProjection>{};
   final _paragraphStyles = <(String?, String), _ParagraphStyleProjection>{};
+  final _styleChains = <String, List<XmlElement>>{};
 
   bool _load({bool includeTheme = true}) {
     final package = document.package;
@@ -661,21 +662,31 @@ class _StyleCascade {
     ];
   }
 
-  List<XmlElement> chain(String? id, [Set<String>? seen]) {
-    if (id == null || !styles.containsKey(id)) return [];
-    seen ??= {};
-    if (!seen.add(id)) return []; // Invalid cyclic input must terminate.
-    final style = styles[id]!;
-    return [
-      ...chain(
-        _wordChild(
-          style,
-          'basedOn',
-        )?.getAttribute('val', namespaceUri: OfficeNamespaces.w),
-        seen,
-      ),
-      style,
-    ];
+  List<XmlElement> chain(String? id) {
+    if (id == null) return const [];
+    final cached = _styleChains[id];
+    if (cached != null) return cached;
+    if (!styles.containsKey(id)) return const [];
+
+    final derivedFirst = <XmlElement>[];
+    final seen = <String>{};
+    // Build from this root so a cyclic source keeps the same precedence
+    // regardless of which other style was resolved first.
+    String? next = id;
+    while (next != null && seen.add(next)) {
+      final style = styles[next];
+      if (style == null) break;
+      derivedFirst.add(style);
+      next = _wordChild(
+        style,
+        'basedOn',
+      )?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    }
+    final resolved = List<XmlElement>.unmodifiable(derivedFirst.reversed);
+    if (resolved.length <= 64 && _styleChains.length < 256) {
+      _styleChains[id] = resolved;
+    }
+    return resolved;
   }
 
   static XmlElement _numberingProjection(XmlElement source) {
@@ -1076,8 +1087,9 @@ class _StyleCascade {
     }
     final source = p.properties.sourcePropertiesXml ?? '';
     final id = p.properties.styleId ?? defaultParagraph;
-    final paragraphChain = chain(id);
-    final paragraphRunStyles = paragraphChain
+    // Cached paragraph and run projections need no inheritance traversal.
+    late final paragraphChain = chain(id);
+    late final paragraphRunStyles = paragraphChain
         .map((style) => _wordChild(style, 'rPr'))
         .whereType<XmlElement>()
         .toSet();

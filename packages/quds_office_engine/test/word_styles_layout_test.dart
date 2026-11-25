@@ -56,6 +56,27 @@ const String _bulletNumbering =
     '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>';
 
 void main() {
+  test('cyclic styles retain precedence for each requested style', () {
+    final doc = _open(
+      [
+        for (final style in ['A', 'B', 'A', 'B'])
+          '<w:p><w:pPr><w:pStyle w:val="$style"/></w:pPr>'
+          '<w:r><w:t>Body</w:t></w:r></w:p>',
+      ].join(),
+      styles:
+          '<w:style w:type="paragraph" w:styleId="A"><w:basedOn w:val="B"/>'
+          '<w:rPr><w:color w:val="CC0000"/></w:rPr></w:style>'
+          '<w:style w:type="paragraph" w:styleId="B"><w:basedOn w:val="A"/>'
+          '<w:rPr><w:color w:val="0000CC"/></w:rPr></w:style>',
+    );
+    expect(
+      doc.paragraphs.map(
+        (paragraph) => (paragraph.inlines.single as WmlRun).properties.color,
+      ),
+      ['CC0000', '0000CC', 'CC0000', '0000CC'],
+    );
+  });
+
   test('empty direct paragraph flags enable settings disabled by a style', () {
     final doc = _open(
       '<w:p><w:pPr><w:pStyle w:val="Disabled"/>'
