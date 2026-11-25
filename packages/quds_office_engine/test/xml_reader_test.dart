@@ -63,6 +63,26 @@ void main() {
       );
     });
 
+    test('event names survive empty tags and follow namespace scope', () {
+      final reader = XmlPullReader(
+        '<root xmlns:p="urn:outer"><p:child xmlns:p="urn:inner"/>'
+        '<p:sibling/></root>',
+      );
+      expect(reader.next(), isTrue);
+      expect(reader.localName, 'root');
+      expect(reader.next(), isTrue);
+      expect(reader.localName, 'child');
+      expect(reader.namespaceUri, 'urn:inner');
+      expect(reader.next(), isTrue);
+      expect(reader.eventType, XmlEventType.endElement);
+      expect(reader.localName, 'child');
+      expect(reader.qualifiedName, 'p:child');
+      expect(reader.namespaceUri, 'urn:outer');
+      expect(reader.next(), isTrue);
+      expect(reader.localName, 'sibling');
+      expect(reader.namespaceUri, 'urn:outer');
+    });
+
     test('handles empty elements, comments, and CDATA', () {
       const String xml =
           '<root><!--c--><empty attr="x"/><![CDATA[raw <&>]]></root>';

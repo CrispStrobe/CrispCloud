@@ -51,6 +51,10 @@ class XmlPullReader {
   int _localEnd = 0;
   int _prefixStart = 0;
   int _prefixEnd = 0;
+  String? _qualifiedName;
+  String? _localName;
+  String? _prefix;
+  String? _namespaceUri;
   int _textStart = 0;
   int _textEnd = 0;
   bool _textHasEntities = false;
@@ -84,14 +88,14 @@ class XmlPullReader {
   }
 
   /// qualifiedName API.
-  String get qualifiedName => _slice(_nameStart, _nameEnd);
+  String get qualifiedName => _qualifiedName ??= _slice(_nameStart, _nameEnd);
 
   /// localName API.
-  String get localName => _slice(_localStart, _localEnd);
+  String get localName => _localName ??= _slice(_localStart, _localEnd);
 
   /// prefix API.
   String get prefix =>
-      _prefixEnd > _prefixStart ? _slice(_prefixStart, _prefixEnd) : '';
+      _prefix ??= _prefixEnd > _prefixStart ? _slice(_prefixStart, _prefixEnd) : '';
 
   /// namespaceUri API.
   String get namespaceUri {
@@ -99,7 +103,7 @@ class XmlPullReader {
         _type != XmlEventType.endElement) {
       return '';
     }
-    return _resolvePrefix(prefix);
+    return _namespaceUri ??= _resolvePrefix(prefix);
   }
 
   /// Resolves a prefix in the current element's namespace scope.
@@ -141,6 +145,9 @@ class XmlPullReader {
     if (_documentEnded) {
       return false;
     }
+    // The synthetic closing event retains the token's name but pops its
+    // namespace scope, so resolve the URI again for that event.
+    _namespaceUri = null;
     if (_emptyElement) {
       _emptyElement = false;
       _type = XmlEventType.endElement;
@@ -155,6 +162,7 @@ class XmlPullReader {
     }
 
     _attrs.clear();
+    _qualifiedName = _localName = _prefix = null;
     _emptyElement = false;
     _textHasEntities = false;
     _nameStart = _nameEnd = _localStart = _localEnd = 0;
@@ -339,6 +347,7 @@ class XmlPullReader {
         _pos,
       );
     }
+    _qualifiedName = open;
     _depth = _elementStack.length;
     if (_nsStack.length > 1) {
       _nsStack.removeLast();
