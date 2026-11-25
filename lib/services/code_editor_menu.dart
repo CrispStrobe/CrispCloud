@@ -13,6 +13,8 @@ enum CodeEditorMenuAction {
   selectAll,
   find,
   replace,
+  findNext,
+  findPrevious,
   goToLine,
   toggleWordWrap,
   toggleHighlighting,
@@ -57,6 +59,8 @@ class CodeEditorMenuActions {
       CodeEditorMenuAction.paste => true,
       CodeEditorMenuAction.selectAll => true,
       CodeEditorMenuAction.find || CodeEditorMenuAction.replace => true,
+      CodeEditorMenuAction.findNext ||
+      CodeEditorMenuAction.findPrevious => true,
       CodeEditorMenuAction.goToLine => true,
       CodeEditorMenuAction.toggleWordWrap => true,
       CodeEditorMenuAction.toggleHighlighting => canHighlight,

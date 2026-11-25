@@ -16,6 +16,7 @@ import '../services/document_activity.dart';
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -47,10 +48,12 @@ import '../services/csv_spreadsheet_import.dart';
 import '../services/editor_highlighting.dart';
 import '../services/syntax_highlight_theme.dart';
 import '../services/file_operation_backend.dart';
+import '../services/file_operation_service.dart' show FileOperationBackend;
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
 import '../services/crisp_office_launcher.dart';
 import '../services/save_coordinator.dart';
+import '../utils/editor_content_probe.dart';
 import '../utils/file_editability.dart'
     show isTextEditableName, isKeePassFileName, isLegacyWordFileName;
 import 'code_editor_context_menu.dart';
@@ -157,25 +160,19 @@ Future<void> showFileEditorDialog(
         );
         return;
       }
-      // F4 and the native menu can be invoked even when the viewer's Edit
-      // button is disabled. Never decode an unsupported binary file as text.
-      if (!isTextEditableName(file.name)) {
-        await showTextHexEditorSession(
-          context,
-          ref,
-          file,
-          side,
-          initialEditor: EditorKind.hex,
-        );
-        return;
-      }
     }
+    // F4 and the native menu can be invoked even when the viewer's Edit
+    // button is disabled. Known text names open the code editor; for every
+    // other name the first bytes decide, matching the F3 preview that already
+    // shows unknown text/code files with highlighting. Explicit "Edit as
+    // Text" skips probing.
     await showTextHexEditorSession(
       context,
       ref,
       file,
       side,
       initialEditor: EditorKind.text,
+      detectTextContent: !forceText,
     );
   } catch (error) {
     if (context.mounted) {
@@ -211,6 +208,7 @@ Future<void> showTextHexEditorSession(
   FileItem file,
   PanelSide side, {
   required EditorKind initialEditor,
+  bool detectTextContent = false,
 }) async {
   if (initialEditor == EditorKind.system) {
     throw ArgumentError.value(initialEditor, 'initialEditor');
@@ -233,6 +231,16 @@ Future<void> showTextHexEditorSession(
   final navigator = Navigator.of(context);
   var currentFile = file.copyWith(path: path);
   var editor = initialEditor;
+  if (detectTextContent) {
+    editor = isTextEditableName(currentFile.name)
+        ? EditorKind.text
+        : shouldEditAsText(
+            currentFile.name,
+            await _readEditorHeader(backend, currentFile),
+          )
+        ? EditorKind.text
+        : EditorKind.hex;
+  }
 
   void checkStorage() {
     if (!origin.isCurrent || backend.identity != identity) {
@@ -297,6 +305,54 @@ Future<void> showTextHexEditorSession(
       await panel.refresh();
     } catch (_) {}
   }
+}
+
+/// Read a bounded prefix for editor routing. Null means the probe failed, so
+/// the caller keeps the safer Hex default.
+Future<Uint8List?> _readEditorHeader(
+  FileOperationBackend backend,
+  FileItem file,
+) async {
+  // Range reads are cheapest. Older adapters or stale version metadata can
+  // reject them, so fall back to the regular file stream before giving up.
+  final ranged = await _readEditorPrefix(() => backend.readRange(file, 0));
+  if (ranged != null) return ranged;
+  return _readEditorPrefix(() => backend.readFile(file));
+}
+
+Future<Uint8List?> _readEditorPrefix(Stream<List<int>> Function() open) async {
+  final builder = BytesBuilder(copy: false);
+  final done = Completer<void>();
+  StreamSubscription<List<int>>? subscription;
+  void finish() {
+    if (!done.isCompleted) done.complete();
+  }
+
+  try {
+    subscription = open().listen(
+      (chunk) {
+        if (chunk.isNotEmpty) builder.add(chunk);
+        if (builder.length >= editorHeaderProbeBytes) {
+          unawaited(subscription?.cancel());
+          finish();
+        }
+      },
+      onError: (Object error, StackTrace stack) {
+        if (!done.isCompleted) done.completeError(error, stack);
+      },
+      onDone: finish,
+      cancelOnError: true,
+    );
+    await done.future.timeout(const Duration(seconds: 15));
+  } on Object {
+    return null;
+  } finally {
+    unawaited(subscription?.cancel());
+  }
+  final bytes = builder.takeBytes();
+  return bytes.length > editorHeaderProbeBytes
+      ? Uint8List.sublistView(bytes, 0, editorHeaderProbeBytes)
+      : bytes;
 }
 
 class _FileEditorPage extends ConsumerStatefulWidget {
@@ -474,6 +530,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         break;
       case CodeEditorMenuAction.replace:
         _openFind(replace: true);
+        break;
+      case CodeEditorMenuAction.findNext:
+        _findNext();
+        break;
+      case CodeEditorMenuAction.findPrevious:
+        _findPrevious();
         break;
       case CodeEditorMenuAction.goToLine:
         unawaited(_goToLine());
@@ -1016,13 +1078,16 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Map<ShortcutActivator, VoidCallback> get _shortcuts {
+    void save() => unawaited(_saveFile());
+    void close() => unawaited(_closeEditor());
+    void reload() => unawaited(_reloadFromDisk());
     return <ShortcutActivator, VoidCallback>{
-      const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
-        unawaited(_saveFile());
-      },
-      const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
-        unawaited(_saveFile());
-      },
+      const SingleActivator(LogicalKeyboardKey.keyS, control: true): save,
+      const SingleActivator(LogicalKeyboardKey.keyS, meta: true): save,
+      const SingleActivator(LogicalKeyboardKey.keyR, control: true): reload,
+      const SingleActivator(LogicalKeyboardKey.keyR, meta: true): reload,
+      const SingleActivator(LogicalKeyboardKey.keyW, control: true): close,
+      const SingleActivator(LogicalKeyboardKey.keyW, meta: true): close,
       const SingleActivator(LogicalKeyboardKey.keyF, control: true): _openFind,
       const SingleActivator(LogicalKeyboardKey.keyF, meta: true): _openFind,
       const SingleActivator(LogicalKeyboardKey.keyH, control: true): () {
@@ -1035,6 +1100,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       ): () {
         _openFind(replace: true);
       },
+      const SingleActivator(LogicalKeyboardKey.f3): _findNext,
+      const SingleActivator(LogicalKeyboardKey.f3, shift: true): _findPrevious,
+      const SingleActivator(LogicalKeyboardKey.keyZ, alt: true):
+          _toggleWordWrap,
       const SingleActivator(LogicalKeyboardKey.keyG, control: true): () {
         unawaited(_goToLine());
       },
@@ -1043,6 +1112,22 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       },
       const SingleActivator(LogicalKeyboardKey.escape): _closeFind,
     };
+  }
+
+  void _findNext() {
+    if (_findController.value == null) {
+      _openFind();
+      return;
+    }
+    _findController.nextMatch();
+  }
+
+  void _findPrevious() {
+    if (_findController.value == null) {
+      _openFind();
+      return;
+    }
+    _findController.previousMatch();
   }
 
   CodeHighlightTheme? _highlightTheme(BuildContext context) {
@@ -1252,7 +1337,15 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     return DocumentPrintScope(
       enabled: _document != null && !_loading && !_isSaving && !_closing,
       onPrint: _printDocument,
-      child: printContent,
+      child: CallbackShortcuts(
+        // Own the shortcuts for the whole editor page, not just the code
+        // surface: Ctrl/Cmd+S must also save while the find panel, a toolbar
+        // action or the status bar owns focus.
+        bindings: _closing
+            ? const <ShortcutActivator, VoidCallback>{}
+            : _shortcuts,
+        child: printContent,
+      ),
     );
   }
 
@@ -1314,71 +1407,78 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       );
     }
 
-    final editor = CallbackShortcuts(
-      bindings: _closing ? const {} : _shortcuts,
-      child: CodeEditor(
-        readOnly: _closing,
-        controller: _controller,
-        findController: _findController,
-        scrollController: _scrollController,
-        focusNode: _focusNode,
-        autofocus: true,
-        wordWrap: _wordWrap,
-        autocompleteSymbols: true,
-        toolbarController: const CodeEditorSelectionToolbarController(),
-        style: CodeEditorStyle(
-          fontSize: 13,
-          fontFamily: 'AppMono',
-          fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace'],
-          fontHeight: 1.45,
-          textColor: syntaxTextColor(dark: theme.brightness == Brightness.dark),
-          backgroundColor: syntaxCanvasColor(
-            dark: theme.brightness == Brightness.dark,
-          ),
-          selectionColor: theme.colorScheme.primary.withValues(alpha: 0.24),
-          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.36),
-          cursorColor: theme.colorScheme.primary,
-          cursorLineColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-          chunkIndicatorColor: theme.colorScheme.onSurfaceVariant,
-          codeTheme: _highlightTheme(context),
+    final editor = CodeEditor(
+      readOnly: _closing,
+      controller: _controller,
+      findController: _findController,
+      scrollController: _scrollController,
+      focusNode: _focusNode,
+      autofocus: true,
+      wordWrap: _wordWrap,
+      autocompleteSymbols: true,
+      toolbarController: const CodeEditorSelectionToolbarController(),
+      // re_editor claims Ctrl/Cmd+S for its own (unimplemented) save intent,
+      // which would swallow the host shortcut. Route it to the file save.
+      shortcutOverrideActions: <Type, Action<Intent>>{
+        CodeShortcutSaveIntent: CallbackAction<CodeShortcutSaveIntent>(
+          onInvoke: (_) {
+            unawaited(_saveFile());
+            return null;
+          },
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        indicatorBuilder:
-            (context, editingController, chunkController, notifier) {
-              return Row(
-                children: [
-                  DefaultCodeLineNumber(
-                    controller: editingController,
-                    notifier: notifier,
-                    textStyle: TextStyle(
-                      fontFamily: 'AppMono',
-                      fontSize: 12,
-                      height: 1.45,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.65,
-                      ),
-                    ),
-                    focusedTextStyle: TextStyle(
-                      fontFamily: 'AppMono',
-                      fontSize: 12,
-                      height: 1.45,
-                      color: theme.colorScheme.primary,
+      },
+      style: CodeEditorStyle(
+        fontSize: 13,
+        fontFamily: 'AppMono',
+        fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace'],
+        fontHeight: 1.45,
+        textColor: syntaxTextColor(dark: theme.brightness == Brightness.dark),
+        backgroundColor: syntaxCanvasColor(
+          dark: theme.brightness == Brightness.dark,
+        ),
+        selectionColor: theme.colorScheme.primary.withValues(alpha: 0.24),
+        highlightColor: theme.colorScheme.primary.withValues(alpha: 0.36),
+        cursorColor: theme.colorScheme.primary,
+        cursorLineColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+        chunkIndicatorColor: theme.colorScheme.onSurfaceVariant,
+        codeTheme: _highlightTheme(context),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      indicatorBuilder:
+          (context, editingController, chunkController, notifier) {
+            return Row(
+              children: [
+                DefaultCodeLineNumber(
+                  controller: editingController,
+                  notifier: notifier,
+                  textStyle: TextStyle(
+                    fontFamily: 'AppMono',
+                    fontSize: 12,
+                    height: 1.45,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.65,
                     ),
                   ),
-                  DefaultCodeChunkIndicator(
-                    width: 20,
-                    controller: chunkController,
-                    notifier: notifier,
+                  focusedTextStyle: TextStyle(
+                    fontFamily: 'AppMono',
+                    fontSize: 12,
+                    height: 1.45,
+                    color: theme.colorScheme.primary,
                   ),
-                ],
-              );
-            },
-        leadingDivider: Container(width: 1, color: theme.dividerColor),
-        findBuilder: (context, controller, readOnly) => CodeEditorFindPanel(
-          controller: controller,
-          editingController: _controller,
-          readOnly: readOnly,
-        ),
+                ),
+                DefaultCodeChunkIndicator(
+                  width: 20,
+                  controller: chunkController,
+                  notifier: notifier,
+                ),
+              ],
+            );
+          },
+      leadingDivider: Container(width: 1, color: theme.dividerColor),
+      findBuilder: (context, controller, readOnly) => CodeEditorFindPanel(
+        controller: controller,
+        editingController: _controller,
+        readOnly: readOnly,
       ),
     );
     return DocumentPageShortcuts(

@@ -121,6 +121,19 @@ List<PlatformMenuItem> buildCodeEditorPlatformMenus(
               ),
             ),
             item(
+              'Find Next',
+              CodeEditorMenuAction.findNext,
+              shortcut: const SingleActivator(LogicalKeyboardKey.f3),
+            ),
+            item(
+              'Find Previous',
+              CodeEditorMenuAction.findPrevious,
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.f3,
+                shift: true,
+              ),
+            ),
+            item(
               'Find and Replace...',
               CodeEditorMenuAction.replace,
               shortcut: const SingleActivator(
@@ -136,7 +149,11 @@ List<PlatformMenuItem> buildCodeEditorPlatformMenus(
     PlatformMenu(
       label: 'View',
       menus: <PlatformMenuItem>[
-        item('Toggle Word Wrap', CodeEditorMenuAction.toggleWordWrap),
+        item(
+          'Toggle Word Wrap',
+          CodeEditorMenuAction.toggleWordWrap,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, alt: true),
+        ),
         item(
           'Toggle Syntax Highlighting',
           CodeEditorMenuAction.toggleHighlighting,

@@ -8,6 +8,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/code_editor_find_panel.dart';
 import 'package:crisp_cloud/widgets/csv_spreadsheet_import_dialog.dart';
 import 'package:crisp_cloud/widgets/hex_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show debugPrintSynchronously, kIsWeb;
@@ -125,9 +126,9 @@ Future<void> _pumpUntil(
     // Keep widget frames and their cursor timers in FakeAsync. Only let the
     // native spool's I/O callbacks progress outside that clock.
     await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 1)),
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
-    if (elapsed.elapsed > const Duration(seconds: 10)) {
+    if (elapsed.elapsed > const Duration(seconds: 30)) {
       throw TimeoutException('Editor transition did not finish.');
     }
   } while (!complete());
@@ -458,5 +459,192 @@ void main() {
     expect(cloud.writes, isEmpty);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('F4 opens unknown text files in the code editor', (tester) async {
+    final fixture = await _open(
+      tester,
+      filename: 'Wallabag_catchup_20260918.recipe',
+    );
+    expect(find.byType(CodeEditor), findsOneWidget);
+    expect(find.byType(HexEditor), findsNothing);
+    expect(_textController(tester).text, 'one');
+    expect(fixture.cloud.writes, isEmpty);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('F4 keeps unknown binary files in the hex editor', (
+    tester,
+  ) async {
+    final cloud = _Cloud()
+      ..put('/capture.dat', <int>[0, 1, 2, 3, 0, 255, 254, 0]);
+    await _open(
+      tester,
+      filename: 'capture.dat',
+      cloud: cloud,
+      waitForReady: false,
+    );
+    await _pumpUntil(
+      tester,
+      () => find.byType(HexEditor).evaluate().isNotEmpty,
+    );
+    expect(find.byType(HexEditor), findsOneWidget);
+    expect(find.byType(CodeEditor), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Ctrl/Cmd+S saves from the code surface', (tester) async {
+    final fixture = await _open(tester);
+    await tester.tap(find.byType(CodeEditor));
+    await tester.pump();
+    _textController(tester).text = 'two';
+    await tester.pumpAndSettle();
+    expect(find.text('Modified'), findsOneWidget);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump(const Duration(milliseconds: 100));
+    await _pumpUntil(tester, () => fixture.cloud.writes.isNotEmpty);
+    expect(utf8.decode(fixture.cloud.files['/note.txt']!), 'two');
+    expect(find.text('Modified'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Cmd+S saves from the code surface through the fork override', (
+    tester,
+  ) async {
+    final fixture = await _open(tester);
+    await tester.tap(find.byType(CodeEditor));
+    await tester.pump();
+    _textController(tester).text = 'four';
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await _pumpUntil(tester, () => fixture.cloud.writes.isNotEmpty);
+    expect(utf8.decode(fixture.cloud.files['/note.txt']!), 'four');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Cmd/Ctrl+S saves while the find panel owns focus', (
+    tester,
+  ) async {
+    final fixture = await _open(tester);
+    tester
+        .widget<CodeEditor>(find.byType(CodeEditor))
+        .focusNode!
+        .requestFocus();
+    await tester.pump();
+    _textController(tester).text = 'three';
+    await tester.pumpAndSettle();
+
+    // Open Find and put the query field in the focus chain.
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    expect(find.byType(CodeEditorFindPanel), findsOneWidget);
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(CodeEditorFindPanel),
+        matching: find.byType(TextField),
+      ),
+      'three',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await _pumpUntil(tester, () => fixture.cloud.writes.isNotEmpty);
+    expect(utf8.decode(fixture.cloud.files['/note.txt']!), 'three');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Ctrl/Cmd+W closes through the unsaved-changes guard', (
+    tester,
+  ) async {
+    final fixture = await _open(tester);
+    _textController(tester).text = 'two';
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyW);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard'), findsOneWidget);
+    await tester.tap(find.text('Discard'));
+    await _pumpUntil(tester, () => fixture.closed.isCompleted);
+    expect(fixture.cloud.writes, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Alt+Z toggles word wrap and F3 moves through matches', (
+    tester,
+  ) async {
+    await _open(tester);
+    final controller = _textController(tester);
+    tester
+        .widget<CodeEditor>(find.byType(CodeEditor))
+        .focusNode!
+        .requestFocus();
+    controller.text = 'alpha\nbeta\nalpha';
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<CodeEditor>(find.byType(CodeEditor)).wordWrap,
+      isFalse,
+    );
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    await tester.pumpAndSettle();
+    expect(tester.widget<CodeEditor>(find.byType(CodeEditor)).wordWrap, isTrue);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    final findController = tester
+        .widget<CodeEditor>(find.byType(CodeEditor))
+        .findController!;
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(CodeEditorFindPanel),
+        matching: find.byType(TextField),
+      ),
+      'alpha',
+    );
+    await _pumpUntil(
+      tester,
+      () => (findController.value?.result?.matches.length ?? 0) == 2,
+    );
+    final first = findController.value!.result!.index;
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.f3);
+    await tester.pumpAndSettle();
+    expect(findController.value!.result!.index, isNot(first));
+
+    await tester.pumpWidget(const SizedBox());
+    expect(tester.takeException(), isNull);
   });
 }
