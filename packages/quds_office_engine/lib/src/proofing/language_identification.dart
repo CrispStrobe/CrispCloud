@@ -472,12 +472,9 @@ final class ParagraphLanguageDetector {
   ) async {
     final segmented = [for (final text in texts) scriptSegments(text)];
     final queries = <String>[];
-    final index = <(int, int), int>{};
     for (var t = 0; t < texts.length; t++) {
-      for (var s = 0; s < segmented[t].length; s++) {
-        final segment = segmented[t][s];
+      for (final segment in segmented[t]) {
         if (!policy.needsClassifier(segment)) continue;
-        index[(t, s)] = queries.length;
         queries.add(texts[t].substring(segment.start, segment.end));
       }
     }
@@ -492,14 +489,17 @@ final class ParagraphLanguageDetector {
       }
     }
     final results = <ParagraphLanguages>[];
+    // Replies follow the same paragraph and script order as the queries.
+    // The policy's letter thresholds are stable across both walks.
+    var nextAnswer = 0;
     for (var t = 0; t < texts.length; t++) {
       final segments = <DetectedSegment>[];
-      for (var s = 0; s < segmented[t].length; s++) {
-        final query = index[(t, s)];
-        final guesses = query != null && query < answers.length
-            ? answers[query]
+      for (final segment in segmented[t]) {
+        final guesses =
+            nextAnswer < answers.length && policy.needsClassifier(segment)
+            ? answers[nextAnswer++]
             : const <LanguageGuess>[];
-        segments.add(policy.decide(segmented[t][s], guesses));
+        segments.add(policy.decide(segment, guesses));
       }
       final result = ParagraphLanguages(texts[t], segments);
       if (generation == _cacheGeneration) _remember(texts[t], result);

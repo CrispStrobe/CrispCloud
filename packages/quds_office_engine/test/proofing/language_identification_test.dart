@@ -230,6 +230,32 @@ void main() {
     },
   );
 
+  test('classifier replies stay aligned across skipped script runs', () async {
+    const latin = 'Dieser Absatz enthält genug Buchstaben für die Prüfung.';
+    const arabic = 'هذا نص عربي طويل بما يكفي لاختبار التصنيف';
+    final identifier = _Identifier(
+      (_) async => const [
+        [LanguageGuess('en', 1)],
+        [LanguageGuess('de', 1)],
+        [LanguageGuess('fa', 1)],
+      ],
+    );
+    final results = await ParagraphLanguageDetector(identifier).detectAll([
+      '$_longLatin عربي $latin',
+      'א $arabic',
+    ]);
+
+    expect(identifier.calls, [
+      ['$_longLatin ', latin, arabic],
+    ]);
+    expect(results[0].segments.map((segment) => segment.language), [
+      'en',
+      'ar',
+      'de',
+    ]);
+    expect(results[1].segments.map((segment) => segment.language), ['he', 'fa']);
+  });
+
   test(
     'concurrent callers share a pending classification and freeze their list',
     () async {
