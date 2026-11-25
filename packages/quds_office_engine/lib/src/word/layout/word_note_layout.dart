@@ -14,6 +14,12 @@ class _NoteStory {
     List<LaidOutLine> lines,
   ) {
     if (lines.length < 2) return const [];
+    final first = lines.first.sourceParagraph;
+    if (lines.every((line) => identical(line.sourceParagraph, first))) {
+      return first != null && first.properties.widowControl != false
+          ? [lines]
+          : const [];
+    }
     final groups = <WmlParagraph, List<LaidOutLine>>{};
     for (final line in lines) {
       final paragraph = line.sourceParagraph;

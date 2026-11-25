@@ -119,7 +119,7 @@ class _LayoutRunIndex {
         breaks++;
       } else if (inline is WmlRun) {
         if (inline.noteRefId case final id? when !inline.noteRefEndnote) {
-          _noteReferences.add((offset + breaks, id));
+          (_noteReferences ??= []).add((offset + breaks, id));
         }
         offset += inline.text.length;
         _ends.add(offset);
@@ -129,7 +129,7 @@ class _LayoutRunIndex {
     }
   }
 
-  final _noteReferences = <(int, int)>[];
+  List<(int, int)>? _noteReferences;
   final _ends = <int>[];
   final _runs = <WmlRun>[];
   final _commentKeys = <WmlRun, String>{};
@@ -185,10 +185,15 @@ class _LayoutRunIndex {
       _ends.isNotEmpty && offset >= _ends.last ? _lastLink : run?.hyperlink;
 
   List<int> footnoteIds(Iterable<int> offsets) {
-    if (_noteReferences.isEmpty) return const [];
+    final references = _noteReferences;
+    if (references == null) return const [];
+    if (references.length == 1) {
+      final (offset, id) = references.single;
+      return [if (offsets.contains(offset)) id];
+    }
     final positions = offsets.toSet();
     return [
-      for (final (offset, id) in _noteReferences)
+      for (final (offset, id) in references)
         if (positions.contains(offset)) id,
     ];
   }
