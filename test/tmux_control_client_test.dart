@@ -541,7 +541,9 @@ void main() {
       await server.start(client);
       server.deferReplies = true;
       final changing = client.resize(120, 40);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      // Wait for the fake server's state, not a fixed delay: a busy runner
+      // can take longer than 100 ms to deliver the command (macOS CI).
+      await _until(() => server.panes.single.width == 120);
       expect(server.panes.single.width, 120);
       final intermediate = client.resize(160, 50);
       var restored = false;
@@ -1219,5 +1221,19 @@ class _Server {
       }
     }
     heldFollowingReplies.clear();
+  }
+}
+
+/// Polls [condition] until it holds, failing after [timeout].
+Future<void> _until(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw TimeoutException('Condition not reached', timeout);
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
   }
 }
