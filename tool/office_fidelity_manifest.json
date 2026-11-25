@@ -3181,7 +3181,7 @@
     "packages/quds_office_engine/test/word_table_style_precedence_test.dart": "04767936d2a0881b1d113aa65df9f07c28721efcfdff08df286c025f464c1bfe",
     "packages/quds_office_engine/test/word_table_tall_frame_layout_test.dart": "e78bde64d570bddfff61878b12f8673221bb243501ff99c13360bda1f28c61c2",
     "packages/quds_office_engine/test/word_table_tall_toc_layout_test.dart": "253a3b0c95c0bd616ef00873b5759ff36d3143877b7bd2fca4d9f9f6e077c3f8",
-    "packages/quds_office_engine/test/word_table_vertical_merge_layout_test.dart": "81e94757e5f489a2b0e8fafaa39da03f33bc5ce335805bd4991651bded592989",
+    "packages/quds_office_engine/test/word_table_vertical_merge_layout_test.dart": "749cae905b913e3a548795ba82f57bcda4da62d5db81461172c6a76aad662e63",
     "packages/quds_office_engine/test/word_tabs_progressive_test.dart": "86551dcc6dc017a8f58c09b3df7ce6b30fd5125cd3ead4994b49873ec629cdc5",
     "packages/quds_office_engine/test/word_textbox_nesting_test.dart": "8f694abd62381dc6b4d364f7fd6f683eac537d3af365ae413142363ef6d90edc",
     "packages/quds_office_engine/test/word_tree_test.dart": "761103a75d2692a378a136f59f0e4776aa1a3d707c612ab6c6ee52fb9adc9f0a",
@@ -3516,7 +3516,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "06b559f404e4905504697001442da93cab1d7e2e",
+  "source_commit": "0a5fceabcda6c674658840a93fc862e4cc4aa5d6",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
