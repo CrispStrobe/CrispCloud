@@ -117,6 +117,26 @@ void main() {
       expect(identical(namespaces[1], namespaces[4]), isTrue);
     });
 
+    test('tag and attribute prefixes use their current namespace scope', () {
+      final reader = XmlPullReader(
+        '<p:root xmlns:p="urn:outer" xmlns:q="urn:other" p:id="parent">'
+        '<p:child xmlns:p="urn:inner" q:id="other" p:id="child"/>'
+        '<p:sibling p:id="sibling"/></p:root>',
+      );
+      expect(reader.next(), isTrue);
+      expect(reader.namespaceUri, 'urn:outer');
+      expect(reader.getAttribute('id', namespaceUri: 'urn:outer'), 'parent');
+      expect(reader.next(), isTrue);
+      expect(reader.namespaceUri, 'urn:inner');
+      expect(reader.getAttribute('id', namespaceUri: 'urn:inner'), 'child');
+      expect(reader.getAttribute('id', namespaceUri: 'urn:other'), 'other');
+      expect(reader.next(), isTrue);
+      expect(reader.next(), isTrue);
+      expect(reader.namespaceUri, 'urn:outer');
+      expect(reader.getAttribute('id', namespaceUri: 'urn:outer'), 'sibling');
+      expect(reader.getAttribute('id', namespaceUri: 'urn:inner'), isNull);
+    });
+
     test('attribute slots reset when the next tag has fewer attributes', () {
       final many = List.generate(20, (i) => 'a$i="$i"').join(' ');
       final reader = XmlPullReader(

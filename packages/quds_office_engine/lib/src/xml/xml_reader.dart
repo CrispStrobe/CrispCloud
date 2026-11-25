@@ -59,6 +59,10 @@ class XmlPullReader {
 
   // Only elements that declare a namespace introduce a scope.
   _NsScope _namespaceScope;
+  // Word elements and their attributes often share the same prefix.
+  _NsScope? _lastPrefixScope;
+  String _lastPrefix = '';
+  String _lastPrefixUri = '';
   final List<_AttrSlice> _attrs = <_AttrSlice>[];
   // Most tags need only a few slots. Keep peak attribute counts on
   // unusually wide tags from extending the lifetime of all their slots.
@@ -106,7 +110,7 @@ class XmlPullReader {
         _type != XmlEventType.endElement) {
       return '';
     }
-    return _namespaceUri ??= _resolvePrefix(prefix);
+    return _namespaceUri ??= _resolveSourcePrefix(_prefixStart, _prefixEnd);
   }
 
   /// Resolves a prefix in the current element's namespace scope.
@@ -160,6 +164,7 @@ class XmlPullReader {
       _depth = _elementStack.length ~/ 2;
       if (_namespaceScope.depth > _depth) {
         _namespaceScope = _namespaceScope.parent!;
+        _lastPrefixScope = null;
       }
       return true;
     }
@@ -262,14 +267,10 @@ class XmlPullReader {
   /// attributeNamespace API.
   String attributeNamespace(int index) {
     final _AttrSlice attr = _attrs[index];
-    if (attr.isXmlns) {
+    if (attr.isXmlns || attr.prefixEnd <= attr.nameStart) {
       return '';
     }
-    final String pfx = attr.prefix(_source);
-    if (pfx.isEmpty) {
-      return '';
-    }
-    return _resolvePrefix(pfx);
+    return _resolveSourcePrefix(attr.nameStart, attr.prefixEnd);
   }
 
   /// getAttribute API.
@@ -358,6 +359,7 @@ class XmlPullReader {
     _depth = _elementStack.length ~/ 2;
     if (_namespaceScope.depth > _depth) {
       _namespaceScope = _namespaceScope.parent!;
+      _lastPrefixScope = null;
     }
   }
 
@@ -563,6 +565,18 @@ class XmlPullReader {
       }
     }
     throw XmlParseException('Unterminated DOCTYPE', _pos);
+  }
+
+  String _resolveSourcePrefix(int start, int end) {
+    if (start == end) return _resolvePrefix('');
+    if (identical(_namespaceScope, _lastPrefixScope) &&
+        end - start == _lastPrefix.length &&
+        _source.startsWith(_lastPrefix, start)) {
+      return _lastPrefixUri;
+    }
+    _lastPrefixScope = _namespaceScope;
+    _lastPrefix = _slice(start, end);
+    return _lastPrefixUri = _resolvePrefix(_lastPrefix);
   }
 
   String _resolvePrefix(String prefix) {
