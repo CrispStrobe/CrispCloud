@@ -56,6 +56,31 @@ const String _bulletNumbering =
     '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>';
 
 void main() {
+  test('cached run snapshots keep hyperlink defaults and edits local', () {
+    final doc = _open(
+      '<w:p>'
+      '<w:r><w:t>plain</w:t></w:r>'
+      '<w:hyperlink w:anchor="bookmark">'
+      '<w:r><w:t>link</w:t></w:r></w:hyperlink>'
+      '<w:r><w:t>another</w:t></w:r>'
+      '</w:p>',
+      styles: '<w:docDefaults><w:rPrDefault><w:rPr>'
+          '<w:sz w:val="28"/>'
+          '</w:rPr></w:rPrDefault></w:docDefaults>',
+    );
+    final runs = doc.paragraphs.single.inlines.whereType<WmlRun>().toList();
+    final plain = runs[0].properties.importedValues!;
+    final link = runs[1].properties.importedValues!;
+    final another = runs[2].properties.importedValues!;
+    expect(plain['sz'], '28');
+    expect(link['color'], WordLink.color);
+    expect(link['u'], '${WmlUnderline.single}');
+    expect(another, plain);
+    expect(another['u'], isNot(link['u']));
+    plain.remove('color');
+    expect(another, contains('color'));
+  });
+
   test('repeated paragraph projections own their tabs and bookmarks', () {
     final doc = _open(
       [

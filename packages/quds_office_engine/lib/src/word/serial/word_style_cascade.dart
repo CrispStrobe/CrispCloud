@@ -1197,13 +1197,19 @@ class _StyleCascade {
       final resolved = cached == null
           ? projection.properties
           : projection.properties.copy();
-      if (inline is WmlRun && inline.hyperlink != null) {
+      final hasLinkDefaults =
+          inline is WmlRun &&
+          inline.hyperlink != null &&
+          (!projection.hasColor || !projection.hasUnderline);
+      final hasNoteBaseline =
+          inline is WmlRun &&
+          inline.noteRefId != null &&
+          !projection.hasBaseline;
+      if (hasLinkDefaults) {
         if (!projection.hasColor) resolved.color = WordLink.color;
         if (!projection.hasUnderline) resolved.underline = WmlUnderline.single;
       }
-      if (inline is WmlRun &&
-          inline.noteRefId != null &&
-          !projection.hasBaseline) {
+      if (hasNoteBaseline) {
         resolved.vertAlign = WmlVertAlign.superscript;
       }
       resolved.styleId = props.styleId;
@@ -1220,7 +1226,15 @@ class _StyleCascade {
       } else {
         resolved.explicitProperties.remove('shd:highlight');
       }
-      resolved.importedValues = WordPropertyIo.runValues(resolved);
+      // A copy of a cached run already owns its snapshot. Link and note
+      // defaults depend on the inline, so keep them out of the style template.
+      if (resolved.importedValues == null || hasLinkDefaults || hasNoteBaseline) {
+        final values = WordPropertyIo.runValues(resolved);
+        resolved.importedValues = values;
+        if (canCache && !hasLinkDefaults && !hasNoteBaseline) {
+          _runStyles[key]?.properties.importedValues = Map.of(values);
+        }
+      }
       if (inline is WmlRun) {
         inline.properties = resolved;
       } else if (inline is WmlNoteMarker) {
