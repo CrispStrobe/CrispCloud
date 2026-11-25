@@ -265,7 +265,7 @@ class XmlPullReader {
   String? getAttribute(String localName, {String? namespaceUri}) {
     for (int i = 0; i < _attrs.length; i++) {
       final _AttrSlice attr = _attrs[i];
-      if (attr.local(_source) != localName) {
+      if (!attr.hasLocalName(_source, localName)) {
         continue;
       }
       if (namespaceUri == null) {
@@ -332,7 +332,8 @@ class XmlPullReader {
       throw XmlParseException('Unexpected end tag </$qualifiedName>', _pos);
     }
     final String open = _elementStack.removeLast();
-    if (open != qualifiedName) {
+    if (open.length != _nameEnd - _nameStart ||
+        !_source.startsWith(open, _nameStart)) {
       throw XmlParseException(
         'Mismatched end tag: expected </$open> but found </$qualifiedName>',
         _pos,
@@ -738,6 +739,11 @@ class _AttrSlice {
       return source.substring(prefixEnd + 1, nameEnd);
     }
     return source.substring(nameStart, nameEnd);
+  }
+
+  bool hasLocalName(String source, String name) {
+    final start = prefixEnd > nameStart ? prefixEnd + 1 : nameStart;
+    return name.length == nameEnd - start && source.startsWith(name, start);
   }
 
   /// prefix API.
