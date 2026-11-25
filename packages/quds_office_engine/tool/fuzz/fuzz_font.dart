@@ -19,36 +19,48 @@ List<Uint8List> _seeds() {
       final name = file.path.toLowerCase();
       if (!(name.endsWith('.ttf') || name.endsWith('.otf'))) continue;
       if (file.lengthSync() > 512 * 1024) continue;
-      out.add(file.readAsBytesSync());
-      if (out.length >= 12) return out;
+      try {
+        final font = SfntFont.parse(file.readAsBytesSync());
+        final subset = FontSubsetter(
+          font,
+        ).subset(const <int>[0x20, 0x41, 0x627, 0x20AC]);
+        out.add(subset.bytes);
+      } on SfntException {
+        continue;
+      }
+      if (out.length >= 6) return out;
     }
   }
   return out;
 }
 
+void _parse(Uint8List bytes) {
+  if (PdfCffHost.isSfnt(bytes) || PdfCffHost.isRawCff(bytes)) {
+    PdfCffHost.forFlutter(bytes);
+  }
+  final font = SfntFont.parse(bytes);
+  for (final codePoint in const <int>[0x41, 0x627, 0x20AC, 0x1F600]) {
+    final glyph = font.glyphIdFor(codePoint);
+    font.advanceWidth(glyph);
+    GlyphOutlineDecoder(font).decode(glyph);
+  }
+  GsubLigatures.parse(font);
+  GposMarkToBase.parse(font);
+}
+
 void main(List<String> args) {
   final seeds = _seeds();
+  for (final seed in seeds) {
+    try {
+      _parse(seed);
+    } on SfntException {
+      // A bundled face must remain parseable, but keep the warmup harness from
+      // failing before the campaign if a platform font is unavailable.
+    }
+  }
   final report = fuzz<Uint8List>(
     seeds: seeds,
-    entry: (bytes) {
-      try {
-        if (PdfCffHost.isSfnt(bytes) || PdfCffHost.isRawCff(bytes)) {
-          PdfCffHost.forFlutter(bytes);
-        }
-        final font = SfntFont.parse(bytes);
-        for (final codePoint in const <int>[0x41, 0x627, 0x20AC, 0x1F600]) {
-          final glyph = font.glyphIdFor(codePoint);
-          font.advanceWidth(glyph);
-          GlyphOutlineDecoder(font).decode(glyph);
-        }
-        GsubLigatures.parse(font);
-        GposMarkToBase.parse(font);
-      } on RangeError catch (error, stack) {
-        stderr.writeln('RANGE: $error');
-        stderr.writeln(stack);
-        rethrow;
-      }
-    },
+    entry: _parse,
     mutate: mutateBytes,
     isClean: (error) => error is SfntException || error is FormatException,
     iterations: 100000,

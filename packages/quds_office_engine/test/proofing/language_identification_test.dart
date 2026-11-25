@@ -68,6 +68,22 @@ void main() {
     }
   });
 
+  test('letter preflight agrees with script runs for Unicode text', () {
+    for (final (text, hasLetters) in [
+      ('', false),
+      ('🙂١!\u0301\u200d', false),
+      ('\ud800?\udcff', false),
+      ('123 A', true),
+      ('\u0301é', true),
+      ('؟ع', true),
+      ('\u{10400}', true),
+      ('漢', true),
+    ]) {
+      expect(hasScriptLetters(text), hasLetters, reason: text);
+      expect(scriptSegments(text).isNotEmpty, hasLetters, reason: text);
+    }
+  });
+
   test('language script honors normalized explicit script subtags', () {
     for (final entry in {
       'EN_us': TextScript.latin,

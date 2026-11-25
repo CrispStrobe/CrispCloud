@@ -903,7 +903,7 @@ final class WordProofingSession extends ChangeNotifier {
       _detections[text] = hit;
       return _lastDetection[paragraph] = hit;
     }
-    if (scriptSegments(text).isEmpty) return null;
+    if (!hasScriptLetters(text)) return null;
     _missingDetections.add(text);
     return _provisionalDetection(_lastDetection[paragraph], text);
   }

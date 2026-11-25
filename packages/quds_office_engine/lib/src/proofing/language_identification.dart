@@ -128,6 +128,9 @@ TextScript? _scriptOf(int rune) {
   return TextScript.other;
 }
 
+/// Whether [text] contains a Unicode letter and can produce a script run.
+bool hasScriptLetters(String text) => _letter.hasMatch(text);
+
 /// Splits [text] into script runs that together cover all of it. Returns an
 /// empty list for text without letters.
 List<ScriptSegment> scriptSegments(String text) {
