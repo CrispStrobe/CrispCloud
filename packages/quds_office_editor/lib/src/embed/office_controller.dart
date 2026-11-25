@@ -1082,6 +1082,7 @@ class WordEditorController extends OfficeController {
 
   late LaidOutDocument _documentLaidOut;
   var _layoutSourceParagraphsAreLive = false;
+  final Set<WmlParagraph> _listLabelDirty = Set<WmlParagraph>.identity();
   ({int index, WmlParagraph paragraph})? _caretDisplayParagraph;
   List<({WmlVisual visual, int after})>? _bodyVisualNavigation;
 
@@ -1782,7 +1783,11 @@ class WordEditorController extends OfficeController {
     // Header/footer text is chrome, not section body content. The incremental
     // layout path reuses page chrome, so edits there would never reach the
     // header band. Force a full layout while editing a header or footer.
-    final bool incremental = localEdit && !isEditingHeaderFooter;
+    // Renumbered list labels live in reused lines and pages, so any label
+    // change also has to reach a fresh layout.
+    final bool incremental =
+        localEdit && !isEditingHeaderFooter && _listLabelDirty.isEmpty;
+    _listLabelDirty.clear();
     if (!incremental) {
       _publishDocumentLayout(_layoutWordDocument(document));
       _layoutComment();
@@ -4166,6 +4171,7 @@ class WordEditorController extends OfficeController {
         },
       ),
     );
+    _refreshListLabels();
     _placeCaretAtEndOf(blocks);
     relayout();
     notifyListeners();
@@ -4242,6 +4248,13 @@ class WordEditorController extends OfficeController {
     final List<WmlInline> before = _cloneInlines(para);
     final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     final split = WmlClone.splitInlines(para, index);
+    // Word gives the inserted paragraph mark the format in effect at the
+    // caret, so typing inside the new paragraph continues bold, size, font
+    // and color, and an empty line keeps the same metrics. An imported
+    // paragraph already carries its authored mark; preserve that one.
+    final WmlRunProps mark =
+        para.properties.importedParagraphMark?.copy() ??
+        WmlRunEdit.propsAt(para, index == 0 ? 0 : index - 1).copy();
     // Keep both the inserted paragraph and its story stable across history.
     // Later commands hold this paragraph, even after focus moves to the body.
     final WmlParagraph next = WmlParagraph(
@@ -4249,7 +4262,8 @@ class WordEditorController extends OfficeController {
         ..bookmarkName = null
         ..listRestart = null
         ..pageBreakBefore = pageBreakBefore
-        ..columnBreakBefore = columnBreakBefore,
+        ..columnBreakBefore = columnBreakBefore
+        ..importedParagraphMark = mark,
       inlines: split.tail.isEmpty
           ? <WmlInline>[WmlRun()]
           : _cloneInlinesFrom(split.tail),
@@ -4279,9 +4293,55 @@ class WordEditorController extends OfficeController {
         },
       ),
     );
+    _refreshListLabels();
     caret.paragraphIndex++;
     caret.logicalIndex = 0;
     caret.collapseSelection();
+  }
+
+  /// Re-resolves native list labels after a structural paragraph edit.
+  ///
+  /// Labels are derived from `numbering.xml`, not stored in the document.
+  /// Inserting, removing or reordering list paragraphs must renumber the list
+  /// the way Word does; otherwise Enter in a numbered list repeats the label
+  /// of the paragraph it came from.
+  void _refreshListLabels() {
+    final OpcPackage? package = document.package;
+    if (package == null) {
+      return;
+    }
+    // Only documents with a numbering part carry resolvable list labels.
+    final PackageRelationship? office = package.packageRelationships
+        .firstByType(RelationshipTypes.officeDocument);
+    final String uri = office == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(office);
+    if (package
+            .relationshipsFor(uri)
+            .firstByType(RelationshipTypes.numbering) ==
+        null) {
+      return;
+    }
+    // A pending restart is a serialization marker that label resolution
+    // consumes. Keep it so the package writer still emits its numbering
+    // instance, and let repeated resolution compute the same labels.
+    final Map<WmlParagraph, int> restarts = <WmlParagraph, int>{
+      for (final paragraph in document.paragraphs)
+        paragraph: ?paragraph.properties.listRestart,
+    };
+    final Map<WmlParagraph, String?> labels = <WmlParagraph, String?>{
+      for (final paragraph in document.paragraphs)
+        paragraph: paragraph.properties.listLabel,
+    };
+    WordDeserializer().refreshNumbering(document);
+    for (final MapEntry<WmlParagraph, String?> entry in labels.entries) {
+      if (entry.key.properties.listLabel != entry.value) {
+        _listLabelDirty.add(entry.key);
+      }
+    }
+    for (final MapEntry<WmlParagraph, int> entry in restarts.entries) {
+      entry.key.properties.listRestart = entry.value;
+    }
   }
 
   void _pasteWordVisual(OfficeVisual visual) {
@@ -4851,6 +4911,7 @@ class WordEditorController extends OfficeController {
         undoFn: restore,
       ),
     );
+    _refreshListLabels();
     caret.paragraphIndex = range.startPara;
     caret.logicalIndex = from;
     caret.collapseSelection();
@@ -4947,6 +5008,7 @@ class WordEditorController extends OfficeController {
   ) {
     final WmlParagraph startIdentity = paras[startPara];
     final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
+    int? mergedMarkerIndex;
     final List<({WmlSection section, List<WmlBlock> blocks})> sectionSnaps =
         <({WmlSection section, List<WmlBlock> blocks})>[
           for (final WmlSection section in document.sections)
@@ -4998,6 +5060,7 @@ class WordEditorController extends OfficeController {
       _CallbackCommand(
         executeFn: () {
           revisions.restore(document);
+          mergedMarkerIndex = null;
           for (final WmlBlock block in remove) {
             final List<WmlBlock>? parent = _parentBlocksOfBlock(block);
             parent?.remove(block);
@@ -5022,11 +5085,40 @@ class WordEditorController extends OfficeController {
               WmlRunEdit.replaceRange(para, from, to, '');
             }
           }
+          // Word merges the boundary paragraphs of a cross-paragraph
+          // deletion: the surviving tail of the last paragraph continues the
+          // first one, which keeps its formatting. Without this, deleting or
+          // typing over a multi-paragraph selection leaves two fragments.
+          final WmlParagraph keepPara = paras[startPara];
+          final WmlParagraph dropPara = paras[endPara];
+          final List<WmlBlock>? mergeParent = _parentBlocksOfBlock(dropPara);
+          if (endPara != startPara &&
+              mergeParent != null &&
+              live.contains(keepPara) &&
+              live.contains(dropPara) &&
+              identical(_parentBlocksOfBlock(keepPara), mergeParent)) {
+            final bool topLevel = document.sections.any(
+              (WmlSection section) => identical(section.blocks, mergeParent),
+            );
+            if (topLevel &&
+                mergeParent.indexOf(dropPara) ==
+                    mergeParent.indexOf(keepPara) + 1) {
+              WordRevisions.joinParagraphs(document, keepPara, dropPara);
+              // Removed bookmark endpoints whose partner survives in the
+              // appended tail must land before that tail, not at the end of
+              // the merged paragraph: an end may not precede its start.
+              mergedMarkerIndex = keepPara.inlines.length;
+              keepPara.inlines.addAll(_cloneInlinesFrom(dropPara.inlines));
+              WmlRunEdit.coalesce(keepPara);
+              mergeParent.remove(dropPara);
+            }
+          }
           WordBookmarks.clampRemoved(
             document,
             removedMarkers,
             anchor: markerAnchor,
             atStart: anchorAtStart,
+            index: mergedMarkerIndex,
           );
           _ensureBodyHasParagraph();
           WordRevisions.markDetached(document);
@@ -5050,6 +5142,7 @@ class WordEditorController extends OfficeController {
         },
       ),
     );
+    _refreshListLabels();
     final List<WmlParagraph> after = document.paragraphs.toList();
     final int stay = after.indexOf(startIdentity);
     if (stay >= 0) {
@@ -5221,6 +5314,7 @@ class WordEditorController extends OfficeController {
     caret.paragraphIndex = paragraphs.isEmpty
         ? 0
         : caret.paragraphIndex.clamp(0, paragraphs.length - 1);
+    _refreshListLabels();
     relayout();
     caret.logicalIndex = caret.logicalIndex.clamp(
       0,
@@ -5596,6 +5690,7 @@ class WordEditorController extends OfficeController {
         },
       ),
     );
+    _refreshListLabels();
     caret.paragraphIndex = caretPara.clamp(0, parent.length - 1);
     caret.logicalIndex = caretAfter.clamp(0, keep.text.length);
     caret.collapseSelection();
@@ -5667,6 +5762,7 @@ class WordEditorController extends OfficeController {
       caret.paragraphIndex = backward ? otherIndex : currentIndex;
       caret.logicalIndex = backward ? keep.text.length : caret.logicalIndex;
       caret.collapseSelection();
+      _refreshListLabels();
       relayout(localEdit: true);
       return true;
     }
@@ -5707,6 +5803,7 @@ class WordEditorController extends OfficeController {
     caret.paragraphIndex = backward ? otherIndex : currentIndex;
     caret.logicalIndex = join;
     caret.collapseSelection();
+    _refreshListLabels();
     relayout(localEdit: true);
     return true;
   }
@@ -6281,6 +6378,7 @@ class WordEditorController extends OfficeController {
   void applyParagraphFormat(
     void Function(WmlParagraphProps props) update, {
     List<WmlTabStop>? tabStops,
+    bool refreshListLabels = false,
   }) {
     if (!config.allowsMutation) {
       return;
@@ -6339,6 +6437,7 @@ class WordEditorController extends OfficeController {
         },
       ),
     );
+    if (refreshListLabels) _refreshListLabels();
     relayout();
     notifyListeners();
   }
@@ -6434,7 +6533,7 @@ class WordEditorController extends OfficeController {
         ..numberingSuppressed = false
         ..ilvl = 0
         ..listLabel = numbered ? '1. ' : '• ';
-    });
+    }, refreshListLabels: true);
   }
 
   /// setSectionColumns API.
@@ -9558,7 +9657,7 @@ class WordEditorController extends OfficeController {
         level: level,
         document: document,
       );
-    });
+    }, refreshListLabels: true);
   }
 
   /// setParagraphIndent API.

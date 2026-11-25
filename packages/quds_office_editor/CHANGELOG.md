@@ -4,6 +4,22 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Extend native Studio's selected-folder server search to the optional EWS,
+  Gmail and Microsoft 365 search adapters. Offer only supported fields, show
+  exact/estimated/unknown counts, retain stop/close cancellation and reject
+  stale account/folder results. Open search results through the normal guarded
+  reader/cache path. Date presets use UTC calendar-day boundaries.
+
+- Add account-owned sender identities and full-message templates to Studio Mail
+  writing tools in English, German and Arabic. Choose a sender explicitly,
+  retain From/display-name/Reply-To snapshots through draft recovery and frozen
+  Outbox messages, and preserve them when reopening editable Outbox copies.
+  Native SMTP can submit configured aliases subject to provider permission;
+  EWS/Gmail/Microsoft 365 retain the account-address restriction. Templates use
+  the shared Word body editor, support recipient/subject/sender defaults and
+  require confirmation before replacing a draft, clearing attachments and
+  removing reply threading. Settings changes never rewrite an existing draft.
+
 - Add English, German and Arabic help for `recipient:` and `participant:`
   correspondence searches in connected and cached Mail. Named saved searches
   accept the same fields while retaining their exact account/folder scopes.

@@ -66,7 +66,8 @@ class XmlPullReader {
   // unusually wide tags from extending the lifetime of all their slots.
   List<_AttrSlice>? _attributePool;
   static const _attributePoolLimit = 16;
-  final List<String> _elementStack = <String>[];
+  // Each open tag contributes its start and end offsets into _source.
+  final List<int> _elementStack = <int>[];
 
   /// eventType API.
   XmlEventType get eventType => _type;
@@ -156,9 +157,9 @@ class XmlPullReader {
       _emptyElement = false;
       _type = XmlEventType.endElement;
       if (_elementStack.isNotEmpty) {
-        _elementStack.removeLast();
+        _elementStack.length -= 2;
       }
-      _depth = _elementStack.length;
+      _depth = _elementStack.length ~/ 2;
       if (_nsStack.length > 1) {
         _nsStack.removeLast();
       }
@@ -330,8 +331,10 @@ class XmlPullReader {
       _skipSpaces();
     }
     _nsStack.add(scope);
-    _elementStack.add(qualifiedName);
-    _depth = _elementStack.length;
+    _elementStack
+      ..add(_nameStart)
+      ..add(_nameEnd);
+    _depth = _elementStack.length ~/ 2;
   }
 
   void _readEndElement() {
@@ -343,19 +346,30 @@ class XmlPullReader {
     if (_elementStack.isEmpty) {
       throw XmlParseException('Unexpected end tag </$qualifiedName>', _pos);
     }
-    final String open = _elementStack.removeLast();
-    if (open.length != _nameEnd - _nameStart ||
-        !_source.startsWith(open, _nameStart)) {
+    final openEnd = _elementStack.removeLast();
+    final openStart = _elementStack.removeLast();
+    if (!_matchesOpenName(openStart, openEnd)) {
+      final open = _slice(openStart, openEnd);
       throw XmlParseException(
         'Mismatched end tag: expected </$open> but found </$qualifiedName>',
         _pos,
       );
     }
-    _qualifiedName = open;
-    _depth = _elementStack.length;
+    _depth = _elementStack.length ~/ 2;
     if (_nsStack.length > 1) {
       _nsStack.removeLast();
     }
+  }
+
+  bool _matchesOpenName(int start, int end) {
+    final length = end - start;
+    if (length != _nameEnd - _nameStart) return false;
+    for (var i = 0; i < length; i++) {
+      if (_source.codeUnitAt(start + i) != _source.codeUnitAt(_nameStart + i)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _readQName() {

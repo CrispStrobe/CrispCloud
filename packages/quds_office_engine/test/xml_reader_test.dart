@@ -63,6 +63,16 @@ void main() {
       );
     });
 
+    test('closing tags match the complete opening name at their depth', () {
+      final reader = XmlPullReader('<é><élément></élément></é>');
+      for (final name in ['é', 'élément', 'élément', 'é']) {
+        expect(reader.next(), isTrue);
+        expect(reader.qualifiedName, name);
+      }
+      final shorter = XmlPullReader('<élément></é>')..next();
+      expect(shorter.next, throwsA(isA<XmlParseException>()));
+    });
+
     test('event names survive empty tags and follow namespace scope', () {
       final reader = XmlPullReader(
         '<root xmlns:p="urn:outer"><p:child xmlns:p="urn:inner"/>'

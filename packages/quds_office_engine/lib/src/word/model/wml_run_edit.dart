@@ -8,7 +8,11 @@ import 'word_proofing_language.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
 abstract final class WmlRunEdit {
-  /// propsAt API.
+  /// Character formatting in effect at [index].
+  ///
+  /// An empty paragraph has no visible character to read, so typing follows
+  /// its paragraph mark: Word, Writer and Docs continue with the mark's
+  /// font, size, weight and color after Enter creates a new paragraph.
   static WmlRunProps propsAt(WmlParagraph paragraph, int index) {
     var offset = 0;
     WmlRunProps last = WmlRunProps();
@@ -18,10 +22,13 @@ abstract final class WmlRunEdit {
       }
       last = inline.properties;
       final int end = offset + inline.text.length;
-      if (index < end) {
+      if (index >= offset && index < end) {
         return inline.properties;
       }
       offset = end;
+    }
+    if (paragraph.text.isEmpty) {
+      return paragraph.properties.importedParagraphMark ?? last;
     }
     return last;
   }

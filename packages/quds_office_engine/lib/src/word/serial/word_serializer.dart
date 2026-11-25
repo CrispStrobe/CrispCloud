@@ -1425,7 +1425,17 @@ class WordSerializer {
         attributes: <String, String>{'w:val': '${p.headingLevel! - 1}'},
       );
     }
-    if (p.proofingLanguage != null) {
+    if (p.importedParagraphMark case final mark?) {
+      // The paragraph mark is an unpainted participant: it supplies the
+      // continuation format for typing in an empty paragraph and the line
+      // metrics of that empty line. Word stores it in `w:pPr/w:rPr`.
+      _writeFullRPr(
+        w,
+        mark.proofingLanguage == null && p.proofingLanguage != null
+            ? (mark.copy()..proofingLanguage = p.proofingLanguage)
+            : mark,
+      );
+    } else if (p.proofingLanguage != null) {
       w.writeStartElement('rPr', prefix: 'w');
       w.writeEmptyElement(
         'lang',
