@@ -141,7 +141,8 @@ void main() {
       final many = List.generate(20, (i) => 'a$i="$i"').join(' ');
       final reader = XmlPullReader(
         '<root xmlns:p="urn:p"><p:wide $many p:val="&amp;"/>'
-        '<p:narrow val="plain"/><p:empty/></root>',
+        '<p:narrow val="plain"/><p:empty/><p:wide $many p:val="again"/>'
+        '</root>',
       );
       expect(reader.next(), isTrue);
       expect(reader.next(), isTrue);
@@ -159,6 +160,12 @@ void main() {
       expect(reader.next(), isTrue);
       expect(reader.next(), isTrue);
       expect(reader.attributeCount, 0);
+      expect(() => reader.attributeNamespace(0), throwsRangeError);
+      expect(reader.next(), isTrue);
+      expect(reader.next(), isTrue);
+      expect(reader.attributeCount, 21);
+      expect(reader.getAttribute('val', namespaceUri: 'urn:p'), 'again');
+      expect(reader.attributeValue(19), '19');
     });
 
     test('handles empty elements, comments, and CDATA', () {

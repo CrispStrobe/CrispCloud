@@ -63,11 +63,11 @@ class XmlPullReader {
   _NsScope? _lastPrefixScope;
   String _lastPrefix = '';
   String _lastPrefixUri = '';
+  // Reuse the first few attribute slots. Only the active prefix of the list
+  // belongs to the current tag.
   final List<_AttrSlice> _attrs = <_AttrSlice>[];
-  // Most tags need only a few slots. Keep peak attribute counts on
-  // unusually wide tags from extending the lifetime of all their slots.
-  List<_AttrSlice>? _attributePool;
-  static const _attributePoolLimit = 16;
+  int _attributeCount = 0;
+  static const _retainedAttributeLimit = 16;
   // Each open tag contributes its start and end offsets into _source.
   final List<int> _elementStack = <int>[];
 
@@ -145,7 +145,7 @@ class XmlPullReader {
   }
 
   /// attributeCount API.
-  int get attributeCount => _attrs.length;
+  int get attributeCount => _attributeCount;
 
   /// Advances to the next event. Returns `false` after [XmlEventType.endDocument].
   bool next() {
@@ -169,7 +169,10 @@ class XmlPullReader {
       return true;
     }
 
-    _attrs.clear();
+    _attributeCount = 0;
+    if (_attrs.length > _retainedAttributeLimit) {
+      _attrs.length = _retainedAttributeLimit;
+    }
     _qualifiedName = _localName = _prefix = null;
     _emptyElement = false;
     _textHasEntities = false;
@@ -252,21 +255,27 @@ class XmlPullReader {
     return _source.substring(start, _pos);
   }
 
+  _AttrSlice _attributeAt(int index) {
+    RangeError.checkValidIndex(index, _attrs, 'index', _attributeCount);
+    return _attrs[index];
+  }
+
   /// attributeQualifiedName API.
-  String attributeQualifiedName(int index) => _attrs[index].qualified(_source);
+  String attributeQualifiedName(int index) =>
+      _attributeAt(index).qualified(_source);
 
   /// attributeLocalName API.
-  String attributeLocalName(int index) => _attrs[index].local(_source);
+  String attributeLocalName(int index) => _attributeAt(index).local(_source);
 
   /// attributePrefix API.
-  String attributePrefix(int index) => _attrs[index].prefix(_source);
+  String attributePrefix(int index) => _attributeAt(index).prefix(_source);
 
   /// attributeValue API.
-  String attributeValue(int index) => _attrs[index].decodedValue(_source);
+  String attributeValue(int index) => _attributeAt(index).decodedValue(_source);
 
   /// attributeNamespace API.
   String attributeNamespace(int index) {
-    final _AttrSlice attr = _attrs[index];
+    final _AttrSlice attr = _attributeAt(index);
     if (attr.isXmlns || attr.prefixEnd <= attr.nameStart) {
       return '';
     }
@@ -275,7 +284,7 @@ class XmlPullReader {
 
   /// getAttribute API.
   String? getAttribute(String localName, {String? namespaceUri}) {
-    for (int i = 0; i < _attrs.length; i++) {
+    for (int i = 0; i < _attributeCount; i++) {
       final _AttrSlice attr = _attrs[i];
       if (!attr.hasLocalName(_source, localName)) {
         continue;
@@ -293,7 +302,7 @@ class XmlPullReader {
   /// attributesAsMap API.
   Map<String, String> attributesAsMap() {
     final Map<String, String> map = <String, String>{};
-    for (int i = 0; i < _attrs.length; i++) {
+    for (int i = 0; i < _attributeCount; i++) {
       map[attributeQualifiedName(i)] = attributeValue(i);
     }
     return map;
@@ -318,7 +327,7 @@ class XmlPullReader {
         break;
       }
       final attr = _readAttribute();
-      _attrs.add(attr);
+      _attributeCount++;
       if (attr.isXmlns) {
         if (identical(scope, inherited)) {
           scope = _NsScope(inherited, _depth + 1);
@@ -436,14 +445,12 @@ class XmlPullReader {
     final int vEnd = _pos;
     _expect(quote, 'Unterminated attribute value');
 
-    final index = _attrs.length;
-    final pool = _attributePool ??= <_AttrSlice>[];
     final _AttrSlice attr;
-    if (index < pool.length) {
-      attr = pool[index];
+    if (_attributeCount < _attrs.length) {
+      attr = _attrs[_attributeCount];
     } else {
       attr = _AttrSlice();
-      if (index < _attributePoolLimit) pool.add(attr);
+      _attrs.add(attr);
     }
     return attr
       ..nameStart = qStart
