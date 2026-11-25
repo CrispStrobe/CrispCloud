@@ -252,6 +252,40 @@ void main() {
     },
   );
 
+  for (final widowControl in [true, false]) {
+    test('tall merged cell cuts respect widow control $widowControl', () {
+      final source = _table(rows: 2);
+      source.rows.first
+        ..height = null
+        ..cantSplit = false;
+      // Each paragraph wraps to two lines in the narrow cell.
+      source.rows.first.cells.first.blocks = [
+        for (var i = 0; i < 35; i++)
+          _paragraph('Master line $i')..properties.widowControl = widowControl,
+      ];
+      final document = _document(source);
+      final table = document.sections.single.blocks.single as WmlTable;
+      final layout = WordLayoutEngine(font: null).layout(document);
+      final paragraphs = table.rows.first.cells.first.blocks;
+      final pagesOf = <Object, List<int>>{};
+      var split = false;
+      for (final page in layout.pages) {
+        for (final line in page.lines) {
+          final paragraph = line.sourceParagraph;
+          if (paragraph == null || !paragraphs.contains(paragraph)) continue;
+          pagesOf.putIfAbsent(paragraph, () => []).add(page.index);
+        }
+      }
+      for (final pages in pagesOf.values) {
+        expect(pages, hasLength(2));
+        if (pages.first != pages.last) split = true;
+      }
+      // Two-line paragraphs either stay together, or (without widow
+      // control) fill each page and leave single lines at the cuts.
+      expect(split, !widowControl);
+    });
+  }
+
   for (final explicitBorder in [false, true]) {
     for (final tableBorders in [false, true]) {
       for (final reopen in [false, true]) {
@@ -266,9 +300,9 @@ void main() {
             source.rows.first.cells.first
               ..borderTop = explicitBorder
               ..borderBottom = explicitBorder
-              ..blocks = [
-                for (var i = 0; i < 35; i++) _paragraph('Master line $i'),
-              ];
+              // One line per paragraph: widow control must not decide where
+              // the cell ends (that is covered separately below).
+              ..blocks = [for (var i = 0; i < 35; i++) _paragraph('Line $i')];
             var document = _document(source);
             if (reopen) document = _reopen(document);
             final table = document.sections.single.blocks.single as WmlTable;

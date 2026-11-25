@@ -181,6 +181,70 @@ void main() {
     expect(s.controller.proofing.summary.complete, isTrue);
   });
 
+  test(
+    'routing follows both Word runs and script spans across noProof gaps',
+    () async {
+      const explicit = '$_german1 ';
+      const skipped = '$_english ';
+      const before = '$_german ';
+      const arabic = '$_arabic ';
+      final document = WmlDocument(
+        proofingLanguage: 'en-US',
+        sections: [
+          WmlSection(
+            blocks: [
+              WmlParagraph(
+                inlines: [
+                  WmlRun(text: before),
+                  WmlRun(
+                    text: explicit,
+                    properties: WmlRunProps(proofingLanguage: 'fr-FR'),
+                  ),
+                  WmlRun(text: arabic),
+                  WmlRun(text: skipped, properties: WmlRunProps(noProof: true)),
+                  WmlRun(text: '$arabic$_german2'),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      final provider = _Provider();
+      final session = WordProofingSession(
+        document: () => document,
+        revision: () => 0,
+        service: OfficeProofingService(providers: [provider]),
+      );
+      addTearDown(session.dispose);
+      session.configureLanguageDetection(
+        ParagraphLanguageDetector(
+          _FakeIdentifier({
+            ..._answers,
+            '$_german $_german1': const [LanguageGuess('de', 0.9999)],
+          }),
+        ),
+      );
+
+      final summary = await session.checkNow();
+
+      final secondArabicOffset =
+          before.length + explicit.length + arabic.length + skipped.length;
+      expect(summary.skippedContentCount, 1);
+      expect(
+        provider.requests.map(
+          (request) => (request.text, request.startOffset, request.language),
+        ),
+        [
+          (before, 0, 'de-DE'),
+          (explicit, before.length, 'fr-FR'),
+          (arabic, before.length + explicit.length, 'ar'),
+          (arabic, secondArabicOffset, 'ar'),
+          (_german2, secondArabicOffset + arabic.length, 'de-DE'),
+        ],
+      );
+    },
+  );
+
   test('turning automatic detection off restores Word routing', () async {
     final s = _setUp();
     await s.controller.proofing.checkNow();
