@@ -131,43 +131,30 @@ TextScript? _scriptOf(int rune) {
 /// Splits [text] into script runs that together cover all of it. Returns an
 /// empty list for text without letters.
 List<ScriptSegment> scriptSegments(String text) {
-  final runs = <({int start, int end, TextScript script, int letters})>[];
+  final runs = <ScriptSegment>[];
+  TextScript? currentScript;
+  var start = 0;
   var offset = 0;
+  var letters = 0;
   for (final rune in text.runes) {
-    final width = rune > 0xffff ? 2 : 1;
     final script = _scriptOf(rune);
-    if (script == null) {
-      if (runs.isNotEmpty) {
-        final last = runs.removeLast();
-        runs.add((
-          start: last.start,
-          end: offset + width,
-          script: last.script,
-          letters: last.letters,
-        ));
+    if (script != null) {
+      if (script != currentScript) {
+        if (currentScript != null) {
+          runs.add(ScriptSegment(start, offset, currentScript, letters));
+          start = offset;
+        }
+        currentScript = script;
+        letters = 0;
       }
-    } else if (runs.isNotEmpty && runs.last.script == script) {
-      final last = runs.removeLast();
-      runs.add((
-        start: last.start,
-        end: offset + width,
-        script: script,
-        letters: last.letters + 1,
-      ));
-    } else {
-      runs.add((
-        start: runs.isEmpty ? 0 : offset,
-        end: offset + width,
-        script: script,
-        letters: 1,
-      ));
+      letters++;
     }
-    offset += width;
+    offset += rune > 0xffff ? 2 : 1;
   }
-  return [
-    for (final run in runs)
-      ScriptSegment(run.start, run.end, run.script, run.letters),
-  ];
+  if (currentScript != null) {
+    runs.add(ScriptSegment(start, offset, currentScript, letters));
+  }
+  return runs;
 }
 
 /// Which script a detected language is written in, for the CLD3 labels the

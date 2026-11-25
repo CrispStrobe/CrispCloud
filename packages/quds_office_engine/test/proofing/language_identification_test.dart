@@ -46,6 +46,22 @@ void main() {
     }
   });
 
+  test('returning to a script resets the letter count and keeps neutrals', () {
+    const first = '🙂ab٢→';
+    const middle = 'ع\u064e…🙂';
+    const last = 'Aéz!🙂';
+    const text = '$first$middle$last';
+    final middleEnd = first.length + middle.length;
+    expect(
+      scriptSegments(text).map((s) => (s.start, s.end, s.script, s.letters)),
+      [
+        (0, first.length, TextScript.latin, 2),
+        (first.length, middleEnd, TextScript.arabic, 1),
+        (middleEnd, text.length, TextScript.latin, 3),
+      ],
+    );
+  });
+
   test('digits, punctuation, marks and emoji alone do not create scripts', () {
     for (final text in ['', '١۲1，؟🙂\u064e\u05b0', '\u200d\u202e']) {
       expect(scriptSegments(text), isEmpty, reason: text);
