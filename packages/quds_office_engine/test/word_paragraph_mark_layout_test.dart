@@ -96,6 +96,32 @@ void main() {
     },
   );
 
+  test('repeated styled paragraph marks retain independent properties', () {
+    final doc = read(
+      '<w:p><w:pPr>$mark</w:pPr>$text</w:p>'
+      '<w:p><w:pPr>$mark</w:pPr>$text</w:p>',
+      styles:
+          '<w:styles xmlns:w="$w"><w:docDefaults><w:rPrDefault><w:rPr>'
+          '<w:color w:val="336699"/>'
+          '</w:rPr></w:rPrDefault></w:docDefaults></w:styles>',
+    );
+    final paragraphs = doc.paragraphs.toList();
+    final first = paragraphs.first.properties.importedParagraphMark!;
+    final second = paragraphs.last.properties.importedParagraphMark!;
+    expect(first, isNot(same(second)));
+    expect(second.fontSizePoints, 36);
+    expect(second.color, '336699');
+    expect(second.explicitProperties, contains('color'));
+
+    first
+      ..fontSizeHalfPoints = 20
+      ..color = 'FF0000'
+      ..explicitProperties.clear();
+    expect(second.fontSizePoints, 36);
+    expect(second.color, '336699');
+    expect(second.explicitProperties, contains('color'));
+  });
+
   test(
     'mark metadata is independent in clones and survives three isolate saves',
     () async {

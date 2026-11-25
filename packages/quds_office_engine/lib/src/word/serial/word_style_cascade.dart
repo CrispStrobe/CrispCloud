@@ -9,7 +9,7 @@ typedef _RunStyleProjection = ({
 
 typedef _ParagraphStyleProjection = ({
   String paragraphXml,
-  String? markerXml,
+  WmlRunProps? marker,
   bool hasSpacingAfter,
   bool hasLineSpacing,
 });
@@ -1144,10 +1144,9 @@ class _StyleCascade {
       }
     }
     p.properties.sourcePropertiesXml = source;
-    if (projection.markerXml case final markerXml?) {
-      final marker = WmlRunProps(kerningHalfPoints: null);
-      reader._parseRPr(XmlPullReader(markerXml)..next(), marker);
-      p.properties.importedParagraphMark = marker;
+    if (projection.marker case final marker?) {
+      // The projection is shared, while each paragraph owns its mark.
+      p.properties.importedParagraphMark = marker.copy();
     }
     p.properties.importedValues = WordPropertyIo.paragraphValues(p.properties);
     for (var index = 0; index < p.inlines.length; index++) {
@@ -1252,11 +1251,19 @@ class _StyleCascade {
       toggleLayers: markerStyles.whereType<XmlElement>().toSet(),
       paragraphRunLayers: paragraphRunStyles,
     );
+    WmlRunProps? parsedMarker;
+    if (marker.childElements.isNotEmpty) {
+      parsedMarker = WmlRunProps(kerningHalfPoints: null);
+      reader._parseRPr(
+        XmlPullReader(
+          XmlDocument(root: marker).toXmlString(declaration: false),
+        )..next(),
+        parsedMarker,
+      );
+    }
     return (
       paragraphXml: XmlDocument(root: pp).toXmlString(declaration: false),
-      markerXml: marker.childElements.isEmpty
-          ? null
-          : XmlDocument(root: marker).toXmlString(declaration: false),
+      marker: parsedMarker,
       hasSpacingAfter: spacing?.getAttribute('after') != null,
       hasLineSpacing: spacing?.getAttribute('line') != null,
     );
