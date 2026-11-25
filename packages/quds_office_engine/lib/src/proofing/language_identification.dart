@@ -422,7 +422,7 @@ final class ParagraphLanguageDetector {
     final input = List<String>.of(texts, growable: false);
     final results = <String, ParagraphLanguages>{};
     final waits = <String, Future<ParagraphLanguages>>{};
-    final missing = <String>[];
+    final missing = <String>{};
     for (final text in input) {
       if (results.containsKey(text) || waits.containsKey(text)) continue;
       final hit = cached(text);
@@ -431,25 +431,26 @@ final class ParagraphLanguageDetector {
         results[text] = hit;
       } else if (running != null) {
         waits[text] = running;
-      } else if (!missing.contains(text)) {
+      } else {
         missing.add(text);
       }
     }
     if (missing.isNotEmpty) {
-      final work = _run(missing, _cacheGeneration);
+      final pendingTexts = missing.toList(growable: false);
+      final work = _run(pendingTexts, _cacheGeneration);
       final owned = <String, Future<ParagraphLanguages>>{};
-      for (var i = 0; i < missing.length; i++) {
+      for (var i = 0; i < pendingTexts.length; i++) {
         final position = i;
         final pending = work.then((done) => done[position]);
         // Only concurrent callers listen; an error must not go unhandled.
         pending.ignore();
-        _running[missing[i]] = pending;
-        owned[missing[i]] = pending;
+        _running[pendingTexts[i]] = pending;
+        owned[pendingTexts[i]] = pending;
       }
       try {
         final done = await work;
-        for (var i = 0; i < missing.length; i++) {
-          results[missing[i]] = done[i];
+        for (var i = 0; i < pendingTexts.length; i++) {
+          results[pendingTexts[i]] = done[i];
         }
       } finally {
         for (final entry in owned.entries) {

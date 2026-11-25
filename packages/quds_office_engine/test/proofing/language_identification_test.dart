@@ -202,19 +202,24 @@ void main() {
         ],
       );
       final detector = ParagraphLanguageDetector(identifier);
+      const later = '$_longLatin Second paragraph.';
       final result = await detector.detectAll([
         _longLatin,
         'عربي',
         '123🙂',
+        later,
         _longLatin,
+        later,
       ]);
       expect(identifier.calls, [
-        [_longLatin],
+        [_longLatin, later],
       ]);
       expect(result[0].segments.single.language, 'fr');
       expect(result[1].segments.single.language, 'ar');
       expect(result[2].segments, isEmpty);
-      expect(identical(result.first, result.last), isTrue);
+      expect(result[3].text, later);
+      expect(result[4], same(result[0]));
+      expect(result[5], same(result[3]));
       await detector.detect(_longLatin);
       expect(identifier.calls, hasLength(1));
       expect(result.first.segmentAt(0), same(result.first.segments.single));
