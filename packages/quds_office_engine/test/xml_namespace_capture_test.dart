@@ -96,6 +96,37 @@ void main() {
     expect(reopened.map((run) => run.properties.italic), [false, false, true]);
   });
 
+  test('repeated field markers retain the namespace of their type', () {
+    const markers =
+        '<w:r><w:fldChar q:fldCharType="begin"/></w:r>'
+        '<w:r><w:fldChar q:fldCharType="end"/></w:r>';
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}" '
+          'xmlns:q="${OfficeNamespaces.w}"><w:body>'
+          '<w:p>$markers</w:p><w:p>$markers</w:p>'
+          '<w:p xmlns:q="urn:foreign">$markers</w:p>'
+          '</w:body></w:document>',
+        );
+    final paragraphs = WordDeserializer().read(package).paragraphs;
+    for (final paragraph in paragraphs.take(2)) {
+      final boundaries = paragraph.inlines.whereType<WmlFieldBoundary>();
+      expect(boundaries.map((boundary) => boundary.kind), [
+        WmlFieldBoundaryKind.begin,
+        WmlFieldBoundaryKind.end,
+      ]);
+      expect(
+        XmlDocument.parse(
+          boundaries.first.sourceXml!,
+        ).root!.getAttribute('fldCharType', namespaceUri: OfficeNamespaces.w),
+        'begin',
+      );
+    }
+    expect(paragraphs.last.inlines.whereType<WmlFieldBoundary>(), isEmpty);
+  });
+
   test('unread XML attributes still validate entities', () {
     final reader = XmlPullReader('<root invalid="&unknown;"/>');
     expect(reader.next, throwsA(isA<XmlParseException>()));

@@ -47,6 +47,8 @@ part 'word_style_cascade.dart';
 
 enum _SdtBreakLayout { none, liftLast, opaque }
 
+typedef _ImportedFieldChar = ({WmlFieldBoundaryKind? kind, String? xml});
+
 /// Reads a `.docx` OPC package into a [WmlDocument] tree.
 class WordDeserializer {
   final List<WmlEquation> _pendingEquations = <WmlEquation>[];
@@ -155,6 +157,9 @@ class WordDeserializer {
     _nextSplitControlId = 0x30000000;
     _openFields.clear();
     _tocBoundaries.clear();
+    _fieldCharNamespaces = null;
+    _emptyFieldChars.clear();
+    _fieldSourceElements.clear();
     _blockMarkers.clear();
     _lastBlockParagraph = null;
     _drawingDepth = 0;
@@ -256,6 +261,9 @@ class WordDeserializer {
       }
     }
     WordContentControls.recordImported(document);
+    _fieldCharNamespaces = null;
+    _emptyFieldChars.clear();
+    _fieldSourceElements.clear();
     _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
     return document;
@@ -1289,36 +1297,28 @@ class WordDeserializer {
         inlines.add(boundary);
         _noteFieldInstruction(boundary);
       } else if (reader.localName == 'fldChar') {
-        final XmlElement fldChar = XmlDocument.readElement(reader);
-        final String? type = fldChar.getAttribute(
-          'fldCharType',
-          namespaceUri: OfficeNamespaces.w,
-        );
-        final kind = switch (type) {
-          'begin' => WmlFieldBoundaryKind.begin,
-          'separate' => WmlFieldBoundaryKind.separate,
-          'end' => WmlFieldBoundaryKind.end,
-          _ => null,
-        };
+        final field = _readFieldChar(reader);
+        final kind = field.kind;
         if (kind != null) {
           _flushFieldText(inlines ??= <WmlInline>[], run);
           final boundary = WmlFieldBoundary(
             kind: kind,
-            sourceXml: XmlDocument(
-              root: fldChar,
-            ).toXmlString(declaration: false),
+            sourceXml: field.xml,
             runPropertiesXml:
                 boundaryRunPropertiesXml ?? run.properties.sourcePropertiesXml,
           );
           inlines.add(boundary);
           _noteFieldChar(boundary);
-        }
-        if (type == 'begin') {
-          paragraph.properties.fieldBegin = true;
-        } else if (type == 'separate') {
-          paragraph.properties.fieldSeparate = true;
-        } else if (type == 'end') {
-          paragraph.properties.fieldEnd = true;
+          switch (kind) {
+            case WmlFieldBoundaryKind.begin:
+              paragraph.properties.fieldBegin = true;
+            case WmlFieldBoundaryKind.separate:
+              paragraph.properties.fieldSeparate = true;
+            case WmlFieldBoundaryKind.end:
+              paragraph.properties.fieldEnd = true;
+            case WmlFieldBoundaryKind.instruction:
+              break;
+          }
         }
       } else if (reader.localName == 'commentReference') {
         continue;
@@ -2236,6 +2236,69 @@ class WordDeserializer {
     );
   }
 
+  // Ordinary field markers repeat in long bibliographies, reference lists,
+  // and TOCs. Share the immutable XML only within the same namespace scope.
+  Map<String, String>? _fieldCharNamespaces;
+  final _emptyFieldChars = <String, _ImportedFieldChar>{};
+  final _fieldSourceElements = <String, XmlElement>{};
+  static const _fieldCacheLimit = 64;
+
+  _ImportedFieldChar _readFieldChar(XmlPullReader reader) {
+    if (!reader.isEmptyElement) {
+      return _parseFieldChar(reader);
+    }
+    final namespaces = reader.inScopeNamespaces;
+    if (!identical(namespaces, _fieldCharNamespaces)) {
+      _fieldCharNamespaces = namespaces;
+      _emptyFieldChars.clear();
+    }
+    final fragment = reader.readRawElement();
+    final cacheable = fragment.length <= 1024;
+    final cached = cacheable ? _emptyFieldChars[fragment] : null;
+    if (cached != null) return cached;
+    final field = _parseFieldChar(
+      XmlPullReader(fragment, inheritedNamespaces: namespaces)..next(),
+    );
+    if (cacheable && _emptyFieldChars.length < _fieldCacheLimit) {
+      _emptyFieldChars[fragment] = field;
+    }
+    return field;
+  }
+
+  static _ImportedFieldChar _parseFieldChar(XmlPullReader reader) {
+    final node = XmlDocument.readElement(reader);
+    final kind = switch (node.getAttribute(
+      'fldCharType',
+      namespaceUri: OfficeNamespaces.w,
+    )) {
+      'begin' => WmlFieldBoundaryKind.begin,
+      'separate' => WmlFieldBoundaryKind.separate,
+      'end' => WmlFieldBoundaryKind.end,
+      _ => null,
+    };
+    return (
+      kind: kind,
+      xml: kind == null
+          ? null
+          : XmlDocument(root: node).toXmlString(declaration: false),
+    );
+  }
+
+  XmlElement? _fieldSourceElement(String xml) {
+    // Both field guards inspect the same normalized XML without mutating it.
+    final cacheable = xml.length <= 4096;
+    final cached = cacheable ? _fieldSourceElements[xml] : null;
+    if (cached != null) return cached;
+    final root = XmlDocument.parse(xml).root;
+    if (root != null && cacheable) {
+      if (_fieldSourceElements.length >= _fieldCacheLimit) {
+        _fieldSourceElements.remove(_fieldSourceElements.keys.first);
+      }
+      _fieldSourceElements[xml] = root;
+    }
+    return root;
+  }
+
   // -- complex-field spans --------------------------------------------------
   // Open fields across paragraphs (a TOC spans many). Each entry is the begin
   // boundary plus whether its instruction marked it as a TOC.
@@ -2394,11 +2457,7 @@ class WordDeserializer {
     _clearParagraphField(paragraph);
   }
 
-  static bool _plainParagraphFieldPacket(
-    List<WmlInline> inlines,
-    int begin,
-    int end,
-  ) {
+  bool _plainParagraphFieldPacket(List<WmlInline> inlines, int begin, int end) {
     var instructed = false;
     var separated = false;
     for (var index = begin; index <= end; index++) {
@@ -2419,7 +2478,7 @@ class WordDeserializer {
     return separated;
   }
 
-  static bool _plainParagraphFieldBoundary(WmlFieldBoundary boundary) {
+  bool _plainParagraphFieldBoundary(WmlFieldBoundary boundary) {
     // Paragraph properties cannot represent a locked field, formatted code
     // run, form state or foreign boundary metadata. Keeping the packet also
     // keeps its authored cache and permits native serialization to retain it.
@@ -2427,7 +2486,7 @@ class WordDeserializer {
     final source = boundary.sourceXml;
     if (source == null) return true;
     if (boundary.kind == WmlFieldBoundaryKind.instruction) return false;
-    final element = XmlDocument.parse(source).root;
+    final element = _fieldSourceElement(source);
     if (element == null ||
         element.localName != 'fldChar' ||
         element.namespaceUri != OfficeNamespaces.w ||
@@ -2513,7 +2572,7 @@ class WordDeserializer {
               }
               final source = member.sourceXml == null
                   ? null
-                  : XmlDocument.parse(member.sourceXml!).root;
+                  : _fieldSourceElement(member.sourceXml!);
               if (source != null) {
                 if (source.children.isNotEmpty ||
                     source.attributes.any(
