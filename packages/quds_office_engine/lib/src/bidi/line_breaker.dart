@@ -323,7 +323,7 @@ abstract final class LineBreaker {
             hyphens,
             clusterStarts,
             controls,
-            measurements.at,
+            measurements.widthAt,
             firstLineWidth: firstLineWidth,
           );
     var breaks = !breakLongWords
@@ -805,7 +805,7 @@ abstract final class LineBreaker {
     Map<int, ShapedGlyph> hyphens,
     GraphemeBoundaries clusterStarts,
     _BreakControls controls,
-    _MeasuredLine Function(int, int) measure, {
+    double Function(int, int) measureWidth, {
     double? firstLineWidth,
   }) {
     final n = glyphs.length;
@@ -851,7 +851,7 @@ abstract final class LineBreaker {
         at >= first && tested < 32;
         at--, tested++
       ) {
-        if (measure(start, legal[at]).width <= limit + .000001) {
+        if (measureWidth(start, legal[at]) <= limit + .000001) {
           chosen = legal[at];
           chosenIndex = at;
           break;
@@ -864,7 +864,7 @@ abstract final class LineBreaker {
         at < legal.length && tested < 32;
         at++, tested++
       ) {
-        if (measure(start, legal[at]).width <= limit + .000001) {
+        if (measureWidth(start, legal[at]) <= limit + .000001) {
           chosen = legal[at];
           chosenIndex = at;
         } else if (_hyphenForBreak(glyphs, legal[at], hyphens) == null) {
@@ -1180,15 +1180,37 @@ class _LineMeasurements {
   static const _maxEntries = 128;
   static const _maxGlyphs = 32768;
 
+  // Greedy search only needs the width of a candidate. For even-level
+  // text with no marks to attach, visual order and advances are unchanged.
+  // Sum in the same order as emission so rounding cannot change a wrap.
+  double widthAt(int from, int to) {
+    if (measureLine != null) return at(from, to).width;
+    final painted = _paintedEnd(from, to);
+    var width = 0.0;
+    for (var index = from; index < painted; index++) {
+      final glyph = logical[index];
+      if (glyph.level.isOdd || LineBreaker.isCombiningMark(glyph.codePoint)) {
+        return at(from, to).width;
+      }
+      if (glyph.codePoint != 0x00ad) width += glyph.advance;
+    }
+    final hyphen = LineBreaker._hyphenForBreak(logical, to, hyphens);
+    if (hyphen != null) width += hyphen.advance;
+    return width;
+  }
+
+  int _paintedEnd(int from, int to) {
+    while (to > from && LineBreaker._isSoftTrailingSpace(logical[to - 1])) {
+      to--;
+    }
+    return to;
+  }
+
   _MeasuredLine at(int from, int to) {
     final key = (from, to);
     final cached = _cache[key];
     if (cached != null) return cached;
-    var painted = to;
-    while (painted > from &&
-        LineBreaker._isSoftTrailingSpace(logical[painted - 1])) {
-      painted--;
-    }
+    final painted = _paintedEnd(from, to);
     var slice = LineBreaker._paintSlice(logical, from, painted, to, hyphens);
     final callback = measureLine;
     if (callback != null && slice.isNotEmpty) {
@@ -1362,7 +1384,7 @@ class PreparedLineBreaker {
               _hyphens,
               _clusterStarts,
               _controls,
-              (a, b) => _measurements.at(from + a, from + b),
+              (a, b) => _measurements.widthAt(from + a, from + b),
             );
       if (_breakLongWords) {
         points = LineBreaker._constrainBreaks(
