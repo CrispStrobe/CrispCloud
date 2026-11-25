@@ -1079,6 +1079,7 @@ class WordLayoutEngine {
   final _footnotesById = <int, WmlNote>{};
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
   final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
+  int _lastReservedNotePage = -1;
   final Set<int> _placedNotes = <int>{};
 
   /// [_placedNotes] in placement order (incremental layout restores
@@ -1138,15 +1139,17 @@ class WordLayoutEngine {
 
   /// Note slices reserved on pages from [fromPage] on, copied; null if none.
   Map<int, List<_NoteSlice>>? _pendingNotes(int fromPage) {
-    if (_noteSlices.isEmpty) return null;
     Map<int, List<_NoteSlice>>? result;
-    _noteSlices.forEach((int page, List<_NoteSlice> slices) {
-      if (page >= fromPage && slices.isNotEmpty) {
+    // Earlier pages are sealed. A checkpoint only needs the reservations on
+    // its current page and in any footnote continuation pages ahead.
+    for (var page = fromPage; page <= _lastReservedNotePage; page++) {
+      final slices = _noteSlices[page];
+      if (slices != null && slices.isNotEmpty) {
         (result ??= <int, List<_NoteSlice>>{})[page] = List<_NoteSlice>.of(
           slices,
         );
       }
-    });
+    }
     return result;
   }
 
@@ -1312,6 +1315,7 @@ class WordLayoutEngine {
                 _layoutDoc!.sections.indexOf(section),
               ),
             );
+        _lastReservedNotePage = math.max(_lastReservedNotePage, target);
         start = end;
         target++;
       }
@@ -1691,6 +1695,7 @@ class WordLayoutEngine {
     _noteNumbering = _inheritedNoteNumbering ?? WordNoteNumbering(document);
     _noteStories.clear();
     _noteSlices.clear();
+    _lastReservedNotePage = -1;
     _placedNotes.clear();
     _placedOrder.clear();
     // Materialize every nested TOC before paragraph indices are counted. A
@@ -1793,8 +1798,7 @@ class WordLayoutEngine {
       );
     }
     final int flowPages = pages.length;
-    final lastNotePage = _noteSlices.keys.fold(-1, math.max);
-    while (pages.length <= lastNotePage) {
+    while (pages.length <= _lastReservedNotePage) {
       final _NoteSlice? slice = _noteSlices[pages.length]?.firstOrNull;
       final WmlSection section = slice?.section ?? document.sections.last;
       pages.add(
@@ -1989,6 +1993,7 @@ class WordLayoutEngine {
         cp.pendingNotes?.forEach((int page, List<_NoteSlice> slices) {
           _noteSlices[page] = List<_NoteSlice>.of(slices);
         });
+        _lastReservedNotePage = _noteSlices.keys.fold(-1, math.max);
         for (final int id in oldNotes.placedOrder.take(cp.placedNotes)) {
           _placedNotes.add(id);
           _placedOrder.add(id);
@@ -2074,6 +2079,7 @@ class WordLayoutEngine {
       oldNotes.slices.forEach((int page, List<_NoteSlice> slices) {
         if (page >= at) _noteSlices[page] = List<_NoteSlice>.of(slices);
       });
+      _lastReservedNotePage = _noteSlices.keys.fold(-1, math.max);
       for (final int id in oldNotes.placedOrder.skip(cp.placedNotes)) {
         if (_placedNotes.add(id)) _placedOrder.add(id);
       }

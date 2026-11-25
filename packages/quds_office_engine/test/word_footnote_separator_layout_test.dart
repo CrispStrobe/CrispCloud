@@ -329,6 +329,41 @@ void main() {
     _expectClearBand(layout, document);
   });
 
+  test('incremental resume preserves footnote continuations', () {
+    final document = _document(
+      noteText: List.generate(
+        45,
+        (i) => 'Continued footnote line $i.',
+      ).join('\n'),
+      bodyParagraphs: 20,
+      height: 150,
+    );
+    final engine = WordLayoutEngine(font: null);
+    final before = engine.layout(document, updateFields: false);
+    expect(
+      before.pages.where((page) => page.notes.isNotEmpty).length,
+      greaterThan(2),
+    );
+
+    final edited = document.paragraphs.elementAt(1);
+    WmlRunEdit.replaceRange(edited, 0, 1, 'X');
+    WordIncrementalLayoutStats.reset();
+    final resumed = engine.layout(
+      document,
+      updateFields: false,
+      reuse: before,
+      dirtyParagraphs: {edited},
+    );
+    final fresh = WordLayoutEngine(font: null)
+        .layout(document, updateFields: false);
+    expect(wordLayoutFingerprint(resumed), wordLayoutFingerprint(fresh));
+    expect(WordIncrementalLayoutStats.incremental, 1);
+    expect(
+      engine.layout(WmlDocument.empty(text: 'New document')).pages,
+      hasLength(1),
+    );
+  });
+
   test('unused footnote preferences do not reserve body space', () {
     final document = _document(addNote: false, bodyParagraphs: 40);
     final engine = WordLayoutEngine(font: null);
