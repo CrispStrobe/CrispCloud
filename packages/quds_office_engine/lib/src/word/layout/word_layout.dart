@@ -2725,9 +2725,9 @@ class WordLayoutEngine {
     // advances by the picture's width and is shaped as a space glyph, so no
     // painter draws a character there; the picture itself becomes a box on
     // the baseline once the line is placed.
-    final inlinePictures = <int, OfficeVisual>{};
-    final displayLabels =
-        <int, ({String text, int end, double scale, bool note})>{};
+    Map<int, OfficeVisual>? pictures;
+    Map<int, ({String text, int end, double scale, bool note})>? labels;
+    var hasCapitalizedRuns = false;
     {
       var offset = 0;
       for (final WmlInline inline in paragraph.inlines) {
@@ -2737,10 +2737,14 @@ class WordLayoutEngine {
         }
         if (inline is! WmlRun) continue;
         final WmlVisual? picture = inline.inlineVisual;
-        if (picture != null) inlinePictures[offset] = picture.visual;
+        if (picture != null) (pictures ??= {})[offset] = picture.visual;
+        hasCapitalizedRuns =
+            hasCapitalizedRuns ||
+            inline.properties.smallCaps ||
+            inline.properties.allCaps;
         final label = _noteNumbering?.referenceLabel(inline);
         if (label != null) {
-          displayLabels[offset] = (
+          (labels ??= {})[offset] = (
             text: label,
             end: offset + inline.text.length,
             scale: 1,
@@ -2750,18 +2754,17 @@ class WordLayoutEngine {
         offset += inline.text.length;
       }
     }
+    final inlinePictures = pictures;
     List<int> notesOn(BrokenLine line) =>
         runIndex.footnoteIds(line.glyphs.map((glyph) => glyph.logicalIndex));
 
-    if (paragraph.inlines.whereType<WmlRun>().any(
-      (run) => run.properties.smallCaps || run.properties.allCaps,
-    )) {
+    if (hasCapitalizedRuns) {
       for (final segment in WordSmallCaps.segments(text)) {
         if (segment.text == text.substring(segment.start, segment.end) ||
             !(propsAt(segment.start).smallCaps ||
                 propsAt(segment.start).allCaps) ||
-            inlinePictures.containsKey(segment.start) ||
-            displayLabels.containsKey(segment.start)) {
+            inlinePictures?[segment.start] != null ||
+            (labels?.containsKey(segment.start) ?? false)) {
           continue;
         }
         // A grapheme that crosses a run with different formatting must stay
@@ -2773,7 +2776,7 @@ class WordLayoutEngine {
         ).every((offset) => identical(propsAt(offset), props))) {
           continue;
         }
-        displayLabels[segment.start] = (
+        (labels ??= {})[segment.start] = (
           text: segment.text,
           end: segment.end,
           // Prefer full-size capitals for malformed input with both flags on.
@@ -2783,21 +2786,22 @@ class WordLayoutEngine {
         );
       }
     }
+    final displayLabels = labels;
     double widthAt(int cp, int offset) {
-      final OfficeVisual? picture = inlinePictures[offset];
+      final OfficeVisual? picture = inlinePictures?[offset];
       if (picture != null) return math.min(picture.width, maxWidth);
       final props = propsAt(offset);
       return _advanceOf(
         cp,
         props.fontSizePoints *
             props.vertAlign.fontScale *
-            (displayLabels[offset]?.scale ?? 1),
+            (displayLabels?[offset]?.scale ?? 1),
         em,
         props,
       );
     }
 
-    int glyphIdAt(int cp, int offset) => inlinePictures.containsKey(offset)
+    int glyphIdAt(int cp, int offset) => inlinePictures?[offset] != null
         ? _faceFor(0x20, propsAt(offset))?.glyphIdFor(0x20) ?? 0
         : _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
 
@@ -2806,7 +2810,7 @@ class WordLayoutEngine {
       var skipUntil = -1;
       for (final glyph in source) {
         if (glyph.logicalIndex < skipUntil) continue;
-        final label = displayLabels[glyph.logicalIndex];
+        final label = displayLabels![glyph.logicalIndex];
         if (label == null) {
           result.add(glyph);
           continue;
@@ -2834,11 +2838,11 @@ class WordLayoutEngine {
     // host metrics so a declined fragment does not reuse a different context.
     // Repeated display-label scalars share this source/style and scalar width.
     List<ShapedGlyph?>? fallbackGlyphs;
-    final labelAdvances = <(int, int, int), double>{};
-    late final pictureOffsets = inlinePictures.keys.toSet();
+    Map<(int, int, int), double>? labelAdvances;
+    late final pictureOffsets = inlinePictures?.keys.toSet() ?? const <int>{};
     final hasMeasuredTabs =
         text.contains('\t') && paragraph.properties.bidiBaseLevel != 1;
-    final tabStops = [...paragraph.properties.tabs]
+    late final tabStops = [...paragraph.properties.tabs]
       ..sort((a, b) => a.position.compareTo(b.position));
     List<ShapedGlyph> measureTabs(List<ShapedGlyph> glyphs) {
       if (!hasMeasuredTabs) return glyphs;
@@ -2899,7 +2903,7 @@ class WordLayoutEngine {
           glyphs: presented,
           text: text,
           runIndex: runIndex,
-          labels: displayLabels,
+          labels: displayLabels ?? const {},
           pictures: pictureOffsets,
           measure: host,
         ),
@@ -2920,7 +2924,7 @@ class WordLayoutEngine {
         // Retain display and source ownership on a selected hyphen.
         return _withMeasuredAdvance(glyph, original.advance);
       }
-      final advance = labelAdvances[(offset, glyph.codePoint, glyph.glyphId)];
+      final advance = labelAdvances?[(offset, glyph.codePoint, glyph.glyphId)];
       return advance == null || advance == glyph.advance
           ? glyph
           : _withMeasuredAdvance(glyph, advance);
@@ -2932,11 +2936,11 @@ class WordLayoutEngine {
         : measureHostRuns([for (final glyph in presented) scalarGlyph(glyph)]);
 
     List<ShapedGlyph> measuredRuns(List<ShapedGlyph> source) {
-      final presented = displayLabels.isEmpty
+      final presented = displayLabels == null
           ? source
           : displayReplacements(source);
       if (measureRun == null) return measureTabs(presented);
-      if (displayLabels.isEmpty) {
+      if (displayLabels == null) {
         final index = fallbackGlyphs = List<ShapedGlyph?>.filled(
           text.length,
           null,
@@ -2946,8 +2950,9 @@ class WordLayoutEngine {
         }
       } else {
         // A display label can have multiple glyphs at the same source offset.
+        final advances = labelAdvances ??= {};
         for (final glyph in presented) {
-          labelAdvances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
+          advances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
               glyph.advance;
         }
         // Match the scalar widths for repeated code points within a label.
@@ -2967,11 +2972,11 @@ class WordLayoutEngine {
       final baseSize =
           baseProps.fontSizePoints *
           baseProps.vertAlign.fontScale *
-          (displayLabels[base.logicalIndex]?.scale ?? 1);
+          (displayLabels?[base.logicalIndex]?.scale ?? 1);
       final markSize =
           markProps.fontSizePoints *
           markProps.vertAlign.fontScale *
-          (displayLabels[mark.logicalIndex]?.scale ?? 1);
+          (displayLabels?[mark.logicalIndex]?.scale ?? 1);
       if (baseFace == null ||
           !identical(baseFace, markFace) ||
           baseSize != markSize) {
@@ -3042,7 +3047,7 @@ class WordLayoutEngine {
                 ? null
                 : measuredLine,
             ligate:
-                displayLabels.isEmpty && measureRun == null && !hasMeasuredTabs
+                displayLabels == null && measureRun == null && !hasMeasuredTabs
                 ? null
                 : measuredRuns,
           )
@@ -3069,7 +3074,7 @@ class WordLayoutEngine {
                     : measuredLine,
                 breakLongWords: !allowBreak && !measureBody,
                 ligate:
-                    displayLabels.isEmpty &&
+                    displayLabels == null &&
                         measureRun == null &&
                         !hasMeasuredTabs
                     ? null
@@ -3139,11 +3144,11 @@ class WordLayoutEngine {
           }
 
           for (final glyph in line.glyphs) {
-            if (inlinePictures.containsKey(glyph.logicalIndex)) continue;
+            if (inlinePictures?[glyph.logicalIndex] != null) continue;
             include(
               propsAt(sourceStyleOffset(glyph)),
               glyph.codePoint,
-              displayScale: displayLabels[glyph.logicalIndex]?.scale ?? 1,
+              displayScale: displayLabels?[glyph.logicalIndex]?.scale ?? 1,
             );
           }
           // The paragraph mark is an unpainted final-line participant. Its
@@ -3171,7 +3176,7 @@ class WordLayoutEngine {
     double pictureHeightOn(BrokenLine line) {
       var tallest = 0.0;
       for (final ShapedGlyph g in line.glyphs) {
-        final OfficeVisual? picture = inlinePictures[g.logicalIndex];
+        final OfficeVisual? picture = inlinePictures?[g.logicalIndex];
         if (picture != null) tallest = math.max(tallest, picture.height);
       }
       return tallest;
@@ -3416,7 +3421,7 @@ class WordLayoutEngine {
         final comments = sourceRun?.commentIds;
         final display = g.isDiscretionaryHyphen
             ? null
-            : displayLabels[g.logicalIndex];
+            : displayLabels?[g.logicalIndex];
         final double size =
             baseSize * props.vertAlign.fontScale * (display?.scale ?? 1);
         glyphs.add(
@@ -3515,7 +3520,7 @@ class WordLayoutEngine {
         laid._baseline = (leading: baselineLeading, ascent: baselineAscent);
       }
       current.add(laid);
-      if (inlinePictures.isNotEmpty) {
+      if (inlinePictures != null) {
         for (final LaidOutGlyph placed in laid.glyphs) {
           final OfficeVisual? picture =
               inlinePictures[placed.glyph.logicalIndex];
