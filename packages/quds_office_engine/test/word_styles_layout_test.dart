@@ -100,6 +100,11 @@ void main() {
     expect(paragraphs.first.properties.tabs, hasLength(1));
     paragraphs.first.properties.tabs.clear();
     expect(paragraphs.last.properties.tabs, hasLength(1));
+    final firstSnapshot = paragraphs.first.properties.importedValues!;
+    final lastSnapshot = paragraphs.last.properties.importedValues!;
+    expect(firstSnapshot, lastSnapshot);
+    firstSnapshot.remove('tabs');
+    expect(lastSnapshot['tabs'], isNotEmpty);
   });
 
   test('cyclic styles retain precedence for each requested style', () {

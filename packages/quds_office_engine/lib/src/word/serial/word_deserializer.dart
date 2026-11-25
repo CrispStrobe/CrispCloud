@@ -842,7 +842,9 @@ class WordDeserializer {
   ) {
     final WmlParagraph paragraph = WmlParagraph()
       ..properties.sourcePropertiesXml = '';
-    final previousFrames = Set<WmlFrame>.identity()..addAll(_pendingFrames);
+    final previousFrames = _pendingFrames.isEmpty
+        ? null
+        : (Set<WmlFrame>.identity()..addAll(_pendingFrames));
     _readParagraphContent(reader, package, docUri, paragraph);
     _settleFieldSpans(paragraph);
     _settleInlinePictures(paragraph);
@@ -857,7 +859,7 @@ class WordDeserializer {
       );
     }
     for (final frame in _pendingFrames) {
-      if (previousFrames.contains(frame)) continue;
+      if (previousFrames?.contains(frame) ?? false) continue;
       frame.anchorParagraphProperties ??= paragraph.properties.copy()
         ..importedValues = WordPropertyIo.paragraphValues(paragraph.properties);
     }

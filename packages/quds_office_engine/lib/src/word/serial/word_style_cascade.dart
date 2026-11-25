@@ -1126,13 +1126,16 @@ class _StyleCascade {
       );
     }
     if (cached == null && canCache && _paragraphStyles.length < 256) {
+      // None of the per-paragraph metadata below belongs to this snapshot.
+      final reusable = !projection.paragraphXml.contains('sectPr');
+      if (reusable) {
+        properties.importedValues = WordPropertyIo.paragraphValues(properties);
+      }
       _paragraphStyles[key] = (
         projection: projection,
         // A section property can trigger story reads. Keep parsing those
         // projections for each occurrence even if their XML is reused.
-        properties: projection.paragraphXml.contains('sectPr')
-            ? null
-            : properties.copy(),
+        properties: reusable ? properties.copy() : null,
       );
     }
     // Source identity and field metadata belong to the individual paragraph.
@@ -1163,7 +1166,7 @@ class _StyleCascade {
       // The projection is shared, while each paragraph owns its mark.
       p.properties.importedParagraphMark = marker.copy();
     }
-    p.properties.importedValues = WordPropertyIo.paragraphValues(p.properties);
+    p.properties.importedValues ??= WordPropertyIo.paragraphValues(p.properties);
     for (var index = 0; index < p.inlines.length; index++) {
       final inline = p.inlines[index];
       final props = switch (inline) {
