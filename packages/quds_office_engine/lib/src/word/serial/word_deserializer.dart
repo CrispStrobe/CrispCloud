@@ -2276,11 +2276,19 @@ class WordDeserializer {
 
   /// Decide, once a paragraph is complete, how its fields are represented.
   void _settleFieldSpans(WmlParagraph paragraph) {
-    final collapsedZotero = _collapseZoteroFields(paragraph);
-    final boundaries = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
-    if (boundaries.isEmpty) {
-      if (collapsedZotero) _clearParagraphField(paragraph);
-      return;
+    List<WmlFieldBoundary>? boundaries;
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlFieldBoundary) {
+        (boundaries ??= <WmlFieldBoundary>[]).add(inline);
+      }
+    }
+    if (boundaries == null) return;
+    if (_collapseZoteroFields(paragraph)) {
+      boundaries = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
+      if (boundaries.isEmpty) {
+        _clearParagraphField(paragraph);
+        return;
+      }
     }
     bool strip() {
       paragraph.inlines.removeWhere((inline) => inline is WmlFieldBoundary);
@@ -2449,7 +2457,7 @@ class WordDeserializer {
   /// representation. Rich, nested, malformed, or cross-paragraph fields keep
   /// their original boundary packets instead of flattening their formatting.
   bool _collapseZoteroFields(WmlParagraph paragraph) {
-    final replacements = <({int start, int end, WmlRun run})>[];
+    List<({int start, int end, WmlRun run})>? replacements;
     var depth = 0;
     var start = -1;
     var nested = false;
@@ -2548,9 +2556,14 @@ class WordDeserializer {
           ..fieldInstruction = code
           ..fieldLocked = locked
           ..fieldDirty = dirty;
-        replacements.add((start: start, end: index + 1, run: cache));
+        (replacements ??= []).add((
+          start: start,
+          end: index + 1,
+          run: cache,
+        ));
       }
     }
+    if (replacements == null) return false;
     for (final replacement in replacements.reversed) {
       paragraph.inlines.replaceRange(
         replacement.start,
@@ -2558,7 +2571,7 @@ class WordDeserializer {
         <WmlInline>[replacement.run],
       );
     }
-    return replacements.isNotEmpty;
+    return true;
   }
 
   static const String _inlinePictureChar = '\uFFFC';
@@ -2569,35 +2582,34 @@ class WordDeserializer {
   /// Native inline runs written by this suite include paragraph/run properties;
   /// the separate block-picture writer deliberately emits neither.
   void _settleInlinePictures(WmlParagraph paragraph) {
-    final runs = paragraph.inlines
-        .whereType<WmlRun>()
-        .where((run) => run.inlineVisual != null)
-        .toList();
-    if (runs.isEmpty) return;
-    if ((paragraph.properties.sourcePropertiesXml?.isNotEmpty ?? false) ||
-        paragraph.contentControlWrappers.isNotEmpty ||
-        paragraph.inlines.length != runs.length ||
-        runs.any(
-          (run) =>
-              run.text != _inlinePictureChar ||
-              run.hyperlink != null ||
-              run.commentIds.isNotEmpty ||
-              run.fieldInstruction != null ||
-              run.noteRefId != null ||
-              (run.properties.sourcePropertiesXml?.isNotEmpty ?? false),
-        ) ||
-        (_document?.revisions.any(
-              (revision) => identical(revision.targetParagraph, paragraph),
-            ) ??
-            false)) {
+    final inlines = paragraph.inlines;
+    if (inlines.isEmpty ||
+        (paragraph.properties.sourcePropertiesXml?.isNotEmpty ?? false) ||
+        paragraph.contentControlWrappers.isNotEmpty) {
       return;
     }
-    for (final run in runs) {
-      _pendingVisuals.add(run.inlineVisual!);
+    for (final inline in inlines) {
+      if (inline is! WmlRun ||
+          inline.inlineVisual == null ||
+          inline.text != _inlinePictureChar ||
+          inline.hyperlink != null ||
+          inline.commentIds.isNotEmpty ||
+          inline.fieldInstruction != null ||
+          inline.noteRefId != null ||
+          (inline.properties.sourcePropertiesXml?.isNotEmpty ?? false)) {
+        return;
+      }
     }
-    paragraph.inlines.removeWhere(
-      (inline) => inline is WmlRun && inline.inlineVisual != null,
-    );
+    if (_document?.revisions.any(
+          (revision) => identical(revision.targetParagraph, paragraph),
+        ) ??
+        false) {
+      return;
+    }
+    for (final inline in inlines) {
+      _pendingVisuals.add((inline as WmlRun).inlineVisual!);
+    }
+    inlines.clear();
   }
 
   ({WmlRunProps props, XmlElement? change, String sourceXml})
