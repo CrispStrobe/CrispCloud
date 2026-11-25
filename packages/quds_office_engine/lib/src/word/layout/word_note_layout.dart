@@ -38,13 +38,13 @@ class _NoteStory {
     final List<WmlBlock> blocks = note.blocks.map(WmlClone.block).toList();
     final originals = WordTree.paragraphs(note.blocks).toList();
     final copies = WordTree.paragraphs(blocks).toList();
-    final originalOf = <WmlParagraph, WmlParagraph>{
-      for (var i = 0; i < copies.length; i++) copies[i]: originals[i],
-    };
+    final originalOf = <WmlParagraph, WmlParagraph>{};
     final offsetsOf = <WmlParagraph, List<int?>>{};
     final label = owner._noteNumbering?.labelFor(note) ?? '${note.id}';
     var hasMarker = false;
-    for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
+    for (var index = 0; index < copies.length; index++) {
+      final paragraph = copies[index];
+      originalOf[paragraph] = originals[index];
       List<(int, int)>? displayRanges;
       var offset = 0;
       for (var i = 0; i < paragraph.inlines.length; i++) {
@@ -78,7 +78,7 @@ class _NoteStory {
       final bool separator =
           label.isNotEmpty &&
           note.addReferenceSpace &&
-          (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
+          !_startsWithWhitespace(first);
       final prefix = label.length + (separator ? 1 : 0);
       offsetsOf[first] = _NoteProofingOffsets(
         (offsetsOf[first]?.length ?? 1) + prefix,
@@ -149,7 +149,8 @@ class _NoteStory {
     ).._containedPhysicalSection = section;
     final LaidOutDocument laid = storyEngine._layoutTransient(story);
     owner._noteLaidOut();
-    final List<WmlParagraph> paragraphs = story.paragraphs.toList();
+    // Most transient lines already carry their source paragraph and text.
+    late final paragraphs = story.paragraphs.toList();
     final List<LaidOutLine> lines = <LaidOutLine>[];
     final List<LaidOutBox> frames = <LaidOutBox>[];
     var height = 0.0;
@@ -184,6 +185,17 @@ class _NoteStory {
     // A short note reserves its measured height. Padding it to a fixed
     // minimum could leave an invisible remainder on a continuation page.
     return _NoteStory(lines, frames, height > 0 ? height : 14);
+  }
+
+  static final _leadingWhitespace = RegExp(r'^\s');
+
+  static bool _startsWithWhitespace(WmlParagraph paragraph) {
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlRun && inline.text.isNotEmpty) {
+        return _leadingWhitespace.hasMatch(inline.text);
+      }
+    }
+    return false;
   }
 
   late final List<double> _cutBoundaries = _buildCutBoundaries();
