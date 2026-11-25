@@ -83,6 +83,30 @@ void main() {
       expect(reader.namespaceUri, 'urn:outer');
     });
 
+    test('attribute slots reset when the next tag has fewer attributes', () {
+      final many = List.generate(20, (i) => 'a$i="$i"').join(' ');
+      final reader = XmlPullReader(
+        '<root xmlns:p="urn:p"><p:wide $many p:val="&amp;"/>'
+        '<p:narrow val="plain"/><p:empty/></root>',
+      );
+      expect(reader.next(), isTrue);
+      expect(reader.next(), isTrue);
+      expect(reader.attributeCount, 21);
+      expect(reader.getAttribute('val', namespaceUri: 'urn:p'), '&');
+      expect(reader.getAttribute('a19'), '19');
+      expect(reader.next(), isTrue);
+      expect(reader.eventType, XmlEventType.endElement);
+      expect(reader.attributeCount, 21);
+      expect(reader.next(), isTrue);
+      expect(reader.attributeCount, 1);
+      expect(reader.attributesAsMap(), {'val': 'plain'});
+      expect(reader.getAttribute('val', namespaceUri: 'urn:p'), isNull);
+      expect(() => reader.attributeValue(1), throwsRangeError);
+      expect(reader.next(), isTrue);
+      expect(reader.next(), isTrue);
+      expect(reader.attributeCount, 0);
+    });
+
     test('handles empty elements, comments, and CDATA', () {
       const String xml =
           '<root><!--c--><empty attr="x"/><![CDATA[raw <&>]]></root>';

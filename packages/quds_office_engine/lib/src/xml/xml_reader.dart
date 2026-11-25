@@ -62,6 +62,10 @@ class XmlPullReader {
   /// root API.
   final List<_NsScope> _nsStack;
   final List<_AttrSlice> _attrs = <_AttrSlice>[];
+  // Most tags need only a few slots. Keep peak attribute counts on
+  // unusually wide tags from extending the lifetime of all their slots.
+  List<_AttrSlice>? _attributePool;
+  static const _attributePoolLimit = 16;
   final List<String> _elementStack = <String>[];
 
   /// eventType API.
@@ -416,17 +420,25 @@ class XmlPullReader {
     final int vEnd = _pos;
     _expect(quote, 'Unterminated attribute value');
 
-    return _AttrSlice(
-      nameStart: qStart,
-      nameEnd: qEnd,
-      prefixEnd: prefixEnd,
-      valueStart: vStart,
-      valueEnd: vEnd,
-      hasEntities: hasEntities,
-      isXmlns:
+    final index = _attrs.length;
+    final pool = _attributePool ??= <_AttrSlice>[];
+    final _AttrSlice attr;
+    if (index < pool.length) {
+      attr = pool[index];
+    } else {
+      attr = _AttrSlice();
+      if (index < _attributePoolLimit) pool.add(attr);
+    }
+    return attr
+      ..nameStart = qStart
+      ..nameEnd = qEnd
+      ..prefixEnd = prefixEnd
+      ..valueStart = vStart
+      ..valueEnd = vEnd
+      ..hasEntities = hasEntities
+      ..isXmlns =
           (prefixEnd == qStart ? qEnd : prefixEnd) == qStart + 5 &&
-          _source.startsWith('xmlns', qStart),
-    );
+          _source.startsWith('xmlns', qStart);
   }
 
   void _readText() {
@@ -716,36 +728,13 @@ int _entityCodePoint(String body) {
 }
 
 class _AttrSlice {
-  _AttrSlice({
-    required this.nameStart,
-    required this.nameEnd,
-    required this.prefixEnd,
-    required this.valueStart,
-    required this.valueEnd,
-    required this.hasEntities,
-    required this.isXmlns,
-  });
-
-  /// nameStart API.
-  final int nameStart;
-
-  /// nameEnd API.
-  final int nameEnd;
-
-  /// prefixEnd API.
-  final int prefixEnd;
-
-  /// valueStart API.
-  final int valueStart;
-
-  /// valueEnd API.
-  final int valueEnd;
-
-  /// hasEntities API.
-  final bool hasEntities;
-
-  /// isXmlns API.
-  final bool isXmlns;
+  int nameStart = 0;
+  int nameEnd = 0;
+  int prefixEnd = 0;
+  int valueStart = 0;
+  int valueEnd = 0;
+  bool hasEntities = false;
+  bool isXmlns = false;
 
   /// qualified API.
   String qualified(String source) => source.substring(nameStart, nameEnd);
