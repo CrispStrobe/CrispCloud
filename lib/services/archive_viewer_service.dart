@@ -16,10 +16,10 @@
 // Neither library is GPL; both are permissive (koni_archive: MIT,
 // archive: MIT). No native code, no FFI, works on Flutter web too.
 
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as ar;
-import 'package:flutter/foundation.dart' show compute;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_cab_reader.dart';
@@ -537,15 +537,12 @@ Future<ViewerArchive> _openCompressedSource(
   final notices = <String>[];
   final Uint8List decompressed;
   if (compression == 'lz4') {
-    final decoded = await compute(
-      (request) => decodeArchiveLz4(request.bytes, maxOutputBytes: request.limit),
-      (
-        bytes: input,
-        limit: maxMemberBytes < kArchiveReadLimit
-            ? maxMemberBytes
-            : kArchiveReadLimit,
-      ),
-      debugLabel: 'archive-preview-lz4',
+    final limit = maxMemberBytes < kArchiveReadLimit
+        ? maxMemberBytes
+        : kArchiveReadLimit;
+    final decoded = await _offUiIsolate(
+      () => decodeArchiveLz4(input, maxOutputBytes: limit),
+      debugName: 'archive-preview-lz4',
     );
     decompressed = decoded.bytes;
     notices.add(
@@ -1568,15 +1565,23 @@ Future<({Uint8List data, String innerName})> decompressSingleFileForPreview(
   Uint8List bytes,
   String name, {
   int maxBytes = kArchiveReadLimit,
-}) => compute(
-  (request) => decompressSingleFile(
-    request.bytes,
-    request.name,
-    maxBytes: request.limit,
-  ),
-  (bytes: bytes, name: name, limit: maxBytes),
-  debugLabel: 'archive-preview-decompress',
+}) => _offUiIsolate(
+  () => decompressSingleFile(bytes, name, maxBytes: maxBytes),
+  debugName: 'archive-preview-decompress',
 );
+
+/// Runs [work] on a background isolate; inline where isolates are absent.
+///
+/// Uses dart:isolate rather than Flutter's compute so this service stays
+/// pure Dart: the parser fuzzers (`dart run tool/fuzz_*.dart`) import it.
+Future<T> _offUiIsolate<T>(T Function() work, {String? debugName}) async {
+  try {
+    return await Isolate.run(work, debugName: debugName);
+  } on UnsupportedError {
+    // The browser has no Dart isolates.
+    return work();
+  }
+}
 
 /// Decode synchronously for callers already running outside the UI isolate.
 ({Uint8List data, String innerName}) decompressSingleFile(
