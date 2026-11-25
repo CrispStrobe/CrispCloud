@@ -30,7 +30,11 @@ class _StyleCascade {
   // Reuse effective run formatting within one document cascade. Table
   // formatting can depend on cell coordinates and uses the normal path.
   final _runStyles = <(String?, String?, String), _RunStyleProjection>{};
-  final _paragraphStyles = <(String?, String), _ParagraphStyleProjection>{};
+  final _paragraphStyles =
+      <
+        (String?, String),
+        ({_ParagraphStyleProjection projection, WmlParagraphProps? properties})
+      >{};
   final _styleChains = <String, List<XmlElement>>{};
 
   bool _load({bool includeTheme = true}) {
@@ -1093,48 +1097,59 @@ class _StyleCascade {
         .map((style) => _wordChild(style, 'rPr'))
         .whereType<XmlElement>()
         .toSet();
-    final key = (id, source);
+    final old = p.properties;
+    final key = (old.styleId, source);
     final canCache = tableLayers.isEmpty && source.length <= 4096;
     final cached = canCache ? _paragraphStyles[key] : null;
     final projection =
-        cached ??
+        cached?.projection ??
         _projectParagraphStyle(
           source,
           tableLayers,
           paragraphChain,
           paragraphRunStyles,
         );
-    if (cached == null && canCache && _paragraphStyles.length < 256) {
-      _paragraphStyles[key] = projection;
+    final template = cached?.properties;
+    final properties =
+        template?.copy() ??
+        WmlParagraphProps(
+          // Native defaults differ from the editor's new-paragraph defaults.
+          spacingAfter: 0,
+          lineSpacing: 1,
+          styleId: old.styleId,
+          defaultStyleId: defaultParagraph,
+        );
+    if (template == null) {
+      reader._parsePPr(
+        XmlPullReader(projection.paragraphXml)..next(),
+        properties,
+      );
     }
-    // Preserve non-formatting paragraph metadata (fields, notes, bookmarks).
-    final old = p.properties;
-    p.properties = WmlParagraphProps(
-      // Native defaults apply when no imported layer declares spacing. The
-      // editor's new-paragraph defaults (8 pt / 1.15 lines) must not appear
-      // merely because an unrelated heading caused a styles part to be added.
-      spacingAfter: 0,
-      lineSpacing: 1,
-      styleId: old.styleId,
-      defaultStyleId: defaultParagraph,
-      fieldInstruction: old.fieldInstruction,
-      fieldBegin: old.fieldBegin,
-      fieldSeparate: old.fieldSeparate,
-      fieldEnd: old.fieldEnd,
-      pageNumberField: old.pageNumberField,
-      bookmarkName: old.bookmarkName,
-      sourceBookmarkName: old.sourceBookmarkName,
-      noteId: old.noteId,
-      endnoteRef: old.endnoteRef,
-      listLabel: old.listLabel,
-      listLabelUsesSpace: old.listLabelUsesSpace,
-      listRestart: old.listRestart,
-      columnBreakBefore: old.columnBreakBefore,
-    );
-    reader._parsePPr(
-      XmlPullReader(projection.paragraphXml)..next(),
-      p.properties,
-    );
+    if (cached == null && canCache && _paragraphStyles.length < 256) {
+      _paragraphStyles[key] = (
+        projection: projection,
+        // A section property can trigger story reads. Keep parsing those
+        // projections for each occurrence even if their XML is reused.
+        properties: projection.paragraphXml.contains('sectPr')
+            ? null
+            : properties.copy(),
+      );
+    }
+    // Source identity and field metadata belong to the individual paragraph.
+    p.properties = properties
+      ..fieldInstruction = old.fieldInstruction
+      ..fieldBegin = old.fieldBegin
+      ..fieldSeparate = old.fieldSeparate
+      ..fieldEnd = old.fieldEnd
+      ..pageNumberField = old.pageNumberField
+      ..bookmarkName = old.bookmarkName
+      ..sourceBookmarkName = old.sourceBookmarkName
+      ..noteId = old.noteId
+      ..endnoteRef = old.endnoteRef
+      ..listLabel = old.listLabel
+      ..listLabelUsesSpace = old.listLabelUsesSpace
+      ..listRestart = old.listRestart
+      ..columnBreakBefore = old.columnBreakBefore;
     if (tableLayers.isNotEmpty && preserveTableSpacing) {
       if (!projection.hasSpacingAfter) {
         p.properties.spacingAfter = old.spacingAfter;
