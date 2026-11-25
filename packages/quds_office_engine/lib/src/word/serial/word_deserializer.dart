@@ -123,7 +123,11 @@ class WordDeserializer {
   final Map<WmlTable, _TableLook> _tableLooks =
       Map<WmlTable, _TableLook>.identity();
 
-  final _paragraphPropertyXml = <(Map<String, String>, String, bool), String>{};
+  final _paragraphPropertyXml =
+      <
+        (Map<String, String>, String, bool),
+        ({String xml, WmlParagraphProps? template})
+      >{};
 
   final _runPropertyCache =
       <
@@ -855,7 +859,7 @@ class WordDeserializer {
     final previousFrames = _pendingFrames.isEmpty
         ? null
         : (Set<WmlFrame>.identity()..addAll(_pendingFrames));
-    _readParagraphContent(reader, package, docUri, paragraph);
+    _readParagraphContent(reader, package, docUri, paragraph, fresh: true);
     _settleFieldSpans(paragraph);
     _settleInlinePictures(paragraph);
     final change = _paragraphFormatChanges.remove(paragraph.properties);
@@ -880,20 +884,28 @@ class WordDeserializer {
     XmlPullReader reader,
     OpcPackage package,
     String docUri,
-    WmlParagraph paragraph,
-  ) {
+    WmlParagraph paragraph, {
+    bool fresh = false,
+  }) {
     if (reader.isEmptyElement) {
       return;
     }
     final int depth = reader.depth;
+    var first = fresh;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
+      final canUseTemplate = first && reader.depth == depth + 1;
+      first = false;
       if (_readMoveBoundary(reader, docUri)) {
         continue;
       } else if (reader.localName == 'pPr') {
-        _readPPr(reader, paragraph.properties);
+        paragraph.properties = _readPPr(
+          reader,
+          paragraph.properties,
+          canUseTemplate: canUseTemplate,
+        );
       } else if (reader.localName == 'r') {
         _readRunInlines(reader, package, docUri, paragraph);
       } else if (reader.namespaceUri == OfficeNamespaces.w &&
@@ -1644,13 +1656,22 @@ class WordDeserializer {
     revision.dateIso = date;
   }
 
-  void _readPPr(XmlPullReader reader, WmlParagraphProps props) {
+  WmlParagraphProps _readPPr(
+    XmlPullReader reader,
+    WmlParagraphProps props, {
+    bool canUseTemplate = false,
+  }) {
     final namespaces = reader.inScopeNamespaces;
     final projected = reader is WordMarkupCompatibilityReader;
     final fragment = reader.readRawElement();
     final key = (namespaces, fragment, projected);
     final cacheable = fragment.length <= 2048;
-    var sourceXml = cacheable ? _paragraphPropertyXml[key] : null;
+    final cached = cacheable ? _paragraphPropertyXml[key] : null;
+    final template = cached?.template;
+    if (canUseTemplate && template != null) return template.copy();
+
+    var sourceXml = cached?.xml;
+    var storeSource = cacheable && cached == null;
     if (sourceXml == null) {
       final replay = projected
           ? WordMarkupCompatibilityReader(
@@ -1667,18 +1688,31 @@ class WordDeserializer {
       if (change != null) {
         node.children.remove(change);
         _paragraphFormatChanges[props] = change;
+        storeSource = false;
       }
       sourceXml = XmlDocument(root: node).toXmlString(declaration: false);
-      // Tracked formatting changes have their own XML owner and must be
-      // captured for every occurrence.
-      if (cacheable && change == null && _paragraphPropertyXml.length < 256) {
-        _paragraphPropertyXml[key] = sourceXml;
-      }
     }
     props.sourcePropertiesXml = sourceXml;
-    // Parse into the current paragraph even on a hit. This also reads any
-    // section boundary owned by this paragraph.
     _parsePPr(WordMarkupCompatibilityReader(sourceXml)..next(), props);
+
+    // A section property reads story parts and changes pending section state.
+    // Tracked formatting is also owned by a particular paragraph. Cache only
+    // the detached properties of a fresh paragraph with neither side effect.
+    final storeTemplate =
+        canUseTemplate &&
+        template == null &&
+        (storeSource || cached != null) &&
+        !sourceXml.contains('sectPr');
+    if (storeSource || storeTemplate) {
+      if (cached == null && _paragraphPropertyXml.length >= 256) {
+        _paragraphPropertyXml.remove(_paragraphPropertyXml.keys.first);
+      }
+      _paragraphPropertyXml[key] = (
+        xml: sourceXml,
+        template: storeTemplate ? props.copy() : null,
+      );
+    }
+    return props;
   }
 
   void _parsePPr(XmlPullReader reader, WmlParagraphProps props) {

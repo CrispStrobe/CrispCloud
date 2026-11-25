@@ -96,6 +96,39 @@ void main() {
     expect(reopened.map((run) => run.properties.italic), [false, false, true]);
   });
 
+  test('reused paragraph properties leave earlier inline state intact', () {
+    const properties =
+        '<w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>';
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body>'
+          '<w:p>$properties<w:r><w:t>A</w:t></w:r></w:p>'
+          '<w:p>$properties<w:r><w:t>B</w:t></w:r></w:p>'
+          '<w:p><w:br w:type="column"/>$properties<w:r><w:t>C</w:t></w:r></w:p>'
+          '</w:body></w:document>',
+        );
+    final document = WordDeserializer().read(package);
+    final paragraphs = document.paragraphs;
+    expect(
+      paragraphs.map((paragraph) => paragraph.properties.columnBreakBefore),
+      [false, false, true],
+    );
+    expect(paragraphs.map((p) => p.properties.tabs.single.position), [
+      36,
+      36,
+      36,
+    ]);
+    paragraphs.first.properties.tabs.clear();
+    expect(paragraphs.elementAt(1).properties.tabs.single.position, 36);
+    final reopened = WordDeserializer()
+        .readBytes(WordSerializer().writeBytes(document))
+        .paragraphs;
+    expect(reopened.first.properties.tabs, isEmpty);
+    expect(reopened.elementAt(1).properties.tabs.single.position, 36);
+  });
+
   test('repeated field markers retain the namespace of their type', () {
     const markers =
         '<w:r><w:fldChar q:fldCharType="begin"/></w:r>'
