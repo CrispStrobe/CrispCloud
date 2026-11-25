@@ -169,6 +169,38 @@ void main() {
     });
   });
 
+  test('repeated paragraph XML preserves in-scope compatibility choices', () {
+    const properties =
+        '<w:pPr><mc:AlternateContent><mc:Choice Requires="x">'
+        '<w:spacing w:after="120"/></mc:Choice><mc:Fallback>'
+        '<w:spacing w:after="300"/></mc:Fallback></mc:AlternateContent>'
+        '<x:packet/></w:pPr>';
+    final package = _fixture('');
+    final body = [
+      '<w:p>$properties<w:r><w:t>One</w:t></w:r></w:p>',
+      '<w:p>$properties<w:r><w:t>Two</w:t></w:r></w:p>',
+      '<w:p xmlns:x="$_extension">$properties<w:r><w:t>Three</w:t></w:r></w:p>',
+    ].join();
+    package.getPart('/word/document.xml')!.writeText(
+      '<w:document xmlns:w="${OfficeNamespaces.w}" '
+      'xmlns:mc="${OfficeNamespaces.mc}" xmlns:x="${OfficeNamespaces.wps}">'
+      '<w:body>$body<w:sectPr/></w:body></w:document>',
+    );
+
+    final paragraphs = WordDeserializer().read(package).paragraphs.toList();
+    expect(paragraphs.map((p) => p.properties.spacingAfter), [6, 6, 15]);
+    for (final (index, paragraph) in paragraphs.indexed) {
+      final xml = XmlDocument.parse(paragraph.properties.sourcePropertiesXml!);
+      expect(
+        xml.root!.firstChild(
+          'packet',
+          namespaceUri: index == 2 ? _extension : OfficeNamespaces.wps,
+        ),
+        isNotNull,
+      );
+    }
+  });
+
   group('effective style direction', () {
     const base =
         '<w:style w:type="paragraph" w:styleId="Base">'

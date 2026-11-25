@@ -121,6 +121,8 @@ class WordDeserializer {
   final Map<WmlTable, _TableLook> _tableLooks =
       Map<WmlTable, _TableLook>.identity();
 
+  final _paragraphPropertyXml = <(Map<String, String>, String, bool), String>{};
+
   final _runPropertyCache =
       <
         (Map<String, String>, String, bool),
@@ -131,6 +133,7 @@ class WordDeserializer {
   WmlDocument read(OpcPackage package) {
     // A reader may be reused after a truncated document or a parse failure.
     // Story state belongs to one document and must not contaminate the next.
+    _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
     _pendingEquations.clear();
     _pendingVisuals.clear();
@@ -251,6 +254,7 @@ class WordDeserializer {
       revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
     }
     WordContentControls.recordImported(document);
+    _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
     return document;
   }
@@ -1626,22 +1630,40 @@ class WordDeserializer {
   }
 
   void _readPPr(XmlPullReader reader, WmlParagraphProps props) {
-    final XmlElement node = XmlDocument.readElement(reader);
-    final change = node.firstChild(
-      'pPrChange',
-      namespaceUri: OfficeNamespaces.w,
-    );
-    if (change != null) {
-      node.children.remove(change);
-      _paragraphFormatChanges[props] = change;
+    final namespaces = reader.inScopeNamespaces;
+    final projected = reader is WordMarkupCompatibilityReader;
+    final fragment = reader.readRawElement();
+    final key = (namespaces, fragment, projected);
+    final cacheable = fragment.length <= 2048;
+    var sourceXml = cacheable ? _paragraphPropertyXml[key] : null;
+    if (sourceXml == null) {
+      final replay = projected
+          ? WordMarkupCompatibilityReader(
+              fragment,
+              inheritedNamespaces: namespaces,
+            )
+          : XmlPullReader(fragment, inheritedNamespaces: namespaces);
+      replay.next();
+      final node = XmlDocument.readElement(replay);
+      final change = node.firstChild(
+        'pPrChange',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      if (change != null) {
+        node.children.remove(change);
+        _paragraphFormatChanges[props] = change;
+      }
+      sourceXml = XmlDocument(root: node).toXmlString(declaration: false);
+      // Tracked formatting changes have their own XML owner and must be
+      // captured for every occurrence.
+      if (cacheable && change == null && _paragraphPropertyXml.length < 256) {
+        _paragraphPropertyXml[key] = sourceXml;
+      }
     }
-    props.sourcePropertiesXml = XmlDocument(
-      root: node,
-    ).toXmlString(declaration: false);
-    final XmlPullReader source = WordMarkupCompatibilityReader(
-      props.sourcePropertiesXml!,
-    )..next();
-    _parsePPr(source, props);
+    props.sourcePropertiesXml = sourceXml;
+    // Parse into the current paragraph even on a hit. This also reads any
+    // section boundary owned by this paragraph.
+    _parsePPr(WordMarkupCompatibilityReader(sourceXml)..next(), props);
   }
 
   void _parsePPr(XmlPullReader reader, WmlParagraphProps props) {
