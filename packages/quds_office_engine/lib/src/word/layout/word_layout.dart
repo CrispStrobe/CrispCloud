@@ -1078,7 +1078,7 @@ class WordLayoutEngine {
   double _containedVerticalInsets = 0;
   final _footnotesById = <int, WmlNote>{};
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
-  final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
+  final _notePages = <int, _NotePageReservation>{};
   int _lastReservedNotePage = -1;
   final Set<int> _placedNotes = <int>{};
 
@@ -1143,7 +1143,7 @@ class WordLayoutEngine {
     // Earlier pages are sealed. A checkpoint only needs the reservations on
     // its current page and in any footnote continuation pages ahead.
     for (var page = fromPage; page <= _lastReservedNotePage; page++) {
-      final slices = _noteSlices[page];
+      final slices = _notePages[page]?.slices;
       if (slices != null && slices.isNotEmpty) {
         (result ??= <int, List<_NoteSlice>>{})[page] = List<_NoteSlice>.of(
           slices,
@@ -1164,15 +1164,15 @@ class WordLayoutEngine {
       if (!_placedNotes.contains(oldOrder[i])) return false;
     }
     final Map<int, List<_NoteSlice>>? pending = cp.pendingNotes;
-    for (final MapEntry<int, List<_NoteSlice>> entry in _noteSlices.entries) {
+    for (final entry in _notePages.entries) {
       if (entry.key >= cp.pagesLength &&
-          !_sameSlices(entry.value, pending?[entry.key])) {
+          !_sameSlices(entry.value.slices, pending?[entry.key])) {
         return false;
       }
     }
     if (pending != null) {
       for (final MapEntry<int, List<_NoteSlice>> entry in pending.entries) {
-        if (!_sameSlices(entry.value, _noteSlices[entry.key])) return false;
+        if (!_sameSlices(entry.value, _notePages[entry.key]?.slices)) return false;
       }
     }
     return true;
@@ -1232,11 +1232,10 @@ class WordLayoutEngine {
   }
 
   double _noteReserve(int page) {
-    final List<_NoteSlice> slices = _noteSlices[page] ?? <_NoteSlice>[];
-    return slices.isEmpty
+    final reservation = _notePages[page];
+    return reservation == null
         ? 0
-        : _footnoteSeparatorHeight +
-              slices.fold<double>(0, (double n, _NoteSlice s) => n + s.height);
+        : _footnoteSeparatorHeight + reservation.height;
   }
 
   double _bodyBottom(WmlSection section, int page) =>
@@ -1304,8 +1303,8 @@ class WordLayoutEngine {
           target++;
           continue;
         }
-        _noteSlices
-            .putIfAbsent(target, () => <_NoteSlice>[])
+        _notePages
+            .putIfAbsent(target, _NotePageReservation.new)
             .add(
               _NoteSlice(
                 story,
@@ -1694,7 +1693,7 @@ class WordLayoutEngine {
     }
     _noteNumbering = _inheritedNoteNumbering ?? WordNoteNumbering(document);
     _noteStories.clear();
-    _noteSlices.clear();
+    _notePages.clear();
     _lastReservedNotePage = -1;
     _placedNotes.clear();
     _placedOrder.clear();
@@ -1799,7 +1798,7 @@ class WordLayoutEngine {
     }
     final int flowPages = pages.length;
     while (pages.length <= _lastReservedNotePage) {
-      final _NoteSlice? slice = _noteSlices[pages.length]?.firstOrNull;
+      final slice = _notePages[pages.length]?.slices.firstOrNull;
       final WmlSection section = slice?.section ?? document.sections.last;
       pages.add(
         _makePage(
@@ -1828,9 +1827,8 @@ class WordLayoutEngine {
       if (hasNotes) {
         state.notes = _NoteState(
           slices: <int, List<_NoteSlice>>{
-            for (final MapEntry<int, List<_NoteSlice>> entry
-                in _noteSlices.entries)
-              entry.key: List<_NoteSlice>.of(entry.value),
+            for (final entry in _notePages.entries)
+              entry.key: List<_NoteSlice>.of(entry.value.slices),
           },
           placedOrder: List<int>.of(_placedOrder),
           stories: Map<WmlNote, _NoteStory>.of(_noteStories),
@@ -1987,13 +1985,13 @@ class WordLayoutEngine {
         // slices reserved before the resume block.
         oldNotes.slices.forEach((int page, List<_NoteSlice> slices) {
           if (page < cp.pagesLength) {
-            _noteSlices[page] = List<_NoteSlice>.of(slices);
+            _notePages[page] = _NotePageReservation.fromSlices(slices);
           }
         });
         cp.pendingNotes?.forEach((int page, List<_NoteSlice> slices) {
-          _noteSlices[page] = List<_NoteSlice>.of(slices);
+          _notePages[page] = _NotePageReservation.fromSlices(slices);
         });
-        _lastReservedNotePage = _noteSlices.keys.fold(-1, math.max);
+        _lastReservedNotePage = _notePages.keys.fold(-1, math.max);
         for (final int id in oldNotes.placedOrder.take(cp.placedNotes)) {
           _placedNotes.add(id);
           _placedOrder.add(id);
@@ -2075,11 +2073,13 @@ class WordLayoutEngine {
     if (oldNotes != null) {
       // From here on the old flow repeats: its reserved slices for the
       // remaining pages and its later placements are the full layout's.
-      _noteSlices.removeWhere((int page, _) => page >= at);
+      _notePages.removeWhere((int page, _) => page >= at);
       oldNotes.slices.forEach((int page, List<_NoteSlice> slices) {
-        if (page >= at) _noteSlices[page] = List<_NoteSlice>.of(slices);
+        if (page >= at) {
+          _notePages[page] = _NotePageReservation.fromSlices(slices);
+        }
       });
-      _lastReservedNotePage = _noteSlices.keys.fold(-1, math.max);
+      _lastReservedNotePage = _notePages.keys.fold(-1, math.max);
       for (final int id in oldNotes.placedOrder.skip(cp.placedNotes)) {
         if (_placedNotes.add(id)) _placedOrder.add(id);
       }
@@ -4899,8 +4899,8 @@ class WordLayoutEngine {
   }
 
   void _attachNotes(LaidOutPage page, WmlSection section) {
-    final List<_NoteSlice> slices = _noteSlices[page.index] ?? <_NoteSlice>[];
-    if (slices.isEmpty) return;
+    final reservation = _notePages[page.index];
+    if (reservation == null) return;
     final separator = _layoutDoc?.footnoteSeparator;
     final reservationTop = _bodyBottom(section, page.index);
     var y = reservationTop + _footnoteSeparatorHeight;
@@ -4945,7 +4945,7 @@ class WordLayoutEngine {
         ),
       );
     }
-    for (final _NoteSlice slice in slices) {
+    for (final _NoteSlice slice in reservation.slices) {
       slice.paintInto(page, y);
       y += slice.height;
     }

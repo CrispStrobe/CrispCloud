@@ -364,6 +364,38 @@ void main() {
     );
   });
 
+  test('incremental resume restores the total of multiple notes on a page', () {
+    final document = _document(
+      bodyParagraphs: 20,
+      separator: _separator(before: 9.25, after: 5.125),
+    );
+    WordNotes.insert(
+      document,
+      document.paragraphs.first,
+      endnote: false,
+      text: 'A second footnote.',
+    );
+    final engine = WordLayoutEngine(font: null);
+    final before = engine.layout(document, updateFields: false);
+    expect(before.pages.first.notes, hasLength(2));
+
+    final edited = document.paragraphs.elementAt(1);
+    WmlRunEdit.replaceRange(edited, 0, 1, 'X');
+    WordIncrementalLayoutStats.reset();
+    final resumed = engine.layout(
+      document,
+      updateFields: false,
+      reuse: before,
+      dirtyParagraphs: {edited},
+    );
+    final fresh = WordLayoutEngine(font: null).layout(
+      document,
+      updateFields: false,
+    );
+    expect(wordLayoutFingerprint(resumed), wordLayoutFingerprint(fresh));
+    expect(WordIncrementalLayoutStats.incremental, 1);
+  });
+
   test('unused footnote preferences do not reserve body space', () {
     final document = _document(addNote: false, bodyParagraphs: 40);
     final engine = WordLayoutEngine(font: null);

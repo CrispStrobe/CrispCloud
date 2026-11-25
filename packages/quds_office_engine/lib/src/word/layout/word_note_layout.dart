@@ -311,6 +311,26 @@ class _NoteProofingOffsets extends ListBase<int?> {
       throw UnsupportedError('Note proofing offsets are read-only');
 }
 
+// Keep the sum in placement order, with the separator added by the caller.
+class _NotePageReservation {
+  _NotePageReservation();
+
+  _NotePageReservation.fromSlices(List<_NoteSlice> existing) {
+    for (final slice in existing) {
+      add(slice);
+    }
+  }
+
+  final slices = <_NoteSlice>[];
+  double _height = 0;
+  double get height => _height;
+
+  void add(_NoteSlice slice) {
+    slices.add(slice);
+    _height += slice.height;
+  }
+}
+
 class _NoteSlice {
   _NoteSlice(this.story, this.start, this.end, this.section, this.sectionIndex);
   final _NoteStory story;
