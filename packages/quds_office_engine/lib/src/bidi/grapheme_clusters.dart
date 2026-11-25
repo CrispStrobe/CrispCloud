@@ -95,9 +95,12 @@ final class GraphemeBoundaries {
     return boundaries;
   }
 
-  bool contains(int offset) {
-    if (offset < 0 || offset > _text.length) return false;
-    if (offset == 0 || offset == _text.length) return true;
+  bool contains(int offset) => offset == _text.length || isStart(offset);
+
+  /// Tests for a cluster start, excluding the end-of-text boundary.
+  bool isStart(int offset) {
+    if (offset < 0 || offset >= _text.length) return false;
+    if (offset == 0) return true;
     final boundaries = _boundaries;
     return boundaries == null || boundaries[offset] != 0;
   }

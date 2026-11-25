@@ -3,6 +3,18 @@ import 'package:quds_office_engine/src/bidi/grapheme_clusters.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('cluster start lookup agrees with segmentation and excludes the end', () {
+    for (final text in ['', 'Aé — B', 'A\r\nB', 'e\u0301👩‍💻عَ']) {
+      final starts = GraphemeClusters.startOffsets(text);
+      final boundaries = GraphemeBoundaries(text);
+      expect(boundaries.isStart(-1), isFalse);
+      for (var i = 0; i <= text.length; i++) {
+        expect(boundaries.isStart(i), starts.contains(i), reason: '$text at $i');
+      }
+      expect(boundaries.contains(text.length), isTrue);
+    }
+  });
+
   test('Latin fast path agrees with Unicode segmentation for every pair', () {
     final units = [
       for (var code = 0; code <= 0xff; code++) code,

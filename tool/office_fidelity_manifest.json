@@ -2314,9 +2314,9 @@
     "packages/quds_office_engine/lib/src/bidi/english_us_hyphenation_data.dart": "809673b992606bbe3a249f99126ae14419e1969905954311e04125c34e231fea",
     "packages/quds_office_engine/lib/src/bidi/german_hyphenation_data.dart": "fdd6a9520d9dc26a240d69f01c74eb879659b21ec2431784a4660fe6db87a3e4",
     "packages/quds_office_engine/lib/src/bidi/german_hyphenator.dart": "f5a419083210b80a1a00f5d00d77caa04328abdc5b9e4dd010b8ef2b77642496",
-    "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "64f2a8d01946d5923388588311fb96428695d0da1f7dc6967db6b0028da096a8",
+    "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "b2a62ffd7f3d97d4f8567fe55b2dfef4435d06e079e44b4c543b2494f8864ead",
     "packages/quds_office_engine/lib/src/bidi/hyphenation_words.dart": "c31b1cf2bcd3a8fe3ba194ff13e88fc6a2f79b4635c2e934ffc132f5c35464ea",
-    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "3a6846076286f8b20a319928d0d3b2f5705491339f216f80cebb4a97890e7fa4",
+    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "e13981f3bbbf2a54bf39cf967a84a0b42efe8bd1e6fb22af95581eba507ae974",
     "packages/quds_office_engine/lib/src/bidi/office_hyphenator.dart": "1af8eed059dfcb9eaa33d9e884ca7c8d073b1b52af22178de9751d9323072a00",
     "packages/quds_office_engine/lib/src/bidi/uax9_bidi.dart": "07d01099f18303258bb99a4d32f343bbeeaeee681d72b3244ca6bebe8c6ec113",
     "packages/quds_office_engine/lib/src/builders/docx_builder.dart": "43a52e550eebd74900bb33d6596326282cb5c3f73e49b64dc8a1c1efd42f1f8b",
@@ -3023,7 +3023,7 @@
     "packages/quds_office_engine/test/proofing/german_suggestion_quality_test.dart": "a99e291868668d7f3181bea7f19272839f47cd8357a4b5433068ba7ee0a56ef5",
     "packages/quds_office_engine/test/proofing/german_verb_object_case_test.dart": "fac1540bf1f13caffdcd440ca74000adbe8986ffbeb7f6ddcb0b5dda8c491acc",
     "packages/quds_office_engine/test/proofing/german_writing_rules_test.dart": "9212c9cb0a84da8f8c4ae56e397c6160e38d430026f14bf8b7ab41e28fb8b32d",
-    "packages/quds_office_engine/test/proofing/grapheme_boundaries_test.dart": "a7b87b0c5b6765cecac39abae1762a577e05618bcf3a330938a2bd21a3aa35f1",
+    "packages/quds_office_engine/test/proofing/grapheme_boundaries_test.dart": "7269ae998fdb5650de8f2311e2fc3be227b1a78ad82e4cef7bc9d92f6bef91de",
     "packages/quds_office_engine/test/proofing/language_identification_calibration_test.dart": "08c4d4eb50e0b9433674dafc6be9a41466ecd5e604fcc3e2f4bd42a78c682ab8",
     "packages/quds_office_engine/test/proofing/language_identification_test.dart": "f17164fa5ae7e0ad26453829c786d905ae3fb39438c0da128627e4d2e8c77a65",
     "packages/quds_office_engine/test/proofing/office_proofing_merge_test.dart": "a95eb4e040ef8a968bd638c52225ce4c93b5cee6084f98feba89683e31d64522",
@@ -3520,7 +3520,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "534d8fd85a60ebeaa1cc4e7ef4ed39e8bad4d8d5",
+  "source_commit": "607e56f7b9368cbd86747da38d30b01508f3376a",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

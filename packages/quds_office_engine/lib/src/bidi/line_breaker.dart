@@ -133,7 +133,7 @@ abstract final class LineBreaker {
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
     final shaped = ligate == null ? logical : ligate(logical);
-    final clusterStarts = GraphemeClusters.startOffsets(text);
+    final clusterStarts = GraphemeBoundaries(text);
     final hyphens = _hyphenGlyphs(
       text,
       shaped,
@@ -217,7 +217,7 @@ abstract final class LineBreaker {
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
-    final clusterStarts = GraphemeClusters.startOffsets(text);
+    final clusterStarts = GraphemeBoundaries(text);
     final hyphens = _hyphenGlyphs(
       text,
       logical,
@@ -291,7 +291,7 @@ abstract final class LineBreaker {
     required double spaceShrink,
     required bool justify,
     MarkAttachFn? markAttachOf,
-    required Set<int> clusterStarts,
+    required GraphemeBoundaries clusterStarts,
     Map<int, ShapedGlyph> hyphens = const {},
     _BreakControls controls = _BreakControls.empty,
     bool breakLongWords = false,
@@ -407,7 +407,7 @@ abstract final class LineBreaker {
   static List<int> _constrainBreaks(
     List<ShapedGlyph> logical,
     List<int> planned,
-    Set<int> clusterStarts,
+    GraphemeBoundaries clusterStarts,
     double maxWidth,
     Map<int, ShapedGlyph> hyphens,
     _BreakControls controls, {
@@ -477,7 +477,7 @@ abstract final class LineBreaker {
   static bool _isClusterBoundary(
     List<ShapedGlyph> logical,
     int at,
-    Set<int> clusterStarts,
+    GraphemeBoundaries clusterStarts,
     _BreakControls controls,
   ) =>
       at == logical.length ||
@@ -486,7 +486,7 @@ abstract final class LineBreaker {
           // line, including a host-measured oversized grapheme fallback.
           logical[at].codePoint != 0x0020 &&
           !controls.prohibits(logical[at].logicalIndex) &&
-          clusterStarts.contains(logical[at].logicalIndex) &&
+          clusterStarts.isStart(logical[at].logicalIndex) &&
           logical[at].logicalIndex != logical[at - 1].logicalIndex &&
           // The continuation of a lam-alef ligature has no independent ink.
           logical[at].codePoint != 0);
@@ -498,7 +498,7 @@ abstract final class LineBreaker {
   static List<int> _refineBreaks(
     List<ShapedGlyph> logical,
     List<int> planned,
-    Set<int> clusterStarts,
+    GraphemeBoundaries clusterStarts,
     double maxWidth,
     Map<int, ShapedGlyph> hyphens,
     _BreakControls controls,
@@ -588,7 +588,7 @@ abstract final class LineBreaker {
   static List<ShapedGlyph> _reorderLine(
     List<ShapedGlyph> logicalSlice,
     MarkAttachFn? markAttachOf, [
-    Set<int>? clusterStarts,
+    GraphemeBoundaries? clusterStarts,
   ]) {
     var hasOddLevel = false;
     var hasMarks = false;
@@ -624,7 +624,7 @@ abstract final class LineBreaker {
   /// UAX #9 L2 at grapheme-cluster granularity: tashkeel stays on its letter.
   static List<List<ShapedGlyph>> _graphemeClusters(
     List<ShapedGlyph> glyphs,
-    Set<int>? clusterStarts,
+    GraphemeBoundaries? clusterStarts,
   ) {
     final List<List<ShapedGlyph>> clusters = <List<ShapedGlyph>>[];
     for (final ShapedGlyph glyph in glyphs) {
@@ -635,7 +635,7 @@ abstract final class LineBreaker {
           sameSource ||
           (clusterStarts == null
               ? isCombiningMark(glyph.codePoint)
-              : !clusterStarts.contains(glyph.logicalIndex) ||
+              : !clusterStarts.isStart(glyph.logicalIndex) ||
                     glyph.codePoint == 0);
       if (clusters.isNotEmpty && continues) {
         clusters.last.add(glyph);
@@ -802,7 +802,7 @@ abstract final class LineBreaker {
     List<ShapedGlyph> glyphs,
     double maxWidth,
     Map<int, ShapedGlyph> hyphens,
-    Set<int> clusterStarts,
+    GraphemeBoundaries clusterStarts,
     _BreakControls controls,
     _MeasuredLine Function(int, int) measure, {
     double? firstLineWidth,
@@ -889,7 +889,7 @@ abstract final class LineBreaker {
     double stretch,
     double shrink, [
     Map<int, ShapedGlyph> hyphens = const {},
-    Set<int>? clusterStarts,
+    GraphemeBoundaries? clusterStarts,
     _BreakControls controls = _BreakControls.empty,
   ]) {
     final int n = glyphs.length;
@@ -986,7 +986,7 @@ abstract final class LineBreaker {
     List<ShapedGlyph> glyphs,
     int i, [
     Map<int, ShapedGlyph> hyphens = const {},
-    Set<int>? clusterStarts,
+    GraphemeBoundaries? clusterStarts,
     _BreakControls controls = _BreakControls.empty,
   ]) {
     final int cp = glyphs[i].codePoint;
@@ -1031,7 +1031,7 @@ abstract final class LineBreaker {
     String text,
     List<ShapedGlyph> logical,
     Iterable<int> candidates,
-    Set<int> clusterStarts,
+    GraphemeBoundaries clusterStarts,
     GlyphWidthAtFn widthAt,
     GlyphIdAtFn glyphIdAt,
   ) {
@@ -1045,7 +1045,7 @@ abstract final class LineBreaker {
     for (final offset in offsets) {
       if (offset <= 0 ||
           offset >= text.length ||
-          !clusterStarts.contains(offset) ||
+          !clusterStarts.isStart(offset) ||
           !bySource.containsKey(offset)) {
         continue;
       }
@@ -1171,7 +1171,7 @@ class _LineMeasurements {
 
   final List<ShapedGlyph> logical;
   final Map<int, ShapedGlyph> hyphens;
-  final Set<int> clusterStarts;
+  final GraphemeBoundaries clusterStarts;
   final MarkAttachFn? markAttach;
   final List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? measureLine;
   final Map<(int, int), _MeasuredLine> _cache = {};
@@ -1269,7 +1269,7 @@ class PreparedLineBreaker {
   final MarkAttachFn? _markAttach;
   final Map<int, ShapedGlyph> _hyphens;
   final _BreakControls _controls;
-  final Set<int> _clusterStarts;
+  final GraphemeBoundaries _clusterStarts;
   final List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? _measureLine;
   final bool _breakLongWords;
   final bool _balanceLines;
