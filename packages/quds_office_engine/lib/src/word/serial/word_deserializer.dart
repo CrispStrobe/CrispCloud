@@ -883,9 +883,7 @@ class WordDeserializer {
       } else if (reader.localName == 'pPr') {
         _readPPr(reader, paragraph.properties);
       } else if (reader.localName == 'r') {
-        paragraph.inlines.addAll(
-          _readRunInlines(reader, package, docUri, paragraph),
-        );
+        _readRunInlines(reader, package, docUri, paragraph);
       } else if (reader.namespaceUri == OfficeNamespaces.w &&
           const {
             'ins',
@@ -1154,21 +1152,20 @@ class WordDeserializer {
     }
   }
 
-  List<WmlInline> _readRunInlines(
+  void _readRunInlines(
     XmlPullReader reader,
     OpcPackage package,
     String docUri,
     WmlParagraph paragraph,
   ) {
-    final List<WmlInline> inlines = <WmlInline>[];
+    if (reader.isEmptyElement) return;
+    // Stage compound runs until their formatting revision has been recorded.
+    List<WmlInline>? inlines;
     XmlElement? formattingChange;
     String? boundaryRunPropertiesXml;
     var hasOrdinaryRunIdentity = false;
     var hasNonTextContent = false;
     final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
-    if (reader.isEmptyElement) {
-      return inlines;
-    }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
@@ -1216,7 +1213,7 @@ class WordDeserializer {
         // custom symbol in the same w:r. The invisible custom reference still
         // owns one stable editor offset and the link to its note story.
         if (run.text.isNotEmpty) {
-          inlines.add(
+          (inlines ??= <WmlInline>[]).add(
             WmlRun(
               text: run.text,
               properties: run.properties.copy(),
@@ -1225,7 +1222,7 @@ class WordDeserializer {
           );
           run.text = '';
         }
-        inlines.add(
+        (inlines ??= <WmlInline>[]).add(
           WmlRun(
             text: custom ? '\uFFFC' : '$id',
             noteRefId: id,
@@ -1241,7 +1238,7 @@ class WordDeserializer {
       } else if (reader.localName == 'footnoteRef' ||
           reader.localName == 'endnoteRef') {
         if (run.text.isNotEmpty) {
-          inlines.add(
+          (inlines ??= <WmlInline>[]).add(
             WmlRun(
               text: run.text,
               properties: run.properties.copy(),
@@ -1254,7 +1251,7 @@ class WordDeserializer {
         markerProperties.importedValues = WordPropertyIo.runValues(
           markerProperties,
         );
-        inlines.add(
+        (inlines ??= <WmlInline>[]).add(
           WmlNoteMarker(
             endnote: reader.localName == 'endnoteRef',
             properties: markerProperties,
@@ -1273,7 +1270,7 @@ class WordDeserializer {
         if (_isPageField(instr)) {
           paragraph.properties.pageNumberField = true;
         }
-        _flushFieldText(inlines, run);
+        _flushFieldText(inlines ??= <WmlInline>[], run);
         final boundary = WmlFieldBoundary(
           kind: WmlFieldBoundaryKind.instruction,
           text: instr,
@@ -1295,7 +1292,7 @@ class WordDeserializer {
           _ => null,
         };
         if (kind != null) {
-          _flushFieldText(inlines, run);
+          _flushFieldText(inlines ??= <WmlInline>[], run);
           final boundary = WmlFieldBoundary(
             kind: kind,
             sourceXml: XmlDocument(
@@ -1321,7 +1318,7 @@ class WordDeserializer {
         final WmlRun? symbol = _symbolRun(reader, run.properties);
         if (symbol != null) {
           if (run.text.isNotEmpty) {
-            inlines.add(
+            (inlines ??= <WmlInline>[]).add(
               WmlRun(
                 text: run.text,
                 properties: run.properties.copy(),
@@ -1330,7 +1327,7 @@ class WordDeserializer {
             );
             run.text = '';
           }
-          inlines.add(symbol);
+          (inlines ??= <WmlInline>[]).add(symbol);
         }
       } else if (reader.localName == 'softHyphen' &&
           reader.namespaceUri == OfficeNamespaces.w) {
@@ -1347,7 +1344,7 @@ class WordDeserializer {
         );
         if (type == 'page' || type == 'column') {
           if (run.text.isNotEmpty) {
-            inlines.add(
+            (inlines ??= <WmlInline>[]).add(
               WmlRun(
                 text: run.text,
                 properties: run.properties.copy(),
@@ -1356,7 +1353,7 @@ class WordDeserializer {
             );
             run.text = '';
           }
-          inlines.add(
+          (inlines ??= <WmlInline>[]).add(
             WmlBreak(type == 'page' ? WmlBreakType.page : WmlBreakType.column),
           );
         } else {
@@ -1365,7 +1362,7 @@ class WordDeserializer {
       } else if (reader.localName == 'pict' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         if (run.text.isNotEmpty) {
-          inlines.add(
+          (inlines ??= <WmlInline>[]).add(
             WmlRun(
               text: run.text,
               properties: run.properties.copy(),
@@ -1374,7 +1371,7 @@ class WordDeserializer {
           );
           run.text = '';
         }
-        inlines.add(
+        (inlines ??= <WmlInline>[]).add(
           WmlOpaqueInline(
             content: WordOpaqueIo.read(reader, package, docUri),
             runPropertiesXml: run.properties.sourcePropertiesXml,
@@ -1384,14 +1381,16 @@ class WordDeserializer {
           reader.localName == 'drawing' ||
           reader.localName == 'OLEObject') {
         if (run.text.isNotEmpty) {
-          inlines.add(WmlRun(text: run.text, properties: run.properties));
+          (inlines ??= <WmlInline>[]).add(
+            WmlRun(text: run.text, properties: run.properties),
+          );
           run.text = '';
         }
         final int pendingBefore = _pendingVisuals.length;
         if (!_takeDrawing(reader, package, docUri)) {
           final WmlObject? obj = _readObject(reader, package, docUri);
           if (obj != null) {
-            inlines.add(obj);
+            (inlines ??= <WmlInline>[]).add(obj);
           }
         } else if (_pendingVisuals.length == pendingBefore + 1 &&
             _pendingVisuals.last.visual.kind == OfficeVisualKind.picture &&
@@ -1399,7 +1398,7 @@ class WordDeserializer {
             _pendingVisuals.last.visual.picture.wrap == PictureWrap.inline) {
           // An inline picture stays in its line of text (settled in
           // _settleInlinePictures once the paragraph is complete).
-          inlines.add(
+          (inlines ??= <WmlInline>[]).add(
             WmlRun(
               text: _inlinePictureChar,
               properties: run.properties.copy(),
@@ -1414,23 +1413,28 @@ class WordDeserializer {
     // Keep it through save/reopen, including an empty rPr inheriting a style.
     // Bare runs and structural-only field, note, drawing or comment markers
     // must not acquire an extra ordinary run beside their existing model node.
+    final hasInlines = inlines?.isNotEmpty ?? false;
     final emptyOrdinaryRun =
-        hasOrdinaryRunIdentity && !hasNonTextContent && inlines.isEmpty;
+        hasOrdinaryRunIdentity && !hasNonTextContent && !hasInlines;
     if (run.text.isNotEmpty ||
         run.noteRefId != null ||
         emptyOrdinaryRun ||
-        formattingChange != null && inlines.isEmpty) {
+        formattingChange != null && !hasInlines) {
       run.commentIds.addAll(_openCommentIds);
-      inlines.add(run);
+      if (inlines == null && formattingChange == null) {
+        paragraph.inlines.add(run);
+        return;
+      }
+      (inlines ??= <WmlInline>[]).add(run);
     }
+    if (inlines == null) return;
     // Field and note markers have no ordinary text range to own a revision.
     // Their complete rPr keeps their formatting history in the native marker.
-    final onlyMarkers =
-        inlines.isNotEmpty &&
-        inlines.every(
-          (inline) => inline is WmlFieldBoundary || inline is WmlNoteMarker,
-        );
-    if (formattingChange != null && !onlyMarkers) {
+    if (formattingChange != null &&
+        (inlines.isEmpty ||
+            !inlines.every(
+              (inline) => inline is WmlFieldBoundary || inline is WmlNoteMarker,
+            ))) {
       if (run.text.isEmpty && inlines.contains(run)) {
         run.properties.hasEmptyFormattingRevision = true;
       }
@@ -1444,7 +1448,7 @@ class WordDeserializer {
         emptyRun: text.isEmpty && inlines.contains(run) ? run : null,
       );
     }
-    return inlines;
+    paragraph.inlines.addAll(inlines);
   }
 
   String _revisionXml(XmlElement element) {
@@ -1913,9 +1917,7 @@ class WordDeserializer {
       }
       final int firstInline = paragraph.inlines.length;
       if (reader.localName == 'r') {
-        paragraph.inlines.addAll(
-          _readRunInlines(reader, package, docUri, paragraph),
-        );
+        _readRunInlines(reader, package, docUri, paragraph);
       } else if (reader.namespaceUri == OfficeNamespaces.w &&
           const {
             'ins',
