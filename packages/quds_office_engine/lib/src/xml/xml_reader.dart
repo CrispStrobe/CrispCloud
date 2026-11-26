@@ -45,9 +45,6 @@ class XmlPullReader {
 
   int _nameStart = 0;
   int _nameEnd = 0;
-  int _localStart = 0;
-  int _localEnd = 0;
-  int _prefixStart = 0;
   int _prefixEnd = 0;
   String? _qualifiedName;
   String? _localName;
@@ -98,11 +95,14 @@ class XmlPullReader {
   String get qualifiedName => _qualifiedName ??= _slice(_nameStart, _nameEnd);
 
   /// localName API.
-  String get localName => _localName ??= _slice(_localStart, _localEnd);
+  String get localName => _localName ??= _slice(
+    _prefixEnd > _nameStart ? _prefixEnd + 1 : _nameStart,
+    _nameEnd,
+  );
 
   /// prefix API.
   String get prefix =>
-      _prefix ??= _prefixEnd > _prefixStart ? _slice(_prefixStart, _prefixEnd) : '';
+      _prefix ??= _prefixEnd > _nameStart ? _slice(_nameStart, _prefixEnd) : '';
 
   /// namespaceUri API.
   String get namespaceUri {
@@ -110,7 +110,7 @@ class XmlPullReader {
         _type != XmlEventType.endElement) {
       return '';
     }
-    return _namespaceUri ??= _resolveSourcePrefix(_prefixStart, _prefixEnd);
+    return _namespaceUri ??= _resolveSourcePrefix(_nameStart, _prefixEnd);
   }
 
   /// Resolves a prefix in the current element's namespace scope.
@@ -176,8 +176,7 @@ class XmlPullReader {
     _qualifiedName = _localName = _prefix = null;
     _emptyElement = false;
     _textHasEntities = false;
-    _nameStart = _nameEnd = _localStart = _localEnd = 0;
-    _prefixStart = _prefixEnd = 0;
+    _nameStart = _nameEnd = _prefixEnd = 0;
     _textStart = _textEnd = 0;
 
     if (_pos >= _source.length) {
@@ -364,7 +363,7 @@ class XmlPullReader {
         scope.declare(key, attr.decodedValue(_source));
       } else if (attr.hasEntities) {
         // Validate entities even when no caller reads this attribute.
-        attr.decodedValue(_source);
+        _validateXmlEntities(_source, attr.valueStart, attr.valueEnd);
       }
       _skipSpaces();
     }
@@ -412,65 +411,59 @@ class XmlPullReader {
   }
 
   void _readQName() {
-    _nameStart = _pos;
-    _prefixStart = _pos;
-    _prefixEnd = _pos;
-    while (_pos < _source.length) {
-      final ch = _source.codeUnitAt(_pos);
+    final start = _pos;
+    var prefixEnd = start;
+    var end = start;
+    final source = _source;
+    final length = source.length;
+    while (end < length) {
+      final ch = source.codeUnitAt(end);
       if (!_isNameChar(ch)) break;
-      if (ch == _colon && _prefixEnd == _prefixStart) {
-        _prefixEnd = _pos;
-      }
-      _pos++;
+      if (ch == _colon && prefixEnd == start) prefixEnd = end;
+      end++;
     }
-    _nameEnd = _pos;
-    if (_nameEnd == _nameStart) {
-      throw XmlParseException('Expected qualified name', _pos);
+    if (end == start) {
+      throw XmlParseException('Expected qualified name', start);
     }
-    if (_prefixEnd > _prefixStart) {
-      _localStart = _prefixEnd + 1;
-      _localEnd = _nameEnd;
-    } else {
-      _localStart = _nameStart;
-      _localEnd = _nameEnd;
-      _prefixStart = _prefixEnd = _nameStart;
-    }
+    _pos = end;
+    _nameStart = start;
+    _nameEnd = end;
+    _prefixEnd = prefixEnd;
   }
 
   _AttrSlice _readAttribute() {
     final int qStart = _pos;
+    final source = _source;
+    final length = source.length;
     int prefixEnd = qStart;
-    while (_pos < _source.length) {
-      final ch = _source.codeUnitAt(_pos);
+    int qEnd = qStart;
+    while (qEnd < length) {
+      final ch = source.codeUnitAt(qEnd);
       if (!_isNameChar(ch)) break;
-      if (ch == _colon && prefixEnd == qStart) {
-        prefixEnd = _pos;
-      }
-      _pos++;
+      if (ch == _colon && prefixEnd == qStart) prefixEnd = qEnd;
+      qEnd++;
     }
-    final int qEnd = _pos;
     if (qEnd == qStart) {
-      throw XmlParseException('Expected attribute name', _pos);
+      throw XmlParseException('Expected attribute name', qStart);
     }
+    _pos = qEnd;
     _skipSpaces();
     _expect(_eq, 'Expected = after attribute name');
     _skipSpaces();
-    final int quote = _source.codeUnitAt(_pos);
+    final int quote = source.codeUnitAt(_pos);
     if (quote != _quot && quote != _apos) {
       throw XmlParseException('Expected quoted attribute value', _pos);
     }
-    _pos++;
-    final int vStart = _pos;
+    final int vStart = _pos + 1;
+    int vEnd = vStart;
     bool hasEntities = false;
-    while (_pos < _source.length) {
-      final ch = _source.codeUnitAt(_pos);
+    while (vEnd < length) {
+      final ch = source.codeUnitAt(vEnd);
       if (ch == quote) break;
-      if (ch == _amp) {
-        hasEntities = true;
-      }
-      _pos++;
+      if (ch == _amp) hasEntities = true;
+      vEnd++;
     }
-    final int vEnd = _pos;
+    _pos = vEnd;
     _expect(quote, 'Unterminated attribute value');
 
     final _AttrSlice attr;
@@ -561,14 +554,10 @@ class XmlPullReader {
       _type = XmlEventType.xmlDeclaration;
       _nameStart = nameStart;
       _nameEnd = nameStart + 3;
-      _localStart = _nameStart;
-      _localEnd = _nameEnd;
     } else {
       _type = XmlEventType.processingInstruction;
       _nameStart = nameStart;
       _nameEnd = nameStart + target.length;
-      _localStart = _nameStart;
-      _localEnd = _nameEnd;
     }
   }
 

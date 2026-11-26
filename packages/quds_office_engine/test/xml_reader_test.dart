@@ -33,6 +33,18 @@ void main() {
     );
   });
 
+  test('attribute validation stops at the closing quote', () {
+    final reader = XmlPullReader('<root a="x &lt" b="&gt;"/>');
+    expect(
+      reader.next,
+      throwsA(
+        isA<XmlParseException>()
+            .having((error) => error.message, 'message', 'Unterminated entity')
+            .having((error) => error.position, 'position', 2),
+      ),
+    );
+  });
+
   test('normalizes literal and entity-encoded XML carriage returns', () {
     expect(decodeXmlEntities('A\r\nB\rC'), 'A\nB\nC');
     expect(decodeXmlEntities('&gt;&#xD;&#xA;A&#13;B&lt;'), '>\nA\nB<');
