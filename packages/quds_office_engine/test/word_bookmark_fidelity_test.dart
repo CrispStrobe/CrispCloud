@@ -329,6 +329,28 @@ void main() {
     );
   }
 
+  test('ordinary empty bookmark markers still require decimal IDs', () {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body><w:p>'
+          '<w:bookmarkStart w:id="bad" w:name="Target"/>'
+          '<w:r><w:t>Text</w:t></w:r>'
+          '<w:bookmarkEnd w:id="bad"/></w:p></w:body></w:document>',
+        );
+    expect(
+      () => WordDeserializer().read(package),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          contains('Bookmark id is not a native decimal number'),
+        ),
+      ),
+    );
+  });
+
   test('source metadata mismatch fails before package mutation', () {
     final doc = _document();
     final p = doc.paragraphs.elementAt(1);
