@@ -2,6 +2,17 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('XML escaping preserves pairs and sanitizes isolated code units', () {
+    final raw = String.fromCharCodes([
+      0xD83D, 0xDE00, // Valid supplementary character before an escape.
+      0x26, 0x3C, 0x3E, 0x22, 0x27, // &, <, >, double and single quotes.
+      0xD800, 0xD83D, 0xDE00, 0xDC00, // A valid pair between lone surrogates.
+      0x00, 0xFFFE, 0xFFFF, 0x09, 0x0A, 0x0D,
+    ]);
+    expect(encodeXmlText(raw), '😀&amp;&lt;&gt;"\'�😀����\t\n\r');
+    expect(encodeXmlAttribute(raw), '😀&amp;&lt;&gt;&quot;\'�😀����\t\n\r');
+  });
+
   test('pruning an XML subtree still validates its text entities', () {
     expect(
       () => XmlDocument.parse(

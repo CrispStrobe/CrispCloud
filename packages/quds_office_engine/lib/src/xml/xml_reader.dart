@@ -708,85 +708,54 @@ void _validateXmlEntities(String source, int start, int end) {
 }
 
 /// Encodes text for XML character data.
-String encodeXmlText(String raw) {
-  /// buffer API.
-  final StringBuffer? buffer = _escape(
-    raw,
-    escapeApos: false,
-    escapeQuot: false,
-  );
-  return buffer?.toString() ?? raw;
-}
+String encodeXmlText(String raw) => _escape(raw, escapeQuot: false);
 
 /// Encodes text for a double-quoted XML attribute.
-String encodeXmlAttribute(String raw) {
-  /// buffer API.
-  final StringBuffer? buffer = _escape(
-    raw,
-    escapeApos: false,
-    escapeQuot: true,
-  );
-  return buffer?.toString() ?? raw;
-}
+String encodeXmlAttribute(String raw) => _escape(raw, escapeQuot: true);
 
-StringBuffer? _escape(
-  String raw, {
-  required bool escapeApos,
-  required bool escapeQuot,
-}) {
-  /// buffer API.
+String _escape(String raw, {required bool escapeQuot}) {
   StringBuffer? buffer;
-  for (int i = 0; i < raw.length; i++) {
-    final int ch = raw.codeUnitAt(i);
-    String? repl;
+  var start = 0;
+  final length = raw.length;
+  for (var index = 0; index < length; index++) {
+    final ch = raw.codeUnitAt(index);
+    final String replacement;
     switch (ch) {
       case _amp:
-        repl = '&amp;';
+        replacement = '&amp;';
       case _lt:
-        repl = '&lt;';
+        replacement = '&lt;';
       case _gt:
-        repl = '&gt;';
-      case _quot:
-        if (escapeQuot) {
-          repl = '&quot;';
+        replacement = '&gt;';
+      case _quot when escapeQuot:
+        replacement = '&quot;';
+      default:
+        if ((ch >= 0x20 && ch <= 0xD7FF) ||
+            (ch >= 0xE000 && ch <= 0xFFFD) ||
+            ch == 0x09 ||
+            ch == 0x0A ||
+            ch == 0x0D) {
+          continue;
         }
-      case _apos:
-        if (escapeApos) {
-          repl = '&apos;';
+        if (ch >= 0xD800 && ch <= 0xDBFF && index + 1 < length) {
+          final low = raw.codeUnitAt(index + 1);
+          if (low >= 0xDC00 && low <= 0xDFFF) {
+            index++;
+            continue;
+          }
         }
+        // Strict XML 1.0 consumers reject controls and unpaired surrogates.
+        replacement = '\uFFFD';
     }
-    if (repl == null && !_isXmlChar(raw, i)) {
-      // XML 1.0 forbids most control characters (and lone surrogates). A
-      // legacy .xls SST can contain NULs; emitting them makes the whole
-      // package unparseable for strict readers.
-      repl = '\uFFFD';
-    }
-    if (repl != null) {
-      buffer ??= StringBuffer(raw.substring(0, i));
-      buffer.write(repl);
-    } else {
-      buffer?.writeCharCode(ch);
-    }
+    // Copy intact ranges in bulk, including any supplementary characters.
+    buffer ??= StringBuffer();
+    if (index > start) buffer.write(raw.substring(start, index));
+    buffer.write(replacement);
+    start = index + 1;
   }
-  return buffer;
-}
-
-bool _isXmlChar(String raw, int index) {
-  final int ch = raw.codeUnitAt(index);
-  if (ch == 0x09 || ch == 0x0A || ch == 0x0D) return true;
-  if (ch >= 0x20 && ch <= 0xD7FF) return true;
-  if (ch >= 0xE000 && ch <= 0xFFFD) return true;
-  if (ch >= 0xD800 && ch <= 0xDBFF) {
-    if (index + 1 >= raw.length) return false;
-    final int next = raw.codeUnitAt(index + 1);
-    return next >= 0xDC00 && next <= 0xDFFF;
-  }
-  if (ch >= 0xDC00 && ch <= 0xDFFF) {
-    if (index == 0) return false;
-    final int previous = raw.codeUnitAt(index - 1);
-    return previous >= 0xD800 && previous <= 0xDBFF;
-  }
-  return false;
+  if (buffer == null) return raw;
+  if (start < length) buffer.write(raw.substring(start));
+  return buffer.toString();
 }
 
 int _entityCodePoint(String body) {
