@@ -674,7 +674,19 @@ String decodeXmlEntities(String raw) {
       out.write(raw.substring(i));
       break;
     }
-    out.write(raw.substring(i, nextAmp));
+    if (nextAmp > i) out.write(raw.substring(i, nextAmp));
+    // Embedded XML in Word fields contains many escaped tags. Match these
+    // fixed-width entities directly without extracting their names.
+    final angle = raw.startsWith('&lt;', nextAmp)
+        ? _lt
+        : raw.startsWith('&gt;', nextAmp)
+        ? _gt
+        : null;
+    if (angle != null) {
+      out.writeCharCode(angle);
+      i = nextAmp + 4;
+      continue;
+    }
     final int semi = raw.indexOf(';', nextAmp + 1);
     if (semi < 0) {
       throw XmlParseException('Unterminated entity', nextAmp);
