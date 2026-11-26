@@ -240,13 +240,7 @@ class XmlPullReader {
       if (validateTextEntities &&
           _type == XmlEventType.characters &&
           _textHasEntities) {
-        _scanXmlEntities(
-          _source,
-          _textStart,
-          _textEnd,
-          _source.indexOf('&', _textStart),
-          null,
-        );
+        _validateXmlEntities(_source, _textStart, _textEnd);
       }
       if (_type == XmlEventType.endElement && _depth < startDepth) {
         return;
@@ -663,56 +657,65 @@ class XmlPullReader {
 
 /// Decodes XML predefined and numeric character entities.
 String decodeXmlEntities(String raw) {
-  final amp = raw.indexOf('&');
-  if (amp < 0) {
-    return raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-  }
-  final out = StringBuffer();
-  _scanXmlEntities(raw, 0, raw.length, amp, out);
-  return out.toString().replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-}
+  var amp = raw.indexOf('&');
+  if (amp < 0) return _normalizeXmlNewlines(raw);
 
-// With no output buffer, validate directly against the source token without
-// building either a copy of the token or its decoded text.
-void _scanXmlEntities(
-  String source,
-  int start,
-  int end,
-  int firstAmp,
-  StringBuffer? out,
-) {
-  var cursor = start;
-  var amp = firstAmp;
-  while (amp >= 0 && amp < end) {
-    if (out != null && amp > cursor) out.write(source.substring(cursor, amp));
+  final out = StringBuffer();
+  var cursor = 0;
+  final end = raw.length;
+  while (amp >= 0) {
+    if (amp > cursor) out.write(raw.substring(cursor, amp));
     // Embedded XML in Word fields contains many escaped tags.
-    final angle = amp + 4 > end
-        ? null
-        : source.startsWith('&lt;', amp)
-        ? _lt
-        : source.startsWith('&gt;', amp)
-        ? _gt
-        : null;
+    final angle = _escapedAngleAt(raw, amp);
     if (angle != null) {
-      out?.writeCharCode(angle);
+      out.writeCharCode(angle);
       cursor = amp + 4;
     } else {
-      final semi = source.indexOf(';', amp + 1);
-      if (semi < 0 || semi >= end) {
-        throw XmlParseException('Unterminated entity', amp - start);
-      }
-      final code = _entityCodePoint(source.substring(amp + 1, semi));
-      if (out != null) {
-        out.writeCharCode(code);
-      } else {
-        RangeError.checkValueInInterval(code, 0, 0x10FFFF);
-      }
+      final semi = _entityEnd(raw, amp, end, 0);
+      out.writeCharCode(_entityCodePoint(raw.substring(amp + 1, semi)));
       cursor = semi + 1;
     }
-    if (cursor == end) return;
-    amp = source.indexOf('&', cursor);
+    if (cursor == end) break;
+    amp = raw.indexOf('&', cursor);
   }
-  if (out != null && cursor < end) out.write(source.substring(cursor, end));
+  if (cursor < end) out.write(raw.substring(cursor));
+  return _normalizeXmlNewlines(out.toString());
+}
+
+String _normalizeXmlNewlines(String value) => value.contains('\r')
+    ? value.replaceAll('\r\n', '\n').replaceAll('\r', '\n')
+    : value;
+
+int? _escapedAngleAt(String source, int amp) => source.startsWith('&lt;', amp)
+    ? _lt
+    : source.startsWith('&gt;', amp)
+    ? _gt
+    : null;
+
+int _entityEnd(String source, int amp, int end, int start) {
+  final semi = source.indexOf(';', amp + 1);
+  if (semi < 0 || semi >= end) {
+    throw XmlParseException('Unterminated entity', amp - start);
+  }
+  return semi;
+}
+
+// Validate directly against the source token without building decoded text.
+void _validateXmlEntities(String source, int start, int end) {
+  var amp = source.indexOf('&', start);
+  while (amp >= 0 && amp < end) {
+    final int next;
+    if (amp + 4 <= end && _escapedAngleAt(source, amp) != null) {
+      next = amp + 4;
+    } else {
+      final semi = _entityEnd(source, amp, end, start);
+      final code = _entityCodePoint(source.substring(amp + 1, semi));
+      RangeError.checkValueInInterval(code, 0, 0x10FFFF);
+      next = semi + 1;
+    }
+    if (next == end) return;
+    amp = source.indexOf('&', next);
+  }
 }
 
 /// Encodes text for XML character data.

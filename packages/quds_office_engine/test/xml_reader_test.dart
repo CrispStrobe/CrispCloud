@@ -33,6 +33,11 @@ void main() {
     );
   });
 
+  test('normalizes literal and entity-encoded XML carriage returns', () {
+    expect(decodeXmlEntities('A\r\nB\rC'), 'A\nB\nC');
+    expect(decodeXmlEntities('&gt;&#xD;&#xA;A&#13;B&lt;'), '>\nA\nB<');
+  });
+
   test('a known raw element leaves the reader at its matching close', () {
     const packet = '<p:run xmlns:p="urn:inner"><p:rPr/></p:run>';
     final reader = XmlPullReader(
