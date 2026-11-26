@@ -49,6 +49,14 @@ enum _SdtBreakLayout { none, liftLast, opaque }
 
 typedef _ImportedFieldChar = ({WmlFieldBoundaryKind? kind, String? xml});
 
+typedef _RunPropertyKey = (Map<String, String>, String, bool);
+typedef _RunPropertyTemplate = ({
+  WmlRunProps props,
+  String xml,
+  bool notBold,
+  bool notItalic,
+});
+
 /// Reads a `.docx` OPC package into a [WmlDocument] tree.
 class WordDeserializer {
   final List<WmlEquation> _pendingEquations = <WmlEquation>[];
@@ -129,11 +137,8 @@ class WordDeserializer {
         ({String xml, WmlParagraphProps? template})
       >{};
 
-  final _runPropertyCache =
-      <
-        (Map<String, String>, String, bool),
-        ({WmlRunProps props, String xml, bool notBold, bool notItalic})
-      >{};
+  final _runPropertyCache = <_RunPropertyKey, _RunPropertyTemplate>{};
+  MapEntry<_RunPropertyKey, _RunPropertyTemplate>? _lastRunProperties;
 
   /// read API.
   WmlDocument read(OpcPackage package) {
@@ -141,6 +146,7 @@ class WordDeserializer {
     // Story state belongs to one document and must not contaminate the next.
     _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
+    _lastRunProperties = null;
     _pendingEquations.clear();
     _pendingVisuals.clear();
     _pendingFrames.clear();
@@ -270,6 +276,7 @@ class WordDeserializer {
     _fieldSourceElements.clear();
     _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
+    _lastRunProperties = null;
     return document;
   }
 
@@ -2722,6 +2729,13 @@ class WordDeserializer {
   _readRunProperties(XmlPullReader reader, WmlRunProps? initial) {
     final namespaces = reader.inScopeNamespaces;
     final projected = reader is WordMarkupCompatibilityReader;
+    final last = _lastRunProperties;
+    if (last != null &&
+        identical(last.key.$1, namespaces) &&
+        last.key.$3 == projected &&
+        reader.trySkipKnownElement(last.key.$2)) {
+      return _copyRunProperties(last.value);
+    }
     final fragment = reader.readRawElement();
     final cacheable = fragment.length <= 2048;
     final key = (namespaces, fragment, projected);
@@ -2729,10 +2743,8 @@ class WordDeserializer {
     // the private parsed template, never a run's editable property object.
     final cached = cacheable ? _runPropertyCache[key] : null;
     if (cached != null) {
-      final copy = cached.props.copy();
-      if (cached.notBold) _notBold.add(copy);
-      if (cached.notItalic) _notItalic.add(copy);
-      return (props: copy, change: null, sourceXml: cached.xml);
+      _lastRunProperties = MapEntry(key, cached);
+      return _copyRunProperties(cached);
     }
     final replay = projected
         ? WordMarkupCompatibilityReader(
@@ -2743,15 +2755,33 @@ class WordDeserializer {
     replay.next();
     final props = initial ?? WmlRunProps();
     final result = _readRPr(replay, props);
-    if (cacheable && result.change == null && _runPropertyCache.length < 256) {
-      _runPropertyCache[key] = (
+    if (cacheable &&
+        result.change == null &&
+        reader.eventType == XmlEventType.endElement) {
+      // Let later stories cache their own formatting when the body has
+      // already used the budget. Keep recent templates across story changes.
+      if (_runPropertyCache.length >= 256) {
+        _runPropertyCache.remove(_runPropertyCache.keys.first);
+      }
+      final template = (
         props: props.copy(),
         xml: result.sourceXml,
         notBold: _notBold.contains(props),
         notItalic: _notItalic.contains(props),
       );
+      _runPropertyCache[key] = template;
+      _lastRunProperties = MapEntry(key, template);
     }
     return (props: props, change: result.change, sourceXml: result.sourceXml);
+  }
+
+  ({WmlRunProps props, XmlElement? change, String sourceXml}) _copyRunProperties(
+    _RunPropertyTemplate template,
+  ) {
+    final copy = template.props.copy();
+    if (template.notBold) _notBold.add(copy);
+    if (template.notItalic) _notItalic.add(copy);
+    return (props: copy, change: null, sourceXml: template.xml);
   }
 
   ({XmlElement? change, String sourceXml}) _readRPr(

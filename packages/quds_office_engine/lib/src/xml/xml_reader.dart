@@ -263,6 +263,26 @@ class XmlPullReader {
     return _source.substring(start, _pos);
   }
 
+  /// Advances past an exact fragment already read and validated by the caller.
+  ///
+  /// Use only with the same inherited namespaces and reader behavior. The
+  /// matching start token is already open, and the usual end-token path
+  /// still restores the parent depth and namespace scope.
+  bool trySkipKnownElement(String fragment) {
+    if (_type != XmlEventType.startElement) return false;
+    final start = _nameStart - 1;
+    if (!_source.startsWith(fragment, start)) return false;
+    if (_emptyElement) {
+      if (start + fragment.length != _pos) return false;
+    } else {
+      final close = fragment.lastIndexOf('</');
+      if (close < 0 || start + close < _pos) return false;
+      _pos = start + close;
+    }
+    next();
+    return true;
+  }
+
   _AttrSlice _attributeAt(int index) {
     RangeError.checkValidIndex(index, _attrs, 'index', _attributeCount);
     return _attrs[index];

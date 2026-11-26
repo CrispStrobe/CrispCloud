@@ -12,6 +12,28 @@ void main() {
     );
   });
 
+  test('a known raw element leaves the reader at its matching close', () {
+    const packet = '<p:run xmlns:p="urn:inner"><p:rPr/></p:run>';
+    final reader = XmlPullReader(
+      '<root xmlns:p="urn:outer">$packet$packet<p:sibling/></root>',
+    );
+    expect(reader.next(), isTrue);
+    expect(reader.next(), isTrue);
+    final fragment = reader.readRawElement();
+    expect(fragment, packet);
+    expect(reader.next(), isTrue);
+    expect(reader.trySkipKnownElement('<p:run/>'), isFalse);
+    expect(reader.localName, 'run');
+    expect(reader.namespaceUri, 'urn:inner');
+    expect(reader.trySkipKnownElement(fragment), isTrue);
+    expect(reader.eventType, XmlEventType.endElement);
+    expect(reader.localName, 'run');
+    expect(reader.depth, 1);
+    expect(reader.next(), isTrue);
+    expect(reader.localName, 'sibling');
+    expect(reader.namespaceUri, 'urn:outer');
+  });
+
   group('XmlPullReader', () {
     test('parses namespaced Office-style documents', () {
       const String xml =
