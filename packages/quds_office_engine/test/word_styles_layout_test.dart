@@ -100,6 +100,38 @@ void main() {
     expect(runs[2].properties.importedValues, contains('color'));
   });
 
+  test('reused rPr output preserves native order and per-run edits', () {
+    const direct = '<w:rPr><w:sz w:val="34"/>'
+        '<w:color w:val="112233"/><w:b/></w:rPr>';
+    final doc = _open(
+      '<w:p><w:r>$direct<w:t>one</w:t></w:r>'
+      '<w:r>$direct<w:t>two</w:t></w:r>'
+      '<w:r>$direct<w:t>three</w:t></w:r></w:p>',
+    );
+    final runs = doc.paragraphs.single.inlines.whereType<WmlRun>().toList();
+    runs[1].properties.color = 'CC0000';
+    final part = WordSerializer().write(doc).getPart('/word/document.xml')!;
+    final properties = XmlDocument.parse(part.readText())
+        .root!
+        .firstChild('body')!
+        .firstChild('p')!
+        .childrenNamed('r')
+        .map((run) => run.firstChild('rPr')!)
+        .toList();
+    expect(properties, hasLength(3));
+    for (final property in properties) {
+      expect(property.childElements.map((child) => child.localName), [
+        'b',
+        'color',
+        'sz',
+      ]);
+    }
+    expect(
+      properties.map((p) => p.firstChild('color')!.getAttribute('val')),
+      ['112233', 'CC0000', '112233'],
+    );
+  });
+
   test('repeated paragraph projections own their tabs and bookmarks', () {
     final doc = _open(
       [

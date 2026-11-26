@@ -698,6 +698,19 @@ class WmlRunProps {
   /// Whether this run has an import baseline, without materializing its map.
   bool get hasImportedValues => _importBaseline != null;
 
+  /// Compares modeled values without creating an editable baseline map.
+  bool matchesImportedValues(Map<String, String> current) {
+    final baseline = _importBaseline;
+    final values = baseline is _RunImportBaseline
+        ? baseline.values
+        : baseline as Map<String, String>?;
+    if (values == null) return false;
+    for (final entry in current.entries) {
+      if (values[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
   /// Stores a comparison baseline that copies can share until edited.
   void captureImportedValues(Map<String, String> values) {
     _importBaseline = _RunImportBaseline(Map.of(values));
