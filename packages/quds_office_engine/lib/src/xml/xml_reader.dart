@@ -240,7 +240,13 @@ class XmlPullReader {
       if (validateTextEntities &&
           _type == XmlEventType.characters &&
           _textHasEntities) {
-        decodeXmlEntities(_source.substring(_textStart, _textEnd));
+        _scanXmlEntities(
+          _source,
+          _textStart,
+          _textEnd,
+          _source.indexOf('&', _textStart),
+          null,
+        );
       }
       if (_type == XmlEventType.endElement && _depth < startDepth) {
         return;
@@ -657,45 +663,56 @@ class XmlPullReader {
 
 /// Decodes XML predefined and numeric character entities.
 String decodeXmlEntities(String raw) {
-  /// amp API.
-  final int amp = raw.indexOf('&');
+  final amp = raw.indexOf('&');
   if (amp < 0) {
     return raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   }
+  final out = StringBuffer();
+  _scanXmlEntities(raw, 0, raw.length, amp, out);
+  return out.toString().replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+}
 
-  /// out API.
-  final StringBuffer out = StringBuffer();
-
-  /// i API.
-  int i = 0;
-  while (i < raw.length) {
-    final int nextAmp = raw.indexOf('&', i);
-    if (nextAmp < 0) {
-      out.write(raw.substring(i));
-      break;
-    }
-    if (nextAmp > i) out.write(raw.substring(i, nextAmp));
-    // Embedded XML in Word fields contains many escaped tags. Match these
-    // fixed-width entities directly without extracting their names.
-    final angle = raw.startsWith('&lt;', nextAmp)
+// With no output buffer, validate directly against the source token without
+// building either a copy of the token or its decoded text.
+void _scanXmlEntities(
+  String source,
+  int start,
+  int end,
+  int firstAmp,
+  StringBuffer? out,
+) {
+  var cursor = start;
+  var amp = firstAmp;
+  while (amp >= 0 && amp < end) {
+    if (out != null && amp > cursor) out.write(source.substring(cursor, amp));
+    // Embedded XML in Word fields contains many escaped tags.
+    final angle = amp + 4 > end
+        ? null
+        : source.startsWith('&lt;', amp)
         ? _lt
-        : raw.startsWith('&gt;', nextAmp)
+        : source.startsWith('&gt;', amp)
         ? _gt
         : null;
     if (angle != null) {
-      out.writeCharCode(angle);
-      i = nextAmp + 4;
-      continue;
+      out?.writeCharCode(angle);
+      cursor = amp + 4;
+    } else {
+      final semi = source.indexOf(';', amp + 1);
+      if (semi < 0 || semi >= end) {
+        throw XmlParseException('Unterminated entity', amp - start);
+      }
+      final code = _entityCodePoint(source.substring(amp + 1, semi));
+      if (out != null) {
+        out.writeCharCode(code);
+      } else {
+        RangeError.checkValueInInterval(code, 0, 0x10FFFF);
+      }
+      cursor = semi + 1;
     }
-    final int semi = raw.indexOf(';', nextAmp + 1);
-    if (semi < 0) {
-      throw XmlParseException('Unterminated entity', nextAmp);
-    }
-    final String body = raw.substring(nextAmp + 1, semi);
-    out.writeCharCode(_entityCodePoint(body));
-    i = semi + 1;
+    if (cursor == end) return;
+    amp = source.indexOf('&', cursor);
   }
-  return out.toString().replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  if (out != null && cursor < end) out.write(source.substring(cursor, end));
 }
 
 /// Encodes text for XML character data.

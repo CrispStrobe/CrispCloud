@@ -12,6 +12,27 @@ void main() {
     );
   });
 
+  test('entity validation in a pruned subtree stays inside its text token', () {
+    expect(
+      () => XmlDocument.parse(
+        '<root><skip>x &lt</skip><keep>&gt;</keep></root>',
+        keepRootChild: (_, child) => child.localName == 'keep',
+      ),
+      throwsA(
+        isA<XmlParseException>()
+            .having((error) => error.message, 'message', 'Unterminated entity')
+            .having((error) => error.position, 'position', 2),
+      ),
+    );
+    expect(
+      () => XmlDocument.parse(
+        '<root><skip>&#x110000;</skip><keep/></root>',
+        keepRootChild: (_, child) => child.localName == 'keep',
+      ),
+      throwsRangeError,
+    );
+  });
+
   test('a known raw element leaves the reader at its matching close', () {
     const packet = '<p:run xmlns:p="urn:inner"><p:rPr/></p:run>';
     final reader = XmlPullReader(
