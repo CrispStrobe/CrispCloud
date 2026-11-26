@@ -85,14 +85,19 @@ void main() {
     final runs = doc.paragraphs.single.inlines.whereType<WmlRun>().toList();
     final plain = runs[0].properties.importedValues!;
     final link = runs[1].properties.importedValues!;
-    final another = runs[2].properties.importedValues!;
+    final unopenedCopy = runs[2].properties.copy();
     expect(plain['sz'], '28');
     expect(link['color'], WordLink.color);
     expect(link['u'], '${WmlUnderline.single}');
-    expect(another, plain);
-    expect(another['u'], isNot(link['u']));
-    plain.remove('color');
-    expect(another, contains('color'));
+    expect(unopenedCopy.importedValues, plain);
+    expect(unopenedCopy.importedValues!['u'], isNot(link['u']));
+    unopenedCopy.importedValues!.remove('color');
+    final editedCopy = unopenedCopy.copy();
+    expect(editedCopy.importedValues, isNot(contains('color')));
+    editedCopy.importedValues!['color'] = '123456';
+    expect(unopenedCopy.importedValues, isNot(contains('color')));
+    expect(plain, contains('color'));
+    expect(runs[2].properties.importedValues, contains('color'));
   });
 
   test('repeated paragraph projections own their tabs and bookmarks', () {

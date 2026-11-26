@@ -679,20 +679,36 @@ abstract final class WmlHighlight {
 class WmlRunProps {
   /// Original direct properties and resolved import values, for sparse export.
   String? sourcePropertiesXml;
-  Map<String, String>? importedValues;
+  // Either a shared snapshot or the map owned by this run.
+  Object? _importBaseline;
+
+  /// Effective values at import time, independently editable for each run.
+  Map<String, String>? get importedValues {
+    final baseline = _importBaseline;
+    if (baseline is _RunImportBaseline) {
+      final values = _RunImportedValues(baseline);
+      _importBaseline = values;
+      return values;
+    }
+    return baseline as Map<String, String>?;
+  }
+
+  set importedValues(Map<String, String>? values) => _importBaseline = values;
+
+  /// Whether this run has an import baseline, without materializing its map.
+  bool get hasImportedValues => _importBaseline != null;
 
   /// Stores a comparison baseline that copies can share until edited.
   void captureImportedValues(Map<String, String> values) {
-    importedValues = _RunImportedValues(Map.of(values));
+    _importBaseline = _RunImportBaseline(Map.of(values));
   }
 
-  Map<String, String>? _copyImportedValues() {
-    final values = importedValues;
-    if (values is _RunImportedValues && values._shared) {
-      return _RunImportedValues(values._values);
-    }
-    return values == null ? null : Map.of(values);
-  }
+  Object? _copyImportBaseline() => switch (_importBaseline) {
+    final _RunImportedValues values when values._edited == null =>
+      values._baseline,
+    final Map<String, String> values => Map.of(values),
+    final baseline => baseline,
+  };
 
   /// A pending native formatting revision on an imported empty run.
   ///
@@ -829,24 +845,26 @@ class WmlRunProps {
         ..explicitProperties.addAll(explicitProperties)
         ..sourcePropertiesXml = sourcePropertiesXml
         ..hasEmptyFormattingRevision = hasEmptyFormattingRevision
-        ..importedValues = _copyImportedValues();
+        .._importBaseline = _copyImportBaseline();
 }
 
-// Cached style projections share a frozen comparison map. Each run keeps
-// its own mutable facade so edits cannot alter a sibling run's baseline.
+// Cached style projections share a frozen comparison map. Each run only
+// creates a mutable facade if a caller actually reads its baseline.
+final class _RunImportBaseline {
+  _RunImportBaseline(this.values);
+
+  final Map<String, String> values;
+}
+
 final class _RunImportedValues extends MapBase<String, String> {
-  _RunImportedValues(this._values);
+  _RunImportedValues(this._baseline);
 
-  Map<String, String> _values;
-  bool _shared = true;
+  final _RunImportBaseline _baseline;
+  Map<String, String>? _edited;
 
-  Map<String, String> _writable() {
-    if (_shared) {
-      _values = Map.of(_values);
-      _shared = false;
-    }
-    return _values;
-  }
+  Map<String, String> get _values => _edited ?? _baseline.values;
+
+  Map<String, String> _writable() => _edited ??= Map.of(_baseline.values);
 
   @override
   String? operator [](Object? key) => _values[key];

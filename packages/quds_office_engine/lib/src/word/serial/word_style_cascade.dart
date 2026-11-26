@@ -1066,7 +1066,7 @@ class _StyleCascade {
         if (!p.properties.explicitLineSpacing) p.properties.lineSpacing = 1;
       }
       for (final run in p.inlines.whereType<WmlRun>()) {
-        if (run.properties.importedValues != null) {
+        if (run.properties.hasImportedValues) {
           run.properties.sourcePropertiesXml = WordSerializer()
               .runPropertiesXml(run.properties);
         }
@@ -1175,7 +1175,7 @@ class _StyleCascade {
         _ => null,
       };
       if (props == null) continue;
-      if (props.importedValues != null) {
+      if (props.hasImportedValues) {
         final xml = WordSerializer().runPropertiesXml(props);
         // A run imported without rPr keeps none: never invent <w:rPr/>.
         if (xml != '<w:rPr/>' ||
@@ -1231,9 +1231,7 @@ class _StyleCascade {
       }
       // Cached runs share a baseline until edited. Link and note defaults
       // depend on the inline, so keep them out of the style template.
-      if (resolved.importedValues == null ||
-          hasLinkDefaults ||
-          hasNoteBaseline) {
+      if (!resolved.hasImportedValues || hasLinkDefaults || hasNoteBaseline) {
         final values = WordPropertyIo.runValues(resolved);
         resolved.importedValues = values;
         if (canCache && !hasLinkDefaults && !hasNoteBaseline) {
