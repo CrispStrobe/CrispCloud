@@ -64,8 +64,10 @@ class PackagePart {
   String readText({Encoding encoding = utf8}) => encoding.decode(_bytes);
 
   /// writeBytes API.
-  void writeBytes(Uint8List data) {
-    _bytes = Uint8List.fromList(data);
+  void writeBytes(Uint8List data) => _replaceBytes(Uint8List.fromList(data));
+
+  void _replaceBytes(Uint8List data) {
+    _bytes = data;
     _loaded = true;
     _modified = true;
     package.markDirty(this);
@@ -73,7 +75,13 @@ class PackagePart {
 
   /// writeText API.
   void writeText(String text, {Encoding encoding = utf8}) {
-    writeBytes(Uint8List.fromList(encoding.encode(text)));
+    // The built-in UTF-8 codec returns its own buffer. Other encoders may
+    // return a shared or reusable buffer, so copy those before taking ownership.
+    _replaceBytes(
+      encoding is Utf8Codec
+          ? encoding.encode(text)
+          : Uint8List.fromList(encoding.encode(text)),
+    );
   }
 
   /// relationships API.

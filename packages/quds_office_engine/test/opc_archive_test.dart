@@ -4,6 +4,22 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
+final class _ReusingEncoding extends Encoding {
+  final bytes = Uint8List.fromList([65]);
+
+  @override
+  String get name => 'reusing-test-encoding';
+
+  @override
+  Converter<List<int>, String> get decoder => ascii.decoder;
+
+  @override
+  Converter<String, List<int>> get encoder => ascii.encoder;
+
+  @override
+  List<int> encode(String input) => bytes;
+}
+
 void main() {
   group('OpcPackage', () {
     test('creates, mutates, and reopens a Word package', () {
@@ -44,6 +60,30 @@ void main() {
             .target,
         'embeddings/oleObject1.bin',
       );
+    });
+
+    test('text and binary writes own their part buffers', () {
+      final package = OpcPackage.openBytes(
+        OpcPackage.create(OpcPackageKind.word).save(),
+      );
+      final document = package.getPart('/word/document.xml')!;
+      expect(document.isModified, isFalse);
+      document.writeText('Grüße & 😀');
+      expect(document.isModified, isTrue);
+      expect(document.readText(), 'Grüße & 😀');
+
+      final codec = _ReusingEncoding();
+      document.writeText('ignored', encoding: codec);
+      codec.bytes[0] = 66;
+      expect(document.readText(), 'A');
+
+      document.writeBytes(codec.bytes);
+      codec.bytes[0] = 67;
+      expect(document.readText(), 'B');
+      final reopened = OpcPackage.openBytes(
+        package.save(reuseCompressedParts: true),
+      );
+      expect(reopened.getPart('/word/document.xml')!.readText(), 'B');
     });
 
     test('allocates unique relationship ids', () {
