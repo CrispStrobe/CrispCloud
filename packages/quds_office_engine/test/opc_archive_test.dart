@@ -110,6 +110,18 @@ void main() {
       );
     });
 
+    test('CRC32 matches the IEEE vector across subviews and split points', () {
+      final bytes = Uint8List.fromList([0, ...ascii.encode('123456789'), 0]);
+      final data = Uint8List.sublistView(bytes, 1, bytes.length - 1);
+      expect(Crc32.compute(data), 0xCBF43926);
+      expect(Crc32.compute(data.toList()), 0xCBF43926);
+      for (var split = 0; split <= data.length; split++) {
+        final head = Uint8List.sublistView(data, 0, split);
+        final tail = Uint8List.sublistView(data, split);
+        expect(Crc32.compute(tail, Crc32.compute(head)), 0xCBF43926);
+      }
+    });
+
     test('ZIP store and deflate round-trip', () {
       final ZipWriter writer = ZipWriter();
       writer.addFile('plain.txt', utf8.encode('hello'), store: true);
