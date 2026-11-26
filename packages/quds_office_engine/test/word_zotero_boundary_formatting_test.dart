@@ -195,6 +195,39 @@ void _assertFields(WmlDocument document) {
 
 void main() {
   _emptyCodeFormattingTests();
+  test('a split Zotero instruction is recognized after a reference field', () {
+    final code = _citation().fieldInstruction;
+    final document = _synthetic(properties: '', instruction: code);
+    document.paragraphs.single.inlines.insertAll(0, [
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+      WmlFieldBoundary(
+        kind: WmlFieldBoundaryKind.instruction,
+        text: ' REF example ',
+      ),
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+      WmlRun(text: 'Reference '),
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+    ]);
+
+    final reopened = _reopen(document).paragraphs.single;
+    expect(
+      reopened.inlines
+          .whereType<WmlRun>()
+          .singleWhere((run) => run.text == '(Original)')
+          .fieldInstruction,
+      code,
+    );
+    expect(
+      reopened.inlines
+          .whereType<WmlFieldBoundary>()
+          .where(
+            (boundary) => boundary.kind == WmlFieldBoundaryKind.instruction,
+          )
+          .map((boundary) => boundary.text),
+      [' REF example '],
+    );
+  });
+
   for (final story in ['body', 'footnote', 'cell']) {
     for (final cycle in [1, 2]) {
       test(

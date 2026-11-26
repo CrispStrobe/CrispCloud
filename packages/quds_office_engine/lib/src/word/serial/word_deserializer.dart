@@ -2574,6 +2574,8 @@ class WordDeserializer {
     var depth = 0;
     var start = -1;
     var nested = false;
+    String? instruction;
+    StringBuffer? splitInstruction;
     for (var index = 0; index < paragraph.inlines.length; index++) {
       final inline = paragraph.inlines[index];
       if (inline is! WmlFieldBoundary) continue;
@@ -2581,21 +2583,36 @@ class WordDeserializer {
         if (depth == 0) {
           start = index;
           nested = false;
+          instruction = null;
+          splitInstruction = null;
         } else {
           nested = true;
         }
         depth++;
+      } else if (inline.kind == WmlFieldBoundaryKind.instruction &&
+          depth == 1 &&
+          !nested) {
+        if (instruction == null) {
+          instruction = inline.text;
+        } else {
+          (splitInstruction ??= StringBuffer(instruction)).write(inline.text);
+        }
       } else if (inline.kind == WmlFieldBoundaryKind.end && depth > 0) {
         depth--;
         if (depth != 0 || nested || start < 0) continue;
-        final packet = paragraph.inlines.sublist(start, index + 1);
-        final instruction = StringBuffer();
+        // Ordinary field packets need no Zotero-specific XML inspection.
+        // Join split instructions before classifying the complete command.
+        final code = splitInstruction?.toString() ?? instruction;
+        if (code == null || WordZotero.kindOfInstruction(code) == null) {
+          continue;
+        }
         WmlRun? cache;
         var separated = false;
         var valid = true;
         bool locked = false;
         bool? dirty;
-        for (final member in packet) {
+        for (var offset = start; offset <= index; offset++) {
+          final member = paragraph.inlines[offset];
           if (member is WmlFieldBoundary) {
             // Code-run properties and foreign field attributes are opaque
             // source metadata. Keep their boundary packet if atomizing would
@@ -2605,7 +2622,6 @@ class WordDeserializer {
             }
             if (member.kind == WmlFieldBoundaryKind.instruction) {
               if (separated) valid = false;
-              instruction.write(member.text);
             } else {
               if (member.kind == WmlFieldBoundaryKind.separate) {
                 if (separated) valid = false;
@@ -2621,7 +2637,7 @@ class WordDeserializer {
                           a.prefix != 'xmlns' &&
                           a.qualifiedName != 'xmlns' &&
                           (a.namespaceUri != OfficeNamespaces.w ||
-                              !<String>{
+                              !const <String>{
                                 'fldCharType',
                                 'fldLock',
                                 'dirty',
@@ -2658,7 +2674,6 @@ class WordDeserializer {
             valid = false;
           }
         }
-        final code = instruction.toString();
         if (!valid ||
             cache == null ||
             !separated ||
