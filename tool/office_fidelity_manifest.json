@@ -2517,9 +2517,9 @@
     "packages/quds_office_engine/lib/src/word/serial/word_bookmark_io.dart": "b1c4a0f896af2f8500b607895d3f23ef204729a17361e07553a93df9961a688c",
     "packages/quds_office_engine/lib/src/word/serial/word_comment_io.dart": "a605eda98d8f99561db02a21524db9c6a1a8d06db5bc46e33704580d856f6f59",
     "packages/quds_office_engine/lib/src/word/serial/word_content_control_io.dart": "d7bb3046bdb8030eee54ffb5baaece8a16688eecf9f9a056be20f0b436cebb3b",
-    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart": "50411eb5ca1ba6aa39f245db84fd3c669835407f7ab82b51d1fc016dd655637d",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart": "3f252fd2b6be0539ddc6558bc65eb907b93914c11c18593c799d585e223e7c08",
     "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart": "d4b779e24fa1eb5b6ea816cace0368a05e9abcc7c7029c9088ea1fda6b36a4bb",
-    "packages/quds_office_engine/lib/src/word/serial/word_footnote_separator_io.dart": "250eb3185ac7fa560c7157704b245b2c6863fb9cdd6fbb068458a32ceff3e329",
+    "packages/quds_office_engine/lib/src/word/serial/word_footnote_separator_io.dart": "5fca05b562ba74b273721475f3bf8de234a01ef37eb8a16245ab554da3592450",
     "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart": "c305e87f48e65d29d97f512cf0a2fdeb05da5f76641d5d836cf38ac8b2e8de6b",
     "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart": "193078aabb0135fe572b89090bb584f40557e45f4b0454b5cc66c9f1831ce58b",
     "packages/quds_office_engine/lib/src/word/serial/word_markup_compatibility.dart": "d098a85682879e9c24300dc59b0426d4d31f69dbfa04156435c19a4a8de5f79b",
@@ -3520,7 +3520,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "5f96ecb4fea060b55e97c6820d882a92bdc80d34",
+  "source_commit": "12b6c95198ffad132f3ede1b0301301a7c31cd4b",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

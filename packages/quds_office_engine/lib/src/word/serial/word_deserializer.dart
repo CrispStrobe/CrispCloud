@@ -4330,7 +4330,7 @@ class WordDeserializer {
   }
 
   void _readNotes(WmlDocument document, OpcPackage package, String docUri) {
-    document.sourceFootnoteSeparatorsPresent = _readNotesPart(
+    final footnotes = _readNotesPart(
       document.footnotes,
       package,
       docUri,
@@ -4339,6 +4339,7 @@ class WordDeserializer {
       'footnote',
       endnote: false,
     );
+    document.sourceFootnoteSeparatorsPresent = footnotes?.hasSeparators;
     _readNotesPart(
       document.endnotes,
       package,
@@ -4348,10 +4349,17 @@ class WordDeserializer {
       'endnote',
       endnote: true,
     );
-    WordFootnoteSeparatorIo.readLayout(document);
+    WordFootnoteSeparatorIo.readLayout(
+      document,
+      readPartText: footnotes == null
+          ? null
+          : (part) => identical(part, footnotes.part)
+                ? footnotes.xml
+                : part.readText(),
+    );
   }
 
-  bool? _readNotesPart(
+  ({PackagePart part, String xml, bool hasSeparators})? _readNotesPart(
     List<WmlNote> bucket,
     OpcPackage package,
     String docUri,
@@ -4372,7 +4380,8 @@ class WordDeserializer {
     }
     var separatorsPresent = false;
     bucket.clear();
-    final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
+    final xml = part.readText();
+    final reader = WordMarkupCompatibilityReader(xml);
     while (reader.next()) {
       if (reader.eventType != XmlEventType.startElement ||
           reader.localName != item) {
@@ -4436,7 +4445,7 @@ class WordDeserializer {
       }
       bucket.add(note);
     }
-    return separatorsPresent;
+    return (part: part, xml: xml, hasSeparators: separatorsPresent);
   }
 
   void _readStyles(

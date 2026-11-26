@@ -30,11 +30,16 @@ abstract final class WordFootnoteSeparatorIo {
   };
 
   /// Projects supported native separator layout without rewriting its XML.
-  static void readLayout(WmlDocument document) {
+  ///
+  /// The importer can supply already-decoded text for the same package part.
+  static void readLayout(
+    WmlDocument document, {
+    String Function(PackagePart part)? readPartText,
+  }) {
     final package = document.package;
     if (package == null) return;
     try {
-      final source = _source(package);
+      final source = _source(package, readPartText: readPartText);
       if (source == null || !_isFootnotesRoot(source.root)) return;
       final definitions = _definitions(source.root);
       document.sourceBlankFootnoteSeparators = _hasBlankPair(definitions);
@@ -352,8 +357,9 @@ abstract final class WordFootnoteSeparatorIo {
       _uniqueAttributes(root);
 
   static ({XmlElement root, Map<int, int> idCounts})? _source(
-    OpcPackage package,
-  ) {
+    OpcPackage package, {
+    String Function(PackagePart part)? readPartText,
+  }) {
     final part = _part(
       package,
       _mainUri(package),
@@ -367,7 +373,7 @@ abstract final class WordFootnoteSeparatorIo {
     final idCounts = <int, int>{};
     XmlElement? countedRoot;
     final root = XmlDocument.parse(
-      part.readText(),
+      readPartText?.call(part) ?? part.readText(),
       keepRootChild: (root, child) {
         if (!identical(root, countedRoot)) {
           countedRoot = root;
