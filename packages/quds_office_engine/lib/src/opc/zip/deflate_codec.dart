@@ -61,6 +61,9 @@ class _Inflater {
   Uint8List _out = Uint8List(0);
   int _length = 0;
 
+  static final _fixedLiteralTable = _fixedLit();
+  static final _fixedDistanceTable = _fixedDist();
+
   void _reserveOutput(int additionalBytes) {
     final required = _length + additionalBytes;
     final limit = maxOutputBytes;
@@ -90,7 +93,7 @@ class _Inflater {
         case 0:
           _stored();
         case 1:
-          _huffman(_fixedLit(), _fixedDist());
+          _huffman(_fixedLiteralTable, _fixedDistanceTable);
         case 2:
           final _Tables tables = _dynamicTables();
           _huffman(tables.lit, tables.dist);
@@ -147,10 +150,17 @@ class _Inflater {
         throw const ZipDeflateException('Invalid backreference distance');
       }
       _reserveOutput(length);
-      final int start = _length - distance;
-      for (int i = 0; i < length; i++) {
-        _out[_length++] = _out[start + i];
+      final out = _out;
+      final end = _length + length;
+      if (length >= 32 && distance >= length) {
+        out.setRange(_length, end, out, _length - distance);
+      } else {
+        // Overlapping references read from the bytes just written.
+        for (var offset = _length; offset < end; offset++) {
+          out[offset] = out[offset - distance];
+        }
       }
+      _length = end;
     }
   }
 
@@ -448,7 +458,7 @@ class _Huffman {
 
   /// decode API.
   int decode(_Inflater inflater) {
-    final int peek = inflater._bitBuf | _peekAhead(inflater);
+    final int peek = _peekAhead(inflater);
     final int fast = _bits[peek & _fastMask];
     if (fast > 0 && fast <= _fastBits) {
       inflater._bits(fast);
@@ -474,7 +484,7 @@ class _Huffman {
     var buf = inflater._bitBuf;
     var count = inflater._bitCount;
     var pos = inflater._pos;
-    while (count < 15 && pos < inflater._src.length) {
+    while (count < _fastBits && pos < inflater._src.length) {
       buf |= inflater._src[pos++] << count;
       count += 8;
     }
