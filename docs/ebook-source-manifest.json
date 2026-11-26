@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "https://github.com/CrispStrobe/crisperbooks.git",
-  "revision": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606",
-  "git_tree": "5692e7027d5c970886071ed8a801be15ac960b83",
+  "revision": "d464f6238af7c59847c692df66b42a139486b638",
+  "git_tree": "45f89119a99e8d703e441b7b80de147848fc2a60",
   "packages": {
     "crisperbooks": ".",
     "crisp_ebook": "packages/crisp_ebook",
@@ -48,9 +48,9 @@
     },
     "CHANGELOG.md": {
       "mode": "100644",
-      "git_blob": "f345b4bf7cb1da81fa67bce86adc32f552ae6c74",
-      "bytes": 197,
-      "sha256": "8828948a4a693dccce2fbfdbc3c7bfaaa2d3446d7b69abca57ecbc0f674d5f56"
+      "git_blob": "57aa4352cd4a499fc4075111d74c6f469344af4c",
+      "bytes": 582,
+      "sha256": "e3d9d4d746295a37e994b103277dd843da785a0c98ec7fe324c49b075186d375"
     },
     "EXTRACTION.json": {
       "mode": "100644",
@@ -162,9 +162,9 @@
     },
     "lib/src/portable_reader_controller.dart": {
       "mode": "100644",
-      "git_blob": "d17bb57bb500e6c06ef883cf6fbd315ca30d717b",
-      "bytes": 14225,
-      "sha256": "e24eb47a4b4ee939dc9e290913fe97c083a2b959f7fe11d4f9a979b8c170de56"
+      "git_blob": "b7061138b14e55aeb73ff4ac93ed09bda4767d77",
+      "bytes": 14802,
+      "sha256": "afe55c571ad9a084d43635e978bcf2155a73105782a09cd9166506a0d7774f0f"
     },
     "lib/src/raster_safety.dart": {
       "mode": "100644",
@@ -186,9 +186,9 @@
     },
     "lib/src/widgets/portable_reader.dart": {
       "mode": "100644",
-      "git_blob": "49f28a7ca1cbce8afa85c2a1f3742928c60ff529",
-      "bytes": 16843,
-      "sha256": "feb4f26e73b0c68818c6b5385849b887e155240ac9dabb8ea349259049f5dd93"
+      "git_blob": "c72afccbee79d75918a18eae45913e6eaeda1ae6",
+      "bytes": 17882,
+      "sha256": "a2f601d6775821ed0cc266c2346c68384e80d6ac270a3b0d72d80d9661ce55c6"
     },
     "lib/src/widgets/prose_editor.dart": {
       "mode": "100644",
@@ -1524,9 +1524,9 @@
     },
     "packages/crisp_ebook_reader/test/browser/make_fixtures.py": {
       "mode": "100644",
-      "git_blob": "5153b6ab3ef8ab7d73ed33042cc02642b01da39e",
-      "bytes": 6216,
-      "sha256": "d1949cfc6a8886a615729c18ff894ee65d426fb76a507bd8f35cfd793badf4f6"
+      "git_blob": "7b4ff045ecfbebdff4c075630d5590e28683925c",
+      "bytes": 6409,
+      "sha256": "844fd0f85880ae2df9250f13191bb8ec157dfb278ac0d5e7db73f9c8c7ecf8f7"
     },
     "packages/crisp_ebook_reader/test/browser/parser_smoke.mjs": {
       "mode": "100644",
@@ -1566,9 +1566,9 @@
     },
     "packages/crisp_ebook_reader/test/browser/reader_smoke.mjs": {
       "mode": "100644",
-      "git_blob": "32628f3307bb37e7cd76ac413196cd9efdd25bed",
-      "bytes": 19060,
-      "sha256": "523dc92c1564a10ee8c80f3b4f1aee0e000254c413b4ce9e4ee2ed81561f00a1"
+      "git_blob": "d11f5c9947628a7310ace6cdbac095a2752decdb",
+      "bytes": 21449,
+      "sha256": "ca8ed8aca2ef56f04195db8b152abc3b2dd7cdb238f052b00d93be5b37a8bad6"
     },
     "packages/crisp_ebook_reader/test/browser/reader_speech.mjs": {
       "mode": "100644",
@@ -1686,9 +1686,9 @@
     },
     "test/portable_reader_test.dart": {
       "mode": "100644",
-      "git_blob": "8651d025dea029c83f5dc57e4a63d4fc666061f3",
-      "bytes": 16207,
-      "sha256": "d7dddb1801b5eca0134be9f6cd3ea525e914d4707a59f3bc316738b6aee66f2a"
+      "git_blob": "2244a8b5fa2d6b3c2c9a1b158b2e84923aa86a2c",
+      "bytes": 18492,
+      "sha256": "bdbfea5885acbd296daa42c9ee3f5d4a520be8a79a4ee55335913b96d954a4b9"
     },
     "test/prose_editor_test.dart": {
       "mode": "100644",
