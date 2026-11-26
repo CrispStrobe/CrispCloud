@@ -94,6 +94,25 @@ WmlParagraph _pair(String id, String name, {String text = 'marked'}) =>
     );
 
 void main() {
+  test('canonical bookmark IDs preserve arbitrary decimal precision', () {
+    const large = '12345678901234567890123456789012345678901234567890';
+    for (final (source, expected) in [
+      ('0', '0'),
+      ('+000', '0'),
+      ('-000', '0'),
+      ('42', '42'),
+      ('+0042', '42'),
+      ('-0042', '-42'),
+      ('+000$large', large),
+      ('-000$large', '-$large'),
+    ]) {
+      expect(WordBookmarks.canonicalId(source), expected);
+    }
+    for (final malformed in ['', '+', '-', ' 123', '12\n', '0x2A', '١٢']) {
+      expect(() => WordBookmarks.canonicalId(malformed), throwsStateError);
+    }
+  });
+
   test(
     'authored textbox endpoints and surrounding body REF retain separate story ownership',
     () async {

@@ -679,13 +679,32 @@ abstract final class WordBookmarks {
 
   /// Compare decimal IDs by value while retaining their source spelling.
   static String canonicalId(String value) {
-    final id = RegExp(r'^[+-]?[0-9]+$').hasMatch(value)
-        ? BigInt.tryParse(value)
-        : null;
-    if (id == null) {
+    final length = value.length;
+    final sign = length == 0 ? 0 : value.codeUnitAt(0);
+    final digits = sign == 0x2B || sign == 0x2D ? 1 : 0;
+    var firstSignificant = digits;
+    while (firstSignificant < length &&
+        value.codeUnitAt(firstSignificant) == 0x30) {
+      firstSignificant++;
+    }
+    var end = firstSignificant;
+    while (end < length) {
+      final digit = value.codeUnitAt(end);
+      if (digit < 0x30 || digit > 0x39) break;
+      end++;
+    }
+    if (digits == length || end != length) {
       throw StateError('Bookmark id is not a native decimal number: $value');
     }
-    return id.toString();
+    if (firstSignificant == length) return '0';
+    // Most IDs already have the canonical spelling. Reuse their strings and
+    // keep the comparison exact even for IDs larger than a machine integer.
+    if (sign == 0x2D) {
+      return firstSignificant == 1
+          ? value
+          : '-${value.substring(firstSignificant)}';
+    }
+    return firstSignificant == 0 ? value : value.substring(firstSignificant);
   }
 
   /// Imported metadata is immutable: fail before any package write if a
