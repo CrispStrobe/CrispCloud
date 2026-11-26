@@ -2380,6 +2380,19 @@ class _SheetFormulaBarState extends State<_SheetFormulaBar> {
               ),
             ),
             const SizedBox(width: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'fx',
+                style: TextStyle(
+                  color: theme.chromeText,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
             Expanded(
               child: ExcludeFocus(
                 excluding: !config.allowsSelection,

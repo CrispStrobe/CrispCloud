@@ -118,6 +118,23 @@ List<(String?, String?, String?)> _native(Uint8List bytes) {
   ];
 }
 
+double _contrast(Color a, Color b) {
+  double lum(Color color) {
+    double channel(double value) => value <= 0.03928
+        ? value / 12.92
+        : ((value + 0.055) / 1.055) * ((value + 0.055) / 1.055);
+    return 0.2126 * channel(color.r) +
+        0.7152 * channel(color.g) +
+        0.0722 * channel(color.b);
+  }
+
+  final first = lum(a);
+  final second = lum(b);
+  final lighter = first > second ? first : second;
+  final darker = first > second ? second : first;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 void main() {
   testWidgets(
     'opening and discarding typed tab drafts never mutates imported stops',
@@ -397,5 +414,57 @@ void main() {
     await _enter(tester, 0, '36.25');
     expect(draft!.first.position, 36.25);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets('tab-stop menus keep readable colors in every base theme', (
+    tester,
+  ) async {
+    for (final (theme, label) in <(ThemeData, String)>[
+      (ThemeData.light(useMaterial3: true), 'light'),
+      (ThemeData.dark(useMaterial3: true), 'dark'),
+    ]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SizedBox(
+                width: 500,
+                child: WordTabStopsEditor(
+                  initialValue: const <WmlTabStop>[
+                    WmlTabStop(position: 36, alignment: WmlTabAlignment.left),
+                  ],
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final scheme = theme.colorScheme;
+      final alignment = tester.widget<DropdownButton<WmlTabAlignment>>(
+        find.descendant(
+          of: _key('alignment-0'),
+          matching: find.byType(DropdownButton<WmlTabAlignment>),
+        ),
+      );
+      expect(alignment.dropdownColor, scheme.surfaceContainerHigh);
+      expect(alignment.style?.color, scheme.onSurface);
+      expect(
+        _contrast(alignment.style!.color!, alignment.dropdownColor!),
+        greaterThanOrEqualTo(4.5),
+        reason: '$label tab alignment menu text must be readable',
+      );
+      await _tap(tester, _key('alignment-0'));
+      final item = find.text('Left').last;
+      final color = DefaultTextStyle.of(tester.element(item)).style.color!;
+      expect(
+        _contrast(color, scheme.surfaceContainerHigh),
+        greaterThanOrEqualTo(4.5),
+        reason: '$label tab alignment menu items must be readable',
+      );
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+    }
   });
 }

@@ -129,7 +129,9 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
       children: <Widget>[
         Text(
           _text('Custom tab stops'),
-          style: Theme.of(context).textTheme.titleSmall,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         for (var index = 0; index < _drafts.length; index++)
           _row(context, _drafts[index], index),
@@ -137,6 +139,9 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
           alignment: AlignmentDirectional.centerStart,
           child: TextButton.icon(
             key: const ValueKey<String>('word-tab-add'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.primary,
+            ),
             onPressed: widget.enabled ? _add : null,
             icon: const Icon(Icons.add),
             label: Text(_text('Add tab stop')),
@@ -169,6 +174,9 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
                     labelText: _text(
                       'Tab position (pt)',
                     ).replaceFirst('(pt)', '(${widget.unit?.suffix ?? 'pt'})'),
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     errorText: draft.error == null ? null : _text(draft.error!),
                     errorMaxLines: 3,
                     border: const OutlineInputBorder(),
@@ -217,12 +225,20 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
   }
 
   Widget _alignment(_TabDraft draft, int index) {
+    final scheme = Theme.of(context).colorScheme;
     return DropdownButtonFormField<WmlTabAlignment>(
       key: ValueKey<String>('word-tab-alignment-$index'),
       initialValue: draft.alignment,
       isExpanded: true,
+      // The dropdown route paints its menu with theme.canvasColor and the
+      // selected text with the button style. Both are explicit here so a
+      // translated/host theme cannot produce white text on a white menu.
+      dropdownColor: scheme.surfaceContainerHigh,
+      style: TextStyle(color: scheme.onSurface),
+      iconEnabledColor: scheme.onSurfaceVariant,
       decoration: InputDecoration(
         labelText: _text('Tab alignment'),
+        labelStyle: TextStyle(color: scheme.onSurfaceVariant),
         border: const OutlineInputBorder(),
         isDense: true,
       ),
@@ -247,12 +263,17 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
   }
 
   Widget _leader(_TabDraft draft, int index) {
+    final scheme = Theme.of(context).colorScheme;
     return DropdownButtonFormField<WmlTabLeader>(
       key: ValueKey<String>('word-tab-leader-$index'),
       initialValue: draft.leader,
       isExpanded: true,
+      dropdownColor: scheme.surfaceContainerHigh,
+      style: TextStyle(color: scheme.onSurface),
+      iconEnabledColor: scheme.onSurfaceVariant,
       decoration: InputDecoration(
         labelText: _text('Tab leader'),
+        labelStyle: TextStyle(color: scheme.onSurfaceVariant),
         border: const OutlineInputBorder(),
         isDense: true,
       ),
