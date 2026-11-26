@@ -44,7 +44,8 @@ abstract final class RawDeflate {
 
   /// deflate API.
   static Uint8List deflate(List<int> data, {int level = 6}) {
-    return _Deflater(Uint8List.fromList(data), level: level).run();
+    final input = data is Uint8List ? data : Uint8List.fromList(data);
+    return _Deflater(input, level: level).run();
   }
 }
 
@@ -270,21 +271,27 @@ class _Deflater {
     _writeBits(1, 1); // BFINAL
     _writeBits(1, 2); // fixed Huffman
     final int window = _level >= 7 ? 32768 : 4096;
-    final Map<int, List<int>> index = <int, List<int>>{};
+    final index = _MatchIndex(_src.length, window);
+    final int maxChain = _level >= 7 ? 1024 : 128;
+    final int tripleEnd = _src.length - 2;
     int cursor = 0;
-    while (cursor < _src.length) {
-      final _Match match = _findMatch(cursor, window, index);
-      _indexTriple(index, cursor);
+    while (cursor < tripleEnd) {
+      final key = _triple(_src, cursor);
+      final match = _findMatch(cursor, window, maxChain, index, key);
+      index.add(cursor, key);
       if (match.length >= 3) {
         _emitLengthDistance(match.length, match.distance);
-        for (int i = 1; i < match.length; i++) {
-          _indexTriple(index, cursor + i);
+        final end = cursor + match.length;
+        for (var pos = cursor + 1; pos < end && pos < tripleEnd; pos++) {
+          index.add(pos, _triple(_src, pos));
         }
-        cursor += match.length;
+        cursor = end;
       } else {
-        _emitLiteral(_src[cursor]);
-        cursor++;
+        _emitLiteral(_src[cursor++]);
       }
+    }
+    while (cursor < _src.length) {
+      _emitLiteral(_src[cursor++]);
     }
     _emitLiteral(256); // EOB
     _flushBits();
@@ -336,49 +343,36 @@ class _Deflater {
     }
   }
 
-  _Match _findMatch(int cursor, int window, Map<int, List<int>> index) {
-    if (cursor + 2 >= _src.length) {
-      return const _Match(0, 0);
-    }
-    final int key = _triple(_src, cursor);
-    final List<int>? candidates = index[key];
-    if (candidates == null) {
-      return const _Match(0, 0);
-    }
+  _Match _findMatch(
+    int cursor,
+    int window,
+    int maxChain,
+    _MatchIndex index,
+    int key,
+  ) {
+    final int minPos = cursor > window ? cursor - window : 0;
+    final int remaining = _src.length - cursor;
+    final int limit = remaining < 258 ? remaining : 258;
     int bestLen = 0;
     int bestDist = 0;
-    final int minPos = cursor > window ? cursor - window : 0;
-    final int maxChain = _level >= 7 ? 1024 : 128;
-    final int stop = candidates.length > maxChain
-        ? candidates.length - maxChain
-        : 0;
-    for (int i = candidates.length - 1; i >= stop; i--) {
-      final int pos = candidates[i];
-      if (pos < minPos) {
-        break;
-      }
-      int len = 0;
-      while (cursor + len < _src.length &&
-          _src[pos + len] == _src[cursor + len] &&
-          len < 258) {
-        len++;
-      }
-      if (len > bestLen) {
-        bestLen = len;
-        bestDist = cursor - pos;
-        if (bestLen == 258) {
-          break;
+    int pos = index.latest(key);
+    for (var seen = 0; seen < maxChain && pos >= minPos; seen++) {
+      // The triple already matches. After finding a candidate, a mismatch
+      // at its end rules out any strictly longer match at this position.
+      if (bestLen == 0 || _src[pos + bestLen] == _src[cursor + bestLen]) {
+        var len = 3;
+        while (len < limit && _src[pos + len] == _src[cursor + len]) {
+          len++;
+        }
+        if (len > bestLen) {
+          bestLen = len;
+          bestDist = cursor - pos;
+          if (bestLen == limit) break;
         }
       }
+      pos = index.previous(pos);
     }
     return _Match(bestLen, bestDist);
-  }
-
-  void _indexTriple(Map<int, List<int>> index, int cursor) {
-    if (cursor + 2 >= _src.length) {
-      return;
-    }
-    index.putIfAbsent(_triple(_src, cursor), () => <int>[]).add(cursor);
   }
 
   void _writeBits(int value, int count) {
@@ -397,6 +391,46 @@ class _Deflater {
       _bitBuf = 0;
       _bitCount = 0;
     }
+  }
+}
+
+/// Keeps the latest position for each triple and links previous matches with
+/// distances in a ring. The oldest slot remains available for the search at
+/// exactly one window of distance and is evicted on the following insertion.
+class _MatchIndex {
+  _MatchIndex(int inputLength, int window) {
+    var capacity = 1;
+    while (capacity < inputLength && capacity < window) {
+      capacity <<= 1;
+    }
+    _keys = Uint32List(capacity);
+    _links = Uint16List(capacity);
+    _mask = capacity - 1;
+  }
+
+  final _heads = <int, int>{};
+  late final Uint32List _keys;
+  late final Uint16List _links;
+  late final int _mask;
+
+  int latest(int key) => _heads[key] ?? -1;
+
+  int previous(int position) {
+    final distance = _links[position & _mask];
+    return distance == 0 ? -1 : position - distance;
+  }
+
+  void add(int position, int key) {
+    final slot = position & _mask;
+    final expired = position - _keys.length;
+    if (expired >= 0) {
+      final oldKey = _keys[slot];
+      if (_heads[oldKey] == expired) _heads.remove(oldKey);
+    }
+    final head = _heads[key];
+    _keys[slot] = key;
+    _links[slot] = head == null ? 0 : position - head;
+    _heads[key] = position;
   }
 }
 

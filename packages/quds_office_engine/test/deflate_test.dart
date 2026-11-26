@@ -37,6 +37,25 @@ void main() {
       }
     });
 
+    test('retains matches at the exact window boundary', () {
+      final token = List<int>.generate(24, (index) => index + 1);
+      for (final (level, window) in [(6, 4096), (9, 32768)]) {
+        final data = Uint8List(window + token.length)
+          ..setRange(0, token.length, token)
+          ..setRange(window, window + token.length, token);
+        final compressed = RawDeflate.deflate(data, level: level);
+        expect(RawDeflate.inflate(compressed), data);
+        expect(
+          () => RawDeflate.inflatePrefix(
+            compressed,
+            maxOutputBytes: data.length,
+            windowBytes: window - 1,
+          ),
+          throwsA(isA<ZipDeflateException>()),
+        );
+      }
+    });
+
     test('inflates a zlib raw-DEFLATE stream (dynamic Huffman)', () {
       const String hex =
           'f348cdc9c9d751082c4d2956f04f4bcb4c4e55082ecd2c4955f0189518951895182e1200';
