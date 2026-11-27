@@ -100,6 +100,12 @@ class XmlPullReader {
     _nameEnd,
   );
 
+  /// Tests the current local name without allocating its string.
+  bool hasLocalName(String name) {
+    final start = _prefixEnd > _nameStart ? _prefixEnd + 1 : _nameStart;
+    return name.length == _nameEnd - start && _source.startsWith(name, start);
+  }
+
   /// prefix API.
   String get prefix =>
       _prefix ??= _prefixEnd > _nameStart ? _slice(_nameStart, _prefixEnd) : '';

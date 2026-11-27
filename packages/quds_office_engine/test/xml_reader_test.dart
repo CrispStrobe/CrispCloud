@@ -143,6 +143,9 @@ void main() {
         'p:identifier="long" q:id="other" p:id="wanted"></q:root>',
       );
       expect(reader.next(), isTrue);
+      expect(reader.hasLocalName('root'), isTrue);
+      expect(reader.hasLocalName('p:root'), isFalse);
+      expect(reader.hasLocalName('roo'), isFalse);
       expect(reader.getAttribute('id'), 'other');
       expect(reader.getAttribute('id', namespaceUri: 'urn:p'), 'wanted');
       expect(reader.getAttribute('identi'), isNull);

@@ -26,8 +26,8 @@ final class WordMarkupCompatibilityReader extends XmlPullReader {
   bool next() {
     while (super.next()) {
       if (eventType == XmlEventType.startElement) {
-        if (namespaceUri == OfficeNamespaces.mc &&
-            localName == 'AlternateContent') {
+        if (hasLocalName('AlternateContent') &&
+            namespaceUri == OfficeNamespaces.mc) {
           _alternatives.add(_AlternateContent(depth));
           continue;
         }
