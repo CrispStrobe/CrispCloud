@@ -538,11 +538,28 @@ class _Huffman {
 
   /// decode API.
   int decode(_Inflater inflater) {
-    final int peek = _peekAhead(inflater);
-    final int fast = _bits[peek & _fastMask];
+    var buffer = inflater._bitBuf;
+    var count = inflater._bitCount;
+    var position = inflater._pos;
+    final source = inflater._src;
+    while (count < _fastBits && position < source.length) {
+      buffer |= source[position++] << count;
+      count += 8;
+    }
+    final index = buffer & _fastMask;
+    final int fast = _bits[index];
     if (fast > 0 && fast <= _fastBits) {
-      inflater._bits(fast);
-      return _symbols[peek & _fastMask];
+      if (fast > count) {
+        throw const ZipDeflateException('Unexpected end of DEFLATE stream');
+      }
+      // Lookahead can include a whole byte beyond this symbol. Leave it
+      // unread so stored blocks and prefix inflation see the true boundary.
+      final unused = count - fast;
+      final remaining = unused & 7;
+      inflater._pos = position - (unused >>> 3);
+      inflater._bitCount = remaining;
+      inflater._bitBuf = (buffer >>> fast) & ((1 << remaining) - 1);
+      return _symbols[index];
     }
     var code = 0;
     var len = 0;
@@ -558,17 +575,6 @@ class _Huffman {
         throw const ZipDeflateException('Invalid Huffman code');
       }
     }
-  }
-
-  int _peekAhead(_Inflater inflater) {
-    var buf = inflater._bitBuf;
-    var count = inflater._bitCount;
-    var pos = inflater._pos;
-    while (count < _fastBits && pos < inflater._src.length) {
-      buf |= inflater._src[pos++] << count;
-      count += 8;
-    }
-    return buf;
   }
 }
 

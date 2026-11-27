@@ -83,17 +83,23 @@ void main() {
     });
 
     test('prefix inflation stops at the end of a fixed Huffman stream', () {
-      final data = Uint8List.fromList(
+      final samples = [
         List<int>.generate(4096, (index) => index % 3),
-      );
-      final compressed = RawDeflate.deflate(data);
-      final input = Uint8List.fromList([...compressed, 0xFF, 0xFF, 0xFF]);
-      final result = RawDeflate.inflatePrefix(
-        input,
-        maxOutputBytes: data.length,
-      );
-      expect(result.bytes, data);
-      expect(result.consumed, compressed.length);
+        // Mix eight- and nine-bit literals so the end code starts at
+        // different bit offsets, with the next record already in view.
+        for (var length = 1; length <= 32; length++)
+          List<int>.generate(length, (index) => index * 17 % 251),
+      ];
+      for (final data in samples) {
+        final compressed = RawDeflate.deflate(data);
+        final input = Uint8List.fromList([...compressed, 0xFF, 0x00, 0xFF]);
+        final result = RawDeflate.inflatePrefix(
+          input,
+          maxOutputBytes: data.length,
+        );
+        expect(result.bytes, data);
+        expect(result.consumed, compressed.length);
+      }
     });
 
     test('inflates Office-style dynamic Huffman with long codes', () {
