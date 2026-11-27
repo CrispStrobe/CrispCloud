@@ -54,6 +54,7 @@ class WordSerializer {
   }
 
   Map<String, String>? _unchangedRunProperties;
+  Map<String, String>? _unchangedNoteProperties;
   Map<String, String>? _unchangedParagraphProperties;
   var _docPrId = 1;
   Map<OfficeVisual, String> _inlineImageIds = <OfficeVisual, String>{};
@@ -79,6 +80,7 @@ class WordSerializer {
   /// write API.
   OpcPackage write(WmlDocument document) {
     _unchangedRunProperties = <String, String>{};
+    _unchangedNoteProperties = <String, String>{};
     _unchangedParagraphProperties = <String, String>{};
     _footnoteSeparator = WordFootnoteSeparatorIo.prepare(document);
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
@@ -172,6 +174,7 @@ class WordSerializer {
     writeZoteroData();
     document.package = package;
     _unchangedRunProperties = null;
+    _unchangedNoteProperties = null;
     _unchangedParagraphProperties = null;
     return package;
   }
@@ -727,7 +730,11 @@ class WordSerializer {
         );
         w.writeEndElement();
       } else if (noteReferencePropertiesXml.isNotEmpty) {
-        XmlDocument.parse(noteReferencePropertiesXml).root!.writeTo(w);
+        _writeRetainedProperties(
+          w,
+          noteReferencePropertiesXml,
+          _unchangedNoteProperties,
+        );
       }
       w.writeEmptyElement(endnote ? 'endnoteRef' : 'footnoteRef', prefix: 'w');
       w.writeEndElement();
@@ -862,12 +869,16 @@ class WordSerializer {
         case WmlNoteMarker():
           w.writeStartElement('r', prefix: 'w');
           final marker = inline.properties;
-          final changed = WordPropertyIo.runValues(marker).entries.any(
-            (entry) => marker.importedValues?[entry.key] != entry.value,
+          final changed = !marker.matchesImportedValues(
+            WordPropertyIo.runValues(marker),
           );
           final nativeProperties = inline.runPropertiesXml;
           if (nativeProperties != null && !changed) {
-            XmlDocument.parse(nativeProperties).root!.writeTo(w);
+            _writeRetainedProperties(
+              w,
+              nativeProperties,
+              _unchangedNoteProperties,
+            );
           } else if (marker.sourcePropertiesXml != '' || changed) {
             _writeRPr(w, marker);
           }
@@ -1268,11 +1279,11 @@ class WordSerializer {
             (entry) => imported[entry.key] == entry.value,
           ) &&
           _hasFiniteParagraphMeasures(p)) {
-        _writeUnchangedProperties(
+        _writeRetainedProperties(
           w,
-          'pPr',
           source,
           _unchangedParagraphProperties,
+          canonicalPropertyName: 'pPr',
         );
         return;
       }
@@ -1541,7 +1552,12 @@ class WordSerializer {
     if (source != null && r.hasImportedValues) {
       final current = WordPropertyIo.runValues(r);
       if (r.matchesImportedValues(current)) {
-        _writeUnchangedProperties(w, 'rPr', source, _unchangedRunProperties);
+        _writeRetainedProperties(
+          w,
+          source,
+          _unchangedRunProperties,
+          canonicalPropertyName: 'rPr',
+        );
         return;
       }
       final generated = XmlWriter();
@@ -1557,14 +1573,14 @@ class WordSerializer {
     _writeFullRPr(w, r);
   }
 
-  void _writeUnchangedProperties(
+  void _writeRetainedProperties(
     XmlWriter writer,
-    String name,
     String source,
-    Map<String, String>? documentCache,
-  ) {
-    if (source.isEmpty) {
-      writer.writeEmptyElement(name, prefix: 'w');
+    Map<String, String>? documentCache, {
+    String? canonicalPropertyName,
+  }) {
+    if (canonicalPropertyName != null && source.isEmpty) {
+      writer.writeEmptyElement(canonicalPropertyName, prefix: 'w');
       return;
     }
     final cache = source.length <= 4096 ? documentCache : null;
@@ -1573,10 +1589,12 @@ class WordSerializer {
       writer.writeRaw(cached);
       return;
     }
-    // Unedited formatting still needs canonical OOXML order. Reuse the
-    // normalized source when multiple elements carry the same direct formatting.
-    final properties = WordPropertyIo.parse(source, name);
-    WordPropertyIo.orderChildren(properties);
+    final properties = canonicalPropertyName == null
+        ? XmlDocument.parse(source).root!
+        : WordPropertyIo.parse(source, canonicalPropertyName);
+    // Native note marks retain their original child order, including history.
+    // Ordinary direct formatting uses Word's canonical property order.
+    if (canonicalPropertyName != null) WordPropertyIo.orderChildren(properties);
     if (cache != null && cache.length < 128) {
       final xml = XmlDocument(root: properties).toXmlString(declaration: false);
       cache[source] = xml;
