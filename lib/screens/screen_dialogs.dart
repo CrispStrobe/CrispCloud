@@ -832,39 +832,46 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
 
   showDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(ScreenDialogStrings(context).text('goPath')),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: ScreenDialogStrings(context).text('path'),
-          border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.folder_open),
+    builder: (ctx) {
+      void submit(String value) {
+        final text = value.trim();
+        if (text.isEmpty) return;
+        // Keep the panel captured when the dialog opened: the path belongs to
+        // the pane that was active at paste time, even if focus changes later.
+        Navigator.pop(ctx);
+        unawaited(
+          panel.navigateToPathOrReveal(text).catchError((Object error) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.maybeOf(context)
+                ?.showSnackBar(SnackBar(content: Text('$error')));
+          }),
+        );
+      }
+
+      return AlertDialog(
+        title: Text(ScreenDialogStrings(context).text('goPath')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: ScreenDialogStrings(context).text('path'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.folder_open),
+          ),
+          onSubmitted: submit,
         ),
-        onSubmitted: (value) {
-          if (value.isNotEmpty) {
-            panel.navigateToPath(value);
-            Navigator.pop(ctx);
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (controller.text.isNotEmpty) {
-              panel.navigateToPath(controller.text);
-              Navigator.pop(ctx);
-            }
-          },
-          child: Text(ScreenDialogStrings(context).text('go')),
-        ),
-      ],
-    ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => submit(controller.text),
+            child: Text(ScreenDialogStrings(context).text('go')),
+          ),
+        ],
+      );
+    },
   );
 }
 
