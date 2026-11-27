@@ -250,8 +250,8 @@ class WordDeserializer {
     // inherited proofing language and explicit noProof resets.
     _readComments(document, package, docUri);
     _readCommentsExtended(document, package, docUri);
-    _readStyles(document, package, docUri);
-    _applyDocumentStyles(document);
+    final styles = _readStyles(document, package, docUri);
+    _applyDocumentStyles(document, styles: styles);
     _notBold.clear();
     _notItalic.clear();
     _applyTableStyles(document, package, docUri);
@@ -3264,13 +3264,13 @@ class WordDeserializer {
     final PackagePart? part = rel == null
         ? package.getPart('/word/styles.xml')
         : package.getPart(rels.resolve(rel));
-    final Map<String, _TableStyle> styles = part == null
+    late final Map<String, _TableStyle> styles = part == null
         ? <String, _TableStyle>{}
         : _TableStyle.readAll(part.readText());
-    final defaultStyles = styles.entries
+    late final defaultStyles = styles.entries
         .where((entry) => entry.value.isDefault)
         .toList();
-    final defaultMarginStyle = defaultStyles.length == 1
+    late final defaultMarginStyle = defaultStyles.length == 1
         ? _TableStyle.resolve(defaultStyles.single.key, styles)
         : null;
 
@@ -4525,7 +4525,7 @@ class WordDeserializer {
     return (part: part, xml: xml, hasSeparators: separatorsPresent);
   }
 
-  void _readStyles(
+  _StyleCascade? _readStyles(
     WmlDocument document,
     OpcPackage package,
     String docUri, {
@@ -4537,10 +4537,12 @@ class WordDeserializer {
         ? package.getPart('/word/styles.xml')
         : package.getPart(rels.resolve(rel));
     if (part == null) {
-      return;
+      return null;
     }
+    final xml = part.readText();
+    final root = XmlDocument.parse(xml).root;
     if (readProofingLanguage) {
-      final defaultLanguage = XmlDocument.parse(part.readText()).root
+      final defaultLanguage = root
           ?.firstChild('docDefaults', namespaceUri: OfficeNamespaces.w)
           ?.firstChild('rPrDefault', namespaceUri: OfficeNamespaces.w)
           ?.firstChild('rPr', namespaceUri: OfficeNamespaces.w)
@@ -4555,8 +4557,7 @@ class WordDeserializer {
       );
     }
     document.styles.clear();
-    final nativeStyles = _StyleCascade(this, document)
-      .._load(includeTheme: false);
+    final nativeStyles = _StyleCascade(this, document).._loadStyleTree(root);
     bool styleRightToLeft(String styleId) {
       bool? direction;
       for (final properties in <XmlElement?>[
@@ -4575,7 +4576,7 @@ class WordDeserializer {
       return direction == true;
     }
 
-    final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
+    final XmlPullReader reader = WordMarkupCompatibilityReader(xml);
     String? id;
     String name = '';
     String? basedOn;
@@ -4722,6 +4723,7 @@ class WordDeserializer {
           reader.localName == 'style' &&
           id != null &&
           id.isNotEmpty) {
+        final rightToLeft = styleRightToLeft(id);
         final WmlStyle style = WmlStyle(
           id: id,
           name: name.isEmpty ? id : name,
@@ -4732,22 +4734,22 @@ class WordDeserializer {
           fontSizePoints: fontSizePoints,
           spacingBefore: spacingBefore,
           spacingAfter: spacingAfter,
-          justification: _jc(justification, rightToLeft: styleRightToLeft(id)),
+          justification: _jc(justification, rightToLeft: rightToLeft),
           headingLevel: headingLevel,
           font: font,
           csFont: csFont,
           basedOn: basedOn,
           numId: numId,
           ilvl: ilvl,
-          indent: indent == null
-              ? null
-              : _physicalIndent(indent, styleRightToLeft(id)),
+          indent: indent == null ? null : _physicalIndent(indent, rightToLeft),
         );
         document.styles.add(style);
         document.importedStyles[style.id] = style;
         id = null;
       }
     }
+    nativeStyles._loadTheme(package, rels);
+    return nativeStyles;
   }
 
   /// Removes direct language overrides from a detached paragraph preview.
@@ -4844,8 +4846,13 @@ class WordDeserializer {
     final uri = rel == null
         ? '/word/document.xml'
         : package.packageRelationships.resolve(rel);
-    _readStyles(document, package, uri, readProofingLanguage: false);
-    _applyDocumentStyles(document);
+    final styles = _readStyles(
+      document,
+      package,
+      uri,
+      readProofingLanguage: false,
+    );
+    _applyDocumentStyles(document, styles: styles);
   }
 
   /// Refresh the native list labels after an editor changes a paragraph style.
@@ -4861,9 +4868,13 @@ class WordDeserializer {
     _applyNumbering(document, package, uri);
   }
 
-  void _applyDocumentStyles(WmlDocument document) {
-    if (_StyleCascade(this, document).apply()) return;
-    _applyLegacyDocumentStyles(document);
+  void _applyDocumentStyles(WmlDocument document, {_StyleCascade? styles}) {
+    final cascade = styles ?? _StyleCascade(this, document);
+    if (styles != null || cascade._load()) {
+      cascade._applyLoadedStyles();
+    } else {
+      _applyLegacyDocumentStyles(document);
+    }
   }
 
   void _applyLegacyDocumentStyles(WmlDocument document) {

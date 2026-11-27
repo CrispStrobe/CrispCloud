@@ -51,8 +51,12 @@ class _StyleCascade {
     final part = package.getPart(
       rel == null ? '/word/styles.xml' : rels.resolve(rel),
     );
-    _missingStyles = part == null;
-    final root = part == null ? null : XmlDocument.parse(part.readText()).root;
+    _loadStyleTree(part == null ? null : XmlDocument.parse(part.readText()).root);
+    if (includeTheme) _loadTheme(package, rels);
+    return true;
+  }
+
+  void _loadStyleTree(XmlElement? root) {
     defaults = _wordChild(root, 'docDefaults');
     // Resolve native style identities by namespace, independently of prefix.
     // Foreign lookalikes stay in the stored styles XML without entering the
@@ -78,11 +82,14 @@ class _StyleCascade {
       }
     }
     _missingStyles = styles.isEmpty && defaults == null;
+  }
+
+  void _loadTheme(OpcPackage package, RelationshipCollection rels) {
     final themeRel = rels.firstByType(RelationshipTypes.theme);
     final theme = package.getPart(
       themeRel == null ? '/word/theme/theme1.xml' : rels.resolve(themeRel),
     );
-    if (includeTheme && theme != null) {
+    if (theme != null) {
       final t = XmlDocument.parse(theme.readText()).root!;
       final elements = t.firstChild('themeElements');
       for (final color
@@ -119,11 +126,9 @@ class _StyleCascade {
         }
       }
     }
-    return true;
   }
 
-  bool apply() {
-    if (!_load()) return false;
+  void _applyLoadedStyles() {
     for (final section in document.sections) {
       walk(section.blocks);
       for (final story in [
@@ -148,7 +153,6 @@ class _StyleCascade {
     for (final comment in document.comments) {
       walk(comment.paragraphs);
     }
-    return true;
   }
 
   static bool _word(XmlElement element, String name) =>
