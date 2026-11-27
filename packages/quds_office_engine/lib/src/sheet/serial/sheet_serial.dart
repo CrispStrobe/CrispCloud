@@ -489,6 +489,13 @@ class SheetDeserializer {
         sheet.protection = SmlSheetProtection(enabled: true);
       }
       if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'headerFooter') {
+        final scale = reader.getAttribute('scaleWithDoc');
+        if (scale == '0' || scale == 'false') {
+          (sheet.headerFooter ??= SmlHeaderFooter()).scaleWithDocument = false;
+        }
+      }
+      if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'oddHeader') {
         sheet.headerFooter ??= SmlHeaderFooter();
         final String text = _elementText(reader);
@@ -817,6 +824,9 @@ class SheetDeserializer {
           sheet.importedDefaultRowHeightPx = SmlWorksheet.rowHeightFromExcel(
             height,
           );
+          final custom = reader.getAttribute('customHeight');
+          sheet.importedDefaultRowHeightIsCustom =
+              custom == '1' || custom == 'true';
         }
         final width = double.tryParse(
           reader.getAttribute('defaultColWidth') ?? '',
@@ -2305,6 +2315,7 @@ class SheetSerializer {
     final SmlHeaderFooter? hf = sheet.headerFooter;
     if (hf != null && !hf.isEmpty) {
       w.writeStartElement('headerFooter');
+      if (!hf.scaleWithDocument) w.writeAttribute('scaleWithDoc', '0');
       final String oddHeader = <String>[
         if (hf.headerLeft.isNotEmpty) '&L${hf.headerLeft}',
         if (hf.headerCenter.isNotEmpty) '&C${hf.headerCenter}',
@@ -2480,6 +2491,7 @@ class SheetSerializer {
       'sheetFormatPr',
       attributes: <String, String>{
         'defaultRowHeight': '${sheet.effectiveDefaultRowHeightPx * 72 / 96}',
+        if (sheet.importedDefaultRowHeightIsCustom) 'customHeight': '1',
         if (width != null) 'defaultColWidth': '$width',
         if (base != null) 'baseColWidth': '$base',
       },

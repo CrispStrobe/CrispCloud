@@ -113,12 +113,31 @@ class VisualImageCache {
   ) async {
     ui.Image image;
     try {
-      final vector = _looksLikeSvg(bytes)
-          ? bytes
-          : await metafileAsSvg?.call(bytes);
-      image = await (vector == null
-          ? _decodeRaster(bytes)
-          : _rasterizeSvg(vector));
+      if (OfficeEmfBitmap.decode(bytes) case final bitmap?) {
+        final rgba = Uint8List(bitmap.width * bitmap.height * 4);
+        for (var i = 0; i < bitmap.width * bitmap.height; i++) {
+          rgba[4 * i] = bitmap.rgb[3 * i];
+          rgba[4 * i + 1] = bitmap.rgb[3 * i + 1];
+          rgba[4 * i + 2] = bitmap.rgb[3 * i + 2];
+          rgba[4 * i + 3] = bitmap.alpha?[i] ?? 255;
+        }
+        final ready = Completer<ui.Image>();
+        ui.decodeImageFromPixels(
+          rgba,
+          bitmap.width,
+          bitmap.height,
+          ui.PixelFormat.rgba8888,
+          ready.complete,
+        );
+        image = await ready.future;
+      } else {
+        final vector = _looksLikeSvg(bytes)
+            ? bytes
+            : await metafileAsSvg?.call(bytes);
+        image = await (vector == null
+            ? _decodeRaster(bytes)
+            : _rasterizeSvg(vector));
+      }
     } catch (_) {
       onError();
       return;

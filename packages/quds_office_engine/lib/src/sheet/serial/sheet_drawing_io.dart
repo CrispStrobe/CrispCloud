@@ -8,6 +8,7 @@ import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
 import '../../visual/drawingml_visual_io.dart';
+import '../../visual/office_emf_bitmap.dart';
 import '../../visual/office_visual.dart';
 import '../../visual/png_bytes.dart';
 import '../../xml/namespaces.dart';
@@ -1074,6 +1075,7 @@ abstract final class WordLikeMedia {
     if (bytes.length > 3 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
       return 'image/jpeg';
     }
+    if (OfficeEmfBitmap.hasSignature(bytes)) return 'image/x-emf';
     return 'image/png';
   }
 
@@ -1082,6 +1084,7 @@ abstract final class WordLikeMedia {
     if (mime == 'image/jpeg') {
       return '.jpeg';
     }
+    if (mime == 'image/x-emf') return '.emf';
     if (mime == 'image/gif') {
       return '.gif';
     }

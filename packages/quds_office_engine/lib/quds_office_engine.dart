@@ -103,6 +103,7 @@ export 'src/slide/shapes/drawingml.dart';
 export 'src/thesaurus/office_thesaurus.dart';
 export 'src/visual/drawing_line_style.dart';
 export 'src/visual/drawingml_visual_io.dart';
+export 'src/visual/office_emf_bitmap.dart';
 export 'src/visual/office_visual.dart';
 export 'src/visual/png_bytes.dart';
 export 'src/visual/sheet_chart_data.dart';

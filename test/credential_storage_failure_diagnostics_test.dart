@@ -10,6 +10,7 @@ import 'package:crisp_cloud/services/credential_storage_diagnostics.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/secure_storage_macos_keychain.dart';
 import 'package:crisp_cloud/widgets/lock_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,6 +138,54 @@ void main() {
       expect(find.text('Restore keychain access'), findsOneWidget);
     },
   );
+
+  testWidgets('a failed same-file grant keeps recovery in the App Lock gate', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      const channel = MethodChannel(
+        MacOsCustomKeychainStorage.methodChannelName,
+      );
+      const path = '/synthetic/original.keychain-db';
+      final store = MacOsCustomKeychainStorage(path: path);
+      final policy = _Policy(store)
+        ..failureCode = 'custom_keychain_access_required';
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      var attempts = 0;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        expect(call.method, 'restoreKeychainAccess');
+        expect(call.arguments, {'path': path});
+        if (++attempts == 1) {
+          throw PlatformException(code: 'custom_keychain_different_file');
+        }
+        policy.fail = false;
+        return true;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+      await tester.pumpWidget(_gate(store, policy));
+      await tester.pumpAndSettle();
+      final restore = find.text('Restore keychain access');
+      await tester.ensureVisible(restore);
+      await tester.tap(restore);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('custom_keychain_different_file'),
+        findsWidgets,
+      );
+      expect(find.byType(LockScreen), findsNothing);
+      await tester.ensureVisible(restore);
+      await tester.tap(restore);
+      await tester.pumpAndSettle();
+      expect(attempts, 2);
+      expect(policy.reads, 2);
+      expect(find.byType(LockScreen), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
 
   testWidgets(
     'late failure offers a confirmed replacement without deleting the original store',

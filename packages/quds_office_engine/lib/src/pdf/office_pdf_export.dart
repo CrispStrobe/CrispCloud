@@ -39,6 +39,8 @@ import 'pdf_font.dart';
 import 'pdf_image.dart';
 import 'pdf_save_options.dart';
 
+part 'office_pdf_sheet_header.dart';
+
 /// Print layout for worksheet PDF (Office Print defaults to A4 portrait).
 class PdfSheetPrintOptions {
   /// PdfSheetPrintOptions API.
@@ -212,18 +214,21 @@ abstract final class OfficePdfExport {
     return pdf.save(faces: pack.faces, options: saveOptions);
   }
 
-  /// workbook API.
+  /// Print a workbook. [workbookFileName] supplies the basename for &F in
+  /// worksheet headers and footers.
   static Uint8List workbook(
     SmlWorkbook book, {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSaveOptions saveOptions = const PdfSaveOptions(),
     String title = 'CrispOffice',
+    String? workbookFileName,
     PdfSheetPrintOptions options = const PdfSheetPrintOptions(),
     int sheetFrom = 1,
     int? sheetTo,
   }) {
     final OfficeFontSet set = fonts ?? OfficeFontSet.single(font);
+    final baseFileName = workbookFileName?.split(RegExp(r'[\\/]')).last ?? '';
     final Set<int> cps = <int>{};
     for (final SmlWorksheet sheet in book.sheets) {
       _collectShaped(sheet.name, cps);
@@ -299,6 +304,7 @@ abstract final class OfficePdfExport {
         images,
         digitWidth,
         normalDigitPoints?.round(),
+        baseFileName,
       );
       plans.add((sheet.name, plan));
       totalPages += plan.pageCount;
@@ -1283,6 +1289,7 @@ abstract final class OfficePdfExport {
     _PdfImageBank images,
     int? digitWidth,
     int? digitPoints,
+    String workbookFileName,
   ) {
     final conditionalFormats = SmlConditionalResolver(
       sheet: sheet,
@@ -1421,15 +1428,19 @@ abstract final class OfficePdfExport {
         (cell.horizontalAlign == SmlHAlign.general ||
             cell.horizontalAlign == SmlHAlign.left);
 
-    bool blocksOverflow(int col, int row) {
+    final authoredRows = options.useWorksheetPageSetup && book.package != null;
+    String cellFill(int col, int row, SmlCell? cell) =>
+        conditionalFormats.resolve(SmlCellRef(col, row)).fillRgb ??
+        cell?.fillRgb ??
+        '';
+
+    bool blocksOverflow(int col, int row, String sourceFill) {
       final neighbor = sheet.rows[row]?.cells[col];
+      final fill = cellFill(col, row, neighbor);
       return neighbor?.formula != null ||
           (neighbor?.asString.isNotEmpty ?? false) ||
           sheet.mergeAt(col, row) != null ||
-          (conditionalFormats.resolve(SmlCellRef(col, row)).fillRgb ??
-                  neighbor?.fillRgb ??
-                  '')
-              .isNotEmpty;
+          (fill.isNotEmpty && (!authoredRows || fill != sourceFill));
     }
 
     final List<double> colPts = <double>[
@@ -1470,12 +1481,16 @@ abstract final class OfficePdfExport {
         if (remaining <= colEnds.last - colEnds[cell.ref.col - minCol]) {
           continue;
         }
+        final sourceFill = cellFill(cell.ref.col, cell.ref.row, cell);
         for (
           var col = cell.ref.col;
           col < SmlWorksheet.excelColumnCount;
           col++
         ) {
-          if (col != cell.ref.col && blocksOverflow(col, cell.ref.row)) break;
+          if (col != cell.ref.col &&
+              blocksOverflow(col, cell.ref.row, sourceFill)) {
+            break;
+          }
           if (col > maxCol) {
             final width = math.max(4.0, printColumnWidth(col));
             colPts.add(width);
@@ -1487,24 +1502,30 @@ abstract final class OfficePdfExport {
         }
       }
     }
-    final authoredRows = options.useWorksheetPageSetup && book.package != null;
-    final List<double> rowPts = <double>[
-      for (int r = minRow; r <= maxRow; r++)
-        math.max(
-          4,
-          authoredRows
-              // Excel for Mac quantizes XLSX row geometry before print scaling.
-              ? (_sheetPxToPt(sheet.rowHeightAt(r)) + 1e-9).floorToDouble()
-              : _sheetPxToPt(sheet.rowHeightAt(r)),
-        ),
+    final fixedPrintPercent =
+        options.scalePercentOverride ?? setup?.scale ?? 100;
+    double printRowHeight(int row) {
+      final pixels = sheet.rowHeightAt(row);
+      final points = _sheetPxToPt(pixels);
+      final usesCustomDefault =
+          sheet.importedDefaultRowHeightIsCustom &&
+          (pixels - sheet.effectiveDefaultRowHeightPx).abs() < 1e-8;
+      // A worksheet-wide custom row height is an authored dimension.
+      // Preserve it before print scaling, including explicit matching rows.
+      return !authoredRows || usesCustomDefault
+          ? points
+          : (points + 1e-9).floorToDouble();
+    }
+
+    final rowPts = [
+      for (int row = minRow; row <= maxRow; row++)
+        math.max(4.0, printRowHeight(row)),
     ];
 
     final double usableW = pageW - left - right - gutter;
     final double usableH =
         pageH - top - bottom - band - (setup == null ? 16 : 0);
-    var scale =
-        (options.scalePercentOverride ?? setup?.scale ?? 100).clamp(10, 400) /
-        100;
+    var scale = fixedPrintPercent.clamp(10, 400) / 100;
     if (fit) {
       final authoredFit =
           authoredRows &&
@@ -1527,7 +1548,13 @@ abstract final class OfficePdfExport {
           : setup?.fitToHeight ?? 1;
       scale = 1;
       if (fitWidth > 0 && needW > 0) {
-        final width = options.fitOverride == true ? usableW - 0.01 : usableW;
+        // Excel allows a two-point horizontal clearance on each authored
+        // fit-to-page band before rounding the scale to a whole percentage.
+        final width = switch (options.fitOverride) {
+          true => usableW - 0.01,
+          null when authoredFit && fitHeight > 0 => math.max(0.0, usableW - 2),
+          _ => usableW,
+        };
         scale = math.min(scale, width * fitWidth / needW);
       }
       if (fitHeight > 0 && needH > 0) {
@@ -1655,6 +1682,7 @@ abstract final class OfficePdfExport {
 
     var pageCount = colBands.length * rowBands.length;
     final SmlHeaderFooter? hf = sheet.headerFooter;
+    final headerFooterFont = hf == null ? null : book.styles?.normalFont;
 
     final pictureTemplates = hf == null
         ? const <String, String>{}
@@ -1669,7 +1697,8 @@ abstract final class OfficePdfExport {
     final pictureToken = RegExp(r'(?:^|[^&])(?:&&)*&G');
     final printPictures = pictureTemplates.values.any(pictureToken.hasMatch)
         ? SheetPrintPictures.read(book.package, sheet.sourcePartUri)
-        : null;
+        : const <SheetPrintPicture>[];
+    final headerFooterScale = hf?.scaleWithDocument == true ? scale : 1.0;
     final placedPictures =
         <
           ({
@@ -1680,41 +1709,38 @@ abstract final class OfficePdfExport {
             double height,
           })
         >[];
-    if (printPictures != null) {
-      final pictureScale = printPictures.scaleWithDocument ? scale : 1.0;
-      for (final picture in printPictures.pictures) {
-        if (!pictureToken.hasMatch(pictureTemplates[picture.slot] ?? '')) {
-          continue;
-        }
-        final raster = PdfImageCodec.decode(picture.part.readBytes());
-        if (raster == null) continue;
-        final width = picture.width * pictureScale;
-        final height = picture.height * pictureScale;
-        final x = switch (picture.slot[0]) {
-          'L' => left,
-          'C' => (left + pageW - right - width) / 2,
-          _ => pageW - right - width,
-        };
-        final y = picture.slot[1] == 'H'
-            ? (setup == null ? top : setup.headerMarginIn * 72)
-            : pageH -
-                  (setup == null ? bottom : setup.footerMarginIn * 72) -
-                  height;
-        placedPictures.add((
-          image: PdfEmbeddedImage(
-            name: images.next(),
-            width: raster.width,
-            height: raster.height,
-            bytes: raster.jpegBytes ?? raster.rgb,
-            jpeg: raster.isJpeg,
-            maskBytes: raster.alpha,
-          ),
-          x: x,
-          y: y,
-          width: width,
-          height: height,
-        ));
+    for (final picture in printPictures) {
+      if (!pictureToken.hasMatch(pictureTemplates[picture.slot] ?? '')) {
+        continue;
       }
+      final raster = PdfImageCodec.decode(picture.part.readBytes());
+      if (raster == null) continue;
+      final width = picture.width * headerFooterScale;
+      final height = picture.height * headerFooterScale;
+      final x = switch (picture.slot[0]) {
+        'L' => left,
+        'C' => (left + pageW - right - width) / 2,
+        _ => pageW - right - width,
+      };
+      final y = picture.slot[1] == 'H'
+          ? (setup == null ? top : setup.headerMarginIn * 72)
+          : pageH -
+                (setup == null ? bottom : setup.footerMarginIn * 72) -
+                height;
+      placedPictures.add((
+        image: PdfEmbeddedImage(
+          name: images.next(),
+          width: raster.width,
+          height: raster.height,
+          bytes: raster.jpegBytes ?? raster.rgb,
+          jpeg: raster.isJpeg,
+          maskBytes: raster.alpha,
+        ),
+        x: x,
+        y: y,
+        width: width,
+        height: height,
+      ));
     }
 
     final acrossThenDown = setup?.printAcrossThenDown ?? true;
@@ -1786,28 +1812,75 @@ abstract final class OfficePdfExport {
             picture.height,
           );
         }
-        void paintHfBand(List<String> sections, double baseline, double size) {
-          const List<_TextAlign> slots = <_TextAlign>[
-            _TextAlign.left,
-            _TextAlign.center,
-            _TextAlign.right,
-          ];
-          for (int i = 0; i < 3; i++) {
-            final String text = _expandSheetTokens(
-              sections[i],
-              sheet.name,
-              pageNo,
-              totalPages,
+        void paintHfBand(
+          List<String> sections,
+          double edge, {
+          required bool footer,
+        }) {
+          final baseSize = headerFooterFont?.sizePoints ?? (footer ? 8.0 : 9.0);
+          final initial = (
+            size: baseSize,
+            color: '000000',
+            family: headerFooterFont?.family,
+            bold: false,
+            italic: false,
+          );
+          final available = pageW - left - right;
+          for (final (slot, template) in sections.indexed) {
+            if (template.isEmpty) continue;
+            final lines = _sheetPrintLines(
+              template,
+              initial,
+              sheetName: sheet.name,
+              fileName: workbookFileName,
+              page: pageNo,
+              pageCount: totalPages,
             );
-            sink.drawText(
-              text,
-              left,
-              baseline,
-              size,
-              '595959',
-              maxWidth: pageW - left - right,
-              align: slots[i],
-            );
+            final heights = [
+              for (final line in lines)
+                line.fold<double>(
+                      line.isEmpty ? baseSize : 0,
+                      (max, run) => math.max(max, run.style.size),
+                    ) *
+                    headerFooterScale,
+            ];
+            var y = footer
+                ? edge - heights.fold(0.0, (sum, height) => sum + height * 1.2)
+                : edge;
+            for (final (index, line) in lines.indexed) {
+              final widths = [
+                for (final run in line)
+                  sink.measureStyled(
+                    run.text,
+                    run.style.size * headerFooterScale,
+                    family: run.style.family,
+                    bold: run.style.bold,
+                    italic: run.style.italic,
+                  ),
+              ];
+              final totalWidth = widths.fold(0.0, (sum, width) => sum + width);
+              var x =
+                  left +
+                  switch (slot) {
+                    1 => (available - totalWidth) / 2,
+                    2 => available - totalWidth,
+                    _ => 0,
+                  };
+              for (final (indexOfRun, run) in line.indexed) {
+                sink.drawText(
+                  run.text,
+                  x,
+                  y + heights[index],
+                  run.style.size * headerFooterScale,
+                  run.style.color,
+                  family: run.style.family,
+                  bold: run.style.bold,
+                  italic: run.style.italic,
+                );
+                x += widths[indexOfRun];
+              }
+              y += heights[index] * 1.2;
+            }
           }
         }
 
@@ -1822,15 +1895,15 @@ abstract final class OfficePdfExport {
         } else if (hf != null) {
           paintHfBand(
             <String>[hf.headerLeft, hf.headerCenter, hf.headerRight],
-            (setup?.headerMarginIn ?? 0) * 72 + (setup == null ? top + 10 : 9),
-            9,
+            setup == null ? top : setup.headerMarginIn * 72,
+            footer: false,
           );
         }
         if (hf != null) {
           paintHfBand(
             <String>[hf.footerLeft, hf.footerCenter, hf.footerRight],
             pageH - (setup == null ? bottom : setup.footerMarginIn * 72),
-            8,
+            footer: true,
           );
         }
         final horizontalInset = setup?.centerHorizontally == true
@@ -1967,6 +2040,7 @@ abstract final class OfficePdfExport {
                 '595959',
               );
             }
+            final overflowingLabels = <void Function()>[];
             for (int c = firstCol; c <= lastCol; c++) {
               final SmlMerge? merge = sheet.mergeAt(c, r);
               final anchor = merge?.c0 ?? c;
@@ -2003,13 +2077,11 @@ abstract final class OfficePdfExport {
                 sink.canvas.clipRect(printedLeft, y, printedWidth, spanH);
               }
               paintCellFrame(x, y, spanW, spanH, stored, conditional);
+              if (splitMerge) sink.canvas.restore();
               final shown = stored == null
                   ? null
                   : _sheetDisplay(book, sheet, stored);
-              if (shown == null || shown.text.isEmpty) {
-                if (splitMerge) sink.canvas.restore();
-                continue;
-              }
+              if (shown == null || shown.text.isEmpty) continue;
               final double size = math.max(4, stored!.fontSize * scale);
               final _TextAlign align = switch (stored.horizontalAlign) {
                 SmlHAlign.left => _TextAlign.left,
@@ -2022,35 +2094,54 @@ abstract final class OfficePdfExport {
               final vertical = book.styles?.verticalAlignAt(stored.styleIndex);
               var textSpan = spanW;
               if (merge == null && canOverflow(stored, shown.numeric, wrap)) {
+                final sourceFill = conditional.fillRgb ?? stored.fillRgb;
                 for (int next = c + 1; next <= minCol + cb.end; next++) {
-                  if (blocksOverflow(next, r)) break;
+                  if (blocksOverflow(next, r, sourceFill)) break;
                   textSpan += colWAt(next);
                 }
               }
-              sink.canvas.save();
-              sink.canvas.clipRect(x + 1, y + 1, textSpan - 2, spanH - 2);
-              sink.drawText(
-                shown.text,
-                x + 3,
-                vertical != null
-                    ? y + 1
-                    : wrap
-                    ? y + size
-                    : y + spanH - math.max(2, size * 0.28),
-                size,
-                conditional.fontRgb ?? shown.color,
-                maxWidth: textSpan - 6,
-                align: align,
-                lineAdvance: wrap ? size * 1.1 : null,
-                bold: stored.fontBold,
-                family: book.styles?.familyAt(stored.styleIndex),
-                italic: book.styles?.italicAt(stored.styleIndex) ?? false,
-                cellBox: vertical == null
-                    ? null
-                    : (alignment: vertical, height: spanH - 2, wrap: wrap),
-              );
-              sink.canvas.restore();
-              if (splitMerge) sink.canvas.restore();
+              void paintLabel() {
+                if (splitMerge) {
+                  sink.canvas.save();
+                  sink.canvas.clipRect(printedLeft, y, printedWidth, spanH);
+                }
+                sink.canvas.save();
+                sink.canvas.clipRect(x + 1, y + 1, textSpan - 2, spanH - 2);
+                sink.drawText(
+                  shown.text,
+                  x + 3,
+                  vertical != null
+                      ? y + 1
+                      : wrap
+                      ? y + size
+                      : y + spanH - math.max(2, size * 0.28),
+                  size,
+                  conditional.fontRgb ?? shown.color,
+                  maxWidth: textSpan - 6,
+                  align: align,
+                  lineAdvance: wrap ? size * 1.1 : null,
+                  wrapText: !authoredRows || wrap,
+                  bold: stored.fontBold,
+                  family: book.styles?.familyAt(stored.styleIndex),
+                  italic: book.styles?.italicAt(stored.styleIndex) ?? false,
+                  cellBox: vertical == null
+                      ? null
+                      : (alignment: vertical, height: spanH - 2, wrap: wrap),
+                );
+                sink.canvas.restore();
+                if (splitMerge) sink.canvas.restore();
+              }
+
+              // Neighboring fills must be painted before text that spills
+              // across them.
+              if (textSpan > spanW) {
+                overflowingLabels.add(paintLabel);
+              } else {
+                paintLabel();
+              }
+            }
+            for (final paint in overflowingLabels) {
+              paint();
             }
           }
         }
@@ -2127,8 +2218,12 @@ abstract final class OfficePdfExport {
               sink.canvas,
               0,
               0,
-              math.max(40, width / scale),
-              math.max(40, height / scale),
+              drawing.visual.isPicture
+                  ? width / scale
+                  : math.max(40, width / scale),
+              drawing.visual.isPicture
+                  ? height / scale
+                  : math.max(40, height / scale),
               drawing.visual,
               sink.images,
               drawText: sink.drawText,
@@ -2196,63 +2291,6 @@ abstract final class OfficePdfExport {
           : null,
       draw: draw,
     );
-  }
-
-  static String _expandSheetTokens(
-    String template,
-    String sheetName,
-    int page,
-    int pages,
-  ) {
-    final StringBuffer out = StringBuffer();
-    var i = 0;
-    while (i < template.length) {
-      final String ch = template[i];
-      if (ch != '&' || i + 1 >= template.length) {
-        out.write(ch);
-        i++;
-        continue;
-      }
-      final String code = template[i + 1];
-      i += 2;
-      switch (code) {
-        case '&':
-          out.write('&');
-        case 'A':
-          out.write(sheetName);
-        case 'P':
-          out.write('$page');
-        case 'N':
-          out.write('$pages');
-        case 'D':
-          final DateTime now = DateTime.now();
-          out.write('${now.year}-${_two(now.month)}-${_two(now.day)}');
-        case 'T':
-          final DateTime now = DateTime.now();
-          out.write('${_two(now.hour)}:${_two(now.minute)}');
-        case '"':
-          final int close = template.indexOf('"', i);
-          i = close < 0 ? template.length : close + 1;
-        case 'K':
-          i = math.min(template.length, i + 6);
-        default:
-          // Font size digits; B / I / U / S / E / X / Y toggles and the
-          // picture, path, and file codes print nothing.
-          if (_isDigit(code)) {
-            while (i < template.length && _isDigit(template[i])) {
-              i++;
-            }
-          }
-      }
-    }
-    return out.toString().trim();
-  }
-
-  static String _two(int n) => n.toString().padLeft(2, '0');
-
-  static bool _isDigit(String ch) {
-    final int cu = ch.codeUnitAt(0);
-    return cu >= 0x30 && cu <= 0x39;
   }
 
   /// Packs variable-size axis segments into bands that fit [budget].
@@ -3914,6 +3952,7 @@ class _PageSink {
     String? family,
     int? baseLevel,
     double? lineAdvance,
+    bool wrapText = true,
     ({SmlVAlign alignment, double height, bool wrap})? cellBox,
   }) {
     if (text.isEmpty || size <= 0) {
@@ -3926,7 +3965,7 @@ class _PageSink {
       final List<BrokenLine> lines = _layoutLines(
         text,
         size,
-        maxWidth: cellBox?.wrap == false ? 1e9 : maxWidth ?? 1e9,
+        maxWidth: !wrapText || cellBox?.wrap == false ? 1e9 : maxWidth ?? 1e9,
         bold: bold,
         italic: italic,
         family: family,

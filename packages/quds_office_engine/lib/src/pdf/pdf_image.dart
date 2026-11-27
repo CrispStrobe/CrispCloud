@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
 import '../opc/zip/deflate_codec.dart';
+import '../visual/office_emf_bitmap.dart';
 
 /// Decoded raster ready for a PDF image XObject.
 class PdfRaster {
@@ -41,7 +42,16 @@ abstract final class PdfImageCodec {
 
   /// decode API.
   static PdfRaster? decode(Uint8List bytes) {
-    return decodePng(bytes) ?? decodeJpeg(bytes);
+    final raster = decodePng(bytes) ?? decodeJpeg(bytes);
+    if (raster != null) return raster;
+    final emf = OfficeEmfBitmap.decode(bytes);
+    if (emf == null) return null;
+    return PdfRaster(
+      width: emf.width,
+      height: emf.height,
+      rgb: emf.rgb,
+      alpha: emf.alpha,
+    );
   }
 
   /// decodeJpeg API.

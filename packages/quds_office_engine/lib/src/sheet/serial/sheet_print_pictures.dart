@@ -5,35 +5,32 @@ import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 
 /// Images named by &G in the worksheet's default print header or footer.
-class SheetPrintPictures {
-  const SheetPrintPictures(this.pictures, {required this.scaleWithDocument});
-
-  final List<SheetPrintPicture> pictures;
-  final bool scaleWithDocument;
-
-  static SheetPrintPictures? read(OpcPackage? package, String? sheetUri) {
-    if (package == null || sheetUri == null) return null;
+abstract final class SheetPrintPictures {
+  static List<SheetPrintPicture> read(OpcPackage? package, String? sheetUri) {
+    if (package == null || sheetUri == null) return const [];
     final sheetPart = package.getPart(sheetUri);
-    if (sheetPart == null) return null;
+    if (sheetPart == null) return const [];
     final sheet = XmlDocument.parse(sheetPart.readText()).root;
     final drawingId = sheet
         ?.firstChild('legacyDrawingHF', namespaceUri: OfficeNamespaces.x)
         ?.getAttribute('id', namespaceUri: OfficeNamespaces.r);
-    if (drawingId == null) return null;
+    if (drawingId == null) return const [];
 
     final sheetRelationships = package.relationshipsFor(sheetUri);
     final drawingLink = sheetRelationships.byId(drawingId);
     if (drawingLink == null ||
         drawingLink.targetMode != RelationshipTargetMode.internal ||
         drawingLink.type != '${OfficeNamespaces.r}/vmlDrawing') {
-      return null;
+      return const [];
     }
     final drawingPart = package.getPart(
       sheetRelationships.resolve(drawingLink),
     );
-    if (drawingPart == null || drawingPart.length > 1024 * 1024) return null;
+    if (drawingPart == null || drawingPart.length > 1024 * 1024) {
+      return const [];
+    }
     final drawing = XmlDocument.parse(drawingPart.readText()).root;
-    if (drawing == null) return null;
+    if (drawing == null) return const [];
 
     final drawingRelationships = package.relationshipsFor(drawingPart.uri);
     final pictures = <SheetPrintPicture>[];
@@ -73,15 +70,7 @@ class SheetPrintPictures {
         SheetPrintPicture(slot, image, width: width, height: height),
       );
     }
-    final scale = sheet
-        ?.firstChild('headerFooter', namespaceUri: OfficeNamespaces.x)
-        ?.getAttribute('scaleWithDoc');
-    return pictures.isEmpty
-        ? null
-        : SheetPrintPictures(
-            pictures,
-            scaleWithDocument: scale != '0' && scale != 'false',
-          );
+    return pictures;
   }
 
   static double? _sizeInPoints(String style, String property) {

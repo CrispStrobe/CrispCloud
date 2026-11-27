@@ -20,6 +20,9 @@ final class CustomKeychainStore {
 
   private let defaults: UserDefaults
   private let requestUnlock: (SecKeychain) -> OSStatus
+  // Channel operations are serialized on the platform thread. Hold only the
+  // active bookmark's scope and drop it if its saved grant or path changes.
+  private var activeAccess: (path: String, bookmark: Data, url: URL)?
 
   init(defaults: UserDefaults = .standard,
        requestUnlock: @escaping (SecKeychain) -> OSStatus = {
@@ -27,6 +30,10 @@ final class CustomKeychainStore {
        }) {
     self.defaults = defaults
     self.requestUnlock = requestUnlock
+  }
+
+  deinit {
+    activeAccess?.url.stopAccessingSecurityScopedResource()
   }
 
   static func fileURL(for path: String) throws -> URL {
@@ -231,9 +238,9 @@ final class CustomKeychainStore {
         code: "custom_keychain_invalid_path",
         message: "Choose a local keychain file.", status: nil)
     }
-    let selected = url.standardizedFileURL
     do {
-      let bookmark = try selected.bookmarkData(
+      // Preserve the Powerbox URL and the authorization it carries.
+      let bookmark = try url.bookmarkData(
         options: .withSecurityScope, includingResourceValuesForKeys: nil,
         relativeTo: nil)
       var bookmarks = defaults.dictionary(forKey: Self.bookmarksPreference) ?? [:]
@@ -250,7 +257,15 @@ final class CustomKeychainStore {
   private func accessibleURL(for path: String) throws -> URL {
     let requested = try Self.fileURL(for: path)
     let bookmarks = defaults.dictionary(forKey: Self.bookmarksPreference) ?? [:]
-    guard let stored = bookmarks[requested.path] else {
+    let stored = bookmarks[requested.path]
+    if let active = activeAccess {
+      if active.path == requested.path, stored as? Data == active.bookmark {
+        return active.url
+      }
+      active.url.stopAccessingSecurityScopedResource()
+      activeAccess = nil
+    }
+    guard let stored else {
       // Manual paths work when access is already granted, including files in
       // the app container. A string path alone grants no sandbox permission.
       return requested
@@ -266,23 +281,25 @@ final class CustomKeychainStore {
       let resolved = try URL(
         resolvingBookmarkData: bookmark, options: [.withSecurityScope, .withoutUI],
         relativeTo: nil, bookmarkDataIsStale: &stale)
-      guard resolved.isFileURL else {
+      guard resolved.isFileURL, resolved.startAccessingSecurityScopedResource() else {
         throw CustomKeychainStoreError(
           code: "custom_keychain_access_required",
           message: "Choose the keychain file again using Browse.", status: nil)
       }
       // Keep the stored selection key unchanged when a bookmark follows a
       // moved file. The resolved URL represents the file the user selected.
-      if stale {
-        let accessing = resolved.startAccessingSecurityScopedResource()
-        defer { if accessing { resolved.stopAccessingSecurityScopedResource() } }
-        let refreshed = try resolved.bookmarkData(
+      var currentBookmark = bookmark
+      // A refresh is best effort once macOS has granted access. Keep the
+      // original bookmark and the live scope if only rewriting it fails.
+      if stale, let refreshed = try? resolved.bookmarkData(
           options: .withSecurityScope, includingResourceValuesForKeys: nil,
-          relativeTo: nil)
+          relativeTo: nil) {
         var updated = bookmarks
         updated[requested.path] = refreshed
         defaults.set(updated, forKey: Self.bookmarksPreference)
+        currentBookmark = refreshed
       }
+      activeAccess = (requested.path, currentBookmark, resolved)
       return resolved
     } catch {
       throw CustomKeychainStoreError(
@@ -301,8 +318,6 @@ final class CustomKeychainStore {
   private func withKeychain<T>(path: String, unlockIfNeeded: Bool = false,
                               operation: (SecKeychain) throws -> T) throws -> T {
     let url = try accessibleURL(for: path)
-    let accessing = url.startAccessingSecurityScopedResource()
-    defer { if accessing { url.stopAccessingSecurityScopedResource() } }
     var keychain: SecKeychain?
     let opened = url.path.withCString { SecKeychainOpen($0, &keychain) }
     guard opened == errSecSuccess, let keychain else {

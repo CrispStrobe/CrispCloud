@@ -408,10 +408,16 @@ void main() {
           .ops
           .whereType<PdfDrawImage>()
           .first;
-      // Three 300pt columns compete for the 505pt body width. Excel
-      // includes the title strip in fit and floors to a whole percentage.
-      expect(fittedHeader.width, closeTo(56, .01));
+      // The title strip adds a third 300pt column to the fit calculation.
+      // At 56%, it would leave less than two points inside the page margins.
+      expect(fittedHeader.width, closeTo(55, .01));
       expect(fitted.pageCount, 1);
+      sheet.pageSetup!.marginRightIn -= 1 / 72;
+      final wider = PdfFile.open(OfficePrint.workbook(book));
+      expect(
+        wider.displayList(0).ops.whereType<PdfDrawImage>().first.width,
+        closeTo(56, .01),
+      );
     });
 
     test('text without a section code is centered', () {

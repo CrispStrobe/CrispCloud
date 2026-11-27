@@ -63,6 +63,7 @@ abstract final class OfficePrint {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSheetPrintOptions? options,
+    String? workbookFileName,
   }) {
     PdfSheetPrintOptions sheetOptions =
         options ??
@@ -83,6 +84,7 @@ abstract final class OfficePrint {
       fonts: fonts,
       title: settings.title.isEmpty ? 'Workbook' : settings.title,
       options: sheetOptions,
+      workbookFileName: workbookFileName,
       sheetFrom: settings.pageFrom,
       sheetTo: settings.pageTo,
     );

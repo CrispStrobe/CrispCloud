@@ -1240,18 +1240,53 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
 
 /// Shows a retryable credential failure without exposing the app or treating
 /// unreadable lock/vault metadata as an empty new profile.
-class _CredentialGateFailure extends ConsumerWidget {
+class _CredentialGateFailure extends ConsumerStatefulWidget {
   const _CredentialGateFailure({required this.onRetry, required this.failure});
   final VoidCallback onRetry;
   final CredentialStorageUnavailable failure;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CredentialGateFailure> createState() =>
+      _CredentialGateFailureState();
+}
+
+class _CredentialGateFailureState
+    extends ConsumerState<_CredentialGateFailure> {
+  CredentialStorageUnavailable? _restoreFailure;
+  bool _restoring = false;
+
+  Future<void> _restoreAccess(MacOsCustomKeychainStorage storage) async {
+    if (_restoring) return;
+    setState(() => _restoring = true);
+    try {
+      final restored = await MacOsCustomKeychainStorage.restoreKeychainAccess(
+        storage.path,
+      );
+      if (mounted && restored) widget.onRetry();
+    } catch (error, stack) {
+      if (!mounted) return;
+      setState(() {
+        _restoreFailure = CredentialStorageUnavailable(
+          diagnostics: CredentialStorageDiagnostics.capture(
+            error,
+            stack,
+            storage: storage,
+            operation: 'Restore selected keychain access',
+          ),
+        );
+      });
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final storage = ref.read(secureStorageProvider);
     return StartupFailureApp(
       locale: Localizations.maybeLocaleOf(context),
-      error: failure,
-      onRetry: onRetry,
+      error: _restoreFailure ?? widget.failure,
+      onRetry: widget.onRetry,
       onChooseStorage: (choice) => unawaited(
         _applyAlternativeCredentialStore(
           choice,
@@ -1260,29 +1295,8 @@ class _CredentialGateFailure extends ConsumerWidget {
       ),
       onRestoreStorageAccess:
           storage is MacOsCustomKeychainStorage &&
-              failure.diagnostics?.needsFileAccessGrant == true
-          ? () async {
-              try {
-                if (await MacOsCustomKeychainStorage.restoreKeychainAccess(
-                  storage.path,
-                )) {
-                  onRetry();
-                }
-              } catch (error, stack) {
-                runApp(
-                  StartupFailureApp(
-                    error: CredentialStorageUnavailable(
-                      diagnostics: CredentialStorageDiagnostics.capture(
-                        error,
-                        stack,
-                        storage: storage,
-                        operation: 'Restore selected keychain access',
-                      ),
-                    ),
-                  ),
-                );
-              }
-            }
+              widget.failure.diagnostics?.needsFileAccessGrant == true
+          ? () => unawaited(_restoreAccess(storage))
           : null,
     );
   }
