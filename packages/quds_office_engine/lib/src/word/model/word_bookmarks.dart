@@ -707,14 +707,14 @@ abstract final class WordBookmarks {
     return firstSignificant == 0 ? value : value.substring(firstSignificant);
   }
 
-  /// Imported metadata is immutable: fail before any package write if a
-  /// caller constructs an endpoint whose source describes a different range.
-  static void validateSource(WmlBookmarkBoundary boundary) {
+  /// Checks the endpoint and returns its parsed source when it has one.
+  /// A caller-supplied source must describe the same range as the endpoint.
+  static XmlElement? validateSource(WmlBookmarkBoundary boundary) {
     canonicalId(boundary.id);
     if (boundary.isStart && (boundary.name == null || boundary.name!.isEmpty)) {
       throw StateError('A bookmark start requires a name.');
     }
-    if (boundary.sourceXml == null) return;
+    if (boundary.sourceXml == null) return null;
     final element = XmlDocument.parse(boundary.sourceXml!).root;
     final kind = boundary.isStart ? 'bookmarkStart' : 'bookmarkEnd';
     if (element == null ||
@@ -731,6 +731,7 @@ abstract final class WordBookmarks {
         'Bookmark endpoint metadata does not match its source XML.',
       );
     }
+    return element;
   }
 
   static Iterable<List<WmlParagraph>> _stories(

@@ -65,9 +65,9 @@ abstract final class WordBookmarkIo {
   }
 
   static void write(XmlWriter writer, WmlBookmarkBoundary marker) {
-    WordBookmarks.validateSource(marker);
-    if (marker.sourceXml != null) {
-      XmlDocument.parse(marker.sourceXml!).root!.writeTo(writer);
+    final source = WordBookmarks.validateSource(marker);
+    if (source != null) {
+      source.writeTo(writer);
       return;
     }
     writer.writeEmptyElement(

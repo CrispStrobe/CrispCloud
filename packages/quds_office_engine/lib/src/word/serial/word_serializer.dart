@@ -56,6 +56,7 @@ class WordSerializer {
   Map<String, String>? _unchangedRunProperties;
   Map<String, String>? _unchangedNoteProperties;
   Map<String, String>? _unchangedParagraphProperties;
+  Map<String, String>? _retainedFieldXml;
   var _docPrId = 1;
   Map<OfficeVisual, String> _inlineImageIds = <OfficeVisual, String>{};
   var _hfPart = 1;
@@ -82,6 +83,7 @@ class WordSerializer {
     _unchangedRunProperties = <String, String>{};
     _unchangedNoteProperties = <String, String>{};
     _unchangedParagraphProperties = <String, String>{};
+    _retainedFieldXml = <String, String>{};
     _footnoteSeparator = WordFootnoteSeparatorIo.prepare(document);
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
@@ -176,6 +178,7 @@ class WordSerializer {
     _unchangedRunProperties = null;
     _unchangedNoteProperties = null;
     _unchangedParagraphProperties = null;
+    _retainedFieldXml = null;
     return package;
   }
 
@@ -374,15 +377,15 @@ class WordSerializer {
     w.writeStartElement('r', prefix: 'w');
     final rPr = boundary.runPropertiesXml;
     if (rPr != null && rPr.isNotEmpty) {
-      XmlDocument.parse(rPr).root!.writeTo(w);
+      _writeRetainedProperties(w, rPr, _retainedFieldXml);
     }
     if (boundary.kind == WmlFieldBoundaryKind.instruction) {
       w.writeStartElement('instrText', prefix: 'w');
       w.writeAttribute('xml:space', 'preserve');
       w.writeText(boundary.text);
       w.writeEndElement();
-    } else if (boundary.sourceXml != null) {
-      XmlDocument.parse(boundary.sourceXml!).root!.writeTo(w);
+    } else if (boundary.sourceXml case final source?) {
+      _writeRetainedProperties(w, source, _retainedFieldXml);
     } else {
       w.writeEmptyElement(
         'fldChar',
@@ -1597,7 +1600,7 @@ class WordSerializer {
     final properties = canonicalPropertyName == null
         ? XmlDocument.parse(source).root!
         : WordPropertyIo.parse(source, canonicalPropertyName);
-    // Native note marks retain their original child order, including history.
+    // Native note and field packets retain their original child order.
     // Ordinary direct formatting uses Word's canonical property order.
     if (canonicalPropertyName != null) WordPropertyIo.orderChildren(properties);
     if (cache != null && cache.length < 128) {
