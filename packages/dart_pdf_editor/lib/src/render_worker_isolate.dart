@@ -18,6 +18,7 @@ import 'package:pdf_cos/perf.dart';
 import 'package:pdf_document/pdf_document.dart';
 
 import 'annotation_display_filter.dart';
+import 'large_flate_rgb.dart';
 import 'perf_log.dart';
 import 'package:pdf_graphics/pdf_graphics.dart';
 import 'package:pdf_graphics/raster.dart'
@@ -1703,6 +1704,10 @@ bool _decodeImageInBackgroundIsolate(
   // in the command buffer so the consumer can use the platform codec and keep
   // an explicit JBIG2 stencil as a GPU mask. Other platforms and uncommon PDF
   // colour/mask semantics retain the portable worker decode.
+  if (!request.isLuminosityMask &&
+      largeUnpredictedRgbSize(document, request.stream.dictionary) != null) {
+    return false;
+  }
   if (_preferAppleJpxCodec(document, request)) return false;
   if (pdfImageDctSoftMaskBytes(document, request.stream.dictionary) == null) {
     return true;

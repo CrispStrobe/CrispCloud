@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -75,6 +76,14 @@ class PdfPerfLog {
   /// into its own log - the package must not import the host, so the host
   /// hands us a closure instead. Not consulted at all while the log is off.
   static void Function(String line)? sink;
+
+  /// Host sink for bounded render failures, even when perf tracing is off.
+  static void Function(String line)? diagnosticSink;
+
+  static void reportRenderFailure(String reason) {
+    developer.log(reason, name: 'pdf.render', level: 900);
+    diagnosticSink?.call(reason);
+  }
 
   static final Stopwatch _clock = Stopwatch()..start();
   static final List<String> _buf = <String>[];
@@ -227,7 +236,8 @@ class PdfPerfLog {
     if (!enabled) return;
     final mp = (imageWidth * imageHeight) / 1e6;
     final ratioStr = ratio == null ? '' : ' ratio=${ratio.toStringAsFixed(1)}';
-    final msStr = elapsedMs == null ? '' : ' ms=${elapsedMs.toStringAsFixed(1)}';
+    final msStr =
+        elapsedMs == null ? '' : ' ms=${elapsedMs.toStringAsFixed(1)}';
     final concStr = concurrency == null ? '' : ' conc=$concurrency';
     final regionStr = region == null
         ? ' full'

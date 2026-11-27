@@ -7,6 +7,8 @@ import 'package:dart_pdf_editor/dart_pdf_editor.dart' as editor;
 import 'package:pdf_cos/pdf_cos.dart' show CosPasswordException;
 import 'package:quds_office_editor/quds_office_editor.dart' as office;
 
+import '../services/log_service.dart';
+
 import '../l10n/commander_strings.dart';
 import '../services/pdf_open_preferences.dart';
 import 'document_page_navigation.dart';
@@ -41,6 +43,7 @@ class PdfRendererViewState extends State<PdfRendererView> {
   @override
   void initState() {
     super.initState();
+    editor.PdfPerfLog.diagnosticSink = const Log('PdfRenderer').warn;
     _viewer.addListener(_changed);
     _viewer.viewportChanges.addListener(_changed);
     _scheduleOpen();
@@ -133,6 +136,9 @@ class PdfRendererViewState extends State<PdfRendererView> {
             error is office.PdfOpenException &&
                 error.error == office.PdfOpenError.wrongPassword;
         if (!needsPassword) {
+          const Log('PdfRenderer').warn(
+            'PDF engine ${widget.backend.name} open failed (${error.runtimeType})',
+          );
           if (!mounted || epoch != _openEpoch) return;
           if (widget.onOpenFailure?.call(widget.backend) == true) return;
           setState(() => _error = '$error');
@@ -342,7 +348,24 @@ class _DeferredOfficePdfPage extends office.PdfDisplayList {
 
   final office.PdfFile _file;
   final int _index;
-  late final office.PdfDisplayList _content = _file.displayList(_index);
+  static const _log = Log('PdfRenderer');
+  late final office.PdfDisplayList _content = _load();
+
+  office.PdfDisplayList _load() {
+    try {
+      final content = _file.displayList(_index);
+      if (content.issues.isNotEmpty) {
+        _log.warn(
+          'CrispOffice page ${_index + 1} incomplete '
+          'issues=${content.issues.map((issue) => issue.name).join(",")}',
+        );
+      }
+      return content;
+    } on Object catch (error) {
+      _log.warn('CrispOffice page ${_index + 1} failed (${error.runtimeType})');
+      rethrow;
+    }
+  }
 
   @override
   List<office.PdfPaintOp> get ops => _content.ops;

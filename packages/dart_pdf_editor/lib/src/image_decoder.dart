@@ -12,8 +12,20 @@ import 'package:pdf_graphics/pdf_graphics.dart';
 import 'browser_jpeg_decode.dart';
 import 'budgeted_cache.dart';
 import 'jpeg_accelerator.dart';
+import 'large_flate_rgb.dart';
 import 'perf_log.dart';
 import 'performance_policy.dart';
+
+final _imageFailureCounts = Expando<int>();
+
+void _reportImageFailure(CosDocument cos, CosDictionary dict, String reason) {
+  final count = _imageFailureCounts[cos] ?? 0;
+  if (count >= 24) return;
+  _imageFailureCounts[cos] = count + 1;
+  final w = _intOrNull(cos.resolve(dict['Width']));
+  final h = _intOrNull(cos.resolve(dict['Height']));
+  PdfPerfLog.reportRenderFailure('Image ${w ?? 0}x${h ?? 0}: $reason');
+}
 
 /// Map key for a decoded image. Image XObjects key by stream identity -
 /// the xref cache hands back the same [CosStream] on every interpretation
@@ -505,8 +517,14 @@ Future<Map<Object, ui.Image>> decodeImages(
         }
         if (image != null) {
           out[p.key] = cache == null ? image : cache.put(p.cacheKey, image);
+        } else if (largeUnpredictedRgbSize(cos, p.request.stream.dictionary) ==
+            null) {
+          _reportImageFailure(
+              cos, p.request.stream.dictionary, 'no decoded pixels');
         }
       } on Exception catch (error) {
+        _reportImageFailure(cos, p.request.stream.dictionary,
+            'decode failed (${error.runtimeType})');
         if (PdfPerfLog.enabled) {
           PdfPerfLog.log('image decode-failed '
               'family=${pdfImageColorFamily(cos, p.request.stream.dictionary)} '
@@ -718,6 +736,33 @@ Future<PdfDecodedPixels?> _decodePortablePixels(
   int? targetHeight,
   required bool luminosityMask,
 }) async {
+  final large =
+      luminosityMask ? null : largeUnpredictedRgbSize(cos, stream.dictionary);
+  if (large != null) {
+    try {
+      final maxSide = targetWidth == null || targetHeight == null
+          ? 2560
+          : math.max(targetWidth, targetHeight).clamp(1, 2560);
+      final image = decodeLargePdfRgb(
+        stream.rawBytes,
+        large.$1,
+        large.$2,
+        maxSide: maxSide,
+      );
+      final rgba = Uint8List(image.width * image.height * 4);
+      for (var r = 0, a = 0; r < image.rgb.length; r += 3, a += 4) {
+        rgba[a] = image.rgb[r];
+        rgba[a + 1] = image.rgb[r + 1];
+        rgba[a + 2] = image.rgb[r + 2];
+        rgba[a + 3] = 255;
+      }
+      return PdfDecodedPixels(rgba, image.width, image.height);
+    } on Exception catch (error) {
+      _reportImageFailure(cos, stream.dictionary,
+          'Flate RGB decode failed (${error.runtimeType})');
+      return null;
+    }
+  }
   final filters = pdfImageFilters(cos, stream.dictionary);
   // The UI-side residual path owns bases that a worker intentionally left for
   // the platform JPEG codec (notably Flate DeviceN under a DCT soft mask).
@@ -810,6 +855,10 @@ Future<ui.Image?> _decodeOne(CosDocument cos, CosStream stream,
           'upload=${(uploadClock.elapsedMicroseconds / 1000).toStringAsFixed(1)}ms');
     }
     return image;
+  }
+
+  if (!luminosityMask && largeUnpredictedRgbSize(cos, dict) != null) {
+    return null;
   }
 
   // A purely-decoded base that only returned null because its /SMask is
