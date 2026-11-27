@@ -106,6 +106,8 @@ class WordDeserializer {
   WmlSection? _pendingParagraphSectPr;
   bool _liftSdtSectionBreak = false;
   int _nextSplitControlId = 0x30000000;
+  bool _hasImportedControls = false;
+  bool _hasImportedBookmarks = false;
 
   /// Bookmark endpoints found between blocks (directly in the body, a
   /// table, row or cell). OOXML allows them there and Word writes them
@@ -165,6 +167,8 @@ class WordDeserializer {
     _pendingParagraphSectPr = null;
     _liftSdtSectionBreak = false;
     _nextSplitControlId = 0x30000000;
+    _hasImportedControls = false;
+    _hasImportedBookmarks = false;
     _openFields.clear();
     _tocBoundaries.clear();
     _fieldCharNamespaces = null;
@@ -257,7 +261,7 @@ class WordDeserializer {
     _applyTableStyles(document, package, docUri);
     _applyNumbering(document, package, docUri);
     // Repair the actual paragraphs before TOC ranges are copied into a cache.
-    WordBookmarks.repairUnpaired(document);
+    if (_hasImportedBookmarks) WordBookmarks.repairUnpaired(document);
     _collapseTocFields(document);
     _readWatermark(document, package);
     WordBibliographyIo.read(document, package, docUri);
@@ -270,7 +274,7 @@ class WordDeserializer {
         revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
       }
     }
-    WordContentControls.recordImported(document);
+    if (_hasImportedControls) WordContentControls.recordImported(document);
     _fieldCharNamespaces = null;
     _emptyFieldChars.clear();
     _fieldSourceElements.clear();
@@ -432,7 +436,7 @@ class WordDeserializer {
         'A section break inside a content control cannot yet be imported safely',
       );
     }
-    final control = WordContentControlIo.capture(source, package, docUri);
+    final control = _captureControl(source, package, docUri);
     final content = _sdtContentReader(source);
     final previousLift = _liftSdtSectionBreak;
     _liftSdtSectionBreak = breakLayout == _SdtBreakLayout.liftLast;
@@ -572,7 +576,7 @@ class WordDeserializer {
         'a drawing, table or equation',
       );
     }
-    final control = WordContentControlIo.capture(source, package, storyUri);
+    final control = _captureControl(source, package, storyUri);
     final content = _sdtContentReader(source)!;
     while (content.next()) {
       if (content.eventType != XmlEventType.startElement ||
@@ -681,7 +685,7 @@ class WordDeserializer {
         'inline control containing a drawing or equation',
       );
     }
-    final control = WordContentControlIo.capture(source, package, docUri);
+    final control = _captureControl(source, package, docUri);
     paragraph.inlines.add(
       WmlContentControlBoundary(control: control, start: true),
     );
@@ -760,7 +764,7 @@ class WordDeserializer {
   }
 
   void _blockMarker(XmlPullReader reader) {
-    final WmlBookmarkBoundary marker = WordBookmarkIo.read(reader);
+    final marker = _captureBookmark(reader);
     final WmlParagraph? previous = _lastBlockParagraph;
     if (!marker.isStart && _blockMarkers.isEmpty && previous != null) {
       previous.inlines.add(marker);
@@ -1172,7 +1176,7 @@ class WordDeserializer {
   }
 
   void _readBookmark(XmlPullReader reader, WmlParagraph paragraph) {
-    final marker = WordBookmarkIo.read(reader);
+    final marker = _captureBookmark(reader);
     final isStart = marker.isStart;
     final name = marker.name;
     paragraph.inlines.add(marker);
@@ -1181,6 +1185,20 @@ class WordDeserializer {
         ..bookmarkName = name
         ..sourceBookmarkName = name;
     }
+  }
+
+  WmlBookmarkBoundary _captureBookmark(XmlPullReader reader) {
+    _hasImportedBookmarks = true;
+    return WordBookmarkIo.read(reader);
+  }
+
+  WmlContentControlData _captureControl(
+    XmlElement source,
+    OpcPackage package,
+    String partUri,
+  ) {
+    _hasImportedControls = true;
+    return WordContentControlIo.capture(source, package, partUri);
   }
 
   void _readRunInlines(
@@ -3548,7 +3566,7 @@ class WordDeserializer {
         : _readCell(content, package, docUri);
     cell.contentControlWrappers.insert(
       0,
-      WordContentControlIo.capture(source, package, docUri),
+      _captureControl(source, package, docUri),
     );
     return cell;
   }

@@ -366,6 +366,38 @@ const _preservedKey = {
 };
 
 void main() {
+  test('structural import checks follow the current document', () {
+    OpcPackage package(String body) {
+      final result = OpcPackage.create(OpcPackageKind.word);
+      result.getPart('/word/document.xml')!.writeText(
+        '<w:document xmlns:w="${OfficeNamespaces.w}">'
+        '<w:body>$body</w:body></w:document>',
+      );
+      return result;
+    }
+
+    final reader = WordDeserializer();
+    final plain = package('<w:p><w:r><w:t>Plain</w:t></w:r></w:p>');
+    expect(reader.read(plain).sourceDuplicateControlIds, isEmpty);
+
+    final structured = reader.read(
+      package(
+        '<w:p><w:bookmarkStart w:id="1" w:name="Unclosed"/>'
+        '${_controlXml(88, '<w:r><w:t>First</w:t></w:r>')}</w:p>'
+        '<w:p>${_controlXml(88, '<w:r><w:t>Second</w:t></w:r>')}</w:p>',
+      ),
+    );
+    expect(structured.sourceDuplicateControlIds, {'88': 2});
+    expect(WordBookmarks.ranges(structured).single.text, 'First\nSecond');
+    final reopened = reader.readBytes(WordSerializer().writeBytes(structured));
+    expect(reopened.sourceDuplicateControlIds, {'88': 2});
+    expect(WordBookmarks.ranges(reopened).single.text, 'First\nSecond');
+
+    final plainAgain = reader.read(plain);
+    expect(plainAgain.sourceDuplicateControlIds, isEmpty);
+    expect(WordBookmarks.ranges(plainAgain), isEmpty);
+  });
+
   test('cell-level controls preserve native metadata and editable cells', () {
     final controlledCell = _controlXml(
       121,
