@@ -9,7 +9,7 @@ class XmlWriter {
   XmlWriter({StringSink? sink}) : _sink = sink ?? StringBuffer();
 
   final StringSink _sink;
-  final List<_OpenElement> _stack = <_OpenElement>[];
+  final List<String> _stack = <String>[];
   bool _inStartTag = false;
   bool _declarationWritten = false;
 
@@ -69,7 +69,7 @@ class XmlWriter {
     _sink.write('<');
     final String qname = _qname(prefix, localName);
     _sink.write(qname);
-    _stack.add(_OpenElement(qname: qname, namespaceUri: namespaceUri));
+    _stack.add(qname);
     _inStartTag = true;
     if (namespaceUri != null && prefix != null) {
       writeAttribute(prefix.isEmpty ? 'xmlns' : 'xmlns:$prefix', namespaceUri);
@@ -85,6 +85,14 @@ class XmlWriter {
     String? namespaceUri,
     Map<String, String>? attributes,
   }) {
+    if (attributes == null && namespaceUri == null) {
+      _closeStartTag();
+      _sink
+        ..write('<')
+        ..write(_qname(prefix, localName))
+        ..write('/>');
+      return;
+    }
     writeStartElement(localName, prefix: prefix, namespaceUri: namespaceUri);
     if (attributes != null) {
       attributes.forEach(writeAttribute);
@@ -143,7 +151,7 @@ class XmlWriter {
     if (_stack.isEmpty) {
       throw StateError('No open element to close');
     }
-    final _OpenElement open = _stack.removeLast();
+    final qname = _stack.removeLast();
     if (_inStartTag) {
       _sink.write('/>');
       _inStartTag = false;
@@ -151,7 +159,7 @@ class XmlWriter {
     }
     _sink
       ..write('</')
-      ..write(open.qname)
+      ..write(qname)
       ..write('>');
   }
 
@@ -185,14 +193,4 @@ class XmlWriter {
     }
     return '$prefix:$localName';
   }
-}
-
-class _OpenElement {
-  _OpenElement({required this.qname, this.namespaceUri});
-
-  /// qname API.
-  final String qname;
-
-  /// namespaceUri API.
-  final String? namespaceUri;
 }

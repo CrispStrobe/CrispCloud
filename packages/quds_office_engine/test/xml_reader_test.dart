@@ -2,6 +2,19 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('XML writer keeps repeated local names scoped to their prefixes', () {
+    final writer = XmlWriter()..writeStartElement('root', namespaceUri: 'urn:r');
+    writer.writeStartElement('node', prefix: 'q', namespaceUri: 'urn:q');
+    writer.writeEmptyElement('node', prefix: 'v', namespaceUri: 'urn:v');
+    writer.writeEmptyElement('node', prefix: 'q');
+    writer.writeEmptyElement('node', prefix: '');
+    expect(
+      writer.toXml(),
+      '<root xmlns="urn:r"><q:node xmlns:q="urn:q">'
+      '<v:node xmlns:v="urn:v"/><q:node/><node/></q:node></root>',
+    );
+  });
+
   test('XML escaping preserves pairs and sanitizes isolated code units', () {
     final raw = String.fromCharCodes([
       0xD83D, 0xDE00, // Valid supplementary character before an escape.
