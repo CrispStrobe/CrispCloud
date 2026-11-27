@@ -2382,8 +2382,9 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_filters.dart": "08836e3f6081c7d3c932a760201e03d51b2cb2df315cd6e9e8abcea30e934130",
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_jbig2.dart": "c59ad0ce17305bf0bdcf77273ca1c122e4d26a79963f119446636dcb167a12eb",
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_jpx.dart": "e10dea809ff44eb33f0ccaa542db37d086e8a0545b1633fe186788134a3f7972",
+    "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_large_rgb.dart": "dbcf2dc61a3f506874b8ab606604f5ff8e4fdc733546c836725016cb06ea6bbb",
     "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_display_list.dart": "2bd2b7930ac830700d8ed5d611688a4991f546ad6b1cd0f702d45705a0ffc791",
-    "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart": "08570778dc908d88cc73bf6c7dde29faae725c9d06810cf90aecd1598177efc1",
+    "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart": "889d7f302c0a312f9fb8744687be2869d51e305f3c29696a65c2d765780aa235",
     "packages/quds_office_engine/lib/src/pdf/file/model/pdf_extra.dart": "c61825d6cdd886349670c77212945447c95093f42aad8d0ca4c6fc927de6f62c",
     "packages/quds_office_engine/lib/src/pdf/file/model/pdf_file.dart": "1bf9f10fd9aef2002503d54a80d87e289a39260e9e3e16a9183cf2ce8d268ca2",
     "packages/quds_office_engine/lib/src/pdf/file/text/pdf_cff_host.dart": "9d346ffd4c19ccf4f1f6be17223f13996c1faf208647b91645671c381c20c539",
@@ -3009,7 +3010,7 @@
     "packages/quds_office_engine/test/pdf_actual_text_scope_test.dart": "43e74d364fcdbd0784e1f52a68b44a6f15ef696674fe02c3b81e92ee14683a69",
     "packages/quds_office_engine/test/pdf_ccitt_test.dart": "20c6c66b1f080b0d5f8177cd302737d36114050de6623e5bdffaa1763b663298",
     "packages/quds_office_engine/test/pdf_cid_encoding_test.dart": "640c532144d9bc8caaf18315dd09fa6624cbd8f689e384089a867118dbfa1800",
-    "packages/quds_office_engine/test/pdf_file_test.dart": "40e50321b974620a85f7d1a5aed3f53fd50fe11aa24c90a0e5bef77fdec4fed4",
+    "packages/quds_office_engine/test/pdf_file_test.dart": "0a46c1dcb64082c5a77fa2e7c4d9cc5c0eb12cac9618d5285c129becea8a1f01",
     "packages/quds_office_engine/test/pdf_filter_expansion_test.dart": "b247d3fe57017c06a5f629c13ff03c62b1b6f5b63f41b52633841a1feb106a8d",
     "packages/quds_office_engine/test/pdf_image_interlace_test.dart": "f2b31c0e19bad7a69ca668d921f783ea67d3a27021175953f5ee35a2441469e7",
     "packages/quds_office_engine/test/pdf_logical_text_export_test.dart": "30e15e5f6ff1f3b2b1c6729db728fbc12c55475a6f27674dd72ab7ed1ee7097d",
@@ -3551,7 +3552,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "9e17dca0bd6b12de3851115ba64b9e5b06a7f746",
+  "source_commit": "9ffc8aa47a3bbb8075a4a17a67d29cfe2d4253ac",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

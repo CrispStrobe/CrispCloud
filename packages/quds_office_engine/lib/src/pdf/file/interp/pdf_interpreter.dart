@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -8,6 +9,7 @@ import '../cos/pdf_open_error.dart';
 import '../cos/pdf_store.dart';
 import '../decode/pdf_dct.dart';
 import '../decode/pdf_filters.dart';
+import '../decode/pdf_large_rgb.dart';
 import '../model/pdf_extra.dart';
 import '../model/pdf_page_info.dart';
 import '../text/pdf_cff_host.dart';
@@ -678,6 +680,33 @@ class PdfInterpreter {
       );
       return;
     }
+    if (decodedStream == null &&
+        pw * ph * 3 > PdfFilters.maxDecodedBytes &&
+        (frame.fill >> 24) & 0xff == 0xff &&
+        _isUnpredictedRgb(raw.dict)) {
+      try {
+        final image = decodeLargePdfRgb(raw.raw, pw, ph);
+        frame.ops.add(
+          PdfDrawImage(
+            x: math.min(x, x1),
+            y: math.min(y, y1),
+            width: (x1 - x).abs().clamp(1, 100000),
+            height: (y1 - y).abs().clamp(1, 100000),
+            bytes: image.rgb,
+            pixelWidth: image.width,
+            pixelHeight: image.height,
+            blend: frame.blend,
+          ),
+        );
+        return;
+      } on Exception catch (error) {
+        developer.log(
+          'RGB image decode failed: ${pw}x$ph, FlateDecode, ${error.runtimeType}',
+          name: 'crispoffice.pdf',
+          level: 900,
+        );
+      }
+    }
     final PdfFilterResult decoded =
         decodedStream ?? store.streamResult(raw, decodeDct: true);
     if (decoded.bytes == null) {
@@ -766,6 +795,31 @@ class PdfInterpreter {
         blend: frame.blend,
       ),
     );
+  }
+
+  bool _isUnpredictedRgb(PdfCosDict dict) {
+    final filter = store.deref(dict['Filter']);
+    if (filter is! PdfCosName ||
+        !const {'FlateDecode', 'Fl'}.contains(filter.value) ||
+        pdfCosInt(store.deref(dict['BitsPerComponent'])) != 8 ||
+        const [
+          'DecodeParms',
+          'Decode',
+          'Mask',
+          'SMask',
+          'ImageMask',
+        ].any((key) => dict[key] != null)) {
+      return false;
+    }
+    final space = store.deref(dict['ColorSpace']);
+    if (space is PdfCosName) return space.value == 'DeviceRGB';
+    if (space is! PdfCosArray || space.items.length != 2) return false;
+    final family = store.deref(space.items.first);
+    final profile = store.deref(space.items.last);
+    return family is PdfCosName &&
+        family.value == 'ICCBased' &&
+        profile is PdfCosStream &&
+        pdfCosInt(store.deref(profile.dict['N'])) == 3;
   }
 
   bool _isJpeg(PdfCosDict dict) {

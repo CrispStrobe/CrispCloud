@@ -33,6 +33,58 @@ void main() {
     return doc.save();
   }
 
+  test('large ICC RGB page image renders under the general stream cap', () {
+    const width = 5000;
+    const height = 4500;
+    const content = 'q 612 0 0 792 0 0 cm /Im0 Do Q';
+    final row = Uint8List(width * 3);
+    for (var p = 0; p < row.length; p += 3) {
+      row[p] = 210;
+      row[p + 1] = 100;
+      row[p + 2] = 20;
+    }
+    final compressed = BytesBuilder();
+    final encoder = ZLibEncoder().startChunkedConversion(
+      ChunkedConversionSink<List<int>>.withCallback((chunks) {
+        for (final chunk in chunks) {
+          compressed.add(chunk);
+        }
+      }),
+    );
+    for (var y = 0; y < height; y++) {
+      encoder.add(row);
+    }
+    encoder.close();
+    final bytes = compressed.takeBytes();
+    final file = PdfFile.open(_pdfParts([
+      utf8.encode('1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n'),
+      utf8.encode('2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n'),
+      utf8.encode(
+        '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+        '/Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >> endobj\n',
+      ),
+      utf8.encode(
+        '4 0 obj << /Length ${content.length} >> stream\n$content\nendstream\nendobj\n',
+      ),
+      [
+        ...utf8.encode(
+          '5 0 obj << /Type /XObject /Subtype /Image /Width $width /Height $height '
+          '/ColorSpace [/ICCBased 6 0 R] /BitsPerComponent 8 '
+          '/Filter /FlateDecode /Length ${bytes.length} >> stream\n',
+        ),
+        ...bytes,
+        ...utf8.encode('\nendstream\nendobj\n'),
+      ],
+      utf8.encode('6 0 obj << /N 3 /Length 1 >> stream\nx\nendstream\nendobj\n'),
+    ]));
+    final page = file.displayList(0);
+    final image = page.ops.whereType<PdfDrawImage>().single;
+    expect(page.issues, isEmpty);
+    expect(image.placeholder, isFalse);
+    expect((image.pixelWidth, image.pixelHeight), (2560, 2304));
+    expect(image.bytes.take(3), [210, 100, 20]);
+  });
+
   test('Flate output limits stop expansion bombs with a typed limit error', () {
     final Uint8List bomb = PdfFlate.compress(Uint8List(1024 * 1024));
     expect(

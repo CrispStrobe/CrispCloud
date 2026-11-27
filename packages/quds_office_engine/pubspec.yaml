@@ -49,6 +49,7 @@ environment:
   sdk: ^3.12.0
 
 dependencies:
+  archive: ^4.6.0
   legacy_doc_parser:
     path: ../legacy_doc_parser
   characters: ^1.4.1
