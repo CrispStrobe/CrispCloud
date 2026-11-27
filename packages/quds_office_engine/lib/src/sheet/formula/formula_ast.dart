@@ -15,6 +15,7 @@ enum FormulaTokenKind {
   name,
   cell,
   range,
+  wholeAxisRange,
   op,
   comma,
   lparen,
@@ -445,6 +446,58 @@ class RangeNode extends FormulaNode {
     }
     return values;
   }
+}
+
+/// An entire row or column span. Only callers that can preserve the semantics
+/// of omitted blank cells may consume this reference sparsely.
+class WholeAxisRangeNode extends FormulaNode {
+  WholeAxisRangeNode(this.range, {this.sheetName});
+
+  final SmlRange range;
+  final String? sheetName;
+
+  SmlWorksheet? target(SmlWorkbook book, SmlWorksheet current) =>
+      sheetName == null ? current : book.sheetByName(sheetName!);
+
+  Iterable<SmlCellRef> storedCells(
+    SmlWorksheet sheet,
+    void Function() visit,
+  ) sync* {
+    for (final row in sheet.rows.values) {
+      visit();
+      if (row.index < range.minRow || row.index > range.maxRow) continue;
+      for (final cell in row.cells.values) {
+        visit();
+        if (cell.ref.col >= range.minCol &&
+            cell.ref.col <= range.maxCol &&
+            (cell.value != null || cell.formula?.isNotEmpty == true)) {
+          yield cell.ref;
+        }
+      }
+    }
+  }
+
+  Object valuesForSum(FormulaContext ctx) {
+    final sheet = target(ctx.workbook, ctx.sheet);
+    if (sheet == null) return ctx.error('#REF!');
+    final refs = storedCells(sheet, () => ctx.budget?.spendRange(1)).toList()
+      ..sort((a, b) {
+        final rowOrder = a.row.compareTo(b.row);
+        return rowOrder == 0 ? a.col.compareTo(b.col) : rowOrder;
+      });
+    return [
+      for (final ref in refs)
+        if (ctx.valueOf(ref, onSheet: sheet) case final value?
+            when value is num || value is FormulaErrorValue)
+          value,
+    ];
+  }
+
+  @override
+  Object? eval(FormulaContext ctx) => ctx.error(
+    '#ERROR! Unsupported whole-row or whole-column operation',
+    unsupported: true,
+  );
 }
 
 /// Class BinaryNode.

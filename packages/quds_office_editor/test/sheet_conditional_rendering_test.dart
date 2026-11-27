@@ -30,6 +30,8 @@ Future<Uint8List> _paint(
   SmlWorksheet sheet, {
   SmlWorkbook? workbook,
   bool frozen = false,
+  double zoom = 1,
+  bool editing = false,
 }) async {
   await tester.pumpWidget(
     Directionality(
@@ -45,10 +47,17 @@ Future<Uint8List> _paint(
               sheet: sheet,
               workbook: workbook,
               selection: SelectionMatrix(
-                anchor: const SmlCellRef(8, 8),
-                focus: const SmlCellRef(8, 8),
+                anchor: editing
+                    ? const SmlCellRef(0, 0)
+                    : const SmlCellRef(8, 8),
+                focus: editing
+                    ? const SmlCellRef(0, 0)
+                    : const SmlCellRef(8, 8),
               ),
               config: _config,
+              viewport: VirtualViewport(scale: zoom),
+              editing: editing,
+              editText: editing ? sheet.cellA1('A1').asString : '',
               frozenRows: frozen ? 1 : 0,
               frozenCols: frozen ? 1 : 0,
             ),
@@ -106,6 +115,72 @@ SmlConditionalRule _rule({
 );
 
 void main() {
+  testWidgets('native cell borders remain visible with gridlines off', (
+    tester,
+  ) async {
+    final sheet = _sheet(text: '');
+    sheet.cellA1('A1').styleIndex = 1;
+    final book = SmlWorkbook(
+      sheets: [sheet],
+      styles: SmlStyleSheet.parse(
+        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        '<borders count="2"><border/><border>'
+        '<right style="medium"><color rgb="FF8833CC"/></right>'
+        '<bottom style="thin"><color rgb="FF22AA55"/></bottom>'
+        '</border></borders><cellXfs count="2">'
+        '<xf borderId="0"/><xf borderId="1"/></cellXfs></styleSheet>',
+      ),
+    );
+    final pixels = await _paint(tester, sheet, workbook: book);
+    expect(_pixelsOf(pixels, 0x8833CC), greaterThan(10));
+    expect(_pixelsOf(pixels, 0x22AA55), greaterThan(10));
+  });
+
+  testWidgets('general numbers align right while explicit left wins', (
+    tester,
+  ) async {
+    final sheet = _sheet(text: '', font: 'E03060');
+    final cell = sheet.cellA1('A1')..value = 123;
+    double meanInkX(Uint8List pixels) {
+      var sum = 0;
+      var count = 0;
+      for (var i = 0; i < pixels.length; i += 4) {
+        if (pixels[i] == 0xE0 &&
+            pixels[i + 1] == 0x30 &&
+            pixels[i + 2] == 0x60) {
+          sum += (i ~/ 4) % 256;
+          count++;
+        }
+      }
+      expect(count, greaterThan(0));
+      return sum / count;
+    }
+
+    final general = meanInkX(await _paint(tester, sheet));
+    cell.horizontalAlign = SmlHAlign.left;
+    final left = meanInkX(await _paint(tester, sheet));
+    expect(general, greaterThan(left + 8));
+  });
+
+  testWidgets(
+    'worksheet zoom scales cell text in both edit and display modes',
+    (tester) async {
+      final sheet = _sheet(text: 'MM', font: 'E03060');
+      for (final editing in [false, true]) {
+        final small = _pixelsOf(
+          await _paint(tester, sheet, zoom: 0.60, editing: editing),
+          0xE03060,
+        );
+        final large = _pixelsOf(
+          await _paint(tester, sheet, zoom: 1.74, editing: editing),
+          0xE03060,
+        );
+        expect(small, greaterThan(0));
+        expect(large, greaterThan(small * 3), reason: 'editing=$editing');
+      }
+    },
+  );
+
   testWidgets('icon sets visibly paint without mutating values or rules', (
     tester,
   ) async {

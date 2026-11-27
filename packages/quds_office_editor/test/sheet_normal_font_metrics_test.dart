@@ -201,6 +201,7 @@ void main() {
         final controller = SheetEditorController.fromBytes(_source());
         addTearDown(controller.dispose);
         final original = controller.sheet;
+        final originalRowHeight = original.rowHeightAt(1);
         final another = SmlWorksheet(name: 'Other', sheetId: 2)
           ..setColumnWidth(1, 120)
           ..setRowHeight(1, 32);
@@ -213,18 +214,19 @@ void main() {
         controller.setActiveSheet(1);
         controller.commitResize();
         expect(original.columnWidth(1), column ? 96 : 166);
-        expect(original.rowHeightAt(1), column ? 20 : 48);
+        expect(original.rowHeightAt(1), column ? originalRowHeight : 48);
         expect(another.columnWidth(1), 120);
         expect(another.rowHeightAt(1), 32);
         controller.undo();
         expect(original.columnWidth(1), 166);
         expect(original.exportColumnWidth(1), 8.72);
         expect(original.rowHeights.containsKey(1), isFalse);
+        expect(original.rowHeightAt(1), originalRowHeight);
         expect(another.columnWidth(1), 120);
         expect(another.rowHeightAt(1), 32);
         controller.redo();
         expect(original.columnWidth(1), column ? 96 : 166);
-        expect(original.rowHeightAt(1), column ? 20 : 48);
+        expect(original.rowHeightAt(1), column ? originalRowHeight : 48);
         expect(another.columnWidth(1), 120);
         expect(another.rowHeightAt(1), 32);
       },

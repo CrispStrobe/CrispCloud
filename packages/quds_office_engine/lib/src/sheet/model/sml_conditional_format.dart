@@ -497,6 +497,7 @@ class _ConditionalFormulas {
     ExternalCellNode() => true,
     CellNode() => _valid(node.ref),
     RangeNode() => _rangeAllowed(node.range),
+    WholeAxisRangeNode() => false,
     BinaryNode() => _allowed(node.left, sheet) && _allowed(node.right, sheet),
     UnaryNode() => _allowed(node.expr, sheet),
     CallNode() =>

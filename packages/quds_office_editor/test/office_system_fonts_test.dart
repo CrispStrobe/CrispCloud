@@ -29,6 +29,20 @@ void main() {
     );
   });
 
+  test(
+    'installed Carlito metrics are discoverable by the authored family',
+    () async {
+      final bytes = await installedFontFixture('Carlito');
+      await File('${primary.path}/Carlito-Regular.ttf').writeAsBytes(bytes);
+      final face = (await installed.load(
+        searchDirectories: [primary.path],
+      )).single;
+      expect(face.family, 'Carlito');
+      expect(face.weight, 400);
+      expect(face.italic, isFalse);
+    },
+  );
+
   test('installed CFF metrics are available through editor opt-in', () async {
     // Synthetic two-glyph face using the family expected by the discovery list.
     final bytes = base64Decode(

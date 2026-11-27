@@ -237,11 +237,10 @@ class PdfFile {
           ),
     ];
     try {
-      return PdfInterpreter(store, layers: layers).interpret(
-        page: rec.info,
-        pageDict: rec.dict,
-        hotspots: spots,
-      );
+      return PdfInterpreter(
+        store,
+        layers: layers,
+      ).interpret(page: rec.info, pageDict: rec.dict, hotspots: spots);
     } on Exception catch (error) {
       return PdfDisplayList(
         page: rec.info,
@@ -433,6 +432,14 @@ class PdfFile {
         if (i >= 0 && i < _pages.length) PdfGraftSlot.page(this, i),
     ];
     return PdfPageGraft.write(slots);
+  }
+
+  /// Writes selected vector pages onto paper for printing or PDF export.
+  Uint8List placePagesOnPaper(List<int> indices, PdfPaperPlacement placement) {
+    return PdfPageGraft.write([
+      for (final index in indices)
+        PdfGraftSlot.page(this, index, placement: placement),
+    ]);
   }
 
   /// setLayerVisible API.
@@ -695,10 +702,12 @@ class PdfFile {
         : store.streamBytes(catalog['Metadata']);
     if (meta != null) {
       xmp = utf8.decode(meta, allowMalformed: true);
-      final RegExpMatch? p = RegExp(r'pdfaid:part[>\"]+\s*(\d+)')
-          .firstMatch(xmp);
-      final RegExpMatch? c = RegExp(r'pdfaid:conformance[>\"]+\s*([A-Z])')
-          .firstMatch(xmp);
+      final RegExpMatch? p = RegExp(
+        r'pdfaid:part[>\"]+\s*(\d+)',
+      ).firstMatch(xmp);
+      final RegExpMatch? c = RegExp(
+        r'pdfaid:conformance[>\"]+\s*([A-Z])',
+      ).firstMatch(xmp);
       part = p?.group(1);
       conf = c?.group(1);
     }

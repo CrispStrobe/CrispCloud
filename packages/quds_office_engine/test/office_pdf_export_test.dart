@@ -7,6 +7,96 @@ import 'package:test/test.dart';
 void main() {
   final SfntFont? font = _tryFont();
 
+  test('printing places a vector PDF on landscape paper with margins', () {
+    final canvas = PdfCanvas(200, 300)..fillRect(0, 0, 200, 300, 'FFFFFF');
+    final source = PdfFile.open(
+      (PdfDocument()..addPage(
+            PdfPage(
+              width: 200,
+              height: 300,
+              content: canvas.toStream(),
+              links: const [
+                PdfLinkAnnot(
+                  x: 0,
+                  y: 0,
+                  width: 20,
+                  height: 20,
+                  uri: 'https://example.com',
+                ),
+              ],
+            ),
+          ))
+          .save(),
+    );
+    final output = PdfFile.open(
+      source.placePagesOnPaper(
+        [0],
+        const PdfPaperPlacement(
+          paper: (width: 300, height: 500),
+          landscape: true,
+          margin: 50,
+          border: true,
+        ),
+      ),
+    );
+    final page = output.pageAt(0);
+    expect((page.width, page.height), (500, 300));
+    expect(output.displayList(0).error, isNull);
+    final link = output.annotsOn(0).single;
+    expect(link.uri, 'https://example.com');
+    expect(link.rect.x, closeTo(183.3333, 0.001));
+    expect(link.rect.y, closeTo(50, 0.001));
+    expect(link.rect.width, closeTo(13.3333, 0.001));
+    expect(source.pageAt(0).width, 200);
+    final content = output.store.asArray(output.pageDict(0)['Contents'])!;
+    final border = output.store.streamBytes(content.items.last)!;
+    expect(
+      String.fromCharCodes(border),
+      contains('400.000000 200.000000 re S'),
+    );
+  });
+
+  test(
+    'sheet overrides repaginate while retaining the worksheet print area',
+    () {
+      final sheet =
+          SmlWorksheet(
+              name: 'Wide',
+              sheetId: 1,
+              pageSetup: SmlPageSetup(orientation: SmlPageOrientation.portrait),
+            )
+            ..printArea = const SmlRange(SmlCellRef(0, 0), SmlCellRef(8, 0))
+            ..cellA1('A1').value = 'First'
+            ..cellA1('I1').value = 'Last'
+            ..cellA1('J1').value = 'Excluded';
+      for (var col = 0; col < 10; col++) {
+        sheet.setColumnWidth(col, 300);
+      }
+      final book = SmlWorkbook(sheets: [sheet]);
+      final pdf = PdfFile.open(
+        OfficePdfExport.workbook(
+          book,
+          options: const PdfSheetPrintOptions(
+            useWorksheetPageSetup: true,
+            paperOverride: (width: 612, height: 792),
+            landscapeOverride: true,
+            marginOverride: 18,
+            fitOverride: true,
+            fitWidthOnly: true,
+            pageBorder: true,
+          ),
+        ),
+      );
+      expect(pdf.pageCount, 1);
+      expect((pdf.pageAt(0).width, pdf.pageAt(0).height), (792, 612));
+      final text = pdf.displayList(0).runs.map((run) => run.text).join(' ');
+      expect(text, contains('First'));
+      expect(text, contains('Last'));
+      expect(text, isNot(contains('Excluded')));
+      expect(sheet.pageSetup!.orientation, SmlPageOrientation.portrait);
+    },
+  );
+
   for (final bool cropped in <bool>[false, true]) {
     test('PPT PDF draws the authored picture border after crop=$cropped', () {
       final OfficeVisual picture = OfficeVisual(
@@ -540,6 +630,326 @@ void main() {
     expect(_ascii(landscape), contains('/MediaBox [0 0 841.890 595.280]'));
   });
 
+  test('worksheet charts at either printable edge are clipped safely', () {
+    final sheet = SmlWorksheet(name: 'Charts', sheetId: 1)
+      ..printArea = const SmlRange(SmlCellRef(0, 0), SmlCellRef(1, 1))
+      ..setColumnWidth(0, 164)
+      ..setColumnWidth(1, 40)
+      ..setRowHeight(0, 140)
+      ..setRowHeight(1, 24);
+    for (final (col, row, title) in [
+      (1, 0, 'Right edge'),
+      (0, 1, 'Bottom edge'),
+    ]) {
+      sheet.drawings.add(
+        SmlDrawing(
+          visual: OfficeVisual(
+            kind: OfficeVisualKind.chartColumn,
+            title: title,
+            points: OfficeVisual.sampleSeries(),
+          ),
+          col: col,
+          row: row,
+        ),
+      );
+    }
+
+    final bytes = OfficePdfExport.workbook(
+      SmlWorkbook(sheets: [sheet]),
+      options: const PdfSheetPrintOptions(
+        pageWidth: 200,
+        pageHeight: 200,
+        margin: 20,
+        showGridlines: false,
+        showHeadings: false,
+      ),
+    );
+    expect(_pageCount(bytes), 1);
+    final body = _inflated(bytes).join();
+    expect(body, contains('Right edge'));
+    expect(body, contains('Bottom edge'));
+    expect(RegExp(r'W n').allMatches(body), hasLength(2));
+    expect(PdfFile.open(bytes).displayList(0).error, isNull);
+  });
+
+  test('fit to page tolerates floating-point width accumulation', () {
+    final sheet = SmlWorksheet(
+      name: 'Exact width',
+      sheetId: 1,
+      printArea: SmlRange.parse('A1:F1'),
+    );
+    for (var col = 0; col < 6; col++) {
+      sheet.setColumnWidth(col, 40);
+    }
+    sheet.cellA1('F1').value = 'Last column';
+    final bytes = OfficePdfExport.workbook(
+      SmlWorkbook(sheets: [sheet]),
+      options: const PdfSheetPrintOptions(
+        pageWidth: 100,
+        pageHeight: 200,
+        margin: 0,
+        showHeadings: false,
+        fitToPage: true,
+      ),
+    );
+    expect(_pageCount(bytes), 1);
+    expect(_inflated(bytes).join(), contains('Last column'));
+  });
+
+  test('a native two-cell drawing continues across both page breaks', () {
+    final sheet =
+        SmlWorksheet(name: 'Drawing', sheetId: 1, pageSetup: SmlPageSetup())
+          ..setColumnWidth(0, 120)
+          ..setRowHeight(0, 120)
+          ..importManualPageBreak(1, rows: false)
+          ..importManualPageBreak(1, rows: true);
+    sheet.drawings.add(
+      SmlDrawing(
+        col: 0,
+        row: 0,
+        offsetX: 16,
+        offsetY: 20,
+        importedEndMarker: (col: 1, row: 1, colEmu: 508000, rowEmu: 508000),
+        visual: OfficeVisual(
+          kind: OfficeVisualKind.chartColumn,
+          title: 'Across pages',
+          points: OfficeVisual.sampleSeries(),
+        ),
+      ),
+    );
+
+    final bytes = OfficePrint.workbook(SmlWorkbook(sheets: [sheet]));
+    final pdf = PdfFile.open(bytes);
+    expect(pdf.pageCount, 4);
+    for (var index = 0; index < pdf.pageCount; index++) {
+      final content = pdf.store.streamBytes(pdf.pageDict(index)['Contents'])!;
+      expect(String.fromCharCodes(content), contains('W n'));
+      expect(pdf.displayList(index).error, isNull);
+    }
+  });
+
+  test('workbook print respects imported landscape paper and fit to page', () {
+    final sheet = SmlWorksheet(
+      name: 'Worksheet',
+      sheetId: 1,
+      pageSetup: SmlPageSetup(
+        orientation: SmlPageOrientation.landscape,
+        paperSize: 8,
+        paperWidthIn: 11.69,
+        paperHeightIn: 16.54,
+        fitToPage: true,
+      ),
+    );
+    sheet.cellA1('A1').value = 'Title';
+    sheet.cellA1('Q45').value = 'End';
+    final blank = SmlWorksheet(name: 'Blank', sheetId: 2);
+    final book = SmlWorkbook(sheets: [sheet, blank]);
+
+    final pdf = OfficePrint.workbook(book);
+
+    expect(_ascii(pdf), contains('/MediaBox [0 0 1190.880 841.680]'));
+    expect(_pageCount(pdf), 1);
+    expect(_inflated(pdf).join(), contains('End'));
+  });
+
+  test(
+    'workbook print projects native columns using the supplied Normal face',
+    () {
+      final book = SheetDeserializer().readBytes(
+        File(
+          'test/fixtures/fidelity/sheet-normal-font-native.xlsx',
+        ).readAsBytesSync(),
+      );
+      final sheet = book.firstSheet;
+      sheet
+        ..printArea = SmlRange.parse('A1:B1')
+        ..pageSetup = SmlPageSetup(
+          paperWidthIn: 2.5,
+          marginLeftIn: 0,
+          marginRightIn: 0,
+        );
+      sheet.importColumnWidth(0, 10);
+      sheet.importColumnWidth(1, 10);
+      final normal = SfntFont.parse(
+        File(
+          '../quds_office_editor/fonts/LiberationMono-Regular.ttf',
+        ).readAsBytesSync(),
+      );
+
+      expect(_pageCount(OfficePrint.workbook(book)), 1);
+      expect(_pageCount(OfficePrint.workbook(book, font: normal)), 2);
+      expect(book.columnMetrics, isNull);
+      expect(sheet.columnWidth(0), 70);
+      expect(sheet.exportColumnWidth(0), 10);
+
+      sheet.setColumnWidth(1, 40);
+      expect(_pageCount(OfficePrint.workbook(book, font: normal)), 1);
+      expect(sheet.columnWidth(1), 40);
+    },
+  );
+
+  test('XLSX print uses the Normal digit rounded in points', () {
+    final source = OpcPackage.openBytes(
+      File(
+        'test/fixtures/fidelity/sheet-normal-font-native.xlsx',
+      ).readAsBytesSync(),
+    );
+    final styles = source.getPart('/xl/styles.xml')!;
+    styles.writeText(
+      styles.readText().replaceFirst(
+        '<sz val="24"/><name val="Liberation Mono"/>',
+        '<sz val="10"/><name val="Liberation Sans"/>',
+      ),
+    );
+    final book = SheetDeserializer().read(source);
+    final sheet = book.firstSheet;
+    sheet
+      ..printArea = SmlRange.parse('A1:B1')
+      ..pageSetup = SmlPageSetup(
+        paperWidthIn: 3.2,
+        marginLeftIn: 0,
+        marginRightIn: 0,
+      );
+    sheet.importColumnWidth(0, 20);
+    sheet.importColumnWidth(1, 20);
+    final normal = SfntFont.parse(
+      File(
+        '../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+      ).readAsBytesSync(),
+    );
+
+    // At 72 dpi the digit rounds to 6 pt and the two columns need 240 pt.
+    // Rounding first at 96 dpi would incorrectly fit them on this 230.4 pt page.
+    expect(_pageCount(OfficePrint.workbook(book, font: normal)), 2);
+    expect(sheet.columnWidth(0), 140);
+    sheet.setColumnWidth(1, 100);
+    expect(_pageCount(OfficePrint.workbook(book, font: normal)), 1);
+  });
+
+  test('XLSX manual page breaks survive saving and guide print pagination', () {
+    final sheet = SmlWorksheet(
+      name: 'Breaks',
+      sheetId: 1,
+      pageSetup: SmlPageSetup(),
+      printArea: SmlRange.parse('B2:E6'),
+    );
+    sheet
+      ..cellA1('B2').value = 'TopLeft'
+      ..cellA1('E2').value = 'TopRight'
+      ..cellA1('B6').value = 'BottomLeft'
+      ..cellA1('E6').value = 'BottomRight';
+    final book = SmlWorkbook(sheets: [sheet]);
+    final package = OpcPackage.openBytes(SheetSerializer().writeBytes(book));
+    final part = package.getPart('/xl/worksheets/sheet1.xml')!;
+    part.writeText(
+      part.readText().replaceFirst('</worksheet>', '''
+<rowBreaks count="3" manualBreakCount="2">
+  <brk id="1" max="4" man="1"/>
+  <brk id="4" max="4" man="true"/>
+  <brk id="5" max="4"/>
+</rowBreaks>
+<colBreaks count="1" manualBreakCount="1">
+  <brk id="3" min="1" max="5" man="1"/>
+</colBreaks></worksheet>'''),
+    );
+    final imported = SheetDeserializer().readBytes(package.save());
+    final reopened = SheetDeserializer().readBytes(
+      SheetSerializer().writeBytes(imported),
+    );
+
+    final pdf = PdfFile.open(OfficePrint.workbook(reopened));
+    expect(pdf.pageCount, 4);
+    for (final (index, label) in [
+      'TopLeft',
+      'BottomLeft',
+      'TopRight',
+      'BottomRight',
+    ].indexed) {
+      expect(pdf.displayList(index).runs.map((run) => run.text), [label]);
+    }
+    final fit = OfficePrint.workbook(
+      reopened,
+      options: const PdfSheetPrintOptions(
+        useWorksheetPageSetup: true,
+        fitOverride: true,
+      ),
+    );
+    expect(_pageCount(fit), 1);
+  });
+
+  test('sheet PDF paints a merged cell across a horizontal page boundary', () {
+    final sheet = SmlWorksheet(
+      name: 'Merged',
+      sheetId: 1,
+      pageSetup: SmlPageSetup(
+        paperWidthIn: 1.5,
+        marginLeftIn: 10 / 72,
+        marginRightIn: 10 / 72,
+      ),
+    );
+    sheet
+      ..setColumnWidth(0, 100)
+      ..setColumnWidth(1, 100)
+      ..cellA1('A1').value = 'Merged label across pages'
+      ..mergeAndCenter(SmlRange.parse('A1:B1'));
+    final bytes = OfficePrint.workbook(SmlWorkbook(sheets: [sheet]));
+    expect(_pageCount(bytes), 2);
+
+    final pages = _inflated(
+      bytes,
+    ).where((stream) => stream.contains('Merged label across pages'));
+    expect(pages, hasLength(2));
+    for (final page in pages) {
+      expect(
+        page,
+        contains(RegExp(r'10(?:\.0+)? [\d.]+ 75(?:\.0+)? [\d.]+ re\s+W n')),
+      );
+    }
+  });
+
+  test('workbook print respects the authored order of page bands', () {
+    final setup = SmlPageSetup(paperWidthIn: 3, paperHeightIn: 3);
+    final sheet = SmlWorksheet(
+      name: 'Page order',
+      sheetId: 1,
+      pageSetup: setup,
+    );
+    sheet.columnWidths
+      ..[0] = 110
+      ..[1] = 110;
+    sheet.rowHeights
+      ..[0] = 110
+      ..[1] = 110;
+    sheet.cellA1('A1').value = 'TopLeft';
+    sheet.cellA1('B1').value = 'TopRight';
+    sheet.cellA1('A2').value = 'BottomLeft';
+    sheet.cellA1('B2').value = 'BottomRight';
+    final book = SmlWorkbook(sheets: [sheet]);
+
+    List<String> labelsInPageOrder() {
+      final bytes = OfficePrint.workbook(book);
+      expect(_pageCount(bytes), 4);
+      return RegExp(r'TopLeft|TopRight|BottomLeft|BottomRight')
+          .allMatches(_inflated(bytes).join())
+          .map((match) => match.group(0)!)
+          .toList();
+    }
+
+    expect(labelsInPageOrder(), [
+      'TopLeft',
+      'BottomLeft',
+      'TopRight',
+      'BottomRight',
+    ]);
+    setup.printAcrossThenDown = true;
+    expect(labelsInPageOrder(), [
+      'TopLeft',
+      'TopRight',
+      'BottomLeft',
+      'BottomRight',
+    ]);
+  });
+
   test('PowerPoint PDF emits one page per slide including rotation', () {
     final PmlPresentation deck = PmlPresentation(
       slides: <PmlSlide>[
@@ -1018,6 +1428,243 @@ void main() {
     );
     expect(opened.firstSheet.headerFooter?.footerLeft, 'Confidential');
     expect(opened.firstSheet.printTitleRows?.minRow, 0);
+  });
+
+  test('print quantizes imported row heights before packing a page', () {
+    final sheet = SmlWorksheet(name: 'Rows', sheetId: 1)
+      ..printArea = SmlRange.parse('A1:A3')
+      ..pageSetup = SmlPageSetup();
+    for (var row = 0; row < 3; row++) {
+      sheet.rowHeights[row] = SmlWorksheet.rowHeightFromExcel(20.75);
+      sheet.cell(SmlCellRef(0, row)).value = row;
+    }
+    final book = SheetDeserializer().readBytes(
+      SheetSerializer().writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final pdf = OfficePrint.workbook(
+      book,
+      options: const PdfSheetPrintOptions(
+        useWorksheetPageSetup: true,
+        paperOverride: (width: 180, height: 81),
+        marginOverride: 10,
+      ),
+    );
+    expect(_pageCount(pdf), 1);
+    expect(
+      SmlWorksheet.rowHeightToExcel(book.firstSheet.rowHeightAt(0)),
+      closeTo(20.75, 0.001),
+    );
+  });
+
+  test('native vertical alignment positions PDF cell text', () {
+    final styles = SmlStyleSheet.parse('''
+<styleSheet xmlns="${OfficeNamespaces.x}">
+  <cellStyleXfs count="1"><xf><alignment vertical="top"/></xf></cellStyleXfs>
+  <cellXfs count="3">
+    <xf xfId="0" applyAlignment="0"><alignment vertical="bottom"/></xf>
+    <xf><alignment vertical="center"/></xf>
+    <xf><alignment vertical="bottom"/></xf>
+  </cellXfs>
+</styleSheet>''');
+    final sheet = SmlWorksheet(
+      name: 'Aligned',
+      sheetId: 1,
+      pageSetup: SmlPageSetup(),
+    );
+    sheet.rowHeights[0] = SmlWorksheet.rowHeightFromExcel(60);
+    for (final (column, label) in ['T', 'C', 'B'].indexed) {
+      sheet.cell(SmlCellRef(column, 0))
+        ..styleIndex = column
+        ..value = label;
+    }
+    final book = SmlWorkbook(sheets: [sheet], styles: styles);
+    final pdf = PdfFile.open(OfficePrint.workbook(book));
+    final runs = pdf.displayList(0).runs;
+    double y(String text) => runs.singleWhere((run) => run.text == text).y;
+    expect(y('C') - y('T'), closeTo(23.5, 0.5));
+    expect(y('B') - y('C'), closeTo(23.5, 0.5));
+
+    final derived = styles.xfFor(align: SmlHAlign.center, baseStyleIndex: 0);
+    expect(styles.verticalAlignAt(derived), SmlVAlign.top);
+    final reopened = SmlStyleSheet.parse(styles.toXml());
+    expect(reopened.verticalAlignAt(derived), SmlVAlign.top);
+  });
+
+  test('worksheet page tokens count the selected print job', () {
+    final first = SmlWorksheet(
+      name: 'First',
+      sheetId: 1,
+      pageSetup: SmlPageSetup(firstPageNumber: 3, useFirstPageNumber: true),
+      headerFooter: SmlHeaderFooter(footerCenter: 'Page &P of &N'),
+    );
+    first
+      ..cellA1('A1').value = 'First page'
+      ..cellA1('A2').value = 'Second page'
+      ..importManualPageBreak(1, rows: true);
+    final blank = SmlWorksheet(name: 'Blank', sheetId: 2);
+    final last = SmlWorksheet(
+      name: 'Last',
+      sheetId: 3,
+      pageSetup: SmlPageSetup(firstPageNumber: 7, useFirstPageNumber: true),
+      headerFooter: SmlHeaderFooter(footerCenter: 'Page &P of &N'),
+    )..cellA1('A1').value = 'Last page';
+    final book = SmlWorkbook(sheets: [first, blank, last]);
+
+    final all = PdfFile.open(OfficePrint.workbook(book));
+    expect(all.pageCount, 3);
+    for (var i = 0; i < all.pageCount; i++) {
+      expect(
+        all.displayList(i).runs.map((run) => run.text),
+        contains('Page ${i + 3} of 3'),
+      );
+    }
+    final selected = PdfFile.open(
+      OfficePrint.workbook(
+        book,
+        settings: const OfficePrintSettings(pageFrom: 3, pageTo: 3),
+      ),
+    );
+    expect(selected.pageCount, 1);
+    expect(
+      selected.displayList(0).runs.map((run) => run.text),
+      contains('Page 7 of 1'),
+    );
+  });
+
+  test(
+    'sheet print includes empty fills and borders within the print area',
+    () {
+      final sheet = SmlWorksheet(
+        name: 'Template',
+        sheetId: 1,
+        pageSetup: SmlPageSetup(
+          paperWidthIn: 2.5,
+          marginLeftIn: 15 / 72,
+          marginRightIn: 15 / 72,
+        ),
+      );
+      sheet
+        ..cellA1('A1').value = 'Form'
+        ..cellA1('B1').fillRgb = 'FFFF00'
+        ..cellA1('C1').borderRgb = '000000'
+        ..cellA1('D1').fontBold = true;
+      for (var col = 0; col < 4; col++) {
+        sheet.setColumnWidth(col, 120);
+      }
+      final book = SmlWorkbook(sheets: [sheet]);
+      expect(_pageCount(OfficePrint.workbook(book)), 3);
+
+      sheet.printArea = SmlRange.parse('A1:B1');
+      expect(_pageCount(OfficePrint.workbook(book)), 2);
+    },
+  );
+
+  test('implicit print columns use Normal digits and print padding', () {
+    final book = SheetDeserializer().readBytes(
+      File(
+        'test/fixtures/fidelity/sheet-normal-font-native.xlsx',
+      ).readAsBytesSync(),
+    );
+    final sheet = book.firstSheet;
+    sheet
+      ..pageSetup = SmlPageSetup()
+      ..printArea = SmlRange.parse('A1:B1')
+      ..importDefaultColumnWidth();
+    sheet.columnWidths.clear();
+    sheet.importColumnWidth(0, 7);
+    final normal = SfntFont.parse(
+      File(
+        '../quds_office_editor/fonts/LiberationMono-Regular.ttf',
+      ).readAsBytesSync(),
+    );
+    const options = PdfSheetPrintOptions(
+      useWorksheetPageSetup: true,
+      paperOverride: (width: 220, height: 300),
+      marginOverride: 10,
+    );
+    expect(
+      _pageCount(OfficePrint.workbook(book, font: normal, options: options)),
+      2,
+    );
+    sheet.setColumnWidth(1, 40);
+    expect(
+      _pageCount(OfficePrint.workbook(book, font: normal, options: options)),
+      1,
+    );
+  });
+
+  test('trailing blank print pages are omitted from an inferred range', () {
+    final sheet = SmlWorksheet(name: 'Form', sheetId: 1)
+      ..pageSetup = SmlPageSetup()
+      ..setColumnWidth(0, 100)
+      ..setColumnWidth(1, 100)
+      ..cellA1('A1').value = 'First'
+      ..cellA1('A3').value = 'Third'
+      ..cellA1('B1').borderRgb = '000000'
+      ..cellA1('B2').fillRgb = 'FFFFFF'
+      ..cellA1('B3').fillRgb = 'FFFFFF';
+    for (var row = 0; row < 3; row++) {
+      sheet.setRowHeight(row, 100);
+    }
+    const options = PdfSheetPrintOptions(
+      useWorksheetPageSetup: true,
+      paperOverride: (width: 140, height: 120),
+      marginOverride: 10,
+    );
+    final book = SmlWorkbook(sheets: [sheet]);
+    expect(_pageCount(OfficePrint.workbook(book, options: options)), 4);
+
+    sheet.printArea = SmlRange.parse('A1:B3');
+    expect(_pageCount(OfficePrint.workbook(book, options: options)), 6);
+  });
+
+  test(
+    'XLSX line feeds survive round-trip and appear on separate PDF lines',
+    () {
+      final sheet = SmlWorksheet(name: 'Line feeds', sheetId: 1);
+      final book = SmlWorkbook(sheets: [sheet]);
+      FormulaEvaluator.applyInput(book, sheet, sheet.cellA1('A1'), '12\n');
+      expect(sheet.cellA1('A1').value, '12\n');
+      FormulaEvaluator.applyInput(
+        book,
+        sheet,
+        sheet.cellA1('A2'),
+        'First\nSecond',
+      );
+      final reopened = SheetDeserializer().readBytes(
+        SheetSerializer().writeBytes(book),
+      );
+      expect(reopened.firstSheet.cellA1('A2').asString, 'First\nSecond');
+      expect(
+        reopened.firstSheet.rowHeightAt(1),
+        greaterThan(SmlWorksheet.defaultRowHeightPx),
+      );
+      final content = _inflated(OfficePrint.workbook(reopened)).join();
+      final starts = RegExp(
+        r'1 0 0 -1 ([\d.]+) ([\d.]+) Tm\n\(([FS])\) Tj',
+      ).allMatches(content).toList();
+      expect(starts.map((match) => match.group(3)), ['F', 'S']);
+      expect(starts.first.group(1), starts.last.group(1));
+      expect(
+        double.parse(starts.last.group(2)!),
+        greaterThan(double.parse(starts.first.group(2)!)),
+      );
+    },
+  );
+
+  test('Excel PDF extends an unwrapped label through an empty cell', () {
+    final book = SmlWorkbook();
+    final sheet = book.firstSheet;
+    sheet.printArea = SmlRange.parse('A1:B2');
+    sheet.columnWidths[0] = 64;
+    sheet.columnWidths[1] = 64;
+    sheet.cellA1('A1').value = 'A long overflowing heading';
+    sheet.cellA1('A2').value = 'This label must stop at B2';
+    sheet.cellA1('B2').value = 'Occupied';
+    final body = _inflated(OfficePdfExport.workbook(book)).join();
+
+    expect(body, matches(RegExp(r'94(?:\.0+)? [0-9.]+ re\s+W n')));
+    expect(body, matches(RegExp(r'46(?:\.0+)? [0-9.]+ re\s+W n')));
   });
 
   test('PPT PDF strokes shapes and emits URI link annots', () {

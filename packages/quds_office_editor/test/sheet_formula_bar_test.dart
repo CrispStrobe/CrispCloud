@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 void main() {
+  test('opens a workbook at its authored zoom, position and selection', () {
+    final sheet = SmlWorksheet(name: 'Budget', sheetId: 1)
+      ..viewZoomPercent = 125
+      ..viewTopLeft = const SmlCellRef(0, 12)
+      ..viewSelection = const SmlCellRef(3, 38)
+      ..importedDefaultRowHeightPx = 18;
+    sheet.cellA1('D39').value = 123;
+    final bytes = SheetSerializer().writeBytes(SmlWorkbook(sheets: [sheet]));
+    final controller = SheetEditorController.fromBytes(bytes);
+    addTearDown(controller.dispose);
+    expect(controller.viewport.scale, 1.25);
+    expect(controller.viewport.origin, const Offset(0, 270));
+    expect(controller.activeCell.a1, 'D39');
+    expect(num.tryParse(controller.formulaBarText), 123);
+    expect(controller.sheet.rowHeightAt(4), 18);
+  });
+
   testWidgets('the sheet editor gives the active cell an editable fx bar', (
     tester,
   ) async {

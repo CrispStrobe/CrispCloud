@@ -4,6 +4,31 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Preserve supported formatting when saving, reopening, editing and applying
+  Mail templates. Keep the custom Word body editor and explicit whole-message
+  replacement; preserve the live draft when saving a reusable snapshot. Refuse
+  unsupported/conflicting template content and stale owner, draft-revision or
+  settings results. Add rich-template migration, SQLite recovery, MIME/Outbox
+  and Flutter widget regression coverage. Fix CI test imports and the actual
+  Enter/visibility fixtures exposed by the first rich-composition runtime run.
+
+- Preserve supported Mail formatting through the Word composer, autosave,
+  database recovery, MIME and frozen Outbox edit-copy. Add English/German/Arabic
+  bold, italic, underline, strikethrough, safe-link, alignment, direction and
+  undo/redo controls. Formatting-only edits save a new revision. Canonical
+  rich bodies have matching plain/HTML alternatives; unsupported content and
+  inconsistent snapshots fail explicitly. Legacy plain drafts keep their
+  independent save and submission limits. Signature insertion retains existing
+  formatting; full-message templates now retain supported formatting as well.
+  Preserve supported empty-paragraph typing styles and fixed link-blue color
+  across the integrated Word Enter behavior; stale link/paste results cannot
+  mutate a newer selection or compose owner.
+- Show a bounded, inert formatted body in Outbox review with selectable text,
+  paragraph direction/alignment and explicit clipping. Links have no activation
+  handlers and exact MIME/private-envelope exports remain unchanged. See the
+  [rich composition guide](../../docs/roadmaps/mail/rich-composition.md) and
+  its qualification record for executed checks and open Flutter runtime gates.
+
 - Extend native Studio's selected-folder server search to the optional EWS,
   Gmail and Microsoft 365 search adapters. Offer only supported fields, show
   exact/estimated/unknown counts, retain stop/close cancellation and reject

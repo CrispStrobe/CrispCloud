@@ -10,7 +10,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   file_viewer_documents
   flutter_secure_storage_linux
+  irondash_engine_context
   sqlite3_flutter_libs
+  super_native_extensions
   system_tray
   url_launcher_linux
 )

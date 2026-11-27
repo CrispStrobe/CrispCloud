@@ -260,6 +260,7 @@ final class _OfficeFormulaPreflight {
     switch (node) {
       case LiteralNode():
       case ExternalCellNode():
+      case WholeAxisRangeNode():
         break;
       case CellNode(:final ref):
         _range(SmlRange(ref, ref));
@@ -304,6 +305,15 @@ final class _OfficeFormulaPreflight {
           name,
         ).toUpperCase();
         _call(function, args, bindings);
+        if (function == 'SUM') {
+          for (final range in args.whereType<WholeAxisRangeNode>()) {
+            final target = range.target(_workbook, sheet);
+            if (target == null) continue;
+            for (final _ in range.storedCells(target, () => _charge(1, 1))) {
+              _charge(1, 1);
+            }
+          }
+        }
         if (function == 'LET' && args.length >= 3 && args.length.isOdd) {
           final locals = Set<String>.of(bindings);
           for (var index = 0; index < args.length - 1; index += 2) {

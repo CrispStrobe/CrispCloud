@@ -29,6 +29,22 @@ void main() {
     expect(font.italic, isFalse);
   });
 
+  test(
+    'untagged Normal style resolves through its own style and font links',
+    () {
+      final source = _native().getPart('/xl/styles.xml')!.readText();
+      final untagged = source.replaceFirst(
+        'name="Standard" xfId="1" builtinId="0"',
+        'name="Normal" xfId="1"',
+      );
+      final font = SmlStyleSheet.parse(untagged).normalFont!;
+      expect(font.family, 'Liberation Mono');
+      expect(font.sizePoints, 24);
+      final ambiguous = untagged.replaceFirst(' builtinId="1"', '');
+      expect(SmlStyleSheet.parse(ambiguous).normalFont, isNull);
+    },
+  );
+
   test('theme Latin font takes precedence over the cached font name', () {
     final package = _native();
     final source = package

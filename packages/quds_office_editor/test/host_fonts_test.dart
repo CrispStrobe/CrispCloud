@@ -186,7 +186,7 @@ void main() {
     'late font registration invalidates widths measured with a fallback',
     () async {
       await OfficeHostFonts.ensureRegistered();
-      const family = 'Late Width Serif';
+      const family = 'Late Width Face';
       final props = WmlRunProps(asciiFont: family);
       final fallbackWidth = PaintRunText.advanceOf(0x6d, 24, props);
       final before = OfficeHostFonts.registrationRevision;

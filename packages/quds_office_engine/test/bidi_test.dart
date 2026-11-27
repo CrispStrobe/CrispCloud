@@ -17,6 +17,23 @@ void main() {
       expect(p.runs.any((BidiRun r) => !r.isRtl), isTrue);
     });
 
+    test('leading number groups respect the paragraph direction', () {
+      for (final text in ['0123 456-789', '13.02.-15.02.2026 (Termin)']) {
+        final points = text.runes.toList();
+        final bidi = Uax9Bidi.reorder(text);
+        expect(
+          String.fromCharCodes(bidi.visualToLogical.map((i) => points[i])),
+          text,
+        );
+      }
+      final points = '123 456'.runes.toList();
+      final rtl = Uax9Bidi.reorder('123 456', baseLevel: 1);
+      expect(
+        String.fromCharCodes(rtl.visualToLogical.map((i) => points[i])),
+        '456 123',
+      );
+    });
+
     test('classifies directional categories', () {
       expect(Uax9Bidi.classify(0x0041), BidiClass.l);
       expect(Uax9Bidi.classify(0x0627), BidiClass.al);
@@ -38,7 +55,7 @@ void main() {
       final result = prepared.breakNext(start: 0, maxWidth: 100);
       expect(requests, [(49, 0), (0xe4, 1), (32, 1), (0x1f600, 2)]);
       expect(result.line.glyphs.map((glyph) => glyph.advance), [8, 8, 8]);
-      expect(result.line.glyphs.map((glyph) => glyph.level), [2, 0, 0]);
+      expect(result.line.glyphs.map((glyph) => glyph.level), [0, 0, 0]);
       expect(result.nextOffset, 4);
     });
 

@@ -39,7 +39,7 @@ class FormulaLexer {
           _externalPrefix.matchAsPrefix(_src, _i) != null) {
         tokens.add(_externalRef());
       } else if (_isDigit(ch) || (ch == 0x2E && _peekIsDigit())) {
-        tokens.add(_number());
+        tokens.add(_unqualifiedRowRange() ?? _number());
       } else if (_isIdentStart(ch)) {
         tokens.add(_nameOrRef());
       } else if (ch == 0x28) {
@@ -157,6 +157,22 @@ class FormulaLexer {
     );
   }
 
+  FormulaToken? _unqualifiedRowRange() {
+    final match = _rowRangePrefix.matchAsPrefix(_src, _i);
+    if (match == null ||
+        (match.end < _src.length && _isIdentPart(_src.codeUnitAt(match.end)))) {
+      return null;
+    }
+    final start = _raw;
+    _i = match.end;
+    return FormulaToken(
+      FormulaTokenKind.wholeAxisRange,
+      match.group(0)!,
+      start: start,
+      end: _raw,
+    );
+  }
+
   FormulaToken _quotedSheetRef() {
     final int start = _i;
     final int rawStart = _raw;
@@ -242,6 +258,16 @@ class FormulaLexer {
     if (_rangePattern.hasMatch(lex)) {
       return FormulaToken(FormulaTokenKind.range, lex, start: start, end: end);
     }
+    final address = lex.substring(lex.lastIndexOf('!') + 1);
+    if (wholeColumnPattern.hasMatch(address) ||
+        wholeRowPattern.hasMatch(address)) {
+      return FormulaToken(
+        FormulaTokenKind.wholeAxisRange,
+        lex,
+        start: start,
+        end: end,
+      );
+    }
     if (_cellPattern.hasMatch(lex)) {
       return FormulaToken(FormulaTokenKind.cell, lex, start: start, end: end);
     }
@@ -275,6 +301,12 @@ class FormulaLexer {
   /// RegExp API.
   static final RegExp _rangePattern = RegExp(
     r"^((?:'[^']+'|[^!]+)!)?\$?[A-Za-z]+\$?\d+:\$?[A-Za-z]+\$?\d+$",
+  );
+
+  static final _rowRangePrefix = RegExp(r'\d{1,7}:\$?\d{1,7}');
+  static final wholeRowPattern = RegExp(r'^\$?\d{1,7}:\$?\d{1,7}$');
+  static final wholeColumnPattern = RegExp(
+    r'^\$?[A-Za-z]{1,3}:\$?[A-Za-z]{1,3}$',
   );
 
   /// RegExp API.
@@ -371,6 +403,14 @@ class FormulaParser {
         return _cell(tok.lexeme);
       case FormulaTokenKind.range:
         return _range(tok.lexeme);
+      case FormulaTokenKind.wholeAxisRange:
+        final bang = tok.lexeme.lastIndexOf('!');
+        return WholeAxisRangeNode(
+          wholeAxisRange(tok.lexeme.substring(bang + 1)),
+          sheetName: bang < 0
+              ? null
+              : _sheetName(tok.lexeme.substring(0, bang)),
+        );
       case FormulaTokenKind.name:
         if (tok.lexeme.endsWith('!') &&
             _cur.kind == FormulaTokenKind.error &&
@@ -406,8 +446,8 @@ class FormulaParser {
           return CallNode(tok.lexeme.toUpperCase(), args);
         }
         // Worksheet-local names have a scope owner independently of their
-        // referenced sheet. External, 3-D and whole-row/column references
-        // remain unsupported and cannot be mistaken for ordinary names.
+        // referenced sheet. Unmodeled external and 3-D references cannot
+        // be mistaken for ordinary names.
         final prefix = tok.lexeme.split('[').first;
         if (prefix.contains('!')) {
           final bang = tok.lexeme.lastIndexOf('!');
@@ -466,6 +506,42 @@ class FormulaParser {
       );
     }
     return RangeNode(SmlRange.parse(lex));
+  }
+
+  /// Decodes a whole-row or whole-column address without materializing cells.
+  static SmlRange wholeAxisRange(String address) {
+    final colon = address.indexOf(':');
+    if (colon < 0) {
+      throw FormatException('Invalid whole-axis reference: $address');
+    }
+    final start = address.substring(0, colon);
+    final end = address.substring(colon + 1);
+    if (FormulaLexer.wholeColumnPattern.hasMatch(address)) {
+      final a = SmlCellRef.parse('${start}1').col;
+      final b = SmlCellRef.parse('${end}1').col;
+      if (a < SmlWorksheet.excelColumnCount &&
+          b < SmlWorksheet.excelColumnCount) {
+        return SmlRange(
+          SmlCellRef(a, 0),
+          SmlCellRef(b, SmlWorksheet.excelRowCount - 1),
+        );
+      }
+    } else if (FormulaLexer.wholeRowPattern.hasMatch(address)) {
+      final a = SmlCellRef.parse('A$start').row;
+      final b = SmlCellRef.parse('A$end').row;
+      if (a >= 0 &&
+          b >= 0 &&
+          a < SmlWorksheet.excelRowCount &&
+          b < SmlWorksheet.excelRowCount) {
+        return SmlRange(
+          SmlCellRef(0, a),
+          SmlCellRef(SmlWorksheet.excelColumnCount - 1, b),
+        );
+      }
+    }
+    throw FormatException(
+      'Whole row or column outside worksheet bounds: $address',
+    );
   }
 
   static FormulaNode _rangeJoin(FormulaNode left, FormulaNode right) {
@@ -603,6 +679,12 @@ class FormulaEvaluator {
           : scalar is String
           ? SmlCellType.string
           : SmlCellType.formula;
+      return;
+    }
+    if (text.contains('\n')) {
+      cell.formula = null;
+      cell.type = SmlCellType.string;
+      cell.value = text;
       return;
     }
     if (trimmed.isEmpty) {

@@ -1,8 +1,24 @@
+import 'package:intl/intl.dart';
+
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 
 /// Horizontal cell alignment (`alignment/@horizontal`).
 enum SmlHAlign { general, left, center, right }
+
+/// Supported authored vertical cell alignment.
+enum SmlVAlign { top, center, bottom }
+
+/// A visible solid edge in a native spreadsheet cell style.
+typedef SmlBorderEdge = ({String color, double widthPoints});
+
+/// Physical edges of a cell. Each side can use an independent style.
+typedef SmlCellBorders = ({
+  SmlBorderEdge? left,
+  SmlBorderEdge? top,
+  SmlBorderEdge? right,
+  SmlBorderEdge? bottom,
+});
 
 /// The font used by the built-in Normal cell style for column dimensions.
 ///
@@ -50,6 +66,9 @@ class SmlStyleSheet {
   final Map<int, int> _fontBases = {};
   final Set<int> _explicitFontColors = {};
   final Map<int, int> _xfBases = {};
+  final List<SmlCellBorders> _borders = [];
+  final List<int> _cellXfsBorderIds = [];
+  final List<String?> _verticalAlignments = [];
 
   /// SmlStyleSheet API.
   SmlStyleSheet({
@@ -134,24 +153,30 @@ class SmlStyleSheet {
   /// Theme Latin faces keyed by `major` or `minor`.
   final Map<String, String> themeFontFamilies;
 
-  /// Native Normal-font selection follows builtinId, not a localized name or
-  /// cellXfs[0]. Ambiguous or malformed native style links remain unresolved.
+  /// Uses the built-in Normal identity, with the conventional untagged name
+  /// as a fallback for producers that omit builtinId.
   SmlNormalFont? get normalFont {
     final root = _source?.root;
     if (root == null) return null;
     final styles = root
         .firstChild('cellStyles', namespaceUri: root.namespaceUri)
         ?.childrenNamed('cellStyle', namespaceUri: root.namespaceUri);
-    final normal = styles
-        ?.where(
-          (style) =>
-              int.tryParse(
-                style.getAttribute('builtinId', namespaceUri: '') ?? '',
-              ) ==
-              0,
+    if (styles == null) return null;
+    final builtIn = styles
+        .where(
+          (style) => int.tryParse(_attribute(style, 'builtinId') ?? '') == 0,
         )
         .toList();
-    if (normal == null || normal.length != 1) return null;
+    final normal = builtIn.isNotEmpty
+        ? builtIn
+        : styles
+              .where(
+                (style) =>
+                    _attribute(style, 'builtinId') == null &&
+                    _attribute(style, 'name') == 'Normal',
+              )
+              .toList();
+    if (normal.length != 1) return null;
     final xfId = int.tryParse(
       normal.single.getAttribute('xfId', namespaceUri: '') ?? '',
     );
@@ -331,11 +356,55 @@ class SmlStyleSheet {
         ),
       );
     }
+    SmlBorderEdge? edge(XmlElement border, String side) {
+      final node = border.firstChild(side, namespaceUri: namespace);
+      if (node == null) return null;
+      final width = switch (_attribute(node, 'style')) {
+        'hair' => 0.35,
+        'thin' => 0.75,
+        'medium' => 1.5,
+        'thick' => 2.25,
+        _ => null,
+      };
+      if (width == null) return null;
+      final rgb = color(node.firstChild('color', namespaceUri: namespace));
+      return (color: rgb.isEmpty ? '000000' : rgb, widthPoints: width);
+    }
+
+    for (final border in entries('borders', 'border')) {
+      sheet._borders.add((
+        left: edge(border, 'left'),
+        top: edge(border, 'top'),
+        right: edge(border, 'right'),
+        bottom: edge(border, 'bottom'),
+      ));
+    }
+    String? vertical(XmlElement? alignment) =>
+        alignment == null ? null : _attribute(alignment, 'vertical');
+    final baseVertical = [
+      for (final style in entries('cellStyleXfs', 'xf'))
+        vertical(style.firstChild('alignment', namespaceUri: namespace)),
+    ];
     for (final format in entries('cellXfs', 'xf')) {
+      sheet._cellXfsBorderIds.add(
+        int.tryParse(_attribute(format, 'borderId') ?? '') ?? 0,
+      );
       sheet.cellXfsNumFmt.add(
         int.tryParse(_attribute(format, 'numFmtId') ?? '') ?? 0,
       );
       final alignment = format.firstChild('alignment', namespaceUri: namespace);
+      final baseId = int.tryParse(_attribute(format, 'xfId') ?? '');
+      final apply = _attribute(format, 'applyAlignment');
+      final inherited =
+          baseId != null && baseId >= 0 && baseId < baseVertical.length
+          ? baseVertical[baseId]
+          : null;
+      final direct = vertical(alignment);
+      sheet._verticalAlignments.add(
+        alignment != null && apply != '0' && apply != 'false'
+            ? direct
+            : inherited ?? direct,
+      );
       sheet.cellXfsAlign.add(
         parseHAlign(
           alignment == null ? null : _attribute(alignment, 'horizontal'),
@@ -394,12 +463,46 @@ class SmlStyleSheet {
   }
 
   /// format API.
-  String format(Object? value, int styleIndex) {
+  String format(Object? value, int styleIndex, {String? locale}) {
     final int numFmtId = styleIndex >= 0 && styleIndex < cellXfsNumFmt.length
         ? cellXfsNumFmt[styleIndex]
         : 0;
     final String code = numFmts[numFmtId] ?? 'General';
-    return applyNumberFormat(value, code);
+    if (locale == null) return applyNumberFormat(value, code);
+    final verified = Intl.verifiedLocale(
+      locale,
+      NumberFormat.localeExists,
+      onFailure: (_) => 'en_US',
+    );
+    final symbols = NumberFormat.decimalPattern(verified).symbols;
+    return applyNumberFormat(
+      value,
+      code,
+      displayDecimalSeparator: symbols.DECIMAL_SEP,
+      displayGroupSeparator: symbols.GROUP_SEP,
+    );
+  }
+
+  /// Returns the solid borders associated with a native cell style.
+  SmlCellBorders? bordersAt(int styleIndex) {
+    var index = styleIndex;
+    // A font/fill edit can derive several xfs from the same native style.
+    while (index >= _cellXfsBorderIds.length) {
+      final base = _xfBases[index];
+      if (base == null) return null;
+      index = base;
+    }
+    if (index < 0 || index >= _cellXfsBorderIds.length) return null;
+    final id = _cellXfsBorderIds[index];
+    if (id < 0 || id >= _borders.length) return null;
+    final edges = _borders[id];
+    if (edges.left == null &&
+        edges.top == null &&
+        edges.right == null &&
+        edges.bottom == null) {
+      return null;
+    }
+    return edges;
   }
 
   /// wrapAt API.
@@ -414,6 +517,25 @@ class SmlStyleSheet {
       return cellXfsAlign[styleIndex];
     }
     return SmlHAlign.general;
+  }
+
+  /// Authored vertical placement, including styles derived by unrelated edits.
+  SmlVAlign? verticalAlignAt(int styleIndex) =>
+      switch (_verticalAlignmentNameAt(styleIndex)) {
+        'top' => SmlVAlign.top,
+        'center' => SmlVAlign.center,
+        'bottom' => SmlVAlign.bottom,
+        _ => null,
+      };
+
+  String? _verticalAlignmentNameAt(int styleIndex) {
+    var index = styleIndex;
+    while (index >= _verticalAlignments.length) {
+      final base = _xfBases[index];
+      if (base == null) return null;
+      index = base;
+    }
+    return index < 0 ? null : _verticalAlignments[index];
   }
 
   /// fillAt API.
@@ -650,6 +772,7 @@ class SmlStyleSheet {
       final int xfFormat = i < cellXfsNumFmt.length ? cellXfsNumFmt[i] : 0;
       if (base == null &&
           cellXfsAlign[i] == align &&
+          _verticalAlignmentNameAt(i) == null &&
           xfFill == fillId &&
           xfFont == fontId &&
           cellXfsWrap[i] == desiredWrap &&
@@ -1073,7 +1196,7 @@ class SmlStyleSheet {
                 (base < cellXfsWrap.length ? cellXfsWrap[base] : false);
             if (cellXfsAlign[i] != cellXfsAlign[base] || wrapChanged) {
               _setAttribute(template, 'applyAlignment', '1');
-              final alignment = template.firstChild(
+              var alignment = template.firstChild(
                 'alignment',
                 namespaceUri: namespace,
               );
@@ -1093,7 +1216,7 @@ class SmlStyleSheet {
                   );
                 }
               } else {
-                final alignment = _generatedCopy(
+                alignment = _generatedCopy(
                   XmlElement(localName: 'alignment', namespaceUri: namespace),
                   namespace,
                 );
@@ -1118,6 +1241,10 @@ class SmlStyleSheet {
                   after < 0 ? template.children.length : after,
                   alignment,
                 );
+              }
+              final vertical = _verticalAlignmentNameAt(base);
+              if (vertical != null) {
+                _setAttribute(alignment, 'vertical', vertical);
               }
             }
           }
@@ -1346,6 +1473,8 @@ String applyNumberFormat(
   String code, {
   String decimalSeparator = '.',
   String groupSeparator = ',',
+  String? displayDecimalSeparator,
+  String? displayGroupSeparator,
 }) {
   if (value == null) {
     return '';
@@ -1383,7 +1512,14 @@ String applyNumberFormat(
   if (_isDateFormat(clean) && !RegExp(r'[0#?]').hasMatch(_literalFree(clean))) {
     out = formatExcelDate(excelSerialToDate(shown), clean);
   } else {
-    out = _formatNumberSection(shown, clean, decimalSeparator, groupSeparator);
+    out = _formatNumberSection(
+      shown,
+      clean,
+      decimalSeparator,
+      groupSeparator,
+      displayDecimalSeparator ?? decimalSeparator,
+      displayGroupSeparator ?? groupSeparator,
+    );
   }
   if (negativeRed && n < 0) {
     return 'RED:$out';
@@ -1421,6 +1557,8 @@ String _formatNumberSection(
   String code,
   String decimalSeparator,
   String groupSeparator,
+  String displayDecimalSeparator,
+  String displayGroupSeparator,
 ) {
   final StringBuffer literal = StringBuffer();
   final StringBuffer pattern = StringBuffer();
@@ -1519,7 +1657,7 @@ String _formatNumberSection(
   var whole = point < 0 ? text : text.substring(0, point);
   final String decimals = point < 0
       ? ''
-      : '$decimalSeparator${text.substring(point + 1)}';
+      : '$displayDecimalSeparator${text.substring(point + 1)}';
   if (whole == '0' && minInteger == 0) {
     whole = '';
   }
@@ -1530,15 +1668,15 @@ String _formatNumberSection(
     grouped.write(whole.substring(0, head));
     for (var g = head; g < whole.length; g += 3) {
       if (grouped.isNotEmpty) {
-        grouped.write(groupSeparator);
+        grouped.write(displayGroupSeparator);
       }
       grouped.write(whole.substring(g, g + 3));
     }
     whole = grouped.toString();
   }
   final bool isZero = RegExp(r'^[0]*$').hasMatch(
-    whole.replaceAll(groupSeparator, '') +
-        decimals.replaceAll(decimalSeparator, ''),
+    whole.replaceAll(displayGroupSeparator, '') +
+        decimals.replaceAll(displayDecimalSeparator, ''),
   );
   final String sign = negative && !isZero ? '-' : '';
   return '$sign$prefix$whole$decimals$suffix';

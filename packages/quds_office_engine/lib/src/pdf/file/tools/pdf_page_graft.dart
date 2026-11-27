@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../../fonts/sfnt_parser.dart';
@@ -8,6 +9,25 @@ import '../cos/pdf_store.dart';
 import '../model/pdf_file.dart';
 import '../model/pdf_page_info.dart';
 import 'pdf_page_view.dart';
+
+/// Places an existing page on paper without reflowing its content.
+class PdfPaperPlacement {
+  const PdfPaperPlacement({
+    this.paper,
+    this.landscape,
+    this.margin = 0,
+    this.scale,
+    this.border = false,
+  });
+
+  final ({double width, double height})? paper;
+  final bool? landscape;
+  final double margin;
+
+  /// When null, shrink oversized pages to fit the printable area.
+  final double? scale;
+  final bool border;
+}
 
 /// One page to emit, from an open file or a blank sheet.
 class PdfGraftSlot {
@@ -23,6 +43,7 @@ class PdfGraftSlot {
     this.cropRight = 0,
     this.cropTop = 0,
     this.embeddedFont,
+    this.placement,
   }) : width = 0,
        height = 0,
        blank = false;
@@ -39,6 +60,7 @@ class PdfGraftSlot {
       cropRight = 0,
       cropTop = 0,
       embeddedFont = null,
+      placement = null,
       blank = true;
 
   /// file API.
@@ -74,6 +96,8 @@ class PdfGraftSlot {
 
   /// blank API.
   final bool blank;
+
+  final PdfPaperPlacement? placement;
 
   /// width API.
   final double width;
@@ -147,9 +171,154 @@ class _Assembler {
     if (overlay != null && overlay.isNotEmpty) {
       _appendOverlay(cloned, overlay, slot.overlayOpacity, slot);
     }
+    final placement = slot.placement;
+    if (placement != null) _placeOnPaper(cloned, rec.info, placement);
     final int id = _next++;
     _bodies[id] = cloned;
     return id;
+  }
+
+  void _placeOnPaper(
+    PdfCosDict page,
+    PdfPageInfo info,
+    PdfPaperPlacement placement,
+  ) {
+    final paper = placement.paper;
+    final w = paper?.width ?? info.width;
+    final h = paper?.height ?? info.height;
+    final landscape = placement.landscape ?? (info.width > info.height);
+    final width = landscape ? math.max(w, h) : math.min(w, h);
+    final height = landscape ? math.min(w, h) : math.max(w, h);
+    if (!width.isFinite ||
+        !height.isFinite ||
+        width < 1 ||
+        height < 1 ||
+        info.width < 1 ||
+        info.height < 1) {
+      throw ArgumentError(
+        'Paper and page dimensions must be positive and finite',
+      );
+    }
+    final margin = placement.margin.clamp(
+      0.0,
+      math.min(width, height) / 2 - 0.5,
+    );
+    final areaWidth = width - 2 * margin;
+    final areaHeight = height - 2 * margin;
+    final scale =
+        placement.scale ??
+        math.min(
+          1.0,
+          math.min(areaWidth / info.width, areaHeight / info.height),
+        );
+    if (!scale.isFinite || scale <= 0) {
+      throw ArgumentError('Page scale must be positive and finite');
+    }
+    final dx = (width - info.width * scale) / 2;
+    final dy = (height - info.height * scale) / 2;
+    final crop = info.cropBox;
+    final (a, b, c, d, tx, ty) = switch (info.rotate) {
+      90 => (0, -1, 1, 0, -crop.lly, crop.urx),
+      180 => (-1, 0, 0, -1, crop.urx, crop.ury),
+      270 => (0, 1, -1, 0, crop.ury, -crop.llx),
+      _ => (1, 0, 0, 1, -crop.llx, -crop.lly),
+    };
+    (double, double) mapPoint(double x, double y) =>
+        (scale * (a * x + c * y + tx) + dx, scale * (b * x + d * y + ty) + dy);
+    String n(num value) => value.toStringAsFixed(6);
+    PdfCosRef stream(String text) => PdfCosRef(
+      _put(PdfCosStream(PdfCosDict(), Uint8List.fromList(ascii.encode(text)))),
+    );
+
+    final contents = page['Contents'];
+    final streams = contents is PdfCosRef ? _bodies[contents.id] : contents;
+    final matrix = [
+      a * scale,
+      b * scale,
+      c * scale,
+      d * scale,
+      tx * scale + dx,
+      ty * scale + dy,
+    ].map(n).join(' ');
+    final inset = math.max(margin, math.min(6.0, math.min(width, height) / 4));
+    page['Contents'] = PdfCosArray(<PdfCos>[
+      stream(
+        'q ${n(margin)} ${n(margin)} ${n(areaWidth)} ${n(areaHeight)} re W n '
+        '$matrix cm ${n(crop.llx)} ${n(crop.lly)} ${n(crop.width)} '
+        '${n(crop.height)} re W n\n',
+      ),
+      if (streams is PdfCosArray) ...streams.items else ?contents,
+      stream(
+        placement.border
+            ? 'Q q 0 G 0.6 w ${n(inset)} ${n(inset)} '
+                  '${n(width - 2 * inset)} ${n(height - 2 * inset)} re S Q\n'
+            : 'Q\n',
+      ),
+    ]);
+    final paperBox = _box(PdfBox(llx: 0, lly: 0, urx: width, ury: height));
+    page['MediaBox'] = paperBox;
+    page['CropBox'] = paperBox;
+    for (final key in ['Rotate', 'BleedBox', 'TrimBox', 'ArtBox', 'UserUnit']) {
+      page.values.remove(key);
+    }
+
+    final annots = page['Annots'];
+    final annotations = annots is PdfCosRef ? _bodies[annots.id] : annots;
+    if (annotations is! PdfCosArray) return;
+    page['Annots'] = PdfCosArray([
+      for (final entry in annotations.items)
+        if (_asDict(entry) case final annot?)
+          PdfCosRef(_put(_placedAnnotation(annot, mapPoint))),
+    ]);
+  }
+
+  PdfCosDict _placedAnnotation(
+    PdfCosDict source,
+    (double, double) Function(double, double) mapPoint,
+  ) {
+    final copy = PdfCosDict(Map.of(source.values));
+    final rect = source['Rect'];
+    if (rect is PdfCosArray &&
+        rect.items.length == 4 &&
+        rect.items.every((value) => pdfCosNumber(value) != null)) {
+      final values = rect.items.map((value) => pdfCosNumber(value)!).toList();
+      final (x0, y0) = mapPoint(values[0], values[1]);
+      final (x1, y1) = mapPoint(values[2], values[3]);
+      copy['Rect'] = _box(
+        PdfBox(
+          llx: math.min(x0, x1),
+          lly: math.min(y0, y1),
+          urx: math.max(x0, x1),
+          ury: math.max(y0, y1),
+        ),
+      );
+    }
+    PdfCosArray? points(PdfCos? value) {
+      final array = value is PdfCosRef ? _bodies[value.id] : value;
+      if (array is! PdfCosArray || array.items.length.isOdd) return null;
+      final result = <PdfCos>[];
+      for (var i = 0; i < array.items.length; i += 2) {
+        final x = pdfCosNumber(array.items[i]);
+        final y = pdfCosNumber(array.items[i + 1]);
+        if (x == null || y == null) return null;
+        final (px, py) = mapPoint(x, y);
+        result.addAll([PdfCosReal(px), PdfCosReal(py)]);
+      }
+      return PdfCosArray(result);
+    }
+
+    for (final key in ['QuadPoints', 'Vertices', 'L', 'CL']) {
+      final mapped = points(source[key]);
+      if (mapped != null) copy[key] = mapped;
+    }
+    final inkRef = source['InkList'];
+    final ink = inkRef is PdfCosRef ? _bodies[inkRef.id] : inkRef;
+    if (ink is PdfCosArray) {
+      copy['InkList'] = PdfCosArray([
+        for (final stroke in ink.items) points(stroke) ?? stroke,
+      ]);
+    }
+    return copy;
   }
 
   int blank(double width, double height) {

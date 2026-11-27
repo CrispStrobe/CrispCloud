@@ -2611,6 +2611,18 @@ class RenderWordCanvas extends RenderBox
     }
   }
 
+  /// Body paragraph at a drop position. Pictures are inserted after it.
+  WmlParagraph? bodyParagraphAt(Offset globalPosition) {
+    final (pageIndex, local) = _hitPage(globalToLocal(globalPosition));
+    if (pageIndex < 0 || pageIndex >= laidOut.pages.length) return null;
+    final page = laidOut.pages[pageIndex];
+    if (page.headerBand.contains(local.dx, local.dy) ||
+        page.footerBand.contains(local.dx, local.dy)) {
+      return null;
+    }
+    return _lineAt(page, local)?.sourceParagraph;
+  }
+
   LaidOutLine? _lineAt(LaidOutPage page, Offset local) {
     final LaidOutBox? cell = _cellAt(page, local);
     LaidOutLine? best;

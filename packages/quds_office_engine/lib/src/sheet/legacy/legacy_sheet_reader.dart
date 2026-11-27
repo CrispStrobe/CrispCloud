@@ -441,6 +441,14 @@ class _BiffWorkbookParser {
       return sheet;
     }
     final records = _records(bound.position, bytes.length);
+    SmlPageSetup printSetup() => sheet.pageSetup ??= SmlPageSetup(
+      marginLeftIn: 0.75,
+      marginRightIn: 0.75,
+      marginTopIn: 1,
+      marginBottomIn: 1,
+      headerMarginIn: 0.5,
+      footerMarginIn: 0.5,
+    );
     var pendingRow = -1;
     var paneRow = 0;
     var paneCol = 0;
@@ -462,6 +470,50 @@ class _BiffWorkbookParser {
             if (paneCol > 0) sheet.freezeCols = paneCol;
           }
           return sheet;
+        case 0x002A: // PrintRowCol
+          if (reader.remaining >= 2) {
+            printSetup().printHeadings = reader.u16() == 1;
+          }
+        case 0x002B: // PrintGrid
+          if (reader.remaining >= 2) {
+            printSetup().printGridlines = reader.u16() == 1;
+          }
+        case 0x0081: // WsBool
+          if (reader.remaining >= 2) {
+            printSetup().fitToPage = reader.u16() & 0x0100 != 0;
+          }
+        case 0x0083: // HCenter
+          if (reader.remaining >= 2) {
+            printSetup().centerHorizontally = reader.u16() == 1;
+          }
+        case 0x0084: // VCenter
+          if (reader.remaining >= 2) {
+            printSetup().centerVertically = reader.u16() == 1;
+          }
+        case 0x0026: // LeftMargin
+        case 0x0027: // RightMargin
+        case 0x0028: // TopMargin
+        case 0x0029: // BottomMargin
+          if (reader.remaining >= 8) {
+            final margin = reader.f64();
+            if (_validPrintMargin(margin)) {
+              final setup = printSetup();
+              switch (record.id) {
+                case 0x0026:
+                  setup.marginLeftIn = margin;
+                case 0x0027:
+                  setup.marginRightIn = margin;
+                case 0x0028:
+                  setup.marginTopIn = margin;
+                case 0x0029:
+                  setup.marginBottomIn = margin;
+              }
+            }
+          }
+        case 0x00A1: // Setup
+          if (reader.remaining >= 34) {
+            _readPrintSetup(reader, printSetup());
+          }
         case 0x0200: // DIMENSIONS
           break;
         case 0x00FD: // LABELSST
@@ -699,6 +751,38 @@ class _BiffWorkbookParser {
       }
     }
     return sheet;
+  }
+
+  static bool _validPrintMargin(double margin) => margin >= 0 && margin < 49;
+
+  static void _readPrintSetup(_Reader reader, SmlPageSetup setup) {
+    final paper = reader.u16();
+    final scale = reader.u16();
+    final firstPage = reader.u16().toSigned(16);
+    final fitWidth = reader.u16();
+    final fitHeight = reader.u16();
+    final flags = reader.u16();
+    reader.skip(4); // horizontal and vertical print resolution
+    final header = reader.f64();
+    final footer = reader.f64();
+
+    // fNoPls marks printer-specific fields as undefined.
+    if (flags & 0x0004 == 0) {
+      if (paper <= 118) setup.setExcelPaperSize(paper);
+      if (scale >= 10 && scale <= 400) setup.scale = scale;
+      setup.orientation = flags & 0x0042 == 0
+          ? SmlPageOrientation.landscape
+          : SmlPageOrientation.portrait;
+    }
+    if (fitWidth <= 32767) setup.fitToWidth = fitWidth;
+    if (fitHeight <= 32767) setup.fitToHeight = fitHeight;
+    setup.printAcrossThenDown = flags & 0x0001 != 0;
+    setup.blackAndWhite = flags & 0x0008 != 0;
+    setup.draft = flags & 0x0010 != 0;
+    setup.useFirstPageNumber = flags & 0x0080 != 0;
+    setup.firstPageNumber = setup.useFirstPageNumber ? firstPage : null;
+    if (_validPrintMargin(header)) setup.headerMarginIn = header;
+    if (_validPrintMargin(footer)) setup.footerMarginIn = footer;
   }
 
   SmlCell _put(

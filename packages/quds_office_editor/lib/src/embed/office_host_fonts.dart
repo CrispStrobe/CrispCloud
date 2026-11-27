@@ -18,6 +18,8 @@ abstract final class OfficeHostFonts {
   static final Map<String, Future<void>> _extensionLoads = {};
   static final Map<String, String> _extensionOwners = {};
   static int _revision = 0;
+  static final Map<String, String> _additionalFamilies = {};
+  static final Map<String, String> _platformFamilies = {};
   static final Map<String, List<OfficeFontFace>> _metricFaces = {};
   static final _paintMetrics =
       <(String, double, int, int, bool), FontMetrics?>{};
@@ -96,6 +98,29 @@ abstract final class OfficeHostFonts {
   /// fallback before an asynchronous registration completed.
   static int get registrationRevision => _revision;
 
+  /// Canonical names from the platform catalog and loaded host extensions.
+  /// Registration aliases and internal paint names are excluded.
+  static Iterable<String> get additionalFamilies sync* {
+    yield* _platformFamilies.values;
+    yield* _additionalFamilies.values;
+  }
+
+  /// Adds names supplied by the native font manager. Flutter resolves these
+  /// faces by name and the host needs no font-file access or eager loading.
+  static void addPlatformFamilies(Iterable<String> families) {
+    final previousCount = _platformFamilies.length;
+    for (final family in families) {
+      final canonical = family.trim();
+      if (canonical.isNotEmpty && canonical.length <= 256) {
+        _platformFamilies.putIfAbsent(canonical.toLowerCase(), () => canonical);
+      }
+    }
+    if (_platformFamilies.length != previousCount) _revision++;
+  }
+
+  static bool hasPlatformFamily(String family) =>
+      _platformFamilies.containsKey(family.trim().toLowerCase());
+
   /// The loaded paint family behind a successfully registered name or alias.
   /// Installed replacements use an internal name so old aliases cannot win.
   /// Unknown/unloaded names and unavailable italic faces stay unresolved;
@@ -106,6 +131,25 @@ abstract final class OfficeHostFonts {
     return face.$1;
   }
 
+  /// Embeddable faces already registered for this document family.
+  static Iterable<OfficeFontFace> pdfFacesForFamily(String family) sync* {
+    final registered = registeredFamily(family);
+    if (registered == null) return;
+    final faces = _metricFaces[registered.toLowerCase()];
+    if (faces == null) return;
+    for (final face in faces) {
+      if (!face.font.hasTable('glyf')) continue;
+      final actual = face.font.familyName;
+      yield OfficeFontFace(
+        font: face.font,
+        family: actual.isEmpty ? family : actual,
+        weight: face.weight,
+        italic: face.italic,
+        aliases: [family],
+      );
+    }
+  }
+
   /// The loaded paint name for an installed face; other names stay unchanged.
   /// A separate Flutter family prevents an earlier bundled alias from winning
   /// selection after the real installed face becomes available.
@@ -113,7 +157,7 @@ abstract final class OfficeHostFonts {
     final key = family.trim().toLowerCase();
     return _installedFaces.containsKey(key)
         ? _registeredFaces[key]!.$1
-        : family;
+        : _platformFamilies[key] ?? family;
   }
 
   /// Registers bundled faces and common Office/PDF aliases.
@@ -187,6 +231,7 @@ abstract final class OfficeHostFonts {
         rethrow;
       }
     }
+    _additionalFamilies[key] = canonical;
   }
 
   /// Registers verified local TrueType bytes, replacing only a bundled Office
@@ -242,6 +287,7 @@ abstract final class OfficeHostFonts {
     _installedLoads[key] = load;
     try {
       await load;
+      _additionalFamilies[key] = canonical;
     } on Object {
       _installedNames.remove(key);
       rethrow;

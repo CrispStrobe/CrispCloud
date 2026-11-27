@@ -25,6 +25,12 @@ abstract final class FormulaFunctions {
     FormulaContext ctx,
   ) {
     final String n = stripFutureFunctionPrefix(name.toUpperCase());
+    if (n != 'SUM' && args.any((arg) => arg is WholeAxisRangeNode)) {
+      return ctx.error(
+        '#ERROR! Unsupported whole-row or whole-column operation',
+        unsupported: true,
+      );
+    }
     if (n == 'LET') {
       return _let(args, ctx);
     }
@@ -73,7 +79,11 @@ abstract final class FormulaFunctions {
       return _conditionalSingle(ctx, args, operation: n);
     }
     final List<Object?> vals = args
-        .map((FormulaNode a) => a.eval(ctx))
+        .map(
+          (FormulaNode a) => n == 'SUM' && a is WholeAxisRangeNode
+              ? a.valuesForSum(ctx)
+              : a.eval(ctx),
+        )
         .toList();
     // Missing capability is never a native Excel error or ordinary text that
     // COUNT, ISERROR, lookups, Boolean or text functions may consume safely.

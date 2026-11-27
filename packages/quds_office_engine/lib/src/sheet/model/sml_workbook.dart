@@ -399,10 +399,12 @@ class SmlPageSetup {
     this.headerMarginIn = 0.3937,
     this.footerMarginIn = 0.3937,
     this.scale = 100,
+    this.fitToPage = false,
     this.fitToWidth = 1,
     this.fitToHeight = 1,
     this.printGridlines = false,
     this.printHeadings = false,
+    this.printAcrossThenDown = false,
     this.centerHorizontally = false,
     this.centerVertically = false,
     this.firstPageNumber,
@@ -444,6 +446,9 @@ class SmlPageSetup {
   /// Print scale percentage.
   int scale;
 
+  /// Whether to fit to the requested page counts instead of using [scale].
+  bool fitToPage;
+
   /// Fit-to-width page count (0 means automatic).
   int fitToWidth;
 
@@ -455,6 +460,9 @@ class SmlPageSetup {
 
   /// Whether row and column headings print.
   bool printHeadings;
+
+  /// Print horizontal page bands before advancing to the next row band.
+  bool printAcrossThenDown;
 
   /// Center the printed sheet horizontally.
   bool centerHorizontally;
@@ -473,6 +481,26 @@ class SmlPageSetup {
 
   /// Print in draft quality.
   bool draft;
+
+  /// Applies a known Excel paper code while retaining unfamiliar codes.
+  void setExcelPaperSize(int code) {
+    paperSize = code;
+    final dimensions = switch (code) {
+      1 => (8.5, 11.0),
+      3 => (11.0, 17.0),
+      5 => (8.5, 14.0),
+      8 => (11.69, 16.54),
+      9 => (8.2677, 11.6929),
+      11 => (5.83, 8.27),
+      12 => (9.84, 13.9),
+      13 => (6.93, 9.84),
+      _ => null,
+    };
+    if (dimensions != null) {
+      paperWidthIn = dimensions.$1;
+      paperHeightIn = dimensions.$2;
+    }
+  }
 }
 
 /// Reversible column state, retaining imported width precision and the metric
@@ -632,6 +660,17 @@ class SmlWorksheet {
   /// Excel `sheetView/@rightToLeft`: column A sits on the right.
   bool rightToLeft;
 
+  /// Native zoom and position saved in the primary Excel worksheet view.
+  int? viewZoomPercent;
+  SmlCellRef? viewTopLeft;
+  SmlCellRef? viewSelection;
+
+  /// Authored default row height in CSS pixels, before per-row overrides.
+  double? importedDefaultRowHeightPx;
+
+  double get effectiveDefaultRowHeightPx =>
+      importedDefaultRowHeightPx ?? defaultRowHeightPx;
+
   /// Frozen row count (`pane/@ySplit`): rows `[0, freezeRows)` stay pinned.
   int freezeRows;
 
@@ -670,18 +709,16 @@ class SmlWorksheet {
 
   /// Native default widths use the same Normal-font metric as explicit columns.
   /// Files omitting both default/base width retain the historical 64px default.
-  double get effectiveDefaultColumnWidthPx {
+  double get effectiveDefaultColumnWidthPx =>
+      _defaultColumnWidthForMetric(maximumDigitWidthPx);
+
+  double _defaultColumnWidthForMetric(int metric) {
     final width = _nativeDefaultColumnWidth;
     if (width != null) {
-      return columnWidthFromExcel(
-        width,
-        maximumDigitWidth: maximumDigitWidthPx,
-      );
+      return columnWidthFromExcel(width, maximumDigitWidth: metric);
     }
     final base = _nativeBaseColumnWidth;
-    return base == null
-        ? defaultColumnWidthPx
-        : base * maximumDigitWidthPx + 5.0;
+    return base == null ? defaultColumnWidthPx : base * metric + 5.0;
   }
 
   /// Retains native sheetFormatPr values without converting their units.
@@ -844,6 +881,23 @@ class SmlWorksheet {
 
   /// Optional worksheet print layout.
   SmlPageSetup? pageSetup;
+
+  final Set<int> _importedRowPageBreaks = <int>{};
+  final Set<int> _importedColumnPageBreaks = <int>{};
+
+  /// Authored manual breaks before zero-based worksheet rows.
+  Iterable<int> get importedRowPageBreaks => _importedRowPageBreaks;
+
+  /// Authored manual breaks before zero-based worksheet columns.
+  Iterable<int> get importedColumnPageBreaks => _importedColumnPageBreaks;
+
+  /// Records a manual break from the source package for print pagination.
+  /// The original rowBreaks and colBreaks elements remain in the package.
+  void importManualPageBreak(int index, {required bool rows}) {
+    final limit = rows ? excelRowCount : excelColumnCount;
+    if (index <= 0 || index >= limit) return;
+    (rows ? _importedRowPageBreaks : _importedColumnPageBreaks).add(index);
+  }
 
   /// protection API.
   SmlSheetProtection? protection;
@@ -1058,9 +1112,39 @@ class SmlWorksheet {
   /// rowHeightToExcel API.
   static double rowHeightToExcel(double px) => px * 72 / 96;
 
-  /// columnWidth API.
-  double columnWidth(int col) =>
-      columnWidths[col] ?? effectiveDefaultColumnWidthPx;
+  /// Resolved width at the current or supplied Normal font metric.
+  /// Explicit pixel edits retain their size in either projection.
+  double columnWidth(int col, {int? projectedDigitWidthPx}) {
+    final pixels = columnWidths[col];
+    if (projectedDigitWidthPx == null ||
+        projectedDigitWidthPx == maximumDigitWidthPx) {
+      return pixels ?? effectiveDefaultColumnWidthPx;
+    }
+    if (pixels == null) {
+      return _defaultColumnWidthForMetric(projectedDigitWidthPx);
+    }
+    final native = unchangedNativeColumnWidth(col);
+    if (native == null) return pixels;
+    return columnWidthFromExcel(
+      native,
+      maximumDigitWidth: projectedDigitWidthPx,
+    );
+  }
+
+  /// Original Excel character width for an untouched column, including the
+  /// authored default where there is no explicit width.
+  double? unchangedNativeColumnWidth(int col) {
+    if (!columnWidths.containsKey(col)) return _nativeDefaultColumnWidth;
+    final native = _importedColumnWidths[col];
+    return native != null &&
+            columnWidths[col] ==
+                columnWidthFromExcel(
+                  native,
+                  maximumDigitWidth: maximumDigitWidthPx,
+                )
+        ? native
+        : null;
+  }
 
   /// Hidden row indices. Empty hidden rows remain part of the authored sheet.
   final Set<int> hiddenRows;
@@ -1077,7 +1161,22 @@ class SmlWorksheet {
     if (autoFilter != null && autoFilter!.isRowHidden(this, row)) {
       return 0;
     }
-    return rowHeights[row] ?? defaultRowHeightPx;
+    final authored = rowHeights[row];
+    if (authored != null) return authored;
+    var height = effectiveDefaultRowHeightPx;
+    final cells = rows[row]?.cells.values;
+    if (cells == null) return height;
+    for (final cell in cells) {
+      final value = cell.value;
+      if (value is! String || !value.contains('\n')) continue;
+      final lines = '\n'.allMatches(value).length + 1;
+      final needed = (lines * cell.fontSize * 4 / 3 + 4).clamp(
+        0.0,
+        maxRowHeightPx,
+      );
+      if (needed > height) height = needed;
+    }
+    return height;
   }
 
   /// setColumnWidth API.
@@ -1101,7 +1200,7 @@ class SmlWorksheet {
       return;
     }
     final double v = px.clamp(minRowHeightPx, maxRowHeightPx);
-    if ((v - defaultRowHeightPx).abs() < 0.5) {
+    if ((v - effectiveDefaultRowHeightPx).abs() < 0.5) {
       rowHeights.remove(row);
     } else {
       rowHeights[row] = v;
@@ -1131,13 +1230,13 @@ class SmlWorksheet {
   /// [row] == [excelRowCount]), in unscaled pixels.
   double rowTop(int row) {
     final int r = row < 0 ? 0 : (row > excelRowCount ? excelRowCount : row);
-    var y = r * defaultRowHeightPx;
+    var y = r * effectiveDefaultRowHeightPx;
     if (rowHeights.isEmpty) {
       return y;
     }
     for (final MapEntry<int, double> e in rowHeights.entries) {
       if (e.key >= 0 && e.key < r) {
-        y += e.value - defaultRowHeightPx;
+        y += e.value - effectiveDefaultRowHeightPx;
       }
     }
     return y;
@@ -1365,9 +1464,15 @@ class SmlWorksheet {
       return 0;
     }
     if (rowHeights.isEmpty) {
-      return (y / defaultRowHeightPx).floor().clamp(0, excelRowCount - 1);
+      return (y / effectiveDefaultRowHeightPx).floor().clamp(
+        0,
+        excelRowCount - 1,
+      );
     }
-    var row = (y / defaultRowHeightPx).floor().clamp(0, excelRowCount - 1);
+    var row = (y / effectiveDefaultRowHeightPx).floor().clamp(
+      0,
+      excelRowCount - 1,
+    );
     var top = rowTop(row);
     var height = rowHeightAt(row);
     var guard = 0;

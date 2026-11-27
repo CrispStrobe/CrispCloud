@@ -11,9 +11,8 @@ class FormulaDepGraph {
 
   /// Maximum cells one formula may add to the dependency graph.
   ///
-  /// Whole-sheet ranges are common in formulas, but expanding every coordinate
-  /// before evaluation is itself a denial-of-service. A larger range is treated
-  /// as an unmodeled dependency and keeps its imported cache.
+  /// Larger dense ranges keep their imported cache. Whole-row and whole-column
+  /// SUM references use the budgeted sparse evaluator instead.
   static const int maxDependencyCells = 1000000;
 
   /// workbook API.
@@ -174,6 +173,11 @@ class FormulaDepGraph {
               out.add(_key(target, ref));
             }
           }
+        case WholeAxisRangeNode():
+          // SUM navigates the stored cells through the evaluation resolver.
+          // That resolver evaluates dependencies and detects cycles as the
+          // range is visited without adding a dense rectangle to the graph.
+          break;
         case BinaryNode(:final FormulaNode left, :final FormulaNode right):
           walk(left, bindings);
           walk(right, bindings);

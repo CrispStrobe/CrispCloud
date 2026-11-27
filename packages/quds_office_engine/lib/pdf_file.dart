@@ -15,6 +15,7 @@ export 'src/pdf/file/model/pdf_file.dart';
 export 'src/pdf/file/model/pdf_form.dart';
 export 'src/pdf/file/model/pdf_page_info.dart';
 export 'src/pdf/file/text/pdf_extract.dart';
+export 'src/pdf/file/tools/pdf_page_graft.dart' show PdfPaperPlacement;
 export 'src/pdf/file/tools/pdf_page_view.dart';
 export 'src/pdf/file/tools/pdf_toolbox.dart';
 export 'src/pdf/office/pdf_office_isolate.dart';

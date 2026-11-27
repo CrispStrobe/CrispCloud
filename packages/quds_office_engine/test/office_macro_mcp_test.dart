@@ -68,6 +68,7 @@ Future<({int exitCode, List<String> stdout, String stderr})> _runStdio(
   final process = await Process.start(Platform.resolvedExecutable, <String>[
     if (packageConfig != null) '--packages=$packageConfig',
     'tool/macros/office_macro_mcp.dart',
+    '--write',
     'test/fixtures/fidelity/native.xlsx',
     output,
   ]);
@@ -114,6 +115,21 @@ void main() {
         OfficeOperationCatalog.fields(OfficeMacroFormat.xlsx)['cellValue'],
       );
       expect(properties, isNot(contains('op')));
+    });
+
+    test('read-only policy conceals and denies execution tools', () async {
+      final session = _session(policy: OfficeMacroPolicy(allowMutation: false));
+      final server = OfficeMacroMcp(session);
+      final tools = server.listTools()['tools']! as List<Map<String, Object?>>;
+      expect(tools.map((tool) => tool['name']), [
+        'office_document_inspect',
+        'office_macro_compile',
+      ]);
+      await expectLater(
+        server.callTool('office_macro_run', {'macro': _macro()}),
+        throwsA(isA<OfficeMacroMcpProtocolException>()),
+      );
+      expect(session.revision, 0);
     });
 
     test('direct calls and macro replay produce the same document', () async {

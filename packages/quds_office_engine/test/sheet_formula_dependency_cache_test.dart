@@ -15,6 +15,59 @@ SmlCell _formula(
   ..type = type;
 
 void main() {
+  test('SUM recalculates sparse whole columns and rows across worksheets', () {
+    final data = SmlWorksheet(name: "Owner's Data", sheetId: 1);
+    final totals = SmlWorksheet(name: 'Totals', sheetId: 2);
+    final book = SmlWorkbook(sheets: [data, totals]);
+    data
+      ..cellA1('E1').value = 5
+      ..cellA1('E2').value = '25'
+      ..cellA1('E3').value = true
+      ..cellA1('XFD4').value = 10;
+    _formula(data, 'E1048576', 'E1*2', 99);
+    _formula(totals, 'A1', r"SUM('Owner''s Data'!$E:$F,3)", 99);
+    _formula(totals, 'A2', "SUM('Owner''s Data'!4:4)", 99);
+    _formula(totals, 'A3', 'SUM(A1:A2)', 99);
+    _formula(totals, 'A4', 'SUM(6:7)', 99);
+    final before = [data.allCells.length, totals.allCells.length];
+
+    FormulaDepGraph(book).recalculate(budget: FormulaBudget(maxRangeCells: 40));
+    expect(totals.cellA1('A1').value, 18);
+    expect(totals.cellA1('A2').value, 10);
+    expect(totals.cellA1('A3').value, 28);
+    expect(totals.cellA1('A4').value, 0);
+    expect([data.allCells.length, totals.allCells.length], before);
+
+    final reopened = SheetDeserializer().readBytes(
+      SheetSerializer().writeBytes(book),
+    );
+    expect(reopened.sheets[1].cellA1('A1').value, 18);
+    reopened.firstSheet.cellA1('E1').value = 6;
+    FormulaDepGraph(reopened).recalculate();
+    expect(reopened.sheets[1].cellA1('A1').value, 21);
+  });
+
+  test('whole-axis SUM preserves error and circular dependency semantics', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    final book = SmlWorkbook(sheets: [sheet]);
+    _formula(sheet, 'A2', '1/0', 10);
+    _formula(sheet, 'B1', 'SUM(A:A)', 42);
+    _formula(sheet, 'C1', 'IFERROR(SUM(C:C),0)', 42);
+    _formula(sheet, 'D1', 'AVERAGE(A:A)', 42);
+    _formula(sheet, 'E1', 'SUM(Missing!A:A)', 42);
+    _formula(sheet, 'F1', 'SUM(A:A)', 42);
+    final graph = FormulaDepGraph(book)..recalculate();
+    expect(sheet.cellA1('B1').value, '#DIV/0!');
+    expect(sheet.cellA1('C1').value, '#CIRC!');
+    expect(sheet.cellA1('D1').value, 42);
+    expect(sheet.cellA1('E1').value, '#REF!');
+    expect(graph.circular, contains('Data!C1'));
+
+    sheet.cellA1('F1').value = 42;
+    graph.recalculate(budget: FormulaBudget(maxRangeCells: 1));
+    expect(sheet.cellA1('F1').value, 42);
+  });
+
   test('external cell caches recalculate without opening the source', () {
     const x = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
     const r =

@@ -610,6 +610,9 @@ class OfficeVisual {
   }
 }
 
+/// Native worksheet drawing marker. Insets are stored in OOXML units.
+typedef SmlDrawingMarker = ({int col, int row, int colEmu, int rowEmu});
+
 /// Floating drawing anchored to a worksheet cell.
 class SmlDrawing {
   /// SmlDrawing API.
@@ -626,7 +629,25 @@ class SmlDrawing {
     this.labelsToA1,
     this.sourceChartPartUri,
     this.sourceChartState,
-  });
+    this.importedEndMarker,
+    this.twoCellEditAs,
+  }) : _importedGeometry = importedEndMarker == null
+           ? null
+           : (col, row, offsetX, offsetY, visual.width, visual.height);
+
+  /// Original end marker from the worksheet drawing part.
+  final SmlDrawingMarker? importedEndMarker;
+  final (int, int, double, double, double, double)? _importedGeometry;
+
+  /// Native end marker, available until the drawing is moved or resized.
+  SmlDrawingMarker? get twoCellEnd =>
+      _importedGeometry ==
+          (col, row, offsetX, offsetY, visual.width, visual.height)
+      ? importedEndMarker
+      : null;
+
+  /// How Excel moves or sizes the drawing when the underlying grid changes.
+  final String? twoCellEditAs;
 
   /// visual API.
   OfficeVisual visual;

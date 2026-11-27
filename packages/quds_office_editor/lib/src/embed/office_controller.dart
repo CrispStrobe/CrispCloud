@@ -3655,6 +3655,8 @@ class WordEditorController extends OfficeController {
     deleteSelectionOr(backward: true);
   }
 
+  var _readingWordClipboard = false;
+
   @override
   /// pasteFromClipboard API.
   /// [isCurrent] can bind a contextual action to its original edit target while
@@ -3663,20 +3665,46 @@ class WordEditorController extends OfficeController {
     OfficePasteMode mode = OfficePasteMode.keepSource,
     bool Function()? isCurrent,
   }) async {
-    if (!canPaste || !(isCurrent?.call() ?? true)) {
+    if (_readingWordClipboard || !canPaste || !(isCurrent?.call() ?? true)) {
       return;
     }
-    final OfficeClipboardPayload payload = await OfficeClipboard.instance
-        .read();
+    final revision = contentRevision;
+    final destination = _activeParagraph;
+    final OfficeClipboardPayload payload;
+    _readingWordClipboard = true;
+    try {
+      payload = await OfficeClipboard.instance.read(
+        wordFormatting: true,
+        preferPlain: mode != OfficePasteMode.keepSource,
+        includeImages: mode == OfficePasteMode.keepSource && canImportPictures,
+      );
+    } finally {
+      _readingWordClipboard = false;
+    }
     if (!(isCurrent?.call() ?? true) || payload.isEmpty) {
       return;
     }
-    if (payload.visual != null && selectedVisual == null && caret.isCollapsed) {
+    final picture = payload.visual;
+    if (mode == OfficePasteMode.keepSource &&
+        canImportPictures &&
+        picture != null &&
+        picture.isPicture &&
+        picture.imageBytes != null) {
+      if (revision == contentRevision &&
+          identical(destination, _activeParagraph)) {
+        insertImportedPictures([picture], after: destination);
+      }
+      return;
+    }
+    if (mode != OfficePasteMode.keepTextOnly &&
+        payload.visual != null &&
+        selectedVisual == null &&
+        caret.isCollapsed) {
       _pasteWordVisual(payload.visual!);
       return;
     }
     if (mode == OfficePasteMode.keepSource && payload.hasWordBlocks) {
-      _pasteWordBlocks(payload.wordBlocks);
+      _pasteWordBlocks(payload.wordBlocks, sections: payload.wordSections);
       return;
     }
     if (mode == OfficePasteMode.keepSource && payload.hasRichText) {
@@ -3993,7 +4021,7 @@ class WordEditorController extends OfficeController {
     notifyListeners();
   }
 
-  void _pasteWordBlocks(List<WmlBlock> blocks) {
+  void _pasteWordBlocks(List<WmlBlock> blocks, {List<WmlSection>? sections}) {
     if (blocks.isEmpty) {
       return;
     }
@@ -4057,7 +4085,11 @@ class WordEditorController extends OfficeController {
         }
       }
     } else if (_wordBodyIsBlank()) {
-      _replaceBodyWith(clones);
+      if (sections != null && _canReplaceBlankPageLayout()) {
+        _replaceClipboardSections(sections, clones);
+      } else {
+        _replaceBodyWith(clones);
+      }
     } else {
       _insertWordBlocksAtCaret(clones);
     }
@@ -4084,6 +4116,52 @@ class WordEditorController extends OfficeController {
       }
     }
     return true;
+  }
+
+  bool _canReplaceBlankPageLayout() {
+    if (document.sections.length != 1) return false;
+    final current = document.sections.single;
+    return current.header.isEmpty &&
+        current.footer.isEmpty &&
+        current.firstHeader.isEmpty &&
+        current.firstFooter.isEmpty &&
+        current.evenHeader.isEmpty &&
+        current.evenFooter.isEmpty &&
+        current.headerVisuals.isEmpty &&
+        current.footerVisuals.isEmpty &&
+        current.firstHeaderVisuals.isEmpty &&
+        current.firstFooterVisuals.isEmpty &&
+        current.evenHeaderVisuals.isEmpty &&
+        current.evenFooterVisuals.isEmpty &&
+        current.preservedStories.isEmpty;
+  }
+
+  void _replaceClipboardSections(
+    List<WmlSection> sections,
+    List<WmlBlock> blocks,
+  ) {
+    final before = document.sections;
+    var blockOffset = 0;
+    final replacement = <WmlSection>[];
+    for (final section in sections) {
+      final end = blockOffset + section.blocks.length;
+      replacement.add(
+        WmlClone.section(section)..blocks = blocks.sublist(blockOffset, end),
+      );
+      blockOffset = end;
+    }
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          document.sections = replacement;
+          selectedTable = null;
+          selectedVisual = null;
+          selectedEquation = null;
+        },
+        undoFn: () => document.sections = before,
+      ),
+    );
+    _placeCaretAtEndOf(blocks);
   }
 
   void _replaceBodyWith(List<WmlBlock> blocks) {
@@ -4344,6 +4422,48 @@ class WordEditorController extends OfficeController {
     }
   }
 
+  /// Picture transfers are scoped to an editable document body.
+  bool get canImportPictures =>
+      canPaste && !isEditingComment && !isEditingHeaderFooter && !editingFrame;
+
+  /// Places one or more imported images after the target paragraph in one
+  /// undoable edit. The host may retain a paragraph across an async drop.
+  bool insertImportedPictures(
+    List<OfficeVisual> pictures, {
+    WmlParagraph? after,
+  }) {
+    if (!canImportPictures ||
+        pictures.isEmpty ||
+        pictures.any(
+          (picture) => !picture.isPicture || picture.imageBytes == null,
+        )) {
+      return false;
+    }
+    final paragraph = after ?? _activeParagraph;
+    if (!document.paragraphs.contains(paragraph)) return false;
+    final slot = WordTree.flowHost(document, paragraph);
+    if (slot == null) return false;
+    final blocks = [for (final picture in pictures) WmlVisual(visual: picture)];
+    final previous = selectedVisual;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          slot.parent.insertAll(slot.index + 1, blocks);
+          selectedVisual = blocks.first;
+        },
+        undoFn: () {
+          for (final block in blocks) {
+            slot.parent.remove(block);
+          }
+          if (blocks.contains(selectedVisual)) selectedVisual = previous;
+        },
+      ),
+    );
+    relayout();
+    notifyListeners();
+    return true;
+  }
+
   void _pasteWordVisual(OfficeVisual visual) {
     final WmlParagraph para = _activeParagraph;
     final ({List<WmlBlock> parent, int index})? slot = _hostSlotOf(para);
@@ -4428,6 +4548,79 @@ class WordEditorController extends OfficeController {
       ),
     );
     fitPaintMetrics(themeFamily: config.theme.fontFamily);
+    _syncImeSelection();
+    notifyListeners();
+  }
+
+  /// Cycles the selected text (or current word) through upper, lower and title case.
+  void cycleTextCase() {
+    if (!config.allowsMutation || document.trackRevisions) return;
+    final paras = _paragraphs;
+    if (paras.isEmpty) return;
+    final range = caret.normalizedRange;
+    final first = range.startPara;
+    final last = range.endPara;
+    if (first < 0 || last >= paras.length) return;
+    final word = caret.isCollapsed
+        ? CaretEngine.wordBounds(paras[first].text, range.startIdx)
+        : null;
+    final selected = <(WmlParagraph, int, int)>[];
+    final buffer = StringBuffer();
+    for (var p = first; p <= last; p++) {
+      final paragraph = paras[p];
+      final from = p == first ? word?.start ?? range.startIdx : 0;
+      final to = p == last ? word?.end ?? range.endIdx : paragraph.text.length;
+      final bounds = WmlRunEdit.normalizeRange(paragraph, from, to);
+      if (bounds.start == bounds.end) continue;
+      selected.add((paragraph, bounds.start, bounds.end));
+      buffer.writeln(paragraph.text.substring(bounds.start, bounds.end));
+    }
+    final text = buffer.toString();
+    if (text == text.toLowerCase() && text == text.toUpperCase()) return;
+    final title = text == text.toLowerCase();
+    final upper = !title && text != text.toUpperCase();
+    final before = [for (final (para, _, _) in selected) _cloneInlines(para)];
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          for (final (index, (para, from, to)) in selected.indexed) {
+            para.inlines
+              ..clear()
+              ..addAll(_cloneInlinesFrom(before[index]));
+            WmlRunEdit.splitAt(para, to);
+            WmlRunEdit.splitAt(para, from);
+            var offset = 0;
+            var atWordStart = true;
+            for (final inline in para.inlines.whereType<WmlRun>()) {
+              final end = offset + inline.text.length;
+              if (!inline.isAtomic && offset >= from && end <= to) {
+                final result = StringBuffer();
+                for (final rune in inline.text.runes) {
+                  final letter = String.fromCharCode(rune);
+                  final next = upper || title && atWordStart
+                      ? letter.toUpperCase()
+                      : letter.toLowerCase();
+                  // Preserve caret and annotation offsets for length-changing folds.
+                  result.write(next.length == letter.length ? next : letter);
+                  atWordStart = letter.trim().isEmpty;
+                }
+                inline.text = result.toString();
+              }
+              offset = end;
+            }
+            WmlRunEdit.coalesce(para);
+          }
+        },
+        undoFn: () {
+          for (final (index, (para, _, _)) in selected.indexed) {
+            para.inlines
+              ..clear()
+              ..addAll(_cloneInlinesFrom(before[index]));
+          }
+        },
+      ),
+    );
+    relayout();
     _syncImeSelection();
     notifyListeners();
   }
@@ -12279,6 +12472,7 @@ class SheetEditorController extends OfficeController {
         if (firstVisible >= 0) _activeSheet = firstVisible;
       }
     }
+    if (this.workbook.sheets.isNotEmpty) _restoreSheetView();
     recalculateWorkbook();
   }
 
@@ -12492,7 +12686,7 @@ class SheetEditorController extends OfficeController {
   String _formatDisplayedValue(Object? value, int styleIndex) {
     final SmlStyleSheet? styles = workbook.styles;
     if (styles != null) {
-      return styles.format(value, styleIndex);
+      return styles.format(value, styleIndex, locale: workbook.formulaLocale);
     }
     return _formatCellValue(value);
   }
@@ -12548,13 +12742,29 @@ class SheetEditorController extends OfficeController {
     _activeSheet = workbook.sheets.indexWhere((sheet) => !sheet.hidden);
     if (_activeSheet < 0) _activeSheet = 0;
     selectedDrawingIndex = null;
-    selection.selectCell(const SmlCellRef(0, 0));
-    viewport.origin = Offset.zero;
+    _restoreSheetView();
     if (recalculate) {
       recalculateWorkbook();
     }
     _dirty = false;
     notifyListeners();
+  }
+
+  void _restoreSheetView() {
+    final current = sheet;
+    final scale = ((current.viewZoomPercent ?? 100) / 100).clamp(
+      viewport.clampMin,
+      viewport.clampMax,
+    );
+    viewport.scale = scale;
+    final start = current.viewTopLeft;
+    viewport.origin = start == null
+        ? Offset.zero
+        : Offset(current.columnLeft(start.col), current.rowTop(start.row)) *
+              scale;
+    selection.selectCell(
+      current.viewSelection ?? start ?? const SmlCellRef(0, 0),
+    );
   }
 
   @override
@@ -14342,14 +14552,18 @@ class SheetEditorController extends OfficeController {
     final Object? prevValue = cell.value;
     final String? prevFormula = cell.formula;
     final SmlCellType prevType = cell.type;
+    final previousWrap = cell.wrapText;
     commands.commit(
       _CallbackCommand(
-        executeFn: () =>
-            FormulaEvaluator.applyInput(workbook, target, cell, text),
+        executeFn: () {
+          FormulaEvaluator.applyInput(workbook, target, cell, text);
+          if (cell.formula == null && text.contains('\n')) cell.wrapText = true;
+        },
         undoFn: () {
           cell.value = prevValue;
           cell.formula = prevFormula;
           cell.type = prevType;
+          cell.wrapText = previousWrap;
         },
       ),
     );
@@ -16220,7 +16434,12 @@ class SlideEditorController extends OfficeController {
   }
 
   /// updateSelected API.
-  void updateSelected({String? text, String? fillColor, double? fontSizePt}) {
+  void updateSelected({
+    String? text,
+    String? fillColor,
+    double? fontSizePt,
+    bool? bold,
+  }) {
     final PmlShape? shape = selected;
     if (shape == null || !config.allowsMutation) {
       return;
@@ -16228,6 +16447,7 @@ class SlideEditorController extends OfficeController {
     final String prevText = shape.text;
     final String prevFill = shape.fillColor;
     final double prevSize = shape.fontSizePt;
+    final previousBold = shape.textBold;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
@@ -16237,6 +16457,7 @@ class SlideEditorController extends OfficeController {
           if (fillColor != null) {
             shape.fillColor = fillColor;
           }
+          if (bold != null) shape.textBold = bold;
           if (fontSizePt != null) {
             shape.fontSizePt = fontSizePt;
           }
@@ -16245,6 +16466,7 @@ class SlideEditorController extends OfficeController {
           shape.text = prevText;
           shape.fillColor = prevFill;
           shape.fontSizePt = prevSize;
+          shape.textBold = previousBold;
         },
       ),
     );

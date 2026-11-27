@@ -1,24 +1,11 @@
-import 'dart:convert';
+import 'mcp_tool_session.dart';
 
 import 'office_macro_language.dart';
 import 'office_macro_model.dart';
 import 'office_macro_runtime.dart';
 import 'office_operations.dart';
 
-/// A JSON-RPC protocol failure, distinct from a document-operation failure.
-final class OfficeMacroMcpProtocolException implements Exception {
-  /// Creates a protocol failure with a standard JSON-RPC [code].
-  const OfficeMacroMcpProtocolException(this.code, this.message);
-
-  /// JSON-RPC error code.
-  final int code;
-
-  /// Actionable protocol diagnostic.
-  final String message;
-
-  @override
-  String toString() => 'OfficeMacroMcpProtocolException($code, $message)';
-}
+typedef OfficeMacroMcpProtocolException = McpProtocolException;
 
 /// Portable MCP tools adapter for one explicitly opened document session.
 ///
@@ -32,12 +19,8 @@ final class OfficeMacroMcp {
   OfficeMacroMcp(this.session, {OfficeMacroLanguages? languages})
     : languages = languages ?? OfficeMacroLanguages();
 
-  /// Protocol versions supported by the bounded JSON-RPC adapter.
-  static const supportedProtocolVersions = <String>[
-    '2025-11-25',
-    '2025-06-18',
-    '2024-11-05',
-  ];
+  static const supportedProtocolVersions =
+      McpToolSession.supportedProtocolVersions;
 
   /// Open document and its execution policy.
   final OfficeMacroSession session;
@@ -45,16 +28,20 @@ final class OfficeMacroMcp {
   /// Host-registered macro source compilers.
   final OfficeMacroLanguages languages;
 
-  bool _initializeReceived = false;
-  bool _initialized = false;
+  late final _protocol = McpToolSession(
+    serverName: 'quds-office-macros',
+    instructions:
+        'Tools operate on the document explicitly opened by the host. '
+        'Macro languages are opt-in. Embedded VBA stays inert.',
+    listTools: listTools,
+    callTool: callTool,
+  );
 
-  static const _managementTools = <String>{
-    'office_document_inspect',
+  static const _writeTools = <String>{
     'office_macro_run',
     'office_macro_validate',
     'office_macro_record_start',
     'office_macro_record_stop',
-    'office_macro_compile',
   };
 
   /// Lists only the session's allowed document operations and macro tools.
@@ -82,36 +69,38 @@ final class OfficeMacroMcp {
           _objectSchema(const <String, Object?>{}),
           readOnly: true,
         ),
-        _tool(
-          'office_macro_run',
-          'Validate and run a version 1 macro against the open document. '
-              'All declared parameters are required. Parameter references are '
-              r'{"$parameter":"name"}; use {"$literal":value} to escape them.',
-          _executionSchema(),
-        ),
-        _tool(
-          'office_macro_validate',
-          'Execute the macro on a detached document and verify serialization '
-              'without changing the session document or revision.',
-          _executionSchema(),
-          readOnly: true,
-        ),
-        _tool(
-          'office_macro_record_start',
-          'Start recording successful document operations in this session. '
-              'Macro management calls are not recorded.',
-          _objectSchema(
-            const <String, Object?>{
-              'name': <String, Object?>{'type': 'string'},
-            },
-            required: const <String>['name'],
+        if (session.policy.allowMutation) ...[
+          _tool(
+            'office_macro_run',
+            'Validate and run a version 1 macro against the open document. '
+                'All declared parameters are required. Parameter references are '
+                r'{"$parameter":"name"}; use {"$literal":value} to escape them.',
+            _executionSchema(),
           ),
-        ),
-        _tool(
-          'office_macro_record_stop',
-          'Stop recording and return a reusable version 1 macro.',
-          _objectSchema(const <String, Object?>{}),
-        ),
+          _tool(
+            'office_macro_validate',
+            'Execute the macro on a detached document and verify serialization '
+                'without changing the session document or revision.',
+            _executionSchema(),
+            readOnly: true,
+          ),
+          _tool(
+            'office_macro_record_start',
+            'Start recording successful document operations in this session. '
+                'Macro management calls are not recorded.',
+            _objectSchema(
+              const <String, Object?>{
+                'name': <String, Object?>{'type': 'string'},
+              },
+              required: const <String>['name'],
+            ),
+          ),
+          _tool(
+            'office_macro_record_stop',
+            'Stop recording and return a reusable version 1 macro.',
+            _objectSchema(const <String, Object?>{}),
+          ),
+        ],
         _tool(
           'office_macro_compile',
           'Compile source using a host-registered language adapter. '
@@ -155,9 +144,16 @@ final class OfficeMacroMcp {
     String name,
     Map<String, Object?> arguments,
   ) async {
-    if (!_managementTools.contains(name) &&
-        !session.allowedTools.contains(name)) {
-      throw OfficeMacroMcpProtocolException(-32602, 'Unknown tool: $name');
+    final allowed =
+        name == 'office_document_inspect' ||
+        name == 'office_macro_compile' ||
+        (session.policy.allowMutation && _writeTools.contains(name)) ||
+        session.allowedTools.contains(name);
+    if (!allowed) {
+      throw const OfficeMacroMcpProtocolException(
+        -32602,
+        'Unknown or disabled tool',
+      );
     }
     try {
       final Map<String, Object?> result;
@@ -225,156 +221,19 @@ final class OfficeMacroMcp {
     }
   }
 
-  /// Processes one unbatched JSON-RPC message using the MCP stdio lifecycle.
-  ///
-  /// The caller owns UTF-8 framing, sequential dispatch, and persistence.
-  /// Returns null for notifications. Errors never include stack traces.
-  Future<Map<String, Object?>?> handleMessage(Object? message) async {
-    Object? id;
-    try {
-      if (message is! Map<String, Object?> ||
-          message['jsonrpc'] != '2.0' ||
-          message['method'] is! String) {
-        throw const OfficeMacroMcpProtocolException(-32600, 'Invalid request');
-      }
-      final hasId = message.containsKey('id');
-      if (hasId) {
-        final requestId = message['id'];
-        if (requestId is! String &&
-            (requestId is! num || !requestId.isFinite)) {
-          throw const OfficeMacroMcpProtocolException(
-            -32600,
-            'Request id must be a string or finite number',
-          );
-        }
-        id = requestId;
-      }
-      final method = message['method']! as String;
-      final Object? rawParams = message['params'];
-      if (message.containsKey('params') && rawParams is! Map<String, Object?>) {
-        throw const OfficeMacroMcpProtocolException(
-          -32602,
-          'Request params must be an object',
-        );
-      }
-      if (!hasId) {
-        if (method == 'notifications/initialized' && _initializeReceived) {
-          _initialized = true;
-        }
-        return null;
-      }
-      final params = rawParams as Map<String, Object?>? ?? <String, Object?>{};
-      final Map<String, Object?> result;
-      if (method == 'initialize') {
-        if (_initializeReceived) {
-          throw const OfficeMacroMcpProtocolException(
-            -32600,
-            'Session is already initialized',
-          );
-        }
-        final version = params['protocolVersion'];
-        final clientInfo = params['clientInfo'];
-        if (version is! String ||
-            params['capabilities'] is! Map<String, Object?> ||
-            clientInfo is! Map<String, Object?> ||
-            clientInfo['name'] is! String ||
-            clientInfo['version'] is! String) {
-          throw const OfficeMacroMcpProtocolException(
-            -32602,
-            'initialize requires protocolVersion, capabilities, and clientInfo',
-          );
-        }
-        _initializeReceived = true;
-        result = <String, Object?>{
-          'protocolVersion': supportedProtocolVersions.contains(version)
-              ? version
-              : supportedProtocolVersions.first,
-          'capabilities': <String, Object?>{
-            'tools': <String, Object?>{'listChanged': false},
-          },
-          'serverInfo': <String, Object?>{
-            'name': 'quds-office-macros',
-            'version': '1.0.0',
-          },
-          'instructions':
-              'Tools operate only on the document explicitly opened by the '
-              'host. Macro languages are opt-in; embedded VBA is not run.',
-        };
-      } else if (method == 'ping') {
-        result = <String, Object?>{};
-      } else {
-        if (!_initialized) {
-          throw const OfficeMacroMcpProtocolException(
-            -32002,
-            'Initialize the session and send notifications/initialized first',
-          );
-        }
-        switch (method) {
-          case 'tools/list':
-            if (params.containsKey('cursor')) {
-              throw const OfficeMacroMcpProtocolException(
-                -32602,
-                'This server returns all tools and does not issue cursors',
-              );
-            }
-            result = listTools();
-          case 'tools/call':
-            final name = params['name'];
-            if (name is! String || name.isEmpty) {
-              throw const OfficeMacroMcpProtocolException(
-                -32602,
-                'tools/call requires a tool name',
-              );
-            }
-            final Object? rawArguments = params['arguments'];
-            if (params.containsKey('arguments') &&
-                rawArguments is! Map<String, Object?>) {
-              throw const OfficeMacroMcpProtocolException(
-                -32602,
-                'Tool arguments must be an object',
-              );
-            }
-            result = await callTool(
-              name,
-              rawArguments as Map<String, Object?>? ?? <String, Object?>{},
-            );
-          default:
-            throw OfficeMacroMcpProtocolException(
-              -32601,
-              'Unknown method: $method',
-            );
-        }
-      }
-      return <String, Object?>{'jsonrpc': '2.0', 'id': id, 'result': result};
-    } on OfficeMacroMcpProtocolException catch (error) {
-      return protocolError(error.code, error.message, id: id);
-    } on Object {
-      return protocolError(-32603, 'Internal server error', id: id);
-    }
-  }
+  Future<Map<String, Object?>?> handleMessage(Object? message) =>
+      _protocol.handleMessage(message);
 
-  /// Formats a machine-readable result and its compatible text representation.
   static Map<String, Object?> toolResult(
     Map<String, Object?> value, {
     bool isError = false,
-  }) => <String, Object?>{
-    'content': <Map<String, Object?>>[
-      <String, Object?>{'type': 'text', 'text': jsonEncode(value)},
-    ],
-    'structuredContent': value,
-    'isError': isError,
-  };
+  }) => McpToolSession.toolResult(value, isError: isError);
 
-  /// Encodes a JSON-RPC error without document or stack-trace information.
   static Map<String, Object?> protocolError(
     int code,
     String message, {
     Object? id,
-  }) => <String, Object?>{
-    'jsonrpc': '2.0',
-    'id': id,
-    'error': <String, Object?>{'code': code, 'message': message},
-  };
+  }) => McpToolSession.protocolError(code, message, id: id);
 
   static Map<String, Object?> _domainError(String code, String message) =>
       toolResult(<String, Object?>{

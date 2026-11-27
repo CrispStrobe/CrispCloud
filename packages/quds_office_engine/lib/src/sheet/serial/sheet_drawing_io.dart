@@ -250,13 +250,14 @@ abstract final class SheetDrawingIo {
     }
     sheet.drawings
       ..clear()
-      ..addAll(_parse(part.readText(), package, drawingUri));
+      ..addAll(_parse(part.readText(), package, drawingUri, sheet));
   }
 
   static List<SmlDrawing> _parse(
     String xml,
     OpcPackage package,
     String drawingUri,
+    SmlWorksheet sheet,
   ) {
     final List<SmlDrawing> out = <SmlDrawing>[];
     final XmlPullReader reader = XmlPullReader(xml);
@@ -268,17 +269,51 @@ abstract final class SheetDrawingIo {
     var row = 0;
     var colOff = 0;
     var rowOff = 0;
-    var inFrom = false;
+    int? endCol;
+    int? endRow;
+    var endColOff = 0;
+    var endRowOff = 0;
+    String? marker;
+    String? editAs;
+    var twoCell = false;
     final PictureAdjust adj = PictureAdjust();
     String name = 'Picture';
     void flush() {
-      if (embed == null && chartId == null) {
-        return;
-      }
       OfficeVisual? visual;
       String? sourceChartUri;
       ({String? sheet, SmlRange range})? values;
       ({String? sheet, SmlRange range})? labels;
+      SmlDrawingMarker? twoCellEnd;
+      final lastCol = endCol;
+      final lastRow = endRow;
+      if (twoCell &&
+          lastCol != null &&
+          lastCol >= col &&
+          lastCol < SmlWorksheet.excelColumnCount &&
+          lastRow != null &&
+          lastRow >= row &&
+          lastRow < SmlWorksheet.excelRowCount &&
+          col >= 0 &&
+          row >= 0) {
+        final width =
+            sheet.columnLeft(lastCol) -
+            sheet.columnLeft(col) +
+            DrawingmlVisualIo.emuToPixels(endColOff - colOff);
+        final height =
+            sheet.rowTop(lastRow) -
+            sheet.rowTop(row) +
+            DrawingmlVisualIo.emuToPixels(endRowOff - rowOff);
+        if (width > 0 && height > 0) {
+          cx = DrawingmlVisualIo.pixelsToEmu(width);
+          cy = DrawingmlVisualIo.pixelsToEmu(height);
+          twoCellEnd = (
+            col: lastCol,
+            row: lastRow,
+            colEmu: endColOff,
+            rowEmu: endRowOff,
+          );
+        }
+      }
       final String? chartRel = chartId;
       final String? embedRel = embed;
       if (chartRel != null) {
@@ -328,6 +363,8 @@ abstract final class SheetDrawingIo {
             labelsFromA1: labels?.range.start.a1,
             labelsToA1: labels?.range.end.a1,
             sourceChartPartUri: sourceChartUri,
+            importedEndMarker: twoCellEnd,
+            twoCellEditAs: editAs,
           ),
         );
       }
@@ -339,14 +376,18 @@ abstract final class SheetDrawingIo {
       row = 0;
       colOff = 0;
       rowOff = 0;
+      endCol = endRow = null;
+      endColOff = endRowOff = 0;
+      marker = editAs = null;
+      twoCell = false;
       adj.reset();
       name = 'Picture';
     }
 
     while (reader.next()) {
       if (reader.eventType == XmlEventType.endElement) {
-        if (reader.localName == 'from') {
-          inFrom = false;
+        if (reader.localName == 'from' || reader.localName == 'to') {
+          marker = null;
         } else if (reader.localName == 'oneCellAnchor' ||
             reader.localName == 'twoCellAnchor' ||
             reader.localName == 'absoluteAnchor') {
@@ -358,24 +399,24 @@ abstract final class SheetDrawingIo {
         continue;
       }
       switch (reader.localName) {
+        case 'twoCellAnchor':
+          twoCell = true;
+          editAs = reader.getAttribute('editAs');
         case 'from':
-          inFrom = true;
+        case 'to':
+          marker = reader.isEmptyElement ? null : reader.localName;
         case 'col':
-          if (inFrom) {
-            col = int.tryParse(_text(reader)) ?? col;
-          }
+          if (marker == 'from') col = int.tryParse(_text(reader)) ?? col;
+          if (marker == 'to') endCol = int.tryParse(_text(reader));
         case 'row':
-          if (inFrom) {
-            row = int.tryParse(_text(reader)) ?? row;
-          }
+          if (marker == 'from') row = int.tryParse(_text(reader)) ?? row;
+          if (marker == 'to') endRow = int.tryParse(_text(reader));
         case 'colOff':
-          if (inFrom) {
-            colOff = int.tryParse(_text(reader)) ?? colOff;
-          }
+          if (marker == 'from') colOff = int.tryParse(_text(reader)) ?? colOff;
+          if (marker == 'to') endColOff = int.tryParse(_text(reader)) ?? 0;
         case 'rowOff':
-          if (inFrom) {
-            rowOff = int.tryParse(_text(reader)) ?? rowOff;
-          }
+          if (marker == 'from') rowOff = int.tryParse(_text(reader)) ?? rowOff;
+          if (marker == 'to') endRowOff = int.tryParse(_text(reader)) ?? 0;
         case 'ext':
         case 'extent':
           cx = int.tryParse(reader.getAttribute('cx') ?? '') ?? cx;
@@ -454,26 +495,29 @@ abstract final class SheetDrawingIo {
     final OfficeVisual visual = drawing.visual;
     final int cx = DrawingmlVisualIo.pointsToEmu(visual.width);
     final int cy = DrawingmlVisualIo.pointsToEmu(visual.height);
-    w.writeStartElement('oneCellAnchor', prefix: 'xdr');
-    w.writeStartElement('from', prefix: 'xdr');
-    w.writeStartElement('col', prefix: 'xdr');
-    w.writeText('${drawing.col}');
-    w.writeEndElement();
-    w.writeStartElement('colOff', prefix: 'xdr');
-    w.writeText('${DrawingmlVisualIo.pixelsToEmu(drawing.offsetX)}');
-    w.writeEndElement();
-    w.writeStartElement('row', prefix: 'xdr');
-    w.writeText('${drawing.row}');
-    w.writeEndElement();
-    w.writeStartElement('rowOff', prefix: 'xdr');
-    w.writeText('${DrawingmlVisualIo.pixelsToEmu(drawing.offsetY)}');
-    w.writeEndElement();
-    w.writeEndElement();
-    w.writeEmptyElement(
-      'ext',
+    final end = drawing.twoCellEnd;
+    w.writeStartElement(
+      end == null ? 'oneCellAnchor' : 'twoCellAnchor',
       prefix: 'xdr',
-      attributes: <String, String>{'cx': '$cx', 'cy': '$cy'},
     );
+    if (end != null && drawing.twoCellEditAs != null) {
+      w.writeAttribute('editAs', drawing.twoCellEditAs!);
+    }
+    _writeMarker(w, 'from', (
+      col: drawing.col,
+      row: drawing.row,
+      colEmu: DrawingmlVisualIo.pixelsToEmu(drawing.offsetX),
+      rowEmu: DrawingmlVisualIo.pixelsToEmu(drawing.offsetY),
+    ));
+    if (end != null) {
+      _writeMarker(w, 'to', end);
+    } else {
+      w.writeEmptyElement(
+        'ext',
+        prefix: 'xdr',
+        attributes: <String, String>{'cx': '$cx', 'cy': '$cy'},
+      );
+    }
     if (visual.isChart) {
       _writeChartFrame(w, visual, relationshipId, nvId, cx, cy);
     } else {
@@ -481,6 +525,25 @@ abstract final class SheetDrawingIo {
     }
     w.writeEmptyElement('clientData', prefix: 'xdr');
     w.writeEndElement();
+  }
+
+  static void _writeMarker(
+    XmlWriter writer,
+    String name,
+    SmlDrawingMarker marker,
+  ) {
+    writer.writeStartElement(name, prefix: 'xdr');
+    for (final (tag, value) in [
+      ('col', marker.col),
+      ('colOff', marker.colEmu),
+      ('row', marker.row),
+      ('rowOff', marker.rowEmu),
+    ]) {
+      writer.writeStartElement(tag, prefix: 'xdr');
+      writer.writeText('$value');
+      writer.writeEndElement();
+    }
+    writer.writeEndElement();
   }
 
   static void _writePic(

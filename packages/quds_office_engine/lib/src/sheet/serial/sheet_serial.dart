@@ -436,11 +436,46 @@ class SheetDeserializer {
     SmlRange? conditionalRange;
     SmlConditionalRule? conditionalRule;
     var conditionalColorIndex = 0;
+    var readingView = false;
+    var foundView = false;
+    SmlCellRef? viewCell(String? address) {
+      if (address == null || address.length > 16) return null;
+      try {
+        final cell = SmlCellRef.parse(address);
+        return cell.col >= 0 &&
+                cell.col < SmlWorksheet.excelColumnCount &&
+                cell.row >= 0 &&
+                cell.row < SmlWorksheet.excelRowCount
+            ? cell
+            : null;
+      } on FormatException {
+        return null;
+      }
+    }
+
     while (reader.next()) {
-      if (reader.eventType == XmlEventType.startElement &&
+      if (readingView && reader.depth < 3) {
+        readingView = false;
+      }
+      if (!foundView &&
+          reader.eventType == XmlEventType.startElement &&
+          reader.depth == 3 &&
           reader.localName == 'sheetView') {
+        foundView = readingView = true;
         final String? rtl = reader.getAttribute('rightToLeft');
         sheet.rightToLeft = rtl == '1' || rtl?.toLowerCase() == 'true';
+        final zoom = int.tryParse(reader.getAttribute('zoomScale') ?? '');
+        if (zoom != null && zoom >= 10 && zoom <= 400) {
+          sheet.viewZoomPercent = zoom;
+        }
+        sheet.viewTopLeft = viewCell(reader.getAttribute('topLeftCell'));
+      }
+      if (readingView &&
+          reader.eventType == XmlEventType.startElement &&
+          reader.depth == 4 &&
+          reader.localName == 'selection' &&
+          reader.getAttribute('pane') == null) {
+        sheet.viewSelection ??= viewCell(reader.getAttribute('activeCell'));
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'autoFilter') {
@@ -700,6 +735,13 @@ class SheetDeserializer {
         }
       }
       if (reader.eventType == XmlEventType.startElement &&
+          reader.depth == 2 &&
+          (reader.localName == 'rowBreaks' ||
+              reader.localName == 'colBreaks') &&
+          reader.namespaceUri == OfficeNamespaces.x) {
+        _readManualPageBreaks(reader, sheet);
+      }
+      if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'printOptions') {
         final setup = ensurePageSetup();
         setup.printHeadings = reader.getAttribute('headings') == '1';
@@ -707,6 +749,13 @@ class SheetDeserializer {
         setup.centerHorizontally =
             reader.getAttribute('horizontalCentered') == '1';
         setup.centerVertically = reader.getAttribute('verticalCentered') == '1';
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'pageSetUpPr') {
+        final fit = reader.getAttribute('fitToPage');
+        if (fit != null) {
+          ensurePageSetup().fitToPage = fit == '1' || fit == 'true';
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'pageMargins') {
@@ -736,9 +785,10 @@ class SheetDeserializer {
         setup.orientation = reader.getAttribute('orientation') == 'landscape'
             ? SmlPageOrientation.landscape
             : SmlPageOrientation.portrait;
-        setup.paperSize =
-            int.tryParse(reader.getAttribute('paperSize') ?? '') ??
-            setup.paperSize;
+        final paperSize = int.tryParse(reader.getAttribute('paperSize') ?? '');
+        if (paperSize != null) setup.setExcelPaperSize(paperSize);
+        setup.printAcrossThenDown =
+            reader.getAttribute('pageOrder') == 'overThenDown';
         setup.scale =
             int.tryParse(reader.getAttribute('scale') ?? '') ?? setup.scale;
         setup.fitToWidth =
@@ -757,6 +807,17 @@ class SheetDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetFormatPr') {
+        final height = double.tryParse(
+          reader.getAttribute('defaultRowHeight') ?? '',
+        );
+        if (height != null &&
+            height.isFinite &&
+            height > 0 &&
+            height <= 409.5) {
+          sheet.importedDefaultRowHeightPx = SmlWorksheet.rowHeightFromExcel(
+            height,
+          );
+        }
         final width = double.tryParse(
           reader.getAttribute('defaultColWidth') ?? '',
         );
@@ -917,13 +978,27 @@ class SheetDeserializer {
       }
     }
     if (pageSetup != null) {
-      SheetSerializer._applyPaperSize(pageSetup!);
       sheet.pageSetup = pageSetup;
     }
     SheetDrawingIo.readSheet(sheet, package, sheetUri);
     _readSheetExtras(sheet, package, sheetUri);
     sheet.sourceValidationState = sheet.validationState();
     sheet.sourceConditionalFormatState = sheet.conditionalFormatState();
+  }
+
+  static void _readManualPageBreaks(XmlPullReader reader, SmlWorksheet sheet) {
+    if (reader.isEmptyElement) return;
+    final rows = reader.localName == 'rowBreaks';
+    while (reader.next() && reader.depth >= 2) {
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.depth == 3 &&
+          reader.localName == 'brk' &&
+          reader.namespaceUri == OfficeNamespaces.x &&
+          _readBoolean(reader.getAttribute('man'))) {
+        final index = int.tryParse(reader.getAttribute('id') ?? '');
+        if (index != null) sheet.importManualPageBreak(index, rows: rows);
+      }
+    }
   }
 
   static void _readSheetExtras(
@@ -1843,9 +1918,16 @@ class SheetSerializer {
         )) {
       w.writeNamespace('r', OfficeNamespaces.r);
     }
-    if (sheet.tabColorRgb case final rgb?) {
+    final writeFitToPage = sheet.pageSetup?.fitToPage == true;
+    final tabColor = sheet.tabColorRgb;
+    if (tabColor != null || writeFitToPage) {
       w.writeStartElement('sheetPr');
-      w.writeEmptyElement('tabColor', attributes: {'rgb': 'FF$rgb'});
+      if (tabColor != null) {
+        w.writeEmptyElement('tabColor', attributes: {'rgb': 'FF$tabColor'});
+      }
+      if (writeFitToPage) {
+        w.writeEmptyElement('pageSetUpPr', attributes: {'fitToPage': '1'});
+      }
       w.writeEndElement();
     }
     _writeSheetViews(w, sheet);
@@ -2270,43 +2352,6 @@ class SheetSerializer {
     }, _worksheetOrder);
   }
 
-  static void _applyPaperSize(SmlPageSetup setup) {
-    switch (setup.paperSize) {
-      case 1:
-        setup
-          ..paperWidthIn = 8.5
-          ..paperHeightIn = 11;
-      case 3:
-        setup
-          ..paperWidthIn = 11
-          ..paperHeightIn = 17;
-      case 5:
-        setup
-          ..paperWidthIn = 8.5
-          ..paperHeightIn = 14;
-      case 8:
-        setup
-          ..paperWidthIn = 11.69
-          ..paperHeightIn = 16.54;
-      case 9:
-        setup
-          ..paperWidthIn = 8.2677
-          ..paperHeightIn = 11.6929;
-      case 11:
-        setup
-          ..paperWidthIn = 5.83
-          ..paperHeightIn = 8.27;
-      case 12:
-        setup
-          ..paperWidthIn = 9.84
-          ..paperHeightIn = 13.9;
-      case 13:
-        setup
-          ..paperWidthIn = 6.93
-          ..paperHeightIn = 9.84;
-    }
-  }
-
   static void _writePageSetup(XmlWriter w, SmlWorksheet sheet) {
     final setup = sheet.pageSetup;
     if (setup == null) return;
@@ -2343,6 +2388,7 @@ class SheetSerializer {
             ? 'landscape'
             : 'portrait',
         'scale': '${setup.scale}',
+        if (setup.printAcrossThenDown) 'pageOrder': 'overThenDown',
         'fitToWidth': '${setup.fitToWidth}',
         'fitToHeight': '${setup.fitToHeight}',
         if (setup.useFirstPageNumber && setup.firstPageNumber != null)
@@ -2412,7 +2458,11 @@ class SheetSerializer {
   ) {
     final width = sheet.nativeDefaultColumnWidth;
     final base = sheet.nativeBaseColumnWidth;
-    if (width == null && base == null) return;
+    if (width == null &&
+        base == null &&
+        sheet.importedDefaultRowHeightPx == null) {
+      return;
+    }
     // Existing native XML can contain additional sheet defaults that are not
     // modeled here. Leave that complete element to _preserveSheetParts.
     if (sourceXml != null &&
@@ -2424,7 +2474,7 @@ class SheetSerializer {
     w.writeEmptyElement(
       'sheetFormatPr',
       attributes: <String, String>{
-        'defaultRowHeight': '${SmlWorksheet.defaultRowHeightPx * 72 / 96}',
+        'defaultRowHeight': '${sheet.effectiveDefaultRowHeightPx * 72 / 96}',
         if (width != null) 'defaultColWidth': '$width',
         if (base != null) 'baseColWidth': '$base',
       },
@@ -2432,12 +2482,23 @@ class SheetSerializer {
   }
 
   static void _writeSheetViews(XmlWriter w, SmlWorksheet sheet) {
-    if (!sheet.rightToLeft && sheet.freezeRows <= 0 && sheet.freezeCols <= 0) {
+    if (!sheet.rightToLeft &&
+        sheet.freezeRows <= 0 &&
+        sheet.freezeCols <= 0 &&
+        sheet.viewZoomPercent == null &&
+        sheet.viewTopLeft == null &&
+        sheet.viewSelection == null) {
       return;
     }
     w.writeStartElement('sheetViews');
     w.writeStartElement('sheetView');
     w.writeAttribute('workbookViewId', '0');
+    if (sheet.viewZoomPercent case final zoom?) {
+      w.writeAttribute('zoomScale', '$zoom');
+    }
+    if (sheet.viewTopLeft case final topLeft?) {
+      w.writeAttribute('topLeftCell', topLeft.a1);
+    }
     if (sheet.rightToLeft) {
       w.writeAttribute('rightToLeft', '1');
     }
@@ -2452,6 +2513,15 @@ class SheetSerializer {
       w.writeAttribute('activePane', 'bottomRight');
       w.writeAttribute('state', 'frozen');
       w.writeEndElement();
+    }
+    if (sheet.viewSelection case final selection?) {
+      w.writeEmptyElement(
+        'selection',
+        attributes: <String, String>{
+          'activeCell': selection.a1,
+          'sqref': selection.a1,
+        },
+      );
     }
     w.writeEndElement();
     w.writeEndElement();

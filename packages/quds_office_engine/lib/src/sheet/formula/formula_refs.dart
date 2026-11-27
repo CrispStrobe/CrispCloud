@@ -73,7 +73,8 @@ abstract final class FormulaRefShift {
     for (var i = 0; i < tokens.length; i++) {
       final FormulaToken token = tokens[i];
       if (token.kind != FormulaTokenKind.cell &&
-          token.kind != FormulaTokenKind.range) {
+          token.kind != FormulaTokenKind.range &&
+          token.kind != FormulaTokenKind.wholeAxisRange) {
         continue;
       }
       // `LOG10(` lexes like a cell reference; it is a function call.
@@ -86,18 +87,45 @@ abstract final class FormulaRefShift {
       }
       final String source = formula.substring(token.start, token.end);
       final int bang = source.lastIndexOf('!');
+      final address = source.substring(bang + 1);
+      final moved = token.kind == FormulaTokenKind.wholeAxisRange
+          ? _moveAxis(address, rows, columns)
+          : address.replaceAllMapped(
+              _ref,
+              (Match m) => _move(m, rows, columns),
+            );
       out
         ..write(formula.substring(last, token.start))
-        ..write(source.substring(0, bang + 1))
         ..write(
-          source
-              .substring(bang + 1)
-              .replaceAllMapped(_ref, (Match m) => _move(m, rows, columns)),
-        );
+          token.kind == FormulaTokenKind.wholeAxisRange && moved == '#REF!'
+              ? ''
+              : source.substring(0, bang + 1),
+        )
+        ..write(moved);
       last = token.end;
     }
     out.write(formula.substring(last));
     return out.toString();
+  }
+
+  static String _moveAxis(String address, int rows, int columns) {
+    final column = FormulaLexer.wholeColumnPattern.hasMatch(address);
+    final delta = column ? columns : rows;
+    if (delta == 0) return address;
+    final endpoints = <String>[];
+    for (final endpoint in address.split(':')) {
+      final cell = column ? '${endpoint}1' : 'A$endpoint';
+      final moved = _move(
+        _ref.firstMatch(cell)!,
+        column ? 0 : rows,
+        column ? columns : 0,
+      );
+      if (moved == '#REF!') return moved;
+      endpoints.add(
+        column ? moved.substring(0, moved.length - 1) : moved.substring(1),
+      );
+    }
+    return endpoints.join(':');
   }
 
   static String _move(Match m, int rows, int columns) {
@@ -143,7 +171,8 @@ abstract final class FormulaRefScanner {
     final List<FormulaRefSpan> spans = <FormulaRefSpan>[];
     for (final FormulaToken token in FormulaLexer(formula).tokenize()) {
       if (token.kind != FormulaTokenKind.cell &&
-          token.kind != FormulaTokenKind.range) {
+          token.kind != FormulaTokenKind.range &&
+          token.kind != FormulaTokenKind.wholeAxisRange) {
         continue;
       }
       try {
@@ -154,7 +183,7 @@ abstract final class FormulaRefScanner {
                 ? token.end
                 : token.start + token.lexeme.length,
             lexeme: token.lexeme,
-            range: _rangeOf(token.lexeme),
+            range: _rangeOf(token),
             sheetName: _sheetName(token.lexeme),
           ),
         );
@@ -165,9 +194,11 @@ abstract final class FormulaRefScanner {
     return spans;
   }
 
-  static SmlRange _rangeOf(String lexeme) {
-    final int bang = lexeme.lastIndexOf('!');
-    return SmlRange.parse(bang >= 0 ? lexeme.substring(bang + 1) : lexeme);
+  static SmlRange _rangeOf(FormulaToken token) {
+    final address = token.lexeme.substring(token.lexeme.lastIndexOf('!') + 1);
+    return token.kind == FormulaTokenKind.wholeAxisRange
+        ? FormulaParser.wholeAxisRange(address)
+        : SmlRange.parse(address);
   }
 
   static String? _sheetName(String lexeme) {

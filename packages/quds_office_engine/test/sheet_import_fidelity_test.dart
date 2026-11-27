@@ -24,7 +24,13 @@ SmlCell _cell(SmlWorkbook book, String a1) =>
     book.sheets.first.cell(SmlCellRef.parse(a1));
 
 /// A sheet with one chart whose series has `c:f` references but no caches.
-SmlWorkbook _openChart(String sheetData, {required String cat, String? val}) {
+SmlWorkbook _openChart(
+  String sheetData, {
+  required String cat,
+  String? val,
+  String end = '',
+  String extent = 'cx="3600000" cy="2160000"',
+}) {
   final OpcPackage package = _package(
     sheetData,
     drawing: '<drawing r:id="rIdDrawing"/>',
@@ -42,12 +48,12 @@ SmlWorkbook _openChart(String sheetData, {required String cat, String? val}) {
     utf8.encode(
       '<xdr:wsDr xmlns:xdr="${OfficeNamespaces.xdr}" '
       'xmlns:a="${OfficeNamespaces.a}" xmlns:r="${OfficeNamespaces.r}" '
-      'xmlns:c="${OfficeNamespaces.c}"><xdr:twoCellAnchor>'
+      'xmlns:c="${OfficeNamespaces.c}"><xdr:twoCellAnchor editAs="oneCell">'
       '<xdr:from><xdr:col>3</xdr:col><xdr:colOff>0</xdr:colOff>'
       '<xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>'
-      '<xdr:graphicFrame><xdr:nvGraphicFramePr>'
+      '$end<xdr:graphicFrame><xdr:nvGraphicFramePr>'
       '<xdr:cNvPr id="2" name="Chart 1"/></xdr:nvGraphicFramePr>'
-      '<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="3600000" cy="2160000"/>'
+      '<xdr:xfrm><a:off x="0" y="0"/><a:ext $extent/>'
       '</xdr:xfrm><a:graphic><a:graphicData>'
       '<c:chart r:id="rIdChart"/></a:graphicData></a:graphic>'
       '</xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>',
@@ -79,6 +85,40 @@ SmlWorkbook _openChart(String sheetData, {required String cat, String? val}) {
 }
 
 void main() {
+  test('two-cell chart bounds override zero transform and survive saving', () {
+    final book = _openChart(
+      '',
+      cat: r'Sheet1!$A$1:$A$3',
+      extent: 'cx="0" cy="0"',
+      end:
+          '<xdr:to><xdr:col>7</xdr:col><xdr:colOff>127000</xdr:colOff>'
+          '<xdr:row>20</xdr:row><xdr:rowOff>254000</xdr:rowOff></xdr:to>',
+    );
+    final sheet = book.firstSheet;
+    final drawing = sheet.drawings.single;
+    final expectedWidth =
+        (sheet.columnLeft(7) - sheet.columnLeft(3)) * .75 + 10;
+    final expectedHeight = (sheet.rowTop(20) - sheet.rowTop(1)) * .75 + 20;
+    expect(drawing.visual.width, closeTo(expectedWidth, .001));
+    expect(drawing.visual.height, closeTo(expectedHeight, .001));
+
+    SmlDrawing roundtrip(SmlWorkbook source) => SheetDeserializer()
+        .readBytes(SheetSerializer().writeBytes(source))
+        .firstSheet
+        .drawings
+        .single;
+    final saved = roundtrip(book);
+    expect(saved.twoCellEnd, (col: 7, row: 20, colEmu: 127000, rowEmu: 254000));
+    expect(saved.twoCellEditAs, 'oneCell');
+    expect(saved.visual.width, closeTo(expectedWidth, .001));
+    expect(saved.visual.height, closeTo(expectedHeight, .001));
+
+    drawing.visual.width += 30;
+    final resized = roundtrip(book);
+    expect(resized.twoCellEnd, isNull);
+    expect(resized.visual.width, closeTo(expectedWidth + 30, .001));
+  });
+
   group('headers and footers', () {
     test('font codes stay inside their section', () {
       final SmlWorkbook book = SheetDeserializer().read(
@@ -185,6 +225,23 @@ void main() {
   });
 
   group('FormulaRefShift', () {
+    test(
+      'moves only the relative axis of whole-row and whole-column ranges',
+      () {
+        expect(
+          FormulaRefShift.shift(r"SUM('Data'!$A:B,2:$4)", rows: 1, columns: 2),
+          r"SUM('Data'!$A:D,3:$4)",
+        );
+        expect(
+          FormulaRefShift.shift('SUM(A:A,1:1)', rows: -1, columns: -1),
+          'SUM(#REF!,#REF!)',
+        );
+        final references = FormulaRefScanner.scan('=SUM(E:E,3:3)');
+        expect(references.map((span) => span.lexeme), ['E:E', '3:3']);
+        expect(references.first.range.maxRow, SmlWorksheet.excelRowCount - 1);
+        expect(references.last.range.maxCol, SmlWorksheet.excelColumnCount - 1);
+      },
+    );
     test('moves relative parts and keeps absolute ones', () {
       expect(
         FormulaRefShift.shift(r'SUM(A1:B2)+$C$1+C$1+$D2', rows: 2, columns: 1),

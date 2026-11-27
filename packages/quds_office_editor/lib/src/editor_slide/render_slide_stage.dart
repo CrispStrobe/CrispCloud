@@ -430,7 +430,9 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
   var _paintRotateCursor = false;
 
   /// VisualImageCache API.
-  final VisualImageCache _images = VisualImageCache();
+  final VisualImageCache _images = VisualImageCache(
+    decodedByteBudget: 32 * 1024 * 1024,
+  );
 
   @override
   void dispose() {
@@ -2811,5 +2813,6 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       );
     }
     canvas.restore();
+    _images.endFrame();
   }
 }

@@ -64,7 +64,9 @@ abstract final class OfficePrint {
     OfficeFontSet? fonts,
     PdfSheetPrintOptions? options,
   }) {
-    PdfSheetPrintOptions sheetOptions = options ?? const PdfSheetPrintOptions();
+    PdfSheetPrintOptions sheetOptions =
+        options ??
+        PdfSheetPrintOptions(useWorksheetPageSetup: settings.landscape == null);
     if (settings.landscape == true) {
       sheetOptions = PdfSheetPrintOptions(
         pageWidth: sheetOptions.pageHeight,

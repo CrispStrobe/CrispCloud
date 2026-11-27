@@ -7,11 +7,19 @@ import 'package:test/test.dart';
 /// write that id's `<numFmt>` entry, otherwise strict readers (openpyxl,
 /// Open XML SDK) index past the end of `<numFmts>` and reject the package.
 void main() {
+  test('localizes a canonical XLSX format without changing its pattern', () {
+    final styles = SmlStyleSheet(
+      numFmts: {164: r'#,##0.00\ "€"'},
+      cellXfsNumFmt: [164],
+    );
+    expect(styles.format(1234.5, 0), '1,234.50 €');
+    expect(styles.format(1234.5, 0, locale: 'de_DE'), '1.234,50 €');
+    expect(styles.format(-1234.5, 0, locale: 'de_DE'), '-1.234,50 €');
+  });
+
   test('an authored custom number format is written and reloads', () async {
     final book = SmlWorkbook(
-      sheets: [
-        SmlWorksheet(name: 'Sheet1', sheetId: 1),
-      ],
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
     );
     final sheet = book.firstSheet;
     final cell = sheet.cellA1('A1')..value = 1234.5;
@@ -32,7 +40,9 @@ void main() {
       ..hasExplicitStyleIndex = true;
 
     final bytes = await OfficeIsolateSave.workbook(book, recalculate: false);
-    final text = OpcPackage.openBytes(bytes).getPart('/xl/styles.xml')!.readText();
+    final text = OpcPackage.openBytes(
+      bytes,
+    ).getPart('/xl/styles.xml')!.readText();
     expect(text, contains('numFmtId="170"'));
     expect(text, contains('#,##0.00'));
     expect(text, contains(r'&quot;EUR&quot;'));
@@ -55,7 +65,9 @@ void main() {
     styles.cellXfsFontId.add(0);
 
     final bytes = await OfficeIsolateSave.workbook(book, recalculate: false);
-    final text = OpcPackage.openBytes(bytes).getPart('/xl/styles.xml')!.readText();
+    final text = OpcPackage.openBytes(
+      bytes,
+    ).getPart('/xl/styles.xml')!.readText();
     expect(text, contains('numFmtId="200"'));
     final reopened = SheetDeserializer().readBytes(bytes);
     expect(reopened.styles!.numFmts[200], '0.0000');

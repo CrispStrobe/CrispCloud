@@ -51,6 +51,9 @@ environment:
 
 dependencies:
   flutter_svg: ^2.3.0
+  html: ^0.15.6
+  super_clipboard: ^0.9.1
+  super_drag_and_drop: ^0.9.1
   crypto: ^3.0.7
   intl: ^0.20.2
   url_launcher: ^6.3.1

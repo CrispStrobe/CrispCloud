@@ -153,7 +153,7 @@ abstract final class Uax9Bidi {
     );
     final List<BidiClass> working = List<BidiClass>.from(types);
     _resolveExplicit(working, levels, paragraphLevel);
-    _resolveWeak(working);
+    _resolveWeak(working, paragraphLevel);
     _resolveNeutrals(working, levels, paragraphLevel);
     _resolveImplicit(working, levels);
     _resetWhitespace(types, levels, paragraphLevel);
@@ -283,7 +283,7 @@ abstract final class Uax9Bidi {
     return false;
   }
 
-  static void _resolveWeak(List<BidiClass> types) {
+  static void _resolveWeak(List<BidiClass> types, int paragraphLevel) {
     // W1 NSM
     BidiClass prev = BidiClass.on;
     for (int i = 0; i < types.length; i++) {
@@ -344,8 +344,9 @@ abstract final class Uax9Bidi {
         types[i] = BidiClass.on;
       }
     }
-    // W7 EN → L after L
-    lastStrong = BidiClass.on;
+    // W7 starts with the direction at the paragraph boundary. Without it,
+    // leading European numbers act like RTL runs around neutral separators.
+    lastStrong = paragraphLevel.isOdd ? BidiClass.r : BidiClass.l;
     for (int i = 0; i < types.length; i++) {
       if (types[i] == BidiClass.l || types[i] == BidiClass.r) {
         lastStrong = types[i];
