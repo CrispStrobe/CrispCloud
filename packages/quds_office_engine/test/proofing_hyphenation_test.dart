@@ -333,6 +333,23 @@ void main() {
         expect(run.firstChild('lang')!.getAttribute('bidi'), 'ar-SA');
         expect(run.firstChild('lang')!.getAttribute('val'), 'de-CH');
         expect(run.firstChild('noProof')!.getAttribute('val'), '0');
+
+        p.properties.proofingLanguage = null;
+        final cleared = WordSerializer()
+            .write(doc)
+            .getPart('/word/document.xml')!
+            .readText();
+        final clearedMarker = XmlDocument.parse(cleared).root!
+            .firstChild('body')!
+            .firstChild('p')!
+            .firstChild('pPr')!
+            .firstChild('rPr')!;
+        expect(clearedMarker.firstChild('b'), isNotNull);
+        expect(clearedMarker.firstChild('lang')!.getAttribute('val'), isNull);
+        expect(
+          clearedMarker.firstChild('lang')!.getAttribute('eastAsia'),
+          'ja-JP',
+        );
       },
     );
     test(

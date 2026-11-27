@@ -1189,46 +1189,44 @@ class WordSerializer {
   }
 
   void _writeRunContent(XmlWriter w, String text, {required bool deleted}) {
-    if (!text.contains(RegExp(r'[\t\r\n\u00ad\u2011]'))) {
-      _writeTextNode(w, text, deleted: deleted);
-      return;
-    }
     var start = 0;
-    for (int i = 0; i < text.length; i++) {
-      final int code = text.codeUnitAt(i);
-      if (code != 0x09 &&
-          code != 0x0a &&
-          code != 0x0d &&
-          code != 0x00ad &&
-          code != 0x2011) {
-        continue;
-      }
+    final length = text.length;
+    for (var i = 0; i < length; i++) {
+      final code = text.codeUnitAt(i);
+      final control = switch (code) {
+        0x09 => 'tab',
+        0x0a || 0x0d => 'br',
+        0x00ad => 'softHyphen',
+        0x2011 => 'noBreakHyphen',
+        _ => null,
+      };
+      if (control == null) continue;
       if (i > start) {
         _writeTextNode(w, text.substring(start, i), deleted: deleted);
       }
-      w.writeEmptyElement(switch (code) {
-        0x09 => 'tab',
-        0x00ad => 'softHyphen',
-        0x2011 => 'noBreakHyphen',
-        _ => 'br',
-      }, prefix: 'w');
-      if (code == 0x0d &&
-          i + 1 < text.length &&
-          text.codeUnitAt(i + 1) == 0x0a) {
+      w.writeEmptyElement(control, prefix: 'w');
+      if (code == 0x0d && i + 1 < length && text.codeUnitAt(i + 1) == 0x0a) {
         i++;
       }
       start = i + 1;
     }
-    if (start < text.length) {
+    if (start == 0) {
+      _writeTextNode(w, text, deleted: deleted);
+    } else if (start < length) {
       _writeTextNode(w, text.substring(start), deleted: deleted);
     }
   }
 
   void _writeTextNode(XmlWriter w, String text, {required bool deleted}) {
-    w.writeStartElement(deleted ? 'delText' : 't', prefix: 'w');
-    w.writeAttribute('xml:space', 'preserve');
+    // These fixed tags are already balanced. The payload still goes through
+    // the XML writer's text escaping and invalid-character handling.
+    w.writeRaw(
+      deleted
+          ? '<w:delText xml:space="preserve">'
+          : '<w:t xml:space="preserve">',
+    );
     w.writeText(text);
-    w.writeEndElement();
+    w.writeRaw(deleted ? '</w:delText>' : '</w:t>');
   }
 
   String _externalLinkId(WmlHyperlink link) {
@@ -1479,11 +1477,18 @@ class WordSerializer {
       // The paragraph mark is an unpainted participant: it supplies the
       // continuation format for typing in an empty paragraph and the line
       // metrics of that empty line. Word stores it in `w:pPr/w:rPr`.
+      final originalLanguage = p.importedValues?['rPr'];
+      final languageChanged =
+          originalLanguage != null &&
+          originalLanguage != '${p.proofingLanguage}';
+      final language = languageChanged || mark.proofingLanguage == null
+          ? p.proofingLanguage
+          : mark.proofingLanguage;
       _writeFullRPr(
         w,
-        mark.proofingLanguage == null && p.proofingLanguage != null
-            ? (mark.copy()..proofingLanguage = p.proofingLanguage)
-            : mark,
+        language == mark.proofingLanguage
+            ? mark
+            : (mark.copy()..proofingLanguage = language),
       );
     } else if (p.proofingLanguage != null) {
       w.writeStartElement('rPr', prefix: 'w');

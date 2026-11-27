@@ -672,6 +672,44 @@ void main() {
     expect(PdfFile.open(bytes).displayList(0).error, isNull);
   });
 
+  test('automatic fit includes visible unwrapped text past the last cell', () {
+    final sheet =
+        SmlWorksheet(
+            name: 'Notes',
+            sheetId: 1,
+            pageSetup: SmlPageSetup(
+              paperWidthIn: 2.5,
+              paperHeightIn: 2,
+              marginLeftIn: 0,
+              marginRightIn: 0,
+              marginTopIn: 0,
+              marginBottomIn: 0,
+              fitToPage: true,
+              fitToHeight: 0,
+            ),
+          )
+          ..setRowHeight(0, 110)
+          ..setRowHeight(1, 110)
+          ..cellA1('A2').value = 'Second row';
+    final note = sheet.cellA1('A1')
+      ..value = 'A long unwrapped worksheet label with a visible ending';
+    final book = SmlWorkbook(sheets: [sheet]);
+    Uint8List printSheet() => OfficePrint.workbook(book);
+
+    final overflow = printSheet();
+    expect(_pageCount(overflow), 1);
+    expect(_inflated(overflow).join(), contains('a visible ending'));
+
+    note.wrapText = true;
+    expect(_pageCount(printSheet()), 2);
+    note.wrapText = false;
+    sheet.cellA1('B1').value = 'Stop';
+    expect(_pageCount(printSheet()), 2);
+    sheet.cellA1('B1').value = null;
+    sheet.printArea = SmlRange.parse('A1:A2');
+    expect(_pageCount(printSheet()), 2);
+  });
+
   test('fit to page tolerates floating-point width accumulation', () {
     final sheet = SmlWorksheet(
       name: 'Exact width',

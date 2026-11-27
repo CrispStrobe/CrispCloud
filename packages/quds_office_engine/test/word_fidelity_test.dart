@@ -5,6 +5,24 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('serializes escaped run text and Word controls in source order', () {
+    final document = WmlDocument.empty(text: ' A<&😀\tB\r\nC\u00adD\u2011 E ');
+    final xml = WordSerializer()
+        .write(document)
+        .getPart('/word/document.xml')!
+        .readText();
+    expect(
+      xml,
+      contains(
+        '<w:t xml:space="preserve"> A&lt;&amp;😀</w:t><w:tab/>'
+        '<w:t xml:space="preserve">B</w:t><w:br/>'
+        '<w:t xml:space="preserve">C</w:t><w:softHyphen/>'
+        '<w:t xml:space="preserve">D</w:t><w:noBreakHyphen/>'
+        '<w:t xml:space="preserve"> E </w:t>',
+      ),
+    );
+  });
+
   test('footer text flows upward from the bottom margin', () {
     WmlParagraph paragraph(String text, int halfPoints, double lineHeight) =>
         WmlParagraph(

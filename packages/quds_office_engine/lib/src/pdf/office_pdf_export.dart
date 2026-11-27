@@ -1396,9 +1396,86 @@ abstract final class OfficePdfExport {
       );
     }
 
+    final bool rtl = sheet.rightToLeft;
+    final fit = options.fitOverride ?? setup?.fitToPage ?? options.fitToPage;
+    final fitWidth = options.fitOverride == true ? 1 : setup?.fitToWidth ?? 1;
+    bool wraps(SmlCell cell, String text) =>
+        text.contains('\n') ||
+        (cell.wrapText ?? book.styles?.wrapAt(cell.styleIndex) ?? false);
+
+    bool canOverflow(SmlCell cell, bool numeric, bool wrap) =>
+        !rtl &&
+        !numeric &&
+        !wrap &&
+        (cell.horizontalAlign == SmlHAlign.general ||
+            cell.horizontalAlign == SmlHAlign.left);
+
+    bool blocksOverflow(int col, int row) {
+      final neighbor = sheet.rows[row]?.cells[col];
+      return neighbor?.formula != null ||
+          (neighbor?.asString.isNotEmpty ?? false) ||
+          sheet.mergeAt(col, row) != null ||
+          (conditionalFormats.resolve(SmlCellRef(col, row)).fillRgb ??
+                  neighbor?.fillRgb ??
+                  '')
+              .isNotEmpty;
+    }
+
     final List<double> colPts = <double>[
       for (int c = minCol; c <= maxCol; c++) math.max(4, printColumnWidth(c)),
     ];
+    if (options.useWorksheetPageSetup &&
+        area == null &&
+        fit &&
+        fitWidth > 0 &&
+        !rtl) {
+      // In automatic print areas, unwrapped labels can occupy empty cells
+      // beyond the final populated column and take part in width fitting.
+      final colEnds = <double>[0];
+      for (final width in colPts) {
+        colEnds.add(colEnds.last + width);
+      }
+      for (final cell in sheet.allCells) {
+        if (!cell.hasContent) continue;
+        final shown = _sheetDisplay(book, sheet, cell);
+        if (shown.text.isEmpty ||
+            !canOverflow(cell, shown.numeric, wraps(cell, shown.text)) ||
+            sheet.mergeAtRef(cell.ref) != null) {
+          continue;
+        }
+        final family = book.styles?.familyAt(cell.styleIndex);
+        final italic = book.styles?.italicAt(cell.styleIndex) ?? false;
+        var remaining = 6.0;
+        for (final cp in shown.text.runes) {
+          if (cp < 32) continue;
+          remaining += pack.widthOf(
+            cp,
+            cell.fontSize,
+            family: family,
+            weight: cell.fontBold ? 700 : 400,
+            italic: italic,
+          );
+        }
+        if (remaining <= colEnds.last - colEnds[cell.ref.col - minCol]) {
+          continue;
+        }
+        for (
+          var col = cell.ref.col;
+          col < SmlWorksheet.excelColumnCount;
+          col++
+        ) {
+          if (col != cell.ref.col && blocksOverflow(col, cell.ref.row)) break;
+          if (col > maxCol) {
+            final width = math.max(4.0, printColumnWidth(col));
+            colPts.add(width);
+            colEnds.add(colEnds.last + width);
+            maxCol = col;
+          }
+          remaining -= colPts[col - minCol];
+          if (remaining <= 0) break;
+        }
+      }
+    }
     final authoredRows = options.useWorksheetPageSetup && book.package != null;
     final List<double> rowPts = <double>[
       for (int r = minRow; r <= maxRow; r++)
@@ -1417,11 +1494,9 @@ abstract final class OfficePdfExport {
     var scale =
         (options.scalePercentOverride ?? setup?.scale ?? 100).clamp(10, 400) /
         100;
-    final fit = options.fitOverride ?? setup?.fitToPage ?? options.fitToPage;
     if (fit) {
       final needW = colPts.fold<double>(0, (a, b) => a + b);
       final needH = rowPts.fold<double>(0, (a, b) => a + b);
-      final fitWidth = options.fitOverride == true ? 1 : setup?.fitToWidth ?? 1;
       final fitHeight = options.fitWidthOnly
           ? 0
           : options.fitOverride == true
@@ -1551,7 +1626,6 @@ abstract final class OfficePdfExport {
     }
 
     var pageCount = colBands.length * rowBands.length;
-    final bool rtl = sheet.rightToLeft;
     final SmlHeaderFooter? hf = sheet.headerFooter;
 
     final acrossThenDown = setup?.printAcrossThenDown ?? true;
@@ -1845,27 +1919,12 @@ abstract final class OfficePdfExport {
                 SmlHAlign.general =>
                   shown.numeric ? _TextAlign.right : _TextAlign.auto,
               };
-              final wrap =
-                  shown.text.contains('\n') ||
-                  (stored.wrapText ??
-                      book.styles?.wrapAt(stored.styleIndex) ??
-                      false);
+              final wrap = wraps(stored, shown.text);
               final vertical = book.styles?.verticalAlignAt(stored.styleIndex);
               var textSpan = spanW;
-              if (!rtl &&
-                  merge == null &&
-                  !shown.numeric &&
-                  !wrap &&
-                  (align == _TextAlign.auto || align == _TextAlign.left)) {
+              if (merge == null && canOverflow(stored, shown.numeric, wrap)) {
                 for (int next = c + 1; next <= minCol + cb.end; next++) {
-                  final neighbor = sheet.rows[r]?.cells[next];
-                  final style = conditionalFormats.resolve(SmlCellRef(next, r));
-                  if (sheet.mergeAt(next, r) != null ||
-                      neighbor?.formula != null ||
-                      (neighbor?.asString.isNotEmpty ?? false) ||
-                      (style.fillRgb ?? neighbor?.fillRgb ?? '').isNotEmpty) {
-                    break;
-                  }
+                  if (blocksOverflow(next, r)) break;
                   textSpan += colWAt(next);
                 }
               }
