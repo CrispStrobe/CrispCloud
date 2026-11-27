@@ -37,6 +37,21 @@ void main() {
       }
     });
 
+    test('matches unaligned overlapping data and short trailing ranges', () {
+      for (final period in [1, 2, 3, 5, 7, 11]) {
+        for (var tail = 0; tail < 8; tail++) {
+          final bytes = Uint8List(260 + period + tail + 3);
+          final data = Uint8List.sublistView(bytes, 1, bytes.length - 2);
+          for (var i = 0; i < data.length; i++) {
+            data[i] = i % period;
+          }
+          data[data.length - 1] = 255;
+          final compressed = RawDeflate.deflate(data);
+          expect(RawDeflate.inflate(compressed), data);
+        }
+      }
+    });
+
     test('retains matches at the exact window boundary', () {
       final token = List<int>.generate(24, (index) => index + 1);
       for (final (level, window) in [(6, 4096), (9, 32768)]) {

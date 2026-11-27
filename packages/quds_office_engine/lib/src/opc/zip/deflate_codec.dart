@@ -255,6 +255,7 @@ class _Deflater {
   _Deflater(this._src, {required this._level});
 
   final Uint8List _src;
+  late final ByteData _words = ByteData.sublistView(_src);
   final int _level;
   int _bitBuf = 0;
   int _bitCount = 0;
@@ -322,25 +323,62 @@ class _Deflater {
     }
   }
 
-  void _emitLiteral(int symbol) {
-    final _Code code = _fixedLiteralCode(symbol);
-    _writeBits(code.bits, code.length);
-  }
+  static final _literalCodes = Uint16List.fromList([
+    for (var symbol = 0; symbol < 288; symbol++) _packedLiteral(symbol),
+  ]);
+  static final _lengthCodes = _buildLengthCodes();
+  static final _distanceCodes = _buildDistanceCodes();
+
+  void _emitLiteral(int symbol) => _emitCode(_literalCodes[symbol]);
 
   void _emitLengthDistance(int length, int distance) {
-    final int lenSym = _lengthSymbol(length);
-    final _Code lit = _fixedLiteralCode(lenSym);
-    _writeBits(lit.bits, lit.length);
-    final int lenExtraBits = _lengthExtra[lenSym - 257];
-    if (lenExtraBits > 0) {
-      _writeBits(length - _lengthBase[lenSym - 257], lenExtraBits);
+    _emitCode(_lengthCodes[length]);
+    _emitCode(_distanceCodes[distance]);
+  }
+
+  void _emitCode(int code) => _writeBits(code >>> 5, code & 31);
+
+  static int _packedLiteral(int symbol) {
+    final code = _fixedLiteralCode(symbol);
+    return _packCode(code.bits, code.length);
+  }
+
+  // Keep the wire-order bits above a five-bit count. A packed length or
+  // distance includes its extra bits, so emitting it needs one buffer write.
+  static int _packCode(int bits, int count) => (bits << 5) | count;
+
+  static Uint32List _buildLengthCodes() {
+    final codes = Uint32List(259);
+    for (var i = 0; i < _lengthBase.length; i++) {
+      final base = _lengthBase[i];
+      final end = i + 1 < _lengthBase.length
+          ? _lengthBase[i + 1]
+          : codes.length;
+      final prefix = _fixedLiteralCode(257 + i);
+      for (var length = base; length < end; length++) {
+        codes[length] = _packCode(
+          prefix.bits | ((length - base) << prefix.length),
+          prefix.length + _lengthExtra[i],
+        );
+      }
     }
-    final int distSym = _distanceSymbol(distance);
-    _writeBits(_reverseBits(distSym, 5), 5);
-    final int distExtra = _distExtra[distSym];
-    if (distExtra > 0) {
-      _writeBits(distance - _distBase[distSym], distExtra);
+    return codes;
+  }
+
+  static Uint32List _buildDistanceCodes() {
+    final codes = Uint32List(32769);
+    for (var i = 0; i < _distBase.length; i++) {
+      final base = _distBase[i];
+      final end = i + 1 < _distBase.length ? _distBase[i + 1] : codes.length;
+      final prefix = _reverseBits(i, 5);
+      for (var distance = base; distance < end; distance++) {
+        codes[distance] = _packCode(
+          prefix | ((distance - base) << 5),
+          5 + _distExtra[i],
+        );
+      }
     }
+    return codes;
   }
 
   _Match _findMatch(
@@ -356,11 +394,19 @@ class _Deflater {
     int bestLen = 0;
     int bestDist = 0;
     int pos = index.latest(key);
+    final words = _words;
     for (var seen = 0; seen < maxChain && pos >= minPos; seen++) {
       // The triple already matches. After finding a candidate, a mismatch
       // at its end rules out any strictly longer match at this position.
       if (bestLen == 0 || _src[pos + bestLen] == _src[cursor + bestLen]) {
         var len = 3;
+        // Probe intact four-byte ranges first, then locate an exact mismatch.
+        // Reading the source permits overlapping matches at any alignment.
+        while (len + 4 <= limit &&
+            words.getUint32(pos + len, Endian.little) ==
+                words.getUint32(cursor + len, Endian.little)) {
+          len += 4;
+        }
         while (len < limit && _src[pos + len] == _src[cursor + len]) {
           len++;
         }
@@ -567,24 +613,6 @@ _Code _fixedLiteralCode(int symbol) {
     return _Code(_reverseBits(symbol - 256, 7), 7);
   }
   return _Code(_reverseBits(0xC0 + (symbol - 280), 8), 8);
-}
-
-int _lengthSymbol(int length) {
-  for (int i = _lengthBase.length - 1; i >= 0; i--) {
-    if (length >= _lengthBase[i]) {
-      return 257 + i;
-    }
-  }
-  return 257;
-}
-
-int _distanceSymbol(int distance) {
-  for (int i = _distBase.length - 1; i >= 0; i--) {
-    if (distance >= _distBase[i]) {
-      return i;
-    }
-  }
-  return 0;
 }
 
 int _triple(Uint8List data, int offset) =>
