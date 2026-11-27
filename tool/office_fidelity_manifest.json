@@ -2368,7 +2368,7 @@
     "packages/quds_office_engine/lib/src/opc/package_part.dart": "97b927e34badedc0146996afb0b29f4af6e4e5fecae9c00660de5f1f4f664191",
     "packages/quds_office_engine/lib/src/opc/repair/office_repair.dart": "7da7d962a3e7e1f35f55fdc787eedb31edaae1b0451e68846ac0ec32d0c72e3e",
     "packages/quds_office_engine/lib/src/opc/repair/zip_recovery.dart": "bc11bf07c06d3d2ef03d70ef08a9559423ed42c7ea621b267f95ad3192ad5cab",
-    "packages/quds_office_engine/lib/src/opc/zip/crc32.dart": "42dd7a85de08ab455a994c5f6738f9b895bede5ccb10f787796f0161b4c95c30",
+    "packages/quds_office_engine/lib/src/opc/zip/crc32.dart": "26bffdf3dfc960771e296fdcb4e4e9d72d7006cc46eb588195e7e7ba3821d84e",
     "packages/quds_office_engine/lib/src/opc/zip/deflate_codec.dart": "a69c166a132675e14f5f5cfbd9a08ee82e3819c7e7e733a2092beb4beaa2c219",
     "packages/quds_office_engine/lib/src/opc/zip/zip_deflate.dart": "51c13270cd58d5319d1c433344ccbb87cdabba3e113a917c44d836a4d2ae9f39",
     "packages/quds_office_engine/lib/src/opc/zip/zip_deflate_io.dart": "19e7c095bc886a0cc831cbdefcdd5c8473fe208902a4260b47370c6d381cd396",
@@ -3005,7 +3005,7 @@
     "packages/quds_office_engine/test/office_vba_word_unit_conversions_integration_test.dart": "6ae729c2f6d2d23a3ad3719574cc826ce33c41a8f64ba2dd574e580cb35e30f8",
     "packages/quds_office_engine/test/office_vba_word_unit_conversions_test.dart": "27f8f3af8ed8f84a9b063a5f34e6c5ca2192b868b8ae3259e3140d3c913e6e3d",
     "packages/quds_office_engine/test/opaque_word_test.dart": "8fb8229ce62d91128dbcb6993970c0d9811c76c670da06d81269e00889773842",
-    "packages/quds_office_engine/test/opc_archive_test.dart": "92e1ea767125b8398f9a4ed8670ac9e59060e566e87364d8c82ee6be527b31d1",
+    "packages/quds_office_engine/test/opc_archive_test.dart": "5bfe7b4a5dd40422e41ee0d112d650b6bbafc9d6590d316dd7d3b102f87833ad",
     "packages/quds_office_engine/test/opc_word_kind_test.dart": "71ea86bfdb04697e39cbe9ec8dfb61272a871ec1df83c789b7f263ec96fa3e16",
     "packages/quds_office_engine/test/pdf_actual_text_scope_test.dart": "43e74d364fcdbd0784e1f52a68b44a6f15ef696674fe02c3b81e92ee14683a69",
     "packages/quds_office_engine/test/pdf_ccitt_test.dart": "20c6c66b1f080b0d5f8177cd302737d36114050de6623e5bdffaa1763b663298",
@@ -3552,7 +3552,7 @@
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da"
   },
   "source_branch": "main",
-  "source_commit": "9ffc8aa47a3bbb8075a4a17a67d29cfe2d4253ac",
+  "source_commit": "3061898d69a15092a51ee32d7ccc89a8bea5270b",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

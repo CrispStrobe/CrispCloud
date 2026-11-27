@@ -122,6 +122,20 @@ void main() {
       }
     });
 
+    test('CRC32 keeps the right checksum across bulk blocks and tails', () {
+      final bytes = Uint8List(4100);
+      final data = Uint8List.sublistView(bytes, 1);
+      for (var i = 0; i < data.length; i++) {
+        data[i] = i % 251;
+      }
+      expect(Crc32.compute(data), 0x48D1721D);
+      for (var split = 0; split < 16; split++) {
+        final head = Uint8List.sublistView(data, 0, split);
+        final tail = Uint8List.sublistView(data, split);
+        expect(Crc32.compute(tail, Crc32.compute(head)), 0x48D1721D);
+      }
+    });
+
     test('ZIP store and deflate round-trip', () {
       final ZipWriter writer = ZipWriter();
       writer.addFile('plain.txt', utf8.encode('hello'), store: true);

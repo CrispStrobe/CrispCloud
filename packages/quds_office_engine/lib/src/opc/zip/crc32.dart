@@ -11,11 +11,26 @@ abstract final class Crc32 {
     var offset = 0;
     if (data is Uint8List && length >= 4 && crc >= 0 && crc <= 0xFFFFFFFF) {
       // Each table advances a byte by a different number of CRC steps.
-      // Combining four independent lookups removes the dependency between
-      // each consecutive byte. The view also handles unaligned sublists.
+      // Combining eight independent lookups cuts the loop-carried
+      // dependencies. Two 32-bit loads support unaligned sublists and web.
       final words = ByteData.sublistView(data);
+      final bulkEnd = length & ~7;
+      while (offset < bulkEnd) {
+        final low = c ^ words.getUint32(offset, Endian.little);
+        final high = words.getUint32(offset + 4, Endian.little);
+        c =
+            _table[1792 + (low & 0xFF)] ^
+            _table[1536 + ((low >>> 8) & 0xFF)] ^
+            _table[1280 + ((low >>> 16) & 0xFF)] ^
+            _table[1024 + (low >>> 24)] ^
+            _table[768 + (high & 0xFF)] ^
+            _table[512 + ((high >>> 8) & 0xFF)] ^
+            _table[256 + ((high >>> 16) & 0xFF)] ^
+            _table[high >>> 24];
+        offset += 8;
+      }
       final end = length & ~3;
-      while (offset < end) {
+      if (offset < end) {
         final word = c ^ words.getUint32(offset, Endian.little);
         c =
             _table[768 + (word & 0xFF)] ^
@@ -32,7 +47,7 @@ abstract final class Crc32 {
   }
 
   static Uint32List _buildTable() {
-    final Uint32List table = Uint32List(4 * 256);
+    final Uint32List table = Uint32List(8 * 256);
     for (int i = 0; i < 256; i++) {
       int c = i;
       for (int j = 0; j < 8; j++) {
@@ -44,7 +59,7 @@ abstract final class Crc32 {
       }
       table[i] = c;
     }
-    for (var slice = 1; slice < 4; slice++) {
+    for (var slice = 1; slice < 8; slice++) {
       for (var byte = 0; byte < 256; byte++) {
         final previous = table[(slice - 1) * 256 + byte];
         table[slice * 256 + byte] = table[previous & 0xFF] ^ (previous >>> 8);
