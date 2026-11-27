@@ -171,6 +171,8 @@ void main() {
       tester.state<ScaffoldState>(find.byType(Scaffold).first).isDrawerOpen,
       isTrue,
     );
+    // Flutter checks debug overrides before addTearDown callbacks run.
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets(
