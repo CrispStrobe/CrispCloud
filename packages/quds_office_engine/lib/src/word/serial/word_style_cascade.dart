@@ -1133,7 +1133,9 @@ class _StyleCascade {
       // None of the per-paragraph metadata below belongs to this snapshot.
       final reusable = !projection.paragraphXml.contains('sectPr');
       if (reusable) {
-        properties.importedValues = WordPropertyIo.paragraphValues(properties);
+        properties.captureImportedValues(
+          WordPropertyIo.paragraphValues(properties),
+        );
       }
       _paragraphStyles[key] = (
         projection: projection,

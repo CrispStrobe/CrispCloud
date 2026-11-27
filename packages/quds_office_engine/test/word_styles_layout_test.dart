@@ -56,6 +56,30 @@ const String _bulletNumbering =
     '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>';
 
 void main() {
+  test('cached paragraph baselines remain independently editable', () {
+    final document = _open(
+      '<w:p><w:r><w:t>First</w:t></w:r></w:p>'
+      '<w:p><w:r><w:t>Second</w:t></w:r></w:p>'
+      '<w:p><w:r><w:t>Third</w:t></w:r></w:p>',
+      styles:
+          '<w:docDefaults><w:pPrDefault><w:pPr>'
+          '<w:spacing w:after="120"/>'
+          '</w:pPr></w:pPrDefault></w:docDefaults>',
+    );
+    final properties = document.paragraphs.map((p) => p.properties).toList();
+    final original = Map<String, String>.of(properties[0].importedValues!);
+    expect(original, isNotEmpty);
+    expect(properties[1].importedValues, original);
+    expect(properties[2].importedValues, original);
+
+    properties[0].importedValues!['spacing:after'] = '42';
+    final editedCopy = properties[0].copy();
+    properties[0].importedValues!.clear();
+    expect(editedCopy.importedValues!['spacing:after'], '42');
+    expect(properties[1].importedValues, original);
+    expect(properties[2].importedValues, original);
+  });
+
   test('cached direct properties preserve text on either side of rPr', () {
     final doc = _open(
       '<w:p><w:r><w:rPr><w:sz w:val="34"/></w:rPr>'

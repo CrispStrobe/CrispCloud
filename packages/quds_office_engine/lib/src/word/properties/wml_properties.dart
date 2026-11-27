@@ -347,6 +347,11 @@ class WmlParagraphProps {
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
 
+  /// Stores a comparison snapshot that copies can share until edited.
+  void captureImportedValues(Map<String, String> values) {
+    importedValues = _ImportedValues(_PropertyImportBaseline(Map.of(values)));
+  }
+
   /// Import-resolved paragraph-mark formatting for blank-line layout.
   /// Direct XML remains authoritative for sparse export.
   /// This is not an extra visible run or an editable text character.
@@ -594,9 +599,12 @@ class WmlParagraphProps {
         )
         ..sourcePropertiesXml = sourcePropertiesXml
         ..importedParagraphMark = importedParagraphMark?.copy()
-        ..importedValues = importedValues == null
-            ? null
-            : Map.of(importedValues!);
+        ..importedValues = switch (importedValues) {
+          final _ImportedValues values when values._edited == null =>
+            _ImportedValues(values._baseline),
+          final Map<String, String> values => Map.of(values),
+          null => null,
+        };
 }
 
 /// Maps Word `w:highlight` names (and raw hex) to RRGGBB.
@@ -685,8 +693,8 @@ class WmlRunProps {
   /// Effective values at import time, independently editable for each run.
   Map<String, String>? get importedValues {
     final baseline = _importBaseline;
-    if (baseline is _RunImportBaseline) {
-      final values = _RunImportedValues(baseline);
+    if (baseline is _PropertyImportBaseline) {
+      final values = _ImportedValues(baseline);
       _importBaseline = values;
       return values;
     }
@@ -701,7 +709,7 @@ class WmlRunProps {
   /// Compares modeled values without creating an editable baseline map.
   bool matchesImportedValues(Map<String, String> current) {
     final baseline = _importBaseline;
-    final values = baseline is _RunImportBaseline
+    final values = baseline is _PropertyImportBaseline
         ? baseline.values
         : baseline as Map<String, String>?;
     if (values == null) return false;
@@ -713,11 +721,11 @@ class WmlRunProps {
 
   /// Stores a comparison baseline that copies can share until edited.
   void captureImportedValues(Map<String, String> values) {
-    _importBaseline = _RunImportBaseline(Map.of(values));
+    _importBaseline = _PropertyImportBaseline(Map.of(values));
   }
 
   Object? _copyImportBaseline() => switch (_importBaseline) {
-    final _RunImportedValues values when values._edited == null =>
+    final _ImportedValues values when values._edited == null =>
       values._baseline,
     final Map<String, String> values => Map.of(values),
     final baseline => baseline,
@@ -861,18 +869,18 @@ class WmlRunProps {
         .._importBaseline = _copyImportBaseline();
 }
 
-// Cached style projections share a frozen comparison map. Each run only
-// creates a mutable facade if a caller actually reads its baseline.
-final class _RunImportBaseline {
-  _RunImportBaseline(this.values);
+// Cached style projections share a frozen comparison map. Edits detach an
+// individual property's facade from that map.
+final class _PropertyImportBaseline {
+  _PropertyImportBaseline(this.values);
 
   final Map<String, String> values;
 }
 
-final class _RunImportedValues extends MapBase<String, String> {
-  _RunImportedValues(this._baseline);
+final class _ImportedValues extends MapBase<String, String> {
+  _ImportedValues(this._baseline);
 
-  final _RunImportBaseline _baseline;
+  final _PropertyImportBaseline _baseline;
   Map<String, String>? _edited;
 
   Map<String, String> get _values => _edited ?? _baseline.values;
