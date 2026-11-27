@@ -94,6 +94,35 @@ WmlParagraph _pair(String id, String name, {String text = 'marked'}) =>
     );
 
 void main() {
+  test('plain bookmark capture keeps attribute order and default bindings', () {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package.getPart('/word/document.xml')!.writeText(
+      '<w:document xmlns="urn:default" xmlns:w="${OfficeNamespaces.w}" '
+      'xmlns:extra="urn:unused"><w:body><w:p>'
+      '<w:bookmarkStart w:name="Target" w:id="+0042"/>'
+      '<w:r><w:t>Inside</w:t></w:r>'
+      '<w:bookmarkEnd w:id="42"/>'
+      '</w:p></w:body></w:document>',
+    );
+    final doc = WordDeserializer().read(package);
+    final range = WordBookmarks.ranges(doc).single;
+    expect(range.text, 'Inside');
+    expect(
+      range.start.sourceXml,
+      '<w:bookmarkStart w:name="Target" w:id="+0042" xmlns="urn:default" '
+      'xmlns:w="${OfficeNamespaces.w}"/>',
+    );
+    expect(
+      range.end.sourceXml,
+      '<w:bookmarkEnd w:id="42" xmlns="urn:default" '
+      'xmlns:w="${OfficeNamespaces.w}"/>',
+    );
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(doc),
+    );
+    expect(WordBookmarks.ranges(reopened).single.text, 'Inside');
+  });
+
   test('canonical bookmark IDs preserve arbitrary decimal precision', () {
     const large = '12345678901234567890123456789012345678901234567890';
     for (final (source, expected) in [

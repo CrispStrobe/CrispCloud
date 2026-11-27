@@ -4,7 +4,6 @@ import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
 import '../model/word_bookmarks.dart';
-import 'word_property_io.dart';
 
 /// Native endpoints use the same validated model as editing and range lookup.
 abstract final class WordBookmarkIo {
@@ -16,52 +15,70 @@ abstract final class WordBookmarkIo {
   static final _nonPlainNameCharacter = RegExp(r'[^A-Za-z0-9_]');
 
   static WmlBookmarkBoundary read(XmlPullReader reader) {
-    final empty = reader.isEmptyElement;
-    final attributeCount = reader.attributeCount;
+    final plain = _readPlainMarker(reader);
+    if (plain != null) return plain;
+
     final source = XmlDocument.readElement(reader);
-    final isStart = source.localName == 'bookmarkStart';
-    final name = source.getAttribute('name', namespaceUri: OfficeNamespaces.w);
-    final plain = empty && _hasPlainSource(source, attributeCount, isStart, name);
-    if (plain) WordPropertyIo.compactScalarWordFragment(source);
     final marker = WmlBookmarkBoundary(
       id: source.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
-      isStart: isStart,
-      name: name,
+      isStart: source.localName == 'bookmarkStart',
+      name: source.getAttribute('name', namespaceUri: OfficeNamespaces.w),
       sourceXml: XmlDocument(root: source).toXmlString(declaration: false),
     );
-    if (plain) {
-      // The captured element already owns these attributes and the native
-      // namespace. Plain decimal IDs and ASCII names survive XML serialization.
-      WordBookmarks.canonicalId(marker.id);
-    } else {
-      WordBookmarks.validateSource(marker);
-    }
+    WordBookmarks.validateSource(marker);
     return marker;
   }
 
-  static bool _hasPlainSource(
-    XmlElement source,
-    int attributeCount,
-    bool isStart,
-    String? name,
-  ) {
-    if (source.prefix != 'w' ||
-        source.namespaceUri != OfficeNamespaces.w ||
-        source.localName != (isStart ? 'bookmarkStart' : 'bookmarkEnd') ||
-        attributeCount != (isStart ? 2 : 1)) {
-      return false;
+  static WmlBookmarkBoundary? _readPlainMarker(XmlPullReader reader) {
+    if (!reader.isEmptyElement ||
+        reader.prefix != 'w' ||
+        reader.namespaceUri != OfficeNamespaces.w) {
+      return null;
     }
-    for (var i = 0; i < attributeCount; i++) {
-      final attribute = source.attributes[i];
-      if (attribute.prefix != 'w' ||
-          (attribute.localName != 'id' && attribute.localName != 'name')) {
-        return false;
+    final element = reader.localName;
+    final isStart = element == 'bookmarkStart';
+    if ((!isStart && element != 'bookmarkEnd') ||
+        reader.attributeCount != (isStart ? 2 : 1)) {
+      return null;
+    }
+    final firstAttribute = reader.attributeQualifiedName(0);
+    final idFirst = firstAttribute == 'w:id';
+    if (!idFirst && (!isStart || firstAttribute != 'w:name')) return null;
+    final secondAttribute = idFirst ? 'w:name' : 'w:id';
+    if (isStart && reader.attributeQualifiedName(1) != secondAttribute) {
+      return null;
+    }
+    final id = reader.attributeValue(idFirst ? 0 : 1);
+    final name = isStart ? reader.attributeValue(idFirst ? 1 : 0) : null;
+    if (name != null &&
+        (name.isEmpty || _nonPlainNameCharacter.hasMatch(name))) {
+      return null;
+    }
+    WordBookmarks.canonicalId(id);
+
+    // These scalar attributes only use the Word prefix. Also retain any
+    // inherited default declaration, at its original position relative to w.
+    final writer = XmlWriter()..writeStartElement(element, prefix: 'w');
+    writer.writeAttribute(firstAttribute, idFirst ? id : name!);
+    if (isStart) writer.writeAttribute(secondAttribute, idFirst ? name! : id);
+    final namespaces = reader.inScopeNamespaces;
+    if (namespaces.containsKey('')) {
+      for (final entry in namespaces.entries) {
+        if (entry.key.isEmpty || entry.key == 'w') {
+          writer.writeNamespace(entry.key, entry.value);
+        }
       }
+    } else {
+      writer.writeNamespace('w', OfficeNamespaces.w);
     }
-    return !isStart ||
-        name != null &&
-            name.isNotEmpty &&
-            !_nonPlainNameCharacter.hasMatch(name);
+    writer.writeEndElement();
+    reader.next();
+    return WmlBookmarkBoundary(
+      id: id,
+      isStart: isStart,
+      name: name,
+      sourceXml: writer.toXml(),
+    );
   }
 
   static void write(XmlWriter writer, WmlBookmarkBoundary marker) {
