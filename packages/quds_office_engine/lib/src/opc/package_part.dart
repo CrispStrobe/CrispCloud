@@ -104,13 +104,35 @@ class PackagePart {
 abstract final class OpcUris {
   /// normalize API.
   static String normalize(String uri) {
-    String value = uri.replaceAll('\\', '/');
-    if (value.isEmpty || value == '/') {
-      return '/';
+    final length = uri.length;
+    if (length == 0 || uri == '/') return '/';
+    final absolute = uri.codeUnitAt(0) == 0x2F;
+    var segmentStart = absolute ? 1 : 0;
+    for (var i = segmentStart; i < length; i++) {
+      final char = uri.codeUnitAt(i);
+      if (char == 0x5C) return _normalizeSegments(uri);
+      if (char == 0x2F) {
+        if (i == segmentStart || _isDotSegment(uri, segmentStart, i)) {
+          return _normalizeSegments(uri);
+        }
+        segmentStart = i + 1;
+      }
     }
-    if (!value.startsWith('/')) {
-      value = '/$value';
+    if (segmentStart == length || _isDotSegment(uri, segmentStart, length)) {
+      return _normalizeSegments(uri);
     }
+    return absolute ? uri : '/$uri';
+  }
+
+  static bool _isDotSegment(String uri, int start, int end) {
+    final length = end - start;
+    return length <= 2 &&
+        uri.codeUnitAt(start) == 0x2E &&
+        (length == 1 || uri.codeUnitAt(start + 1) == 0x2E);
+  }
+
+  static String _normalizeSegments(String uri) {
+    final value = uri.replaceAll('\\', '/');
     final List<String> out = <String>[];
     for (final String segment in value.split('/')) {
       if (segment.isEmpty || segment == '.') {

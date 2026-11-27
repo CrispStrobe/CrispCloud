@@ -332,6 +332,70 @@ void main() {
       expect(again.footerRight, hf.footerRight);
     });
 
+    test('print pictures use their VML slots and worksheet scale', () {
+      const sheetPath = '/xl/worksheets/sheet1.xml';
+      const drawingPath = '/xl/drawings/headerPictures.vml';
+      final package = _package(
+        '<row r="1"><c r="A1"><v>1</v></c></row>',
+        drawing:
+            '<pageMargins left="0.5" right="0.75" top="1" bottom="1" '
+            'header="0.25" footer="0.5"/>'
+            '<pageSetup paperSize="9" scale="50"/>'
+            '<headerFooter><oddHeader>&amp;L&amp;&amp;G&amp;R&amp;G</oddHeader>'
+            '<oddFooter>&amp;C&amp;G</oddFooter></headerFooter>'
+            '<legacyDrawingHF r:id="rIdHeaderPictures"/>',
+      );
+      package
+          .relationshipsFor(sheetPath)
+          .add(
+            type: '${OfficeNamespaces.r}/vmlDrawing',
+            target: '../drawings/headerPictures.vml',
+            id: 'rIdHeaderPictures',
+          );
+      package.createPart(
+        drawingPath,
+        'application/vnd.openxmlformats-officedocument.vmlDrawing',
+        utf8.encode(
+          '<xml xmlns:v="${OfficeNamespaces.v}" xmlns:o="${OfficeNamespaces.o}">'
+          '<v:shape id="RH" style="width:100pt;height:40pt">'
+          '<v:imagedata o:relid="rIdLogo"/></v:shape>'
+          '<v:shape id="CF" style="width:2in;height:30pt">'
+          '<v:imagedata o:relid="rIdLogo"/></v:shape>'
+          '<v:shape id="LH" style="width:100pt;height:40pt">'
+          '<v:imagedata o:relid="rIdLogo"/></v:shape></xml>',
+        ),
+      );
+      package
+          .relationshipsFor(drawingPath)
+          .add(
+            type: RelationshipTypes.image,
+            target: '../media/logo.png',
+            id: 'rIdLogo',
+          );
+      package.createPart(
+        '/xl/media/logo.png',
+        'image/png',
+        PngBytes.studioCard(width: 8, height: 8),
+      );
+
+      final book = SheetDeserializer().read(package);
+      final output = PdfFile.open(OfficePrint.workbook(book));
+      final page = output.pageAt(0);
+      final pictures = output.displayList(0).ops.whereType<PdfDrawImage>();
+      expect(pictures, hasLength(2));
+      final header = pictures.first;
+      expect(header.placeholder, isFalse);
+      expect(header.x, closeTo(page.width - 54 - 50, .01));
+      expect(header.y, closeTo(18, .01));
+      expect(header.width, closeTo(50, .01));
+      expect(header.height, closeTo(20, .01));
+      final footer = pictures.last;
+      expect(footer.placeholder, isFalse);
+      expect(footer.x, closeTo((36 + page.width - 54 - 72) / 2, .01));
+      expect(footer.y, closeTo(page.height - 36 - 15, .01));
+      expect(footer.width, closeTo(72, .01));
+    });
+
     test('text without a section code is centered', () {
       final SmlWorkbook book = SheetDeserializer().read(
         _package(

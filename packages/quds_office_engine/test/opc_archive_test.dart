@@ -110,6 +110,23 @@ void main() {
       );
     });
 
+    test('normalizes OPC segments without altering ordinary dotted names', () {
+      const expected = {
+        '': '/',
+        '/': '/',
+        '/word/مستند.xml': '/word/مستند.xml',
+        'word/.hidden/three...dots.xml': '/word/.hidden/three...dots.xml',
+        'word//./media/../document.xml/': '/word/document.xml',
+        r'\word\media\..\document.xml': '/word/document.xml',
+        '../../word/document.xml': '/word/document.xml',
+        '/word/../..': '/',
+        '///': '/',
+      };
+      for (final entry in expected.entries) {
+        expect(OpcUris.normalize(entry.key), entry.value, reason: entry.key);
+      }
+    });
+
     test('CRC32 matches the IEEE vector across subviews and split points', () {
       final bytes = Uint8List.fromList([0, ...ascii.encode('123456789'), 0]);
       final data = Uint8List.sublistView(bytes, 1, bytes.length - 1);

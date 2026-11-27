@@ -15,6 +15,7 @@ import '../opc/repair/office_repair.dart';
 import '../sheet/formula/formula_eval.dart';
 import '../sheet/model/sml_conditional_format.dart';
 import '../sheet/model/sml_workbook.dart';
+import '../sheet/serial/sheet_print_pictures.dart';
 import '../sheet/serial/sheet_serial.dart';
 import '../sheet/styles/sml_styles.dart';
 import '../slide/model/pml_presentation.dart';
@@ -35,6 +36,7 @@ import 'office_pdf_visuals.dart';
 import 'pdf_canvas.dart';
 import 'pdf_document.dart';
 import 'pdf_font.dart';
+import 'pdf_image.dart';
 import 'pdf_save_options.dart';
 
 /// Print layout for worksheet PDF (Office Print defaults to A4 portrait).
@@ -1637,6 +1639,67 @@ abstract final class OfficePdfExport {
     var pageCount = colBands.length * rowBands.length;
     final SmlHeaderFooter? hf = sheet.headerFooter;
 
+    final pictureTemplates = hf == null
+        ? const <String, String>{}
+        : <String, String>{
+            'LH': hf.headerLeft,
+            'CH': hf.headerCenter,
+            'RH': hf.headerRight,
+            'LF': hf.footerLeft,
+            'CF': hf.footerCenter,
+            'RF': hf.footerRight,
+          };
+    final pictureToken = RegExp(r'(?:^|[^&])(?:&&)*&G');
+    final printPictures = pictureTemplates.values.any(pictureToken.hasMatch)
+        ? SheetPrintPictures.read(book.package, sheet.sourcePartUri)
+        : null;
+    final placedPictures =
+        <
+          ({
+            PdfEmbeddedImage image,
+            double x,
+            double y,
+            double width,
+            double height,
+          })
+        >[];
+    if (printPictures != null) {
+      final pictureScale = printPictures.scaleWithDocument ? scale : 1.0;
+      for (final picture in printPictures.pictures) {
+        if (!pictureToken.hasMatch(pictureTemplates[picture.slot] ?? '')) {
+          continue;
+        }
+        final raster = PdfImageCodec.decode(picture.part.readBytes());
+        if (raster == null) continue;
+        final width = picture.width * pictureScale;
+        final height = picture.height * pictureScale;
+        final x = switch (picture.slot[0]) {
+          'L' => left,
+          'C' => (left + pageW - right - width) / 2,
+          _ => pageW - right - width,
+        };
+        final y = picture.slot[1] == 'H'
+            ? (setup == null ? top : setup.headerMarginIn * 72)
+            : pageH -
+                  (setup == null ? bottom : setup.footerMarginIn * 72) -
+                  height;
+        placedPictures.add((
+          image: PdfEmbeddedImage(
+            name: images.next(),
+            width: raster.width,
+            height: raster.height,
+            bytes: raster.jpegBytes ?? raster.rgb,
+            jpeg: raster.isJpeg,
+            maskBytes: raster.alpha,
+          ),
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+        ));
+      }
+    }
+
     final acrossThenDown = setup?.printAcrossThenDown ?? true;
     final outerBands = acrossThenDown ? rowBands : colBands;
     final innerBands = acrossThenDown ? colBands : rowBands;
@@ -1696,6 +1759,16 @@ abstract final class OfficePdfExport {
         final cb = acrossThenDown ? inner : outer;
         final _PageSink sink = _PageSink(pageW, pageH, pack, images);
         sink.canvas.fillRect(0, 0, pageW, pageH, 'FFFFFF');
+        for (final picture in placedPictures) {
+          sink.images.add(picture.image);
+          sink.canvas.drawImage(
+            picture.image.name,
+            picture.x,
+            picture.y,
+            picture.width,
+            picture.height,
+          );
+        }
         void paintHfBand(List<String> sections, double baseline, double size) {
           const List<_TextAlign> slots = <_TextAlign>[
             _TextAlign.left,
