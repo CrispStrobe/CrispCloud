@@ -394,6 +394,24 @@ void main() {
       expect(footer.x, closeTo((36 + page.width - 54 - 72) / 2, .01));
       expect(footer.y, closeTo(page.height - 36 - 15, .01));
       expect(footer.width, closeTo(72, .01));
+
+      final sheet = book.firstSheet
+        ..printArea = SmlRange.parse('A1:B1')
+        ..printTitleCols = SmlRange.parse('A1:A1')
+        ..setColumnWidth(0, 400)
+        ..setColumnWidth(1, 400);
+      sheet.pageSetup!.fitToPage = true;
+      sheet.pageSetup!.fitToWidth = 1;
+      final fitted = PdfFile.open(OfficePrint.workbook(book));
+      final fittedHeader = fitted
+          .displayList(0)
+          .ops
+          .whereType<PdfDrawImage>()
+          .first;
+      // Three 300pt columns compete for the 505pt body width. Excel
+      // includes the title strip in fit and floors to a whole percentage.
+      expect(fittedHeader.width, closeTo(56, .01));
+      expect(fitted.pageCount, 1);
     });
 
     test('text without a section code is centered', () {

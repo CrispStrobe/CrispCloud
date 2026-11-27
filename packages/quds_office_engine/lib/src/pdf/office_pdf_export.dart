@@ -1506,7 +1506,19 @@ abstract final class OfficePdfExport {
         (options.scalePercentOverride ?? setup?.scale ?? 100).clamp(10, 400) /
         100;
     if (fit) {
-      final needW = colPts.fold<double>(0, (a, b) => a + b);
+      final authoredFit =
+          authoredRows &&
+          setup?.fitToPage == true &&
+          options.fitOverride == null;
+      var repeatedWidth = 0.0;
+      if (sheet.printTitleCols case final titles? when authoredFit) {
+        for (var col = titles.minCol; col <= titles.maxCol; col++) {
+          repeatedWidth += math.max(4, printColumnWidth(col));
+        }
+      }
+      // Excel reserves the title strip on each fitted horizontal page.
+      final needW =
+          colPts.fold<double>(0, (a, b) => a + b) + repeatedWidth * fitWidth;
       final needH = rowPts.fold<double>(0, (a, b) => a + b);
       final fitHeight = options.fitWidthOnly
           ? 0
@@ -1524,6 +1536,11 @@ abstract final class OfficePdfExport {
         if (options.fitOverride == true && showHeadings) {
           scale = math.min(scale, height / (needH + rowPts.first));
         }
+      }
+      if (authoredFit && fitHeight > 0) {
+        // Excel rounds down the scale for an authored width and height.
+        // A width-only job retains its continuous scale and row pagination.
+        scale = (scale * 100 + 1e-9).floor() / 100;
       }
       scale = math.max(options.fitOverride == true ? 1e-9 : 0.01, scale);
     }

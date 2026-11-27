@@ -51,7 +51,9 @@ class _StyleCascade {
     final part = package.getPart(
       rel == null ? '/word/styles.xml' : rels.resolve(rel),
     );
-    _loadStyleTree(part == null ? null : XmlDocument.parse(part.readText()).root);
+    _loadStyleTree(
+      part == null ? null : XmlDocument.parse(part.readText()).root,
+    );
     if (includeTheme) _loadTheme(package, rels);
     return true;
   }
@@ -847,13 +849,18 @@ class _StyleCascade {
     Iterable<XmlElement?> layers, {
     Set<XmlElement> toggleLayers = const {},
     Set<XmlElement> paragraphRunLayers = const {},
+    String? onlyProperty,
   }) {
     final result = WordPropertyIo.parse('', name)
       ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
     for (final layer in layers) {
       if (layer == null) continue;
       for (final incoming in layer.childElements) {
+        if (onlyProperty != null && incoming.localName != onlyProperty) {
+          continue;
+        }
         if (!_word(incoming, incoming.localName)) continue;
+        // These projections create detached trees owned by this merge.
         final scalarControl =
             (name == 'rPr' &&
                 (incoming.localName == 'kern' ||
@@ -908,7 +915,7 @@ class _StyleCascade {
                 }.contains(child.localName))) {
           // An omitted on/off value enables these properties. Do not retain
           // a lower layer's explicit false for a direct empty marker.
-          final effective = old ?? child.copy();
+          final effective = old ?? child;
           effective.setAttribute(
             'val',
             child.getAttribute('val') ?? '1',
@@ -948,13 +955,13 @@ class _StyleCascade {
                   paragraphRunLayers.contains(layer));
           if (toggles && !on) continue;
           final value = toggles ? !enabled(old) : on;
-          final effective = old ?? child.copy();
+          final effective = old ?? child;
           effective.setAttribute('val', value ? '1' : '0', prefix: 'w');
           if (old == null) result.addChild(effective);
           continue;
         }
         if (old == null) {
-          result.addChild(child.copy());
+          result.addChild(child);
           continue;
         }
         if (child.localName == 'color' &&
@@ -1003,9 +1010,10 @@ class _StyleCascade {
           );
         }
         if (child.children.isNotEmpty) {
-          old.children
-            ..clear()
-            ..addAll(child.children.map((n) => n.copy()));
+          old.children.clear();
+          for (final node in child.children) {
+            old.addChild(node);
+          }
         }
       }
     }
@@ -1172,7 +1180,9 @@ class _StyleCascade {
       // The projection is shared, while each paragraph owns its mark.
       p.properties.importedParagraphMark = marker.copy();
     }
-    p.properties.importedValues ??= WordPropertyIo.paragraphValues(p.properties);
+    p.properties.importedValues ??= WordPropertyIo.paragraphValues(
+      p.properties,
+    );
     for (var index = 0; index < p.inlines.length; index++) {
       final inline = p.inlines[index];
       final props = switch (inline) {
@@ -1293,9 +1303,8 @@ class _StyleCascade {
     if (marker.childElements.isNotEmpty) {
       parsedMarker = WmlRunProps(kerningHalfPoints: null);
       reader._parseRPr(
-        XmlPullReader(
-          XmlDocument(root: marker).toXmlString(declaration: false),
-        )..next(),
+        XmlPullReader(XmlDocument(root: marker).toXmlString(declaration: false))
+          ..next(),
         parsedMarker,
       );
     }
@@ -1336,7 +1345,11 @@ class _StyleCascade {
     );
     // Keep document-default proofing language live instead of copying it
     // into runs whose own formatting layers do not declare a language.
-    final language = merged('rPr', layers).firstChild('lang');
+    final language = merged(
+      'rPr',
+      layers,
+      onlyProperty: 'lang',
+    ).firstChild('lang');
     resolved.proofingLanguage = language?.getAttribute('val');
     resolved.complexScriptLanguage = language?.getAttribute('bidi');
     return (
