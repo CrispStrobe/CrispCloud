@@ -10,12 +10,11 @@ import 'word_proofing_language.dart';
 abstract final class WmlRunEdit {
   /// Character formatting in effect at [index].
   ///
-  /// An empty paragraph has no visible character to read, so typing follows
-  /// its paragraph mark: Word, Writer and Docs continue with the mark's
-  /// font, size, weight and color after Enter creates a new paragraph.
+  /// An authored empty run can carry the insertion style. Otherwise typing
+  /// in an empty paragraph follows its paragraph mark.
   static WmlRunProps propsAt(WmlParagraph paragraph, int index) {
     var offset = 0;
-    WmlRunProps last = WmlRunProps();
+    WmlRunProps? last;
     for (final WmlInline inline in paragraph.inlines) {
       if (inline is! WmlRun) {
         continue;
@@ -27,10 +26,13 @@ abstract final class WmlRunEdit {
       }
       offset = end;
     }
-    if (paragraph.text.isEmpty) {
-      return paragraph.properties.importedParagraphMark ?? last;
+    if (offset == 0 &&
+        last?.sourcePropertiesXml?.isNotEmpty != true &&
+        last?.explicitProperties.isNotEmpty != true) {
+      final mark = paragraph.properties.importedParagraphMark;
+      if (mark != null) return mark;
     }
-    return last;
+    return last ?? WmlRunProps();
   }
 
   /// splitAt API.
