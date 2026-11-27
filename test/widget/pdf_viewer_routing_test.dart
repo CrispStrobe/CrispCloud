@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:file_viewer_documents/file_viewer_documents.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +15,8 @@ import 'package:crisp_cloud/widgets/pdf_review_status.dart';
 import 'package:crisp_cloud/services/pdf_open_preferences.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:dart_pdf_editor/dart_pdf_editor.dart' as editor;
 import 'package:quds_office_editor/quds_office_editor.dart' as office;
@@ -141,6 +145,108 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     controller.dispose();
   });
+
+  testWidgets('F3 reads linked PDFs and XLSX files through their targets', (
+    tester,
+  ) async {
+    final temp = Directory.systemTemp.createTempSync('crisp-linked-preview-');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final service = DesktopFileService()..currentPath = temp.path;
+    final container = ProviderContainer(
+      overrides: [localFileServiceProvider.overrideWithValue(service)],
+    );
+    addTearDown(container.dispose);
+    final origin = container
+        .read(panelProvider(PanelSide.local))
+        .captureLocalClipboardOrigin(temp.path);
+    final worksheet = office.SmlWorksheet(name: 'Sheet1', sheetId: 1);
+    worksheet.cellA1('A1').value = 'Linked worksheet';
+    final files = <(String, Uint8List, Type)>[
+      ('linked.pdf', buildPdfEditorFixture(), PdfRendererView),
+      (
+        'linked.xlsx',
+        office.SheetSerializer().writeBytes(
+          office.SmlWorkbook(sheets: [worksheet]),
+        ),
+        DocumentPreview,
+      ),
+    ];
+    for (final (name, bytes, view) in files) {
+      final target = File('${temp.path}/target-$name')..writeAsBytesSync(bytes);
+      final link = Link('${temp.path}/$name')..createSync(target.path);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: InternalViewerDialog(
+              key: ValueKey(name),
+              file: FileItem(
+                name: name,
+                path: link.path,
+                isFolder: false,
+                isSymlink: true,
+              ),
+              side: PanelSide.local,
+              origin: origin,
+            ),
+          ),
+        ),
+      );
+      for (
+        var tick = 0;
+        tick < 60 && find.byType(view).evaluate().isEmpty;
+        tick++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 40)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(view), findsOneWidget);
+      expect(target.readAsBytesSync(), bytes);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    }
+  }, skip: Platform.isWindows);
+
+  testWidgets(
+    'a PDF engine failure tries the alternate engine and keeps the chooser',
+    (tester) async {
+      await const PdfOpenPreferences(
+        viewer: PdfViewerBackend.native,
+        secondaryViewer: PdfViewerBackend.crispOffice,
+      ).save();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: InternalViewerDialog(
+              file: FileItem(name: 'sample.pdf', isFolder: false),
+              side: PanelSide.local,
+              bytesOverride: buildPdfEditorFixture(),
+            ),
+          ),
+        ),
+      );
+      // Native PDF rendering is not registered in this widget test.
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<PdfRendererView>(find.byType(PdfRendererView)).backend,
+        PdfViewerBackend.crispOffice,
+      );
+      final chooser = find.byKey(const ValueKey('pdf-viewer-backend'));
+      await tester.tap(chooser);
+      await tester.pumpAndSettle();
+      expect(find.text('CrispCloud PDF viewer'), findsOneWidget);
+      expect(find.text('Native compatibility viewer'), findsOneWidget);
+      await tester.tap(find.text('CrispCloud PDF viewer'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<PdfRendererView>(find.byType(PdfRendererView)).backend,
+        PdfViewerBackend.pdfEditor,
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   for (final secondary in [false, true]) {
     testWidgets(

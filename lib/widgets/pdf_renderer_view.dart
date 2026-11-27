@@ -20,11 +20,13 @@ class PdfRendererView extends StatefulWidget {
     required this.bytes,
     required this.backend,
     required this.onCompatibility,
+    this.onOpenFailure,
     this.autoRenderWorker = true,
   });
   final Uint8List bytes;
   final PdfViewerBackend backend;
   final VoidCallback onCompatibility;
+  final bool Function(PdfViewerBackend)? onOpenFailure;
   final bool autoRenderWorker;
   @override
   State<PdfRendererView> createState() => PdfRendererViewState();
@@ -100,6 +102,7 @@ class PdfRendererViewState extends State<PdfRendererView> {
 
   Future<void> _open(int epoch) async {
     if (widget.bytes.length > 64 * 1024 * 1024) {
+      if (widget.onOpenFailure?.call(widget.backend) == true) return;
       setState(
         () => _error =
             'Use the native compatibility viewer for PDFs larger than 64 MiB.',
@@ -130,7 +133,9 @@ class PdfRendererViewState extends State<PdfRendererView> {
             error is office.PdfOpenException &&
                 error.error == office.PdfOpenError.wrongPassword;
         if (!needsPassword) {
-          if (mounted) setState(() => _error = '$error');
+          if (!mounted || epoch != _openEpoch) return;
+          if (widget.onOpenFailure?.call(widget.backend) == true) return;
+          setState(() => _error = '$error');
           return;
         }
         final entered = await _password();

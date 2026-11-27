@@ -391,6 +391,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   int _bytesPerLine = 16;
   double _zoom = 1.0;
   PdfViewerBackend? _pdfBackend;
+  PdfViewerBackend? _preferredPdfFallback;
+  final _pdfAttempts = <PdfViewerBackend>{};
+  String? _previewLinkTarget;
   final _pdfRendererKey = GlobalKey<PdfRendererViewState>();
   final _nativePdfKey = GlobalKey<PdfPagePanelState>();
   final _slideViewerKey = GlobalKey<PptxSlideViewerState>();
@@ -665,7 +668,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? get _nativeViewPath {
     if (kIsWeb || widget.bytesOverride != null) return null;
     if (_spool != null) return _spool!.path;
-    return _origin?.source.isLocal == true ? widget.file.path : null;
+    return _origin?.source.isLocal == true
+        ? _previewLinkTarget ?? widget.file.path
+        : null;
   }
 
   Future<void> _initialLoad({ViewerMode? preferredMode}) async {
@@ -699,20 +704,41 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (!kIsWeb &&
             _origin!.source.isLocal &&
             (isVolume ||
+                fresh.isSymlink == true ||
                 (fresh.size ?? 0) > kAutoFullLoadBytes ||
                 _viewName.toLowerCase().endsWith('.pdf') ||
                 _viewerService.detectMode(_viewName) == ViewerMode.media)) {
           final local = ref.read(localFileServiceProvider);
+          final linked = fresh.isSymlink == true;
+          // Preview may follow a deliberately selected link. Keep file
+          // transfers on the regular-file backend and read only the captured
+          // target under its own security scope.
+          final readPath = linked
+              ? await local.withFileOperationAccess(path, () async {
+                  final target = await File(path).resolveSymbolicLinks();
+                  if (await FileSystemEntity.type(target, followLinks: false) !=
+                      FileSystemEntityType.file) {
+                    throw FileBytesLoadException('File not found: $path');
+                  }
+                  return target;
+                })
+              : path;
+          if (!current()) return;
+          var acquired = false;
           final source = ViewBytesSource.file(
-            path,
+            readPath,
             acquireAccess: () async {
-              if (!_origin!.isCurrent || !await local.beginStreamAccess(path)) {
+              if (!_origin!.isCurrent ||
+                  !await local.beginStreamAccess(readPath)) {
                 throw FileBytesLoadException(
                   'Access to "$path" was not granted.',
                 );
               }
+              acquired = true;
             },
-            releaseAccess: local.endStreamAccess,
+            releaseAccess: () async {
+              if (acquired) await local.endStreamAccess();
+            },
           );
           try {
             await source.open();
@@ -722,6 +748,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             }
             _source?.dispose();
             _source = source;
+            _previewLinkTarget = linked ? readPath : null;
           } catch (_) {
             source.dispose();
             rethrow;
@@ -855,6 +882,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (size > _fullDataLimit) {
       throw FileBytesTooLargeException(size, _fullDataLimit);
     }
+    final linked = _previewLinkTarget == null ? null : _source;
+    if (linked != null) {
+      final token = _loadToken;
+      bool current() =>
+          mounted && token == _loadToken && identical(linked, _source);
+      final bytes = await readDocumentPreviewSource(
+        linked,
+        maxBytes: _fullDataLimit,
+        isCurrent: current,
+      );
+      if (current()) _fullData = bytes;
+      return bytes;
+    }
     if (_spool != null && _source != null) {
       final bytes = BytesBuilder(copy: false);
       for (var offset = 0; offset < size; offset += 256 * 1024) {
@@ -907,9 +947,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           'can use a local file or a streamed temporary copy.';
     }
     if (error is FileBytesTooLargeException) {
-      final detail = InternalViewerStrings(
-        context,
-      ).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+      final detail = InternalViewerStrings(context)
+          .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
       return '${localizedFileBytesError(context, error)}\n\n$detail';
     }
     return localizedFileBytesError(context, error);
@@ -1043,9 +1082,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             var cut = text.lastIndexOf('\n', _kRichRenderCap);
             if (cut <= 0) cut = _kRichRenderCap;
             text = text.substring(0, cut);
-            note = InternalViewerStrings(
-              context,
-            ).withNumber('truncated', formatBytes(_kRichRenderCap));
+            note = InternalViewerStrings(context)
+                .withNumber('truncated', formatBytes(_kRichRenderCap));
           }
           _richText = text;
           setState(() {
@@ -1094,9 +1132,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     ? OdsSheetReader.readBytes(data)
                     : LegacySheetReader.readBytes(data),
                 config: _sheetViewConfig,
-                formulaLocale: Localizations.maybeLocaleOf(
-                  context,
-                )?.toLanguageTag(),
+                formulaLocale: Localizations.maybeLocaleOf(context)
+                    ?.toLanguageTag(),
               );
               _sheetController?.dispose();
               setState(() {
@@ -1217,12 +1254,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         case ViewerMode.pdf:
           setState(() => _preparing = true);
           final pdfPreferences = await PdfOpenPreferences.load();
-          _pdfBackend ??= widget.secondaryPdfViewer
+          if (!mounted || token != _prepareToken) return;
+          final backend = _pdfBackend ??= widget.secondaryPdfViewer
               ? pdfPreferences.secondaryViewer
               : pdfPreferences.viewer;
-          if (!mounted || token != _prepareToken) return;
+          _preferredPdfFallback = pdfPreferences.secondaryViewer;
+          _pdfAttempts.add(backend);
           final usePdfium =
-              useWindowsPdfiumPages && _pdfBackend == PdfViewerBackend.pdfEditor;
+              useWindowsPdfiumPages &&
+              _pdfBackend == PdfViewerBackend.pdfEditor;
           if (_pdfBackend != PdfViewerBackend.native && !usePdfium) {
             await _ensureFullData();
             if (mounted && token == _prepareToken) {
@@ -1263,8 +1303,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               doc = await PdfDocument.openData(data);
             } catch (error, stack) {
               if (!usePdfium) rethrow;
-              _log.warn('PDFium could not open PDF; using portable viewer',
-                  error, stack);
+              _log.warn(
+                'PDFium could not open PDF; using portable viewer',
+                error,
+                stack,
+              );
               if (mounted && token == _prepareToken) {
                 setState(() => _preparing = false);
               }
@@ -1305,6 +1348,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } catch (e, st) {
       _log.warn('viewer prepare failed for ${mode.name}', e, st);
       if (!mounted || token != _prepareToken) return;
+      final backend = _pdfBackend;
+      if (mode == ViewerMode.pdf && backend != null) {
+        if (_tryPdfFallback(
+          backend,
+          nativeFirst: e is FileBytesTooLargeException,
+        )) {
+          return;
+        }
+      }
       setState(() {
         _preparing = false;
         _richError = _describeError(e);
@@ -1481,9 +1533,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _preparing = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 
@@ -2594,9 +2645,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 total,
               ])
             : previewMode && _mode == ViewerMode.office
-            ? OfficePreviewStrings(
-                Localizations.localeOf(context),
-              ).searchedPreview
+            ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .searchedPreview
             : context.commanderTr("Searched entire file ({0})", [
                 formatBytes(source.size),
               ]);
@@ -2893,6 +2943,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     ++_prepareToken;
     ++_loadToken;
     _disposeModeResources(spool: _spool);
+    _pdfAttempts.clear();
+    _previewLinkTarget = null;
     _spool = null;
     _source?.dispose();
     _source = null;
@@ -3287,9 +3339,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } on ArchivePasswordRequiredException catch (e) {
       if (!mounted || !current()) return null;
       _showSnack(
-        InternalViewerStrings(
-          context,
-        ).text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
+        InternalViewerStrings(context)
+            .text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
       );
       return null;
     } on ArchiveViewException catch (e) {
@@ -3379,9 +3430,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (source == null) throw StateError('Text is unavailable.');
         text = _encodingOverride == null
             ? EditorDocument.decode(source).text
-            : ViewerTextDecoder(
-                _encodingOverride!,
-              ).add(source, 0, last: true).text;
+            : ViewerTextDecoder(_encodingOverride!)
+                  .add(source, 0, last: true)
+                  .text;
       } else if (mode == ViewerMode.email) {
         text = _emailMessage?.searchText;
       } else if (mode == ViewerMode.office) {
@@ -3462,6 +3513,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_autoMode == ViewerMode.pdf ||
+                          _viewName.toLowerCase().endsWith('.pdf'))
+                        _pdfBackendMenu(),
                       if (widget.positionLabel != null) ...[
                         IconButton(
                           tooltip: context.commanderTr(
@@ -3516,14 +3570,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                           IconButton(
                             tooltip: context.commanderTr("Edit (F4)"),
                             icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => Navigator.of(
-                              context,
-                            ).pop(InternalViewerAction.edit),
+                            onPressed: () =>
+                                Navigator.of(context)
+                                    .pop(InternalViewerAction.edit),
                           ),
                         IconButton(
-                          tooltip: InternalViewerStrings(
-                            context,
-                          ).text('search'),
+                          tooltip: InternalViewerStrings(context)
+                              .text('search'),
                           icon: const Icon(Icons.search),
                           onPressed: _toggleSearch,
                         ),
@@ -3535,9 +3588,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                         if (_canChangeEncoding)
                           PopupMenuButton<String>(
                             popUpAnimationStyle: AnimationStyle.noAnimation,
-                            tooltip: InternalViewerStrings(
-                              context,
-                            ).text('encoding'),
+                            tooltip: InternalViewerStrings(context)
+                                .text('encoding'),
                             icon: const Icon(Icons.text_fields),
                             onSelected: (value) =>
                                 _setEncoding(value == 'auto' ? null : value),
@@ -3610,25 +3662,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                             PopupMenuItem(
                               value: 'bpl8',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 8),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 8),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl16',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 16),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 16),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl32',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 32),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 32),
                               ),
                             ),
                             const PopupMenuDivider(),
@@ -3889,42 +3938,70 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
   );
 
+  void _choosePdfBackend(PdfViewerBackend backend) {
+    _pdfAttempts.clear();
+    _pdfBackend = backend;
+    _pdfShowText = false;
+    if (_source == null || _loading || _error != null) {
+      _reload(preferredMode: ViewerMode.pdf);
+    } else {
+      _selectMode(ViewerMode.pdf);
+    }
+  }
+
+  bool _tryPdfFallback(PdfViewerBackend failed, {bool nativeFirst = false}) {
+    if (!mounted || _mode != ViewerMode.pdf || _pdfBackend != failed) {
+      return false;
+    }
+    _pdfAttempts.add(failed);
+    final next = <PdfViewerBackend>[
+      if (nativeFirst) PdfViewerBackend.native,
+      if (_preferredPdfFallback case final preferred?) preferred,
+      ...PdfViewerBackend.values,
+    ].where((backend) => !_pdfAttempts.contains(backend)).firstOrNull;
+    if (next == null) return false;
+    _log.warn(
+      'PDF viewer ${failed.name} could not open the file; trying ${next.name}.',
+    );
+    _pdfBackend = next;
+    _selectMode(ViewerMode.pdf);
+    return true;
+  }
+
+  Widget _pdfBackendMenu() => PopupMenuButton<PdfViewerBackend>(
+    key: const ValueKey('pdf-viewer-backend'),
+    popUpAnimationStyle: AnimationStyle.noAnimation,
+    initialValue: _pdfBackend,
+    itemBuilder: (_) => [
+      for (final backend in PdfViewerBackend.values)
+        PopupMenuItem(
+          value: backend,
+          child: Text(context.commanderTr(pdfViewerBackendLabel(backend))),
+        ),
+    ],
+    onSelected: _choosePdfBackend,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.commanderTr(
+              pdfViewerBackendLabel(_pdfBackend ?? PdfViewerBackend.pdfEditor),
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down),
+        ],
+      ),
+    ),
+  );
+
   Widget _pdfViewToggle() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          PopupMenuButton<PdfViewerBackend>(
-            key: const ValueKey('pdf-viewer-backend'),
-            popUpAnimationStyle: AnimationStyle.noAnimation,
-            initialValue: _pdfBackend,
-            itemBuilder: (_) => [
-              for (final backend in PdfViewerBackend.values)
-                PopupMenuItem(
-                  value: backend,
-                  child: Text(
-                    context.commanderTr(pdfViewerBackendLabel(backend)),
-                  ),
-                ),
-            ],
-            onSelected: (backend) {
-              _pdfBackend = backend;
-              _selectMode(ViewerMode.pdf);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(context.commanderTr(pdfViewerBackendLabel(
-                    _pdfBackend ?? PdfViewerBackend.pdfEditor,
-                  ))),
-                  const Icon(Icons.arrow_drop_down),
-                ],
-              ),
-            ),
-          ),
           SegmentedButton<bool>(
             style: _compactButtonStyle,
             segments: [
@@ -4746,9 +4823,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            OfficePdfFontNoticeStrings(
-              Localizations.localeOf(context),
-            ).text('previewFallback'),
+            OfficePdfFontNoticeStrings(Localizations.localeOf(context))
+                .text('previewFallback'),
           ),
         ),
         Expanded(child: content),
@@ -4862,9 +4938,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
           final locale = Localizations.localeOf(context);
-          final localized = OfficePreviewStrings(
-            locale,
-          ).headings(csv, document.csvHeadings, locale);
+          final localized = OfficePreviewStrings(locale)
+              .headings(csv, document.csvHeadings, locale);
           return CsvTableView(
             content: localized,
             filename: _viewName,
@@ -4873,9 +4948,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
-        final safeHtml = OfficePreviewStrings(
-          Localizations.localeOf(context),
-        ).safeHtml(document);
+        final safeHtml = OfficePreviewStrings(Localizations.localeOf(context))
+            .safeHtml(document);
         if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
           return SelectionArea(
             child: SingleChildScrollView(
@@ -4897,9 +4971,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
-        final markdown = OfficePreviewStrings(
-          locale,
-        ).headings(document.markdown, document.markdownHeadings, locale).trim();
+        final markdown = OfficePreviewStrings(locale)
+            .headings(document.markdown, document.markdownHeadings, locale)
+            .trim();
         if (markdown.isEmpty) {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
@@ -5022,10 +5096,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           key: _pdfRendererKey,
           bytes: _fullData!,
           backend: _pdfBackend!,
-          onCompatibility: () {
-            _pdfBackend = PdfViewerBackend.native;
-            _selectMode(ViewerMode.pdf);
-          },
+          onOpenFailure: _tryPdfFallback,
+          onCompatibility: () => _choosePdfBackend(PdfViewerBackend.native),
         ),
       );
     }
@@ -5103,9 +5175,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!current()) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = InternalViewerStrings(
-          context,
-        ).withNumber('pdfError', localizedNativePreviewError(context, e));
+        _pdfTextError = InternalViewerStrings(context)
+            .withNumber('pdfError', localizedNativePreviewError(context, e));
       });
     }
   }
@@ -5389,9 +5460,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildStatusBar(ThemeData theme) {
     final note = _mode == ViewerMode.office && _officeDoc != null
         ? (_documentTextFallback ? _viewNote : null) ??
-              OfficePreviewStrings(
-                Localizations.localeOf(context),
-              ).note(_officeDoc!) ??
+              OfficePreviewStrings(Localizations.localeOf(context))
+                  .note(_officeDoc!) ??
               _viewNote
         : _viewNote;
     final style = TextStyle(
