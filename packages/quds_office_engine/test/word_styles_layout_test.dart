@@ -132,6 +132,36 @@ void main() {
     );
   });
 
+  test('unchanged paragraph output retains native order and local edits', () {
+    const direct = '<w:pPr><w:jc w:val="right"/>'
+        '<w:spacing w:before="120" w:after="80"/></w:pPr>';
+    final doc = _open(
+      '<w:p>$direct<w:r><w:t>one</w:t></w:r></w:p>'
+      '<w:p>$direct<w:r><w:t>two</w:t></w:r></w:p>'
+      '<w:p>$direct<w:r><w:t>three</w:t></w:r></w:p>',
+    );
+    doc.paragraphs.elementAt(1).properties.spacingAfter = 12;
+    final part = WordSerializer().write(doc).getPart('/word/document.xml')!;
+    final properties = XmlDocument.parse(part.readText())
+        .root!
+        .firstChild('body')!
+        .childrenNamed('p')
+        .map((paragraph) => paragraph.firstChild('pPr')!)
+        .toList();
+    expect(properties, hasLength(3));
+    for (final property in properties) {
+      expect(property.childElements.map((child) => child.localName), [
+        'spacing',
+        'jc',
+      ]);
+      expect(property.firstChild('spacing')!.getAttribute('before'), '120');
+    }
+    expect(
+      properties.map((p) => p.firstChild('spacing')!.getAttribute('after')),
+      ['80', '240', '80'],
+    );
+  });
+
   test('repeated paragraph projections own their tabs and bookmarks', () {
     final doc = _open(
       [

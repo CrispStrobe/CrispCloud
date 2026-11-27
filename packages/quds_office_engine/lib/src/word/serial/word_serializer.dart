@@ -54,6 +54,7 @@ class WordSerializer {
   }
 
   Map<String, String>? _unchangedRunProperties;
+  Map<String, String>? _unchangedParagraphProperties;
   var _docPrId = 1;
   Map<OfficeVisual, String> _inlineImageIds = <OfficeVisual, String>{};
   var _hfPart = 1;
@@ -78,6 +79,7 @@ class WordSerializer {
   /// write API.
   OpcPackage write(WmlDocument document) {
     _unchangedRunProperties = <String, String>{};
+    _unchangedParagraphProperties = <String, String>{};
     _footnoteSeparator = WordFootnoteSeparatorIo.prepare(document);
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
@@ -170,6 +172,7 @@ class WordSerializer {
     writeZoteroData();
     document.package = package;
     _unchangedRunProperties = null;
+    _unchangedParagraphProperties = null;
     return package;
   }
 
@@ -1253,18 +1256,51 @@ class WordSerializer {
       node.writeTo(w);
       return;
     }
-    if (p.importedValues != null && p.sourcePropertiesXml != null) {
+    final imported = p.importedValues;
+    final source = p.sourcePropertiesXml;
+    if (imported != null && source != null) {
+      final current = WordPropertyIo.paragraphValues(p);
+      // Section properties are owned by the current section plan. Let the
+      // normal merge remove old section XML and emit its current replacement.
+      if (sectionBreak == null &&
+          !source.contains('sectPr') &&
+          current.entries.every(
+            (entry) => imported[entry.key] == entry.value,
+          ) &&
+          _hasFiniteParagraphMeasures(p)) {
+        _writeUnchangedProperties(
+          w,
+          'pPr',
+          source,
+          _unchangedParagraphProperties,
+        );
+        return;
+      }
       final XmlWriter generated = XmlWriter();
       _writeFullPPr(generated, p, sectionBreak: sectionBreak);
       WordPropertyIo.preserve(
         XmlDocument.parse(generated.toXml()).root!,
-        p.sourcePropertiesXml!,
-        p.importedValues!,
-        WordPropertyIo.paragraphValues(p),
+        source,
+        imported,
+        current,
       ).writeTo(w);
       return;
     }
     _writeFullPPr(w, p, sectionBreak: sectionBreak);
+  }
+
+  static bool _hasFiniteParagraphMeasures(WmlParagraphProps p) {
+    // Keep the full writer's numeric conversion behavior for a caller that
+    // supplies a nonfinite measurement and its own matching import baseline.
+    final lineScale = p.lineSpacingRule == WmlLineSpacingRule.auto ? 240 : 20;
+    return (p.spacingBefore * 20).isFinite &&
+        (p.spacingAfter * 20).isFinite &&
+        (p.lineSpacing * lineScale).isFinite &&
+        (p.indent.left * 20).isFinite &&
+        (p.indent.right * 20).isFinite &&
+        (p.indent.firstLine * 20).isFinite &&
+        (p.indent.hanging * 20).isFinite &&
+        p.tabs.every((tab) => (tab.position * 20).isFinite);
   }
 
   void _writeFullPPr(
@@ -1505,7 +1541,7 @@ class WordSerializer {
     if (source != null && r.hasImportedValues) {
       final current = WordPropertyIo.runValues(r);
       if (r.matchesImportedValues(current)) {
-        _writeUnchangedRPr(w, source);
+        _writeUnchangedProperties(w, 'rPr', source, _unchangedRunProperties);
         return;
       }
       final generated = XmlWriter();
@@ -1521,20 +1557,25 @@ class WordSerializer {
     _writeFullRPr(w, r);
   }
 
-  void _writeUnchangedRPr(XmlWriter writer, String source) {
+  void _writeUnchangedProperties(
+    XmlWriter writer,
+    String name,
+    String source,
+    Map<String, String>? documentCache,
+  ) {
     if (source.isEmpty) {
-      writer.writeEmptyElement('rPr', prefix: 'w');
+      writer.writeEmptyElement(name, prefix: 'w');
       return;
     }
-    final cache = source.length <= 4096 ? _unchangedRunProperties : null;
+    final cache = source.length <= 4096 ? documentCache : null;
     final cached = cache?[source];
     if (cached != null) {
       writer.writeRaw(cached);
       return;
     }
     // Unedited formatting still needs canonical OOXML order. Reuse the
-    // normalized source when multiple runs carry the same direct formatting.
-    final properties = WordPropertyIo.parse(source, 'rPr');
+    // normalized source when multiple elements carry the same direct formatting.
+    final properties = WordPropertyIo.parse(source, name);
     WordPropertyIo.orderChildren(properties);
     if (cache != null && cache.length < 128) {
       final xml = XmlDocument(root: properties).toXmlString(declaration: false);
