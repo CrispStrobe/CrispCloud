@@ -36,10 +36,19 @@ void main() {
     // 1) Hardware throughput on a big payload (encrypt + decrypt only).
     final big = Uint8List(32 * 1024 * 1024)
       ..setAll(0, List.generate(32 * 1024 * 1024, (i) => (i * 31 + 7) & 0xff));
-    final sw = Stopwatch()..start();
-    final enc = await p.encrypt(key, big);
-    final ms = sw.elapsedMilliseconds;
-    final mbps = 32 / (ms / 1000);
+    // Best of three: a shared CI runner can stall one sample (33 MB/s once,
+    // 72 MB/s the night before), while the software path never reaches 50.
+    late Uint8List enc;
+    var ms = 1 << 30;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      final sw = Stopwatch()..start();
+      enc = await p.encrypt(key, big);
+      final elapsed = sw.elapsedMilliseconds;
+      // ignore: avoid_print
+      print('NATIVE_AESGCM 32MB encrypt #${attempt + 1}: ${elapsed}ms');
+      if (elapsed < ms) ms = elapsed;
+    }
+    final mbps = 32 / (ms.clamp(1, 1 << 30) / 1000);
     // ignore: avoid_print
     print(
         'NATIVE_AESGCM 32MB encrypt: ${ms}ms (${mbps.toStringAsFixed(0)} MB/s)');
