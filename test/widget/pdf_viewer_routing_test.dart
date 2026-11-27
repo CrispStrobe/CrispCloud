@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:file_viewer_documents/file_viewer_documents.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +21,8 @@ import 'package:dart_pdf_editor/dart_pdf_editor.dart' as editor;
 import 'package:quds_office_editor/quds_office_editor.dart' as office;
 
 import '../support/pdf_editor_fixture.dart';
+import '../support/workflow_fake_client.dart';
+import '../support/workspace_fixture.dart';
 
 class _RecordingPdf extends PdfDocument {
   _RecordingPdf() : super(sourceName: 'fixture', id: 'fixture', pagesCount: 2);
@@ -153,7 +154,13 @@ void main() {
     addTearDown(() => temp.deleteSync(recursive: true));
     final service = DesktopFileService()..currentPath = temp.path;
     final container = ProviderContainer(
-      overrides: [localFileServiceProvider.overrideWithValue(service)],
+      overrides: [
+        localFileServiceProvider.overrideWithValue(service),
+        // PanelNotifier reads auth on creation; the app provides it from main().
+        authProvider.overrideWith(
+          (_) => WorkspaceTestAuth(WorkflowFakeClient()),
+        ),
+      ],
     );
     addTearDown(container.dispose);
     final origin = container
@@ -161,14 +168,15 @@ void main() {
         .captureLocalClipboardOrigin(temp.path);
     final worksheet = office.SmlWorksheet(name: 'Sheet1', sheetId: 1);
     worksheet.cellA1('A1').value = 'Linked worksheet';
-    final files = <(String, Uint8List, Type)>[
-      ('linked.pdf', buildPdfEditorFixture(), PdfRendererView),
+    final files = <(String, Uint8List, Finder)>[
+      ('linked.pdf', buildPdfEditorFixture(), find.byType(PdfRendererView)),
       (
         'linked.xlsx',
         office.SheetSerializer().writeBytes(
           office.SmlWorkbook(sheets: [worksheet]),
         ),
-        DocumentPreview,
+        // The worksheet's own text proves the bytes came from the link target.
+        find.text('Linked worksheet'),
       ),
     ];
     for (final (name, bytes, view) in files) {
@@ -192,17 +200,13 @@ void main() {
           ),
         ),
       );
-      for (
-        var tick = 0;
-        tick < 60 && find.byType(view).evaluate().isEmpty;
-        tick++
-      ) {
+      for (var tick = 0; tick < 60 && view.evaluate().isEmpty; tick++) {
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 40)),
         );
         await tester.pump(const Duration(milliseconds: 100));
       }
-      expect(find.byType(view), findsOneWidget);
+      expect(view, findsOneWidget);
       expect(target.readAsBytesSync(), bytes);
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
@@ -227,7 +231,18 @@ void main() {
           ),
         ),
       );
-      // Native PDF rendering is not registered in this widget test.
+      // Native PDF rendering is not registered in this widget test, so the
+      // native open fails over a real platform channel; let that finish.
+      for (
+        var tick = 0;
+        tick < 60 && find.byType(PdfRendererView).evaluate().isEmpty;
+        tick++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 40)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+      }
       await tester.pumpAndSettle();
       expect(
         tester.widget<PdfRendererView>(find.byType(PdfRendererView)).backend,

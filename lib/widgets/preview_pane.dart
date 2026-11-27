@@ -12,6 +12,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../utils/native_pdf.dart';
+
 import 'package:pdfx/pdfx.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -394,7 +397,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         );
       }
       if (type == PreviewType.pdf) {
-        final document = await PdfDocument.openData(bytes);
+        final document = await openNativePdfData(bytes);
         if (!_sameRequest(file, token) || !origin.isCurrent) {
           await document.close();
           if (!origin.isCurrent) {

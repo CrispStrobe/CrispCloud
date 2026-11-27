@@ -51,6 +51,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:file_viewer_documents/file_viewer_documents.dart';
 import 'package:quds_office_editor/quds_office_editor.dart' hide PdfDocument;
 import 'package:path_provider/path_provider.dart';
+
+import '../utils/native_pdf.dart';
+
 import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
@@ -1288,7 +1291,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             }
             if (acquired) {
               try {
-                doc = await PdfDocument.openFile(localPath);
+                doc = await openNativePdfFile(localPath);
                 streamAccess = localSvc != null;
               } catch (e, st) {
                 _log.warn('PdfDocument.openFile failed; using bytes', e, st);
@@ -1300,7 +1303,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             final data = await _ensureFullData();
             if (!mounted || token != _prepareToken) return;
             try {
-              doc = await PdfDocument.openData(data);
+              doc = await openNativePdfData(data);
             } catch (error, stack) {
               if (!usePdfium) rethrow;
               _log.warn(
@@ -4767,7 +4770,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       }
       final result = await convertOfficeToPdfResult(data);
       if (!current()) return;
-      final document = await PdfDocument.openData(result.bytes);
+      final document = await openNativePdfData(result.bytes);
       if (!current()) {
         unawaited(document.close());
         return;
