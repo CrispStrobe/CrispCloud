@@ -1422,6 +1422,47 @@ void main() {
   );
 
   test(
+    'go to path reveals a remote file in its folder and selects it',
+    () async {
+      cloud.folders['/'] = ['one', 'two'];
+      final panel = await remote();
+      await panel.navigateToPathOrReveal('/two/same.txt');
+      expect(panel.currentPath, '/two');
+      expect(panel.selection.single.path, '/two/same.txt');
+      expect(panel.cursorItem?.path, '/two/same.txt');
+    },
+  );
+
+  test('go to path still opens a remote directory', () async {
+    cloud.folders['/'] = ['one', 'two'];
+    final panel = await remote();
+    await panel.navigateToPathOrReveal('/one');
+    expect(panel.currentPath, '/one');
+  });
+
+  test(
+    'go to path reveals a local file in its folder and selects it',
+    () async {
+      final temp = Directory.systemTemp.createTempSync('goto-reveal');
+      addTearDown(() {
+        if (temp.existsSync()) temp.deleteSync(recursive: true);
+      });
+      final file = File('${temp.path}/note.txt')..writeAsStringSync('contents');
+      local.directory = temp.path;
+      final panel = await readyLocalPanel();
+      await panel.navigateToPathOrReveal(file.path);
+      expect(panel.currentPath, temp.path);
+      expect(panel.selection.single.path, file.path);
+      expect(panel.cursorItem?.path, file.path);
+
+      // Finder/browser links arrive as file:// URIs.
+      await panel.navigateToPathOrReveal(Uri.file(file.path).toString());
+      expect(panel.currentPath, temp.path);
+      expect(panel.selection.single.path, file.path);
+    },
+  );
+
+  test(
     'tabs retain virtual lists and their selection in this session',
     () async {
       final panel = await remote();

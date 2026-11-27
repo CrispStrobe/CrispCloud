@@ -3341,6 +3341,51 @@ class PanelNotifier extends ChangeNotifier {
     focusList();
   }
 
+  /// Opens a user-entered path in this panel.
+  ///
+  /// A directory navigates normally. A file opens its containing folder and
+  /// selects that exact row, matching the commander "go to" workflow while
+  /// keeping the pane that was active when the path was entered.
+  Future<void> navigateToPathOrReveal(String raw) async {
+    final origin = directoryPresentationOrigin;
+    final selectedSource = _ref.read(panelSourceProvider(side));
+    final isRemote =
+        origin?.source.isRemote ??
+        (selectedSource.isRemote ||
+            (side == PanelSide.remote && _ref.read(authProvider).isConnected));
+    var path = raw.trim();
+    if (!isRemote) {
+      path = _normaliseLocalPath(path);
+    } else if (path.length > 1 && path.startsWith('"') && path.endsWith('"')) {
+      path = path.substring(1, path.length - 1);
+    }
+    if (path.isEmpty) return;
+    if (origin == null) {
+      await navigateToPath(path);
+      focusList();
+      return;
+    }
+    FileItem? stat;
+    try {
+      stat = await fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      ).stat(path);
+    } catch (_) {
+      // A failed probe must not block a real directory navigation below.
+      stat = null;
+    }
+    if (stat == null || stat.isFolder) {
+      await navigateToPath(path, origin: origin);
+      focusList();
+      return;
+    }
+    final paths = origin.source.isRemote ? p.posix : p.context;
+    await navigateToPath(paths.dirname(path), selectItem: stat, origin: origin);
+    focusList();
+  }
+
   /// Resolve an imported path list through the current source. Every imported
   /// row must be present in a real parent-directory listing before it gains an
   /// operation origin. The panel/account may not change during the import.
