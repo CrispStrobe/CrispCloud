@@ -3,7 +3,8 @@ import 'package:test/test.dart';
 
 void main() {
   test('XML writer keeps repeated local names scoped to their prefixes', () {
-    final writer = XmlWriter()..writeStartElement('root', namespaceUri: 'urn:r');
+    final writer = XmlWriter()
+      ..writeStartElement('root', namespaceUri: 'urn:r');
     writer.writeStartElement('node', prefix: 'q', namespaceUri: 'urn:q');
     writer.writeEmptyElement('node', prefix: 'v', namespaceUri: 'urn:v');
     writer.writeEmptyElement('node', prefix: 'q');
@@ -158,13 +159,30 @@ void main() {
     });
 
     test('closing tags match the complete opening name at their depth', () {
-      final reader = XmlPullReader('<é><élément></élément></é>');
-      for (final name in ['é', 'élément', 'élément', 'é']) {
+      final reader = XmlPullReader(
+        '<é xmlns:p="urn:p"><p:élément></p:élément \n></é>',
+      );
+      for (final name in ['é', 'p:élément', 'p:élément', 'é']) {
         expect(reader.next(), isTrue);
         expect(reader.qualifiedName, name);
+        if (name.startsWith('p:')) {
+          expect(reader.localName, 'élément');
+          expect(reader.namespaceUri, 'urn:p');
+        }
       }
-      final shorter = XmlPullReader('<élément></é>')..next();
-      expect(shorter.next, throwsA(isA<XmlParseException>()));
+      for (final closing in ['é', 'élémentSuffix']) {
+        final mismatched = XmlPullReader('<élément></$closing>')..next();
+        expect(
+          mismatched.next,
+          throwsA(
+            isA<XmlParseException>().having(
+              (error) => error.message,
+              'message',
+              'Mismatched end tag: expected </élément> but found </$closing>',
+            ),
+          ),
+        );
+      }
     });
 
     test('event names survive empty tags and follow namespace scope', () {

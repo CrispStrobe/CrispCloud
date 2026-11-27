@@ -377,7 +377,8 @@ class XmlPullReader {
   void _readEndElement() {
     _type = XmlEventType.endElement;
     _pos++; // skip /
-    _readQName();
+    final matched = _readMatchingCloseName();
+    if (!matched) _readQName();
     _skipSpaces();
     _expect(_gt, 'Expected > at end of closing tag');
     if (_elementStack.isEmpty) {
@@ -385,7 +386,7 @@ class XmlPullReader {
     }
     final openEnd = _elementStack.removeLast();
     final openStart = _elementStack.removeLast();
-    if (!_matchesOpenName(openStart, openEnd)) {
+    if (!matched) {
       final open = _slice(openStart, openEnd);
       throw XmlParseException(
         'Mismatched end tag: expected </$open> but found </$qualifiedName>',
@@ -399,14 +400,29 @@ class XmlPullReader {
     }
   }
 
-  bool _matchesOpenName(int start, int end) {
-    final length = end - start;
-    if (length != _nameEnd - _nameStart) return false;
+  // The expected name was tokenized on entry. Match it and capture the close
+  // event in one pass. Re-tokenize mismatches for the normal diagnostics.
+  bool _readMatchingCloseName() {
+    final stackLength = _elementStack.length;
+    if (stackLength == 0) return false;
+    final openStart = _elementStack[stackLength - 2];
+    final length = _elementStack[stackLength - 1] - openStart;
+    final start = _pos;
+    final end = start + length;
+    final source = _source;
+    if (end >= source.length) return false;
+    final terminator = source.codeUnitAt(end);
+    if (terminator != _gt && !_isXmlSpace(terminator)) return false;
+    var prefixEnd = start;
     for (var i = 0; i < length; i++) {
-      if (_source.codeUnitAt(start + i) != _source.codeUnitAt(_nameStart + i)) {
-        return false;
-      }
+      final ch = source.codeUnitAt(start + i);
+      if (ch != source.codeUnitAt(openStart + i)) return false;
+      if (ch == _colon && prefixEnd == start) prefixEnd = start + i;
     }
+    _nameStart = start;
+    _nameEnd = end;
+    _prefixEnd = prefixEnd;
+    _pos = end;
     return true;
   }
 
