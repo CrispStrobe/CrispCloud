@@ -85,12 +85,18 @@ void main() {
       '<w:p><w:r><w:rPr><w:sz w:val="34"/></w:rPr>'
       '<w:t>first</w:t></w:r>'
       '<w:r><w:t>sec</w:t><w:rPr><w:sz w:val="34"/></w:rPr>'
-      '<w:t>ond</w:t></w:r></w:p>',
+      '<w:t>ond</w:t></w:r>'
+      '<w:r><w:rPr><w:sz w:val="18"/></w:rPr><w:t>third</w:t></w:r>'
+      '<w:r><w:rPr><w:sz w:val="34"/></w:rPr><w:t>fourth</w:t></w:r></w:p>',
     );
     final runs = doc.paragraphs.single.inlines.whereType<WmlRun>().toList();
-    expect(runs.map((run) => run.text), ['first', 'second']);
-    expect(runs.map((run) => run.properties.fontSizeHalfPoints), [34, 34]);
+    expect(runs.map((run) => run.text), ['first', 'second', 'third', 'fourth']);
+    expect(
+      runs.map((run) => run.properties.fontSizeHalfPoints),
+      [34, 34, 18, 34],
+    );
     runs.first.properties.fontSizeHalfPoints = 24;
+    expect(runs[1].properties.fontSizeHalfPoints, 34);
     expect(runs.last.properties.fontSizeHalfPoints, 34);
   });
 

@@ -141,6 +141,7 @@ class WordDeserializer {
 
   final _runPropertyCache = <_RunPropertyKey, _RunPropertyTemplate>{};
   MapEntry<_RunPropertyKey, _RunPropertyTemplate>? _lastRunProperties;
+  MapEntry<_RunPropertyKey, _RunPropertyTemplate>? _previousRunProperties;
 
   /// read API.
   WmlDocument read(OpcPackage package) {
@@ -149,6 +150,7 @@ class WordDeserializer {
     _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
     _lastRunProperties = null;
+    _previousRunProperties = null;
     _pendingEquations.clear();
     _pendingVisuals.clear();
     _pendingFrames.clear();
@@ -281,6 +283,7 @@ class WordDeserializer {
     _paragraphPropertyXml.clear();
     _runPropertyCache.clear();
     _lastRunProperties = null;
+    _previousRunProperties = null;
     return document;
   }
 
@@ -2784,6 +2787,15 @@ class WordDeserializer {
         reader.trySkipKnownElement(last.key.$2)) {
       return _copyRunProperties(last.value);
     }
+    final previous = _previousRunProperties;
+    if (previous != null &&
+        identical(previous.key.$1, namespaces) &&
+        previous.key.$3 == projected &&
+        reader.trySkipKnownElement(previous.key.$2)) {
+      _previousRunProperties = last;
+      _lastRunProperties = previous;
+      return _copyRunProperties(previous.value);
+    }
     final fragment = reader.readRawElement();
     final cacheable = fragment.length <= 2048;
     final key = (namespaces, fragment, projected);
@@ -2791,6 +2803,7 @@ class WordDeserializer {
     // the private parsed template, never a run's editable property object.
     final cached = cacheable ? _runPropertyCache[key] : null;
     if (cached != null) {
+      _previousRunProperties = last;
       _lastRunProperties = MapEntry(key, cached);
       return _copyRunProperties(cached);
     }
@@ -2818,6 +2831,7 @@ class WordDeserializer {
         notItalic: _notItalic.contains(props),
       );
       _runPropertyCache[key] = template;
+      _previousRunProperties = last;
       _lastRunProperties = MapEntry(key, template);
     }
     return (props: props, change: result.change, sourceXml: result.sourceXml);
