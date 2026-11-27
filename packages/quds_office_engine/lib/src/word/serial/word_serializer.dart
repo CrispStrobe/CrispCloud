@@ -2970,23 +2970,18 @@ class WordSerializer {
     );
   }
 
+  static const _noteChromeTypes = {
+    'separator',
+    'continuationSeparator',
+    'continuationNotice',
+  };
+
   void _writeNoteChrome(XmlWriter w, String item, XmlElement? source) {
     if (source != null) {
       // An imported part owns its separator choices, including their absence.
       // Replacing them with the conventional pair adds a visible rule to
       // documents that deliberately contain no separator definition.
       for (final node in source.childElements) {
-        if (node.namespaceUri != OfficeNamespaces.w ||
-            node.localName != item ||
-            !const {
-              'separator',
-              'continuationSeparator',
-              'continuationNotice',
-            }.contains(
-              node.getAttribute('type', namespaceUri: OfficeNamespaces.w),
-            )) {
-          continue;
-        }
         final retained = node.copy();
         // Native fragments may depend on aliases or markup-compatibility
         // context declared on their original root. Keep that context local so
@@ -3035,9 +3030,19 @@ class WordSerializer {
     String item,
   ) {
     final sourcePart = package.getPart(uri);
+    // Ordinary note bodies are written from the model. Keep only native
+    // separator definitions and their root-level namespace context.
     final source = sourcePart == null
         ? null
-        : XmlDocument.parse(sourcePart.readText()).root;
+        : XmlDocument.parse(
+            sourcePart.readText(),
+            keepRootChild: (_, child) =>
+                child.namespaceUri == OfficeNamespaces.w &&
+                child.localName == item &&
+                _noteChromeTypes.contains(
+                  child.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+                ),
+          ).root;
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
       notes
           .expand((WmlNote note) => note.visuals)

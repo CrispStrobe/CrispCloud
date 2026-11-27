@@ -118,6 +118,19 @@ Future<Uint8List> _save(WmlDocument document, bool isolate) => isolate
 void main() {
   for (final endnote in [false, true]) {
     final kind = endnote ? 'endnote' : 'footnote';
+    test('$kind saving still validates the discarded original note body', () {
+      final source = _authoredNotes(kind, chrome: false);
+      final package = _source(endnote, source, relocated: true);
+      final document = WordDeserializer().read(package);
+      package.getPart('/word/notes/native-${kind}s.xml')!.writeText(
+        source.replaceFirst('Original note', 'Malformed &unknown; entity'),
+      );
+      expect(
+        () => WordSerializer().write(document),
+        throwsA(isA<XmlParseException>()),
+      );
+    });
+
     for (final isolate in [false, true]) {
       final route = isolate ? 'isolate' : 'direct';
       test(
