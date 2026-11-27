@@ -330,6 +330,9 @@ abstract final class SheetDrawingIo {
             width: cx > 0 ? DrawingmlVisualIo.emuToPoints(cx) : 360,
             height: cy > 0 ? DrawingmlVisualIo.emuToPoints(cy) : 180,
           );
+          if (visual.kind == OfficeVisualKind.chartLine) {
+            _projectLineChart(chartXml, visual, name);
+          }
           final ({String? categories, String? values}) refs =
               DrawingmlVisualIo.chartSeriesRefs(chartXml);
           values = _seriesRange(refs.values);
@@ -467,6 +470,133 @@ abstract final class SheetDrawingIo {
       }
     }
     return out;
+  }
+
+  static void _projectLineChart(String xml, OfficeVisual visual, String name) {
+    final chart = XmlDocument.parse(xml).root?.firstChild('chart');
+    final plot = chart?.firstChild('plotArea');
+    final line = plot?.firstChild('lineChart');
+    if (chart == null || plot == null || line == null) return;
+    final grouping = line.firstChild('grouping')?.getAttribute('val');
+    if (grouping != null && grouping != 'standard') return;
+
+    String titleText(XmlElement? title) {
+      final text = title?.firstChild('tx');
+      final cached = text?.firstChild('strRef')?.firstChild('strCache');
+      return (text?.firstChild('rich')?.text ??
+              cached?.firstChild('pt')?.firstChild('v')?.text ??
+              '')
+          .trim();
+    }
+
+    const maxCategories = 16384;
+    Map<int, String> points(XmlElement? cache) {
+      final result = <int, String>{};
+      if (cache == null) return result;
+      for (final point in cache.childrenNamed('pt')) {
+        final index = int.tryParse(point.getAttribute('idx') ?? '');
+        final value = point.firstChild('v')?.text;
+        if (index != null &&
+            index >= 0 &&
+            index < maxCategories &&
+            value != null) {
+          result[index] = value;
+        }
+      }
+      return result;
+    }
+
+    XmlElement? cacheFor(XmlElement? region) {
+      final source = region?.childElements.firstOrNull;
+      return switch (source?.localName) {
+        'strRef' => source?.firstChild('strCache'),
+        'numRef' => source?.firstChild('numCache'),
+        'strLit' || 'numLit' => source,
+        _ => null,
+      };
+    }
+
+    final labels = <int, String>{};
+    final series = <ChartSeries>[];
+    var categoryCount = 0;
+    var sampleBudget = 65536;
+    final blanks = chart.firstChild('dispBlanksAs')?.getAttribute('val');
+    for (final item in line.childrenNamed('ser')) {
+      final categoryCache = cacheFor(item.firstChild('cat'));
+      final valueCache = cacheFor(item.firstChild('val'));
+      final categories = points(categoryCache);
+      final values = points(valueCache);
+      for (final entry in categories.entries) {
+        labels.putIfAbsent(entry.key, () => entry.value);
+      }
+      final declared =
+          int.tryParse(
+            valueCache?.firstChild('ptCount')?.getAttribute('val') ?? '',
+          ) ??
+          0;
+      var size = declared.clamp(0, maxCategories);
+      for (final index in [...categories.keys, ...values.keys]) {
+        if (index >= size) size = index + 1;
+      }
+      sampleBudget -= blanks == 'zero' ? size : values.length;
+      if (sampleBudget < 0) return;
+      if (size > categoryCount) categoryCount = size;
+      final title = item.firstChild('tx');
+      final seriesName =
+          title?.firstChild('v')?.text ?? points(cacheFor(title))[0] ?? '';
+      final rgb = item
+          .firstChild('spPr')
+          ?.firstChild('ln')
+          ?.firstChild('solidFill')
+          ?.firstChild('srgbClr')
+          ?.getAttribute('val');
+      final color = rgb != null && RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(rgb)
+          ? rgb.toUpperCase()
+          : VisualPalette.fills[series.length % VisualPalette.fills.length];
+      final samples = <ChartPoint>[];
+      final indices = blanks == 'zero'
+          ? Iterable<int>.generate(size)
+          : (values.keys.toList()..sort());
+      for (final index in indices) {
+        final value =
+            double.tryParse(values[index] ?? '') ??
+            (blanks == 'zero' ? 0.0 : null);
+        if (value != null && value.isFinite) {
+          samples.add(
+            ChartPoint(
+              label: categories[index] ?? '',
+              value: value,
+              x: index.toDouble(),
+              color: color,
+            ),
+          );
+        }
+      }
+      if (samples.isEmpty) continue;
+      series.add(
+        ChartSeries(
+          name: seriesName.isEmpty ? 'Series ${series.length + 1}' : seriesName,
+          points: List.unmodifiable(samples),
+          color: color,
+        ),
+      );
+    }
+
+    final title = titleText(chart.firstChild('title'));
+    visual.title = title.isEmpty ? name : title;
+    visual.chart
+      ..showTitle = chart.firstChild('title') != null
+      ..categoryTitle = titleText(plot.firstChild('catAx')?.firstChild('title'))
+      ..valueTitle = titleText(plot.firstChild('valAx')?.firstChild('title'));
+    if (series.isNotEmpty) {
+      visual.importedLineChart = OfficeLineChart(
+        categories: [
+          for (var i = 0; i < categoryCount; i++) labels[i] ?? '${i + 1}',
+        ],
+        series: series,
+        connectGaps: blanks == 'span',
+      );
+    }
   }
 
   static String _drawingXml(SmlWorksheet sheet, List<String> embedIds) {

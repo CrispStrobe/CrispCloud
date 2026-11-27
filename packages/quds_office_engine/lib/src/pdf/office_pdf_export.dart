@@ -230,6 +230,15 @@ abstract final class OfficePdfExport {
       }
       for (final SmlDrawing drawing in sheet.drawings) {
         _collectShaped(drawing.visual.title, cps);
+        if (drawing.visual.importedLineChart case final chart?) {
+          for (final index in chart.labelIndices) {
+            _collectShaped(chart.categories[index], cps);
+          }
+          for (final series in chart.series) {
+            _collectShaped(series.name, cps);
+          }
+          _collectShaped(drawing.visual.chart.categoryTitle, cps);
+        }
         for (final point in drawing.visual.points) {
           _collectShaped(point.label, cps);
         }

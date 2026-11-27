@@ -141,6 +141,30 @@ abstract final class SheetChartData {
     drawing.visual.points
       ..clear()
       ..addAll(merged);
+    final imported = drawing.visual.importedLineChart;
+    if (imported == null ||
+        imported.series.isEmpty ||
+        merged.length != imported.categories.length) {
+      return;
+    }
+    final first = imported.series.first;
+    drawing.visual.importedLineChart = OfficeLineChart(
+      categories: imported.categories,
+      connectGaps: imported.connectGaps,
+      series: [
+        ChartSeries(
+          name: first.name,
+          color: first.color,
+          points: List.unmodifiable(
+            first.points.map((point) {
+              final value = merged[point.x!.toInt()].value;
+              return value.isFinite ? point.copyWith(value: value) : point;
+            }),
+          ),
+        ),
+        ...imported.series.skip(1),
+      ],
+    );
   }
 
   /// refreshSheet API.

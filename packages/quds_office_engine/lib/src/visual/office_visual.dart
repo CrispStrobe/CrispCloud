@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../builders/office_markup.dart';
@@ -356,6 +357,79 @@ abstract final class VisualPalette {
   }
 }
 
+/// Read-only line-chart data projected from an imported DrawingML cache.
+class OfficeLineChart {
+  /// Creates a chart whose point X values are zero-based category indices.
+  OfficeLineChart({
+    required List<String> categories,
+    required List<ChartSeries> series,
+    required this.connectGaps,
+  }) : categories = List.unmodifiable(categories),
+       series = List.unmodifiable(series);
+
+  /// Shared category axis, including slots with missing values.
+  final List<String> categories;
+
+  /// Each series keeps its own name, color, and indexed values.
+  final List<ChartSeries> series;
+
+  /// Whether a line spans empty cells.
+  final bool connectGaps;
+
+  /// Shared signed limits for all series.
+  ({double min, double max}) get limits {
+    var min = 0.0;
+    var max = 0.0;
+    for (final series in this.series) {
+      for (final point in series.points) {
+        min = math.min(min, point.value);
+        max = math.max(max, point.value);
+      }
+    }
+    return (min: min, max: min == max ? 1 : max);
+  }
+
+  /// Fraction of the shared category axis occupied by a point.
+  double categoryFraction(int index) =>
+      categories.length < 2 ? 0.5 : index / (categories.length - 1);
+
+  /// Interpolates a finite value on a shared axis, including signed values.
+  static double valueFraction(double value, ({double min, double max}) limits) {
+    final span = limits.max - limits.min;
+    if (span.isFinite) return (value - limits.min) / span;
+    return (value / 2 - limits.min / 2) / (limits.max / 2 - limits.min / 2);
+  }
+
+  /// Category labels to paint without crowding the axis.
+  Iterable<int> get labelIndices sync* {
+    final last = categories.length - 1;
+    final step = math.max(1, (last / 7).ceil());
+    for (var index = 0; index < last; index += step) {
+      yield index;
+    }
+    if (last >= 0) yield last;
+  }
+
+  /// Compact labels for the display axis.
+  static String formatTick(double value) {
+    final (divisor, suffix) = switch (value.abs()) {
+      >= 1e12 => (1e12, 'T'),
+      >= 1e9 => (1e9, 'B'),
+      >= 1e6 => (1e6, 'M'),
+      >= 1e3 => (1e3, 'k'),
+      _ => (1.0, ''),
+    };
+    if (value == 0) return '0';
+    var text = (value / divisor).toStringAsPrecision(3);
+    if (text.contains('.') && !text.contains('e')) {
+      text = text
+          .replaceFirst(RegExp(r'0+$'), '')
+          .replaceFirst(RegExp(r'\.$'), '');
+    }
+    return '$text$suffix';
+  }
+}
+
 /// Class OfficeVisual.
 class OfficeVisual {
   /// OfficeVisual API.
@@ -370,6 +444,7 @@ class OfficeVisual {
     this.offsetY = 0,
     PictureAdjust? picture,
     ChartDisplay? chart,
+    this.importedLineChart,
   }) : points = points ?? <ChartPoint>[],
        picture = picture ?? PictureAdjust(),
        chart = chart ?? ChartDisplay();
@@ -382,6 +457,9 @@ class OfficeVisual {
 
   /// points API.
   List<ChartPoint> points;
+
+  /// Native line-chart display data, independent of the editable point list.
+  OfficeLineChart? importedLineChart;
 
   /// imageBytes API.
   Uint8List? imageBytes;
@@ -435,6 +513,7 @@ class OfficeVisual {
     offsetY: offsetY,
     picture: picture.copy(),
     chart: chart.copy(),
+    importedLineChart: importedLineChart,
   );
 
   /// restoreFrom API.
@@ -453,6 +532,7 @@ class OfficeVisual {
     offsetY = source.offsetY;
     picture = source.picture.copy();
     chart = source.chart.copy();
+    importedLineChart = source.importedLineChart;
   }
 
   /// addSamplePoint API.

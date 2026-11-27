@@ -567,6 +567,11 @@ abstract final class PaintOfficeVisual {
     OfficeVisual visual,
     String fontFamily,
   ) {
+    final imported = visual.importedLineChart;
+    if (imported != null && rect.width >= 90 && rect.height >= 70) {
+      _importedLine(canvas, rect, visual, imported, fontFamily);
+      return;
+    }
     _frame(canvas, rect, visual, fontFamily);
     final Rect plot = _plot(rect, visual);
     final List<ChartPoint> pts = visual.points;
@@ -595,6 +600,143 @@ abstract final class PaintOfficeVisual {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
+  }
+
+  static void _importedLine(
+    Canvas canvas,
+    Rect rect,
+    OfficeVisual visual,
+    OfficeLineChart chart,
+    String fontFamily,
+  ) {
+    canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = const Color(0xFFD0D0D0)
+        ..style = PaintingStyle.stroke,
+    );
+    if (visual.chart.showTitle) {
+      _label(
+        canvas,
+        Rect.fromLTWH(rect.left + 10, rect.top + 2, rect.width - 20, 18),
+        visual.title,
+        fontFamily: fontFamily,
+        align: TextAlign.left,
+        bold: true,
+      );
+    }
+    final plot = Rect.fromLTRB(
+      rect.left + (visual.chart.showAxes ? 39 : 10),
+      rect.top + (visual.chart.showTitle ? 24 : 8),
+      rect.right - 18,
+      rect.bottom - (visual.chart.showLegend ? 42 : 24),
+    );
+    if (plot.isEmpty) return;
+    final limits = chart.limits;
+    double category(int index) =>
+        plot.left + chart.categoryFraction(index) * plot.width;
+    double ordinate(double value) =>
+        plot.bottom -
+        OfficeLineChart.valueFraction(value, limits) * plot.height;
+    for (var tick = 0; tick <= 4; tick++) {
+      final fraction = tick / 4;
+      final y = plot.bottom - plot.height * fraction;
+      if (visual.chart.showGridlines || (tick == 0 && visual.chart.showAxes)) {
+        canvas.drawLine(
+          Offset(plot.left, y),
+          Offset(plot.right, y),
+          Paint()
+            ..color = tick == 0
+                ? const Color(0xFF808080)
+                : const Color(0xFFD0D0D0),
+        );
+      }
+      if (visual.chart.showAxes) {
+        final value = limits.min * (1 - fraction) + limits.max * fraction;
+        _label(
+          canvas,
+          Rect.fromLTWH(rect.left + 4, y - 6, 32, 12),
+          OfficeLineChart.formatTick(value),
+          fontFamily: fontFamily,
+          fontSize: 8,
+          align: TextAlign.right,
+        );
+      }
+    }
+    if (visual.chart.showAxes) {
+      for (final index in chart.labelIndices) {
+        _label(
+          canvas,
+          Rect.fromLTWH(category(index) - 21, plot.bottom, 42, 14),
+          chart.categories[index],
+          fontFamily: fontFamily,
+          fontSize: 8,
+        );
+      }
+      _label(
+        canvas,
+        Rect.fromLTWH(plot.left, plot.bottom + 12, plot.width, 12),
+        visual.chart.categoryTitle,
+        fontFamily: fontFamily,
+        fontSize: 8,
+        align: TextAlign.left,
+      );
+    }
+    canvas.save();
+    canvas.clipRect(plot.inflate(3));
+    for (final series in chart.series) {
+      final color = _hex(series.color ?? series.points.first.color);
+      final path = Path();
+      int? previous;
+      final markers = <Offset>[];
+      for (final point in series.points) {
+        final index = point.x!.toInt();
+        final offset = Offset(category(index), ordinate(point.value));
+        if (previous == null || (!chart.connectGaps && index != previous + 1)) {
+          path.moveTo(offset.dx, offset.dy);
+        } else {
+          path.lineTo(offset.dx, offset.dy);
+        }
+        markers.add(offset);
+        previous = index;
+      }
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6,
+      );
+      canvas.drawPoints(
+        ui.PointMode.points,
+        markers,
+        Paint()
+          ..color = color
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 4,
+      );
+    }
+    canvas.restore();
+    if (visual.chart.showLegend) {
+      final slot = (rect.width - 20) / chart.series.length;
+      for (final (index, series) in chart.series.indexed) {
+        final left = rect.left + 10 + index * slot;
+        if (slot <= 10) break;
+        canvas.drawRect(
+          Rect.fromLTWH(left, rect.bottom - 11, 6, 6),
+          Paint()..color = _hex(series.color ?? series.points.first.color),
+        );
+        _label(
+          canvas,
+          Rect.fromLTWH(left + 8, rect.bottom - 15, slot - 8, 13),
+          series.name,
+          fontFamily: fontFamily,
+          fontSize: 8,
+          align: TextAlign.left,
+        );
+      }
+    }
   }
 
   static void _process(

@@ -30,6 +30,7 @@ SmlWorkbook _openChart(
   String? val,
   String end = '',
   String extent = 'cx="3600000" cy="2160000"',
+  String? chartXml,
 }) {
   final OpcPackage package = _package(
     sheetData,
@@ -70,12 +71,13 @@ SmlWorkbook _openChart(
     '/xl/charts/chart1.xml',
     OfficeContentTypes.drawingChart,
     utf8.encode(
-      '<c:chartSpace xmlns:c="${OfficeNamespaces.c}"><c:chart><c:plotArea>'
-      '<c:barChart><c:ser><c:idx val="0"/>'
-      '<c:cat><c:strRef><c:f>$cat</c:f></c:strRef></c:cat>'
-      '<c:val><c:numRef><c:f>${val ?? r"Sheet1!$B$1:$B$3"}</c:f>'
-      '</c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart>'
-      '</c:chartSpace>',
+      chartXml ??
+          '<c:chartSpace xmlns:c="${OfficeNamespaces.c}"><c:chart><c:plotArea>'
+              '<c:barChart><c:ser><c:idx val="0"/>'
+              '<c:cat><c:strRef><c:f>$cat</c:f></c:strRef></c:cat>'
+              '<c:val><c:numRef><c:f>${val ?? r"Sheet1!$B$1:$B$3"}</c:f>'
+              '</c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart>'
+              '</c:chartSpace>',
     ),
   );
   final SmlWorkbook book = SheetDeserializer().read(package);
@@ -118,6 +120,82 @@ void main() {
     expect(resized.twoCellEnd, isNull);
     expect(resized.visual.width, closeTo(expectedWidth + 30, .001));
   });
+
+  test(
+    'native XLSX line chart previews multiple series and retains sparse values',
+    () {
+      final book = _openChart(
+        '',
+        cat: '',
+        chartXml:
+            '''
+<c:chartSpace xmlns:c="${OfficeNamespaces.c}" xmlns:a="${OfficeNamespaces.a}">
+<c:chart><c:title><c:tx><c:rich><a:p><a:r><a:t>Trading results</a:t></a:r></a:p></c:rich></c:tx></c:title>
+<c:plotArea><c:lineChart><c:grouping val="standard"/>
+<c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Retail</c:v></c:tx>
+<c:spPr><a:ln><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln></c:spPr>
+<c:cat><c:strLit><c:ptCount val="3"/><c:pt idx="0"><c:v>April</c:v></c:pt><c:pt idx="1"><c:v>May</c:v></c:pt><c:pt idx="2"><c:v>June</c:v></c:pt></c:strLit></c:cat>
+<c:val><c:numLit><c:ptCount val="3"/><c:pt idx="2"><c:v>20</c:v></c:pt><c:pt idx="0"><c:v>-10</c:v></c:pt></c:numLit></c:val></c:ser>
+<c:ser><c:idx val="1"/><c:order val="1"/><c:tx><c:v>Services</c:v></c:tx>
+<c:spPr><a:ln><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:ln></c:spPr>
+<c:val><c:numLit><c:ptCount val="3"/><c:pt idx="0"><c:v>3</c:v></c:pt><c:pt idx="1"><c:v>12</c:v></c:pt><c:pt idx="2"><c:v>7</c:v></c:pt></c:numLit></c:val></c:ser>
+</c:lineChart><c:catAx><c:title><c:tx><c:rich><a:p><a:r><a:t>Month</a:t></a:r></a:p></c:rich></c:tx></c:title></c:catAx>
+<c:valAx><c:majorGridlines/></c:valAx></c:plotArea><c:legend/><c:dispBlanksAs val="gap"/></c:chart>
+</c:chartSpace>''',
+      );
+      final reopened = SheetDeserializer().readBytes(
+        SheetSerializer().writeBytes(book),
+      );
+      for (final version in [book, reopened]) {
+        final visual = version.firstSheet.drawings.single.visual;
+        final line = visual.importedLineChart!;
+        expect(visual.title, 'Trading results');
+        expect(visual.chart.categoryTitle, 'Month');
+        expect(line.categories, ['April', 'May', 'June']);
+        expect(line.series.map((series) => series.name), [
+          'Retail',
+          'Services',
+        ]);
+        expect(line.series.map((series) => series.color), ['FF0000', '0000FF']);
+        expect(line.series.first.points.map((point) => point.x), [0, 2]);
+        expect(line.series.first.points.map((point) => point.value), [-10, 20]);
+        expect(line.limits, (min: -10.0, max: 20.0));
+        expect(line.connectGaps, isFalse);
+      }
+      final pdf = PdfFile.open(OfficePrint.workbook(reopened));
+      final outs = [
+        for (var i = 0; i < pdf.pageCount; i++)
+          String.fromCharCodes(
+            pdf.store.streamBytes(pdf.pageDict(i)['Contents'])!,
+          ),
+      ].join();
+      expect(outs, contains('1 0 0 RG'));
+      expect(outs, contains('0 0 1 RG'));
+      expect(outs, contains('Retail'));
+      expect(outs, contains('Services'));
+
+      final sheet = reopened.firstSheet;
+      final drawing = sheet.drawings.single
+        ..sourceFromA1 = 'B1'
+        ..sourceToA1 = 'B3'
+        ..labelsFromA1 = 'A1'
+        ..labelsToA1 = 'A3';
+      sheet.cellA1('B1').value = -25;
+      sheet.cellA1('B3').value = 50;
+      SheetChartData.refreshDrawing(reopened, sheet, drawing);
+      final updated = drawing.visual.importedLineChart!;
+      expect(updated.series.first.points.map((point) => point.x), [0, 2]);
+      expect(updated.series.first.points.map((point) => point.value), [
+        -25,
+        50,
+      ]);
+      expect(updated.series.last.points.map((point) => point.value), [
+        3,
+        12,
+        7,
+      ]);
+    },
+  );
 
   group('headers and footers', () {
     test('font codes stay inside their section', () {

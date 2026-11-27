@@ -291,6 +291,11 @@ abstract final class OfficePdfVisuals {
     OfficeVisual visual,
     void Function(String, double, double, double, String) drawText,
   ) {
+    final imported = visual.importedLineChart;
+    if (imported != null && w >= 90 && h >= 70) {
+      _importedLine(canvas, x, y, w, h, visual, imported, drawText);
+      return;
+    }
     _frame(canvas, x, y, w, h, visual, drawText);
     final List<ChartPoint> pts = visual.points;
     if (pts.isEmpty) {
@@ -315,6 +320,110 @@ abstract final class OfficePdfVisuals {
       }
     }
     canvas.stroke();
+  }
+
+  static void _importedLine(
+    PdfCanvas canvas,
+    double x,
+    double y,
+    double w,
+    double h,
+    OfficeVisual visual,
+    OfficeLineChart chart,
+    void Function(String, double, double, double, String) drawText,
+  ) {
+    canvas.fillRect(x, y, w, h, 'FFFFFF');
+    canvas.strokeRect(x, y, w, h, 'D0D0D0');
+    if (visual.chart.showTitle) {
+      drawText(visual.title, x + 10, y + 14, 11, '222222');
+    }
+    final left = x + (visual.chart.showAxes ? 39 : 10);
+    final top = y + (visual.chart.showTitle ? 24 : 8);
+    final plotW = x + w - 18 - left;
+    final bottom = y + h - (visual.chart.showLegend ? 42 : 24);
+    final plotH = bottom - top;
+    if (plotH <= 0) return;
+    final limits = chart.limits;
+    double category(int index) => left + chart.categoryFraction(index) * plotW;
+    double ordinate(double value) =>
+        bottom - OfficeLineChart.valueFraction(value, limits) * plotH;
+
+    canvas.setLineWidth(0.5);
+    for (var tick = 0; tick <= 4; tick++) {
+      final fraction = tick / 4;
+      final py = bottom - plotH * fraction;
+      if (visual.chart.showGridlines || (tick == 0 && visual.chart.showAxes)) {
+        canvas.setStrokeColor(tick == 0 ? '808080' : 'D0D0D0');
+        canvas.moveTo(left, py);
+        canvas.lineTo(left + plotW, py);
+        canvas.stroke();
+      }
+      if (visual.chart.showAxes) {
+        final value = limits.min * (1 - fraction) + limits.max * fraction;
+        drawText(OfficeLineChart.formatTick(value), x + 5, py + 2, 7, '444444');
+      }
+    }
+    if (visual.chart.showAxes) {
+      for (final index in chart.labelIndices) {
+        final label = chart.categories[index];
+        drawText(
+          label,
+          category(index) - label.length * 1.8,
+          bottom + 11,
+          7,
+          '444444',
+        );
+      }
+      drawText(visual.chart.categoryTitle, left, bottom + 21, 7, '444444');
+    }
+    canvas.save();
+    canvas.clipRect(left - 3, top - 3, plotW + 6, plotH + 6);
+    for (final series in chart.series) {
+      final color = series.color ?? series.points.first.color;
+      canvas.setStrokeColor(color);
+      canvas.setLineWidth(1.5);
+      int? previous;
+      for (final point in series.points) {
+        final index = point.x!.toInt();
+        final px = category(index);
+        final py = ordinate(point.value);
+        if (previous == null || (!chart.connectGaps && index != previous + 1)) {
+          canvas.moveTo(px, py);
+        } else {
+          canvas.lineTo(px, py);
+        }
+        previous = index;
+      }
+      canvas.stroke();
+      canvas.setFillColor(color);
+      for (final point in series.points) {
+        canvas.ellipse(
+          category(point.x!.toInt()) - 2,
+          ordinate(point.value) - 2,
+          4,
+          4,
+        );
+        canvas.fill();
+      }
+    }
+    canvas.restore();
+    if (visual.chart.showLegend) {
+      final slot = (w - 20) / chart.series.length;
+      for (final (index, series) in chart.series.indexed) {
+        final lx = x + 10 + index * slot;
+        canvas.save();
+        canvas.clipRect(lx, y + h - 15, slot, 13);
+        canvas.fillRect(
+          lx,
+          y + h - 11,
+          6,
+          6,
+          series.color ?? series.points.first.color,
+        );
+        drawText(series.name, lx + 8, y + h - 5, 7, '333333');
+        canvas.restore();
+      }
+    }
   }
 
   static void _process(
