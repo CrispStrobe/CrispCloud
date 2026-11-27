@@ -153,6 +153,8 @@ abstract final class SheetChartData {
       connectGaps: imported.connectGaps,
       labelFormats: imported.labelFormats,
       locale: imported.locale,
+      betweenCategories: imported.betweenCategories,
+      labelsAtZero: imported.labelsAtZero,
       series: [
         ChartSeries(
           name: first.name,

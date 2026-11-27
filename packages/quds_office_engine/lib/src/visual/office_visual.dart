@@ -252,6 +252,10 @@ class ChartDisplay {
     this.showPercent = false,
     this.legendPos = ChartLegendPos.bottom,
     this.titleSize,
+    this.titleBold = true,
+    this.titleFamily,
+    this.legendSize,
+    this.legendFamily,
     this.categoryTitle = '',
     this.valueTitle = '',
     this.gapWidth = 120,
@@ -285,6 +289,18 @@ class ChartDisplay {
   /// Point size of the authored chart title, when available.
   double? titleSize;
 
+  /// Weight specified by the native chart title.
+  bool titleBold;
+
+  /// Font specified by the native chart title.
+  String? titleFamily;
+
+  /// Point size of native legend text.
+  double? legendSize;
+
+  /// Typeface of native legend text.
+  String? legendFamily;
+
   /// categoryTitle API.
   String categoryTitle;
 
@@ -316,6 +332,10 @@ class ChartDisplay {
     showPercent: showPercent,
     legendPos: legendPos,
     titleSize: titleSize,
+    titleBold: titleBold,
+    titleFamily: titleFamily,
+    legendSize: legendSize,
+    legendFamily: legendFamily,
     categoryTitle: categoryTitle,
     valueTitle: valueTitle,
     gapWidth: gapWidth,
@@ -365,16 +385,96 @@ abstract final class VisualPalette {
   }
 }
 
+/// Width of styled text in chart coordinates.
+typedef ChartTextMeasure =
+    double Function(String text, double size, bool bold, String? family);
+
+/// A measured grid of legend cells, in source order.
+class OfficeChartLegend {
+  /// Computes columns that fit the legend's available width.
+  OfficeChartLegend(
+    List<String> labels, {
+    required double width,
+    required double maxHeight,
+    required double size,
+    required String? family,
+    ChartTextMeasure? measure,
+    bool vertical = false,
+    double keyWidth = 14,
+  }) {
+    fontSize = size;
+    if (labels.isEmpty || width <= keyWidth || maxHeight <= 0) return;
+    final natural = [
+      for (final text in labels)
+        (measure?.call(text, size, false, family) ??
+                text.runes.length * size * .51) +
+            keyWidth,
+    ];
+    var columns = vertical
+        ? 1
+        : math.min(labels.length, (width / keyWidth).floor());
+    List<double> columnWidths(int count) {
+      final widths = List.filled(count, 0.0);
+      for (final (index, measured) in natural.indexed) {
+        final col = index % count;
+        widths[col] = math.max(widths[col], measured);
+      }
+      return widths;
+    }
+
+    var widths = columnWidths(columns);
+    double total() => widths.fold(0.0, (sum, value) => sum + value);
+    while (columns > 1 && total() > width) {
+      columns--;
+      widths = columnWidths(columns);
+    }
+    final rows = (labels.length / columns).ceil();
+    rowHeight = math.min(size + 3, maxHeight / rows);
+    fontSize = math.min(size, math.max(1, rowHeight - 2));
+    final offsets = <double>[vertical ? 0 : math.max(0, (width - total()) / 2)];
+    for (final slot in widths) {
+      offsets.add(offsets.last + slot);
+    }
+    for (var i = 0; i < labels.length; i++) {
+      final col = i % columns;
+      entries.add((
+        index: i,
+        x: offsets[col],
+        y: (i ~/ columns) * rowHeight,
+        width: math.min(widths[col], width - offsets[col]),
+      ));
+    }
+    height = rows * rowHeight;
+  }
+
+  /// Legend cells relative to the top left of the legend.
+  final entries = <({int index, double x, double y, double width})>[];
+
+  /// Height reserved for all legend rows.
+  double height = 0;
+
+  /// Height of a legend row.
+  double rowHeight = 0;
+
+  /// Effective size after accounting for the available height.
+  late double fontSize;
+}
+
 /// Geometry shared by the editor and PDF pie-chart renderers.
 class OfficePieLayout {
   /// Builds the pie, its slice labels and its legend in chart coordinates.
-  OfficePieLayout(OfficeVisual visual, double width, double height) {
+  OfficePieLayout(
+    OfficeVisual visual,
+    double width,
+    double height, {
+    ChartTextMeasure? measure,
+  }) {
     final chart = visual.chart;
     final points = visual.points
         .where((point) => point.value.isFinite && point.value >= 0)
         .toList();
     titleSize = chart.titleSize ?? 11;
-    titleLines = visual.chartTitleLines(width, titleSize);
+    titleLines = visual.chartTitleLines(width, titleSize, measure: measure);
     var left = 8.0;
     var right = width - 8;
     var top = titleLines.isEmpty ? 6.0 : titleSize * titleLines.length + 10;
@@ -384,55 +484,40 @@ class OfficePieLayout {
           chart.legendPos == ChartLegendPos.left ||
           chart.legendPos == ChartLegendPos.right ||
           chart.legendPos == ChartLegendPos.topRight;
+      final available = right - left;
+      final grid = OfficeChartLegend(
+        points.map((point) => point.label).toList(),
+        width: side ? available * .35 : available,
+        maxHeight: (bottom - top) * (side ? 1 : .45),
+        size: chart.legendSize ?? 8,
+        family: chart.legendFamily,
+        measure: measure,
+        vertical: side,
+      );
+      legendSize = grid.fontSize;
+      legendRowHeight = grid.rowHeight;
+      final above = chart.legendPos == ChartLegendPos.top;
+      final onLeft = chart.legendPos == ChartLegendPos.left;
+      final legendX = side && !onLeft ? right - available * .35 : left;
+      final legendY = above || side ? top : bottom - grid.height;
+      for (final entry in grid.entries) {
+        legend.add((
+          point: points[entry.index],
+          x: legendX + entry.x,
+          y: legendY + entry.y,
+          width: entry.width,
+        ));
+      }
       if (side) {
-        final legendWidth = (right - left) * .35;
-        final x = chart.legendPos == ChartLegendPos.left
-            ? left
-            : right - legendWidth;
-        for (final (index, point) in points.indexed) {
-          final y = top + index * 12;
-          if (y + 12 > bottom) break;
-          legend.add((point: point, x: x, y: y, width: legendWidth));
-        }
-        if (chart.legendPos == ChartLegendPos.left) {
-          left += legendWidth + 6;
+        if (onLeft) {
+          left += available * .35 + 6;
         } else {
-          right -= legendWidth + 6;
+          right -= available * .35 + 6;
         }
+      } else if (above) {
+        top += grid.height;
       } else {
-        final rows = <List<({ChartPoint point, double width})>>[[]];
-        final rowWidths = <double>[0];
-        final available = right - left;
-        for (final point in points) {
-          final slot = math.min(available, 16 + point.label.runes.length * 4.1);
-          if (rows.last.isNotEmpty && rowWidths.last + slot > available) {
-            rows.add([]);
-            rowWidths.add(0);
-          }
-          rows.last.add((point: point, width: slot));
-          rowWidths[rowWidths.length - 1] += slot;
-        }
-        final maxRows = math.max(0, ((bottom - top) * .35 / 12).floor());
-        final count = math.min(rows.length, maxRows);
-        final above = chart.legendPos == ChartLegendPos.top;
-        final startY = above ? top : bottom - count * 12;
-        for (var row = 0; row < count; row++) {
-          var x = left + (available - rowWidths[row]) / 2;
-          for (final slot in rows[row]) {
-            legend.add((
-              point: slot.point,
-              x: x,
-              y: startY + row * 12,
-              width: slot.width,
-            ));
-            x += slot.width;
-          }
-        }
-        if (above) {
-          top += count * 12;
-        } else {
-          bottom -= count * 12;
-        }
+        bottom -= grid.height;
       }
     }
     cx = (left + right) / 2;
@@ -492,6 +577,12 @@ class OfficePieLayout {
   /// Legend entries with local bounds.
   final legend = <({ChartPoint point, double x, double y, double width})>[];
 
+  /// Effective font size for the legend.
+  double legendSize = 8;
+
+  /// Legend row height used by both renderers.
+  double legendRowHeight = 12;
+
   /// Chart title size in points.
   late final double titleSize;
 
@@ -517,6 +608,8 @@ class OfficeLineChart {
     required this.connectGaps,
     List<String?> labelFormats = const [],
     this.locale = 'en_US',
+    this.betweenCategories = false,
+    this.labelsAtZero = false,
   }) : categories = List.unmodifiable(categories),
        series = List.unmodifiable(series),
        labelFormats = List.unmodifiable(labelFormats);
@@ -535,6 +628,12 @@ class OfficeLineChart {
 
   /// Language used by the native chart's labels.
   final String locale;
+
+  /// Leave half a category slot to either side of the line.
+  final bool betweenCategories;
+
+  /// Display categories beside the horizontal zero axis.
+  final bool labelsAtZero;
 
   /// A formatted label, or an empty string when its series has labels disabled.
   String pointLabel(int seriesIndex, double value) {
@@ -600,8 +699,11 @@ class OfficeLineChart {
   }
 
   /// Fraction of the shared category axis occupied by a point.
-  double categoryFraction(int index) =>
-      categories.length < 2 ? 0.5 : index / (categories.length - 1);
+  double categoryFraction(int index) => categories.length < 2
+      ? 0.5
+      : betweenCategories
+      ? (index + .5) / categories.length
+      : index / (categories.length - 1);
 
   /// Interpolates a finite value on a shared axis, including signed values.
   static double valueFraction(double value, ({double min, double max}) limits) {
@@ -672,9 +774,13 @@ class OfficeVisual {
   OfficeLineChart? importedLineChart;
 
   /// Wraps an authored chart title within its frame.
-  List<String> chartTitleLines(double width, double size) {
+  List<String> chartTitleLines(
+    double width,
+    double size, {
+    ChartTextMeasure? measure,
+  }) {
     if (!chart.showTitle || title.isEmpty) return const [];
-    final available = width - 16;
+    final available = width - 20;
     if (available <= 0) return const [];
     final lines = <String>[];
     for (final paragraph in title.split('\n')) {
@@ -682,7 +788,10 @@ class OfficeVisual {
       for (final word in paragraph.split(RegExp(r'\s+'))) {
         if (word.isEmpty) continue;
         final next = line.isEmpty ? word : '$line $word';
-        if (line.isNotEmpty && next.runes.length * size * .53 > available) {
+        final advance =
+            measure?.call(next, size, chart.titleBold, chart.titleFamily) ??
+            next.runes.length * size * .53;
+        if (line.isNotEmpty && advance > available) {
           lines.add(line);
           line = word;
         } else {

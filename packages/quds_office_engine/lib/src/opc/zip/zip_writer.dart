@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import '../../io/byte_source.dart';
 import 'crc32.dart';
-import 'deflate_codec.dart';
+import 'zip_deflate.dart' if (dart.library.io) 'zip_deflate_io.dart';
 import 'zip_reader.dart';
 
 /// Streaming ZIP writer that emits local headers as parts are added and
@@ -30,7 +30,7 @@ class ZipWriter {
       payload = raw;
       method = zipMethodStore;
     } else {
-      payload = RawDeflate.deflate(raw, level: deflateLevel);
+      payload = deflateZipEntry(raw, deflateLevel);
       method = zipMethodDeflate;
     }
     _writeLocalAndRecord(

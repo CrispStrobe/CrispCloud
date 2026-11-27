@@ -131,5 +131,24 @@ void main() {
       expect(utf8.decode(reader.read('plain.txt')), 'hello');
       expect(utf8.decode(reader.read('deflated.txt')), 'hello world ' * 20);
     });
+
+    test('native ZIP compression packs XML and preserves copied entries', () {
+      final xml = utf8.encode(
+        '<w:p><w:r><w:t>Repeated document text</w:t></w:r></w:p>' * 2500,
+      );
+      const name = 'word/document.xml';
+      final writer = ZipWriter()..addFile(name, xml);
+      final reader = ZipReader.fromBytes(writer.close());
+      final entry = reader[name]!;
+      final compressed = reader.compressedPayload(entry);
+      expect(entry.compressionMethod, zipMethodDeflate);
+      expect(compressed.length, lessThan(RawDeflate.deflate(xml).length));
+      expect(reader.read(name, maxBytes: xml.length), xml);
+
+      final copy = ZipWriter()..copyFile(reader, name);
+      final reopened = ZipReader.fromBytes(copy.close());
+      expect(reopened.compressedPayload(reopened[name]!), compressed);
+      expect(reopened.read(name), xml);
+    }, testOn: 'vm');
   });
 }

@@ -131,7 +131,7 @@ void main() {
             '''
 <c:chartSpace xmlns:c="${OfficeNamespaces.c}" xmlns:a="${OfficeNamespaces.a}">
 <c:lang val="de-DE"/>
-<c:chart><c:title><c:tx><c:rich><a:p><a:r><a:rPr sz="1800"/><a:t>Trading results</a:t></a:r></a:p></c:rich></c:tx></c:title>
+<c:chart><c:title><c:tx><c:rich><a:p><a:r><a:rPr sz="1800" b="1"><a:latin typeface="Calibri"/></a:rPr><a:t>Trading results</a:t></a:r></a:p></c:rich></c:tx></c:title>
 <c:plotArea><c:lineChart><c:grouping val="standard"/>
 <c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Retail</c:v></c:tx>
 <c:spPr><a:ln><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln></c:spPr>
@@ -141,7 +141,7 @@ void main() {
 <c:spPr><a:ln><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:ln></c:spPr>
 <c:val><c:numLit><c:ptCount val="3"/><c:pt idx="0"><c:v>3</c:v></c:pt><c:pt idx="1"><c:v>12</c:v></c:pt><c:pt idx="2"><c:v>7</c:v></c:pt></c:numLit></c:val></c:ser>
 </c:lineChart><c:catAx><c:title><c:tx><c:rich><a:p><a:r><a:t>Month</a:t></a:r></a:p></c:rich></c:tx></c:title></c:catAx>
-<c:valAx><c:majorGridlines/></c:valAx></c:plotArea><c:legend/><c:dispBlanksAs val="gap"/></c:chart>
+<c:valAx><c:majorGridlines/><c:crossBetween val="between"/></c:valAx></c:plotArea><c:legend/><c:dispBlanksAs val="gap"/></c:chart>
 </c:chartSpace>''',
       );
       final reopened = SheetDeserializer().readBytes(
@@ -152,6 +152,10 @@ void main() {
         final line = visual.importedLineChart!;
         expect(visual.title, 'Trading results');
         expect(visual.chart.titleSize, 18);
+        expect(visual.chart.titleBold, isTrue);
+        expect(visual.chart.titleFamily, 'Calibri');
+        expect(line.categoryFraction(0), closeTo(1 / 6, 1e-9));
+        expect(line.categoryFraction(2), closeTo(5 / 6, 1e-9));
         expect(line.pointLabel(0, 1234), isEmpty);
         expect(line.pointLabel(1, 1234), '1.234');
         expect(line.axisTicks.first, lessThanOrEqualTo(-10));
@@ -263,6 +267,42 @@ void main() {
       expect(layout.legend, hasLength(4));
     },
   );
+
+  test('measured chart titles and narrow legends retain their contents', () {
+    final chart = OfficeVisual(
+      kind: OfficeVisualKind.chartPie,
+      title: 'Wider region has a continuous title',
+      chart: ChartDisplay(
+        titleSize: 18,
+        titleFamily: 'Calibri',
+        legendSize: 10,
+      ),
+      points: [
+        for (final name in [
+          'Meetings',
+          'Technology',
+          'Payroll',
+          'Vehicles',
+          'Advertising and representation',
+          'Other expenses',
+        ])
+          ChartPoint(label: name, value: 1),
+      ],
+    );
+    double measure(String value, double size, bool bold, String? family) =>
+        value.length * size * .44;
+    final title = chart.chartTitleLines(308, 18, measure: measure);
+    expect(title, [chart.title]);
+    final compact = OfficePieLayout(chart, 218, 170, measure: measure);
+    expect(
+      compact.legend.map((entry) => entry.point.label),
+      chart.points.map((point) => point.label),
+    );
+    expect(
+      compact.legend.map((entry) => entry.y).toSet().length,
+      greaterThan(1),
+    );
+  });
 
   group('headers and footers', () {
     test('font codes stay inside their section', () {

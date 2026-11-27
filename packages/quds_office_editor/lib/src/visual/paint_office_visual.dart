@@ -519,7 +519,13 @@ abstract final class PaintOfficeVisual {
     OfficeVisual visual,
     String fontFamily,
   ) {
-    final layout = OfficePieLayout(visual, rect.width, rect.height);
+    final layout = OfficePieLayout(
+      visual,
+      rect.width,
+      rect.height,
+      measure: (text, size, bold, family) =>
+          _measureChartText(text, size, bold, family ?? fontFamily),
+    );
     canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFFFF));
     canvas.drawRect(
       rect,
@@ -531,15 +537,15 @@ abstract final class PaintOfficeVisual {
       _label(
         canvas,
         Rect.fromLTWH(
-          rect.left + 8,
+          rect.left + 10,
           rect.top + 3 + index * layout.titleSize,
-          rect.width - 16,
+          rect.width - 20,
           layout.titleSize + 5,
         ),
         title,
         fontSize: layout.titleSize,
-        fontFamily: fontFamily,
-        bold: true,
+        fontFamily: visual.chart.titleFamily ?? fontFamily,
+        bold: visual.chart.titleBold,
       );
     }
     final cx = rect.left + layout.cx;
@@ -577,16 +583,22 @@ abstract final class PaintOfficeVisual {
     for (final entry in layout.legend) {
       final left = rect.left + entry.x;
       final top = rect.top + entry.y;
+      final key = math.min(6.0, layout.legendSize * .7);
       canvas.drawRect(
-        Rect.fromLTWH(left + 2, top + 4, 6, 6),
+        Rect.fromLTWH(
+          left + 2,
+          top + (layout.legendRowHeight - key) / 2,
+          key,
+          key,
+        ),
         Paint()..color = _hex(entry.point.color),
       );
       _label(
         canvas,
-        Rect.fromLTWH(left + 10, top, entry.width - 10, 12),
+        Rect.fromLTWH(left + 10, top, entry.width - 10, layout.legendRowHeight),
         entry.point.label,
-        fontSize: 8,
-        fontFamily: fontFamily,
+        fontSize: layout.legendSize,
+        fontFamily: visual.chart.legendFamily ?? fontFamily,
         align: TextAlign.left,
       );
     }
@@ -648,20 +660,37 @@ abstract final class PaintOfficeVisual {
         ..style = PaintingStyle.stroke,
     );
     final titleSize = visual.chart.titleSize ?? 11;
-    final titleLines = visual.chartTitleLines(rect.width, titleSize);
+    double measure(String text, double size, bool bold, String? family) =>
+        _measureChartText(text, size, bold, family ?? fontFamily);
+    final titleLines = visual.chartTitleLines(
+      rect.width,
+      titleSize,
+      measure: measure,
+    );
+    final legend = OfficeChartLegend(
+      visual.chart.showLegend
+          ? chart.series.map((series) => series.name).toList()
+          : [],
+      width: rect.width - 24,
+      maxHeight: rect.height * .28,
+      size: visual.chart.legendSize ?? 8,
+      family: visual.chart.legendFamily,
+      measure: measure,
+      keyWidth: 22,
+    );
     for (final (index, title) in titleLines.indexed) {
       _label(
         canvas,
         Rect.fromLTWH(
-          rect.left + 8,
+          rect.left + 10,
           rect.top + 3 + index * titleSize,
-          rect.width - 16,
+          rect.width - 20,
           titleSize + 5,
         ),
         title,
         fontSize: titleSize,
-        fontFamily: fontFamily,
-        bold: true,
+        fontFamily: visual.chart.titleFamily ?? fontFamily,
+        bold: visual.chart.titleBold,
       );
     }
     final plot = Rect.fromLTRB(
@@ -671,7 +700,7 @@ abstract final class PaintOfficeVisual {
               : 10),
       rect.top + (titleLines.isEmpty ? 8 : titleSize * titleLines.length + 13),
       rect.right - 18,
-      rect.bottom - (visual.chart.showLegend ? 42 : 24),
+      rect.bottom - legend.height - 30,
     );
     if (plot.isEmpty) return;
     final ticks = chart.axisTicks;
@@ -705,10 +734,13 @@ abstract final class PaintOfficeVisual {
       }
     }
     if (visual.chart.showAxes) {
+      final categoryY = chart.labelsAtZero && limits.min < 0 && limits.max > 0
+          ? ordinate(0)
+          : plot.bottom;
       for (final index in chart.labelIndices) {
         _label(
           canvas,
-          Rect.fromLTWH(category(index) - 21, plot.bottom, 42, 14),
+          Rect.fromLTWH(category(index) - 21, categoryY, 42, 14),
           chart.categories[index],
           fontFamily: fontFamily,
           fontSize: 8,
@@ -786,24 +818,26 @@ abstract final class PaintOfficeVisual {
         }
       }
     }
-    if (visual.chart.showLegend) {
-      final slot = (rect.width - 20) / chart.series.length;
-      for (final (index, series) in chart.series.indexed) {
-        final left = rect.left + 10 + index * slot;
-        if (slot <= 10) break;
-        canvas.drawRect(
-          Rect.fromLTWH(left, rect.bottom - 11, 6, 6),
-          Paint()..color = _hex(series.color ?? series.points.first.color),
-        );
-        _label(
-          canvas,
-          Rect.fromLTWH(left + 8, rect.bottom - 15, slot - 8, 13),
-          series.name,
-          fontFamily: fontFamily,
-          fontSize: 8,
-          align: TextAlign.left,
-        );
-      }
+    for (final entry in legend.entries) {
+      final series = chart.series[entry.index];
+      final left = rect.left + 12 + entry.x;
+      final top = rect.bottom - legend.height - 5 + entry.y;
+      final middle = top + legend.rowHeight / 2;
+      final color = _hex(series.color ?? series.points.first.color);
+      canvas.drawLine(
+        Offset(left + 2, middle),
+        Offset(left + 15, middle),
+        Paint()..color = color,
+      );
+      canvas.drawCircle(Offset(left + 8, middle), 2, Paint()..color = color);
+      _label(
+        canvas,
+        Rect.fromLTWH(left + 17, top, entry.width - 17, legend.rowHeight),
+        series.name,
+        fontFamily: visual.chart.legendFamily ?? fontFamily,
+        fontSize: legend.fontSize,
+        align: TextAlign.left,
+      );
     }
   }
 
@@ -1051,6 +1085,32 @@ abstract final class PaintOfficeVisual {
       rect.width - 20,
       rect.height - (legend ? 56 : 40),
     );
+  }
+
+  static double _measureChartText(
+    String text,
+    double size,
+    bool bold,
+    String family,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: size,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+          fontFamily: OfficeHostFonts.paintFamily(family),
+          fontFamilyFallback: PaintRunText.fontFallbacks,
+        ),
+      ),
+      textDirection: PaintRunText.looksRtl(text)
+          ? TextDirection.rtl
+          : TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 
   static void _label(

@@ -478,7 +478,7 @@ abstract final class SheetDrawingIo {
     return out;
   }
 
-  static void _applyTitleSize(XmlElement? node, ChartDisplay display) {
+  static void _applyTitleStyle(XmlElement? node, ChartDisplay display) {
     final rich = node?.firstChild('tx')?.firstChild('rich');
     final paragraph = rich?.firstChild('p');
     final run = paragraph?.firstChild('r')?.firstChild('rPr');
@@ -489,6 +489,27 @@ abstract final class SheetDrawingIo {
     if (size != null && size >= 600 && size <= 7200) {
       display.titleSize = size / 100;
     }
+    final bold = run?.getAttribute('b') ?? defaults?.getAttribute('b');
+    if (bold != null) display.titleBold = bold == '1' || bold == 'true';
+    display.titleFamily =
+        run?.firstChild('latin')?.getAttribute('typeface') ??
+        defaults?.firstChild('latin')?.getAttribute('typeface');
+  }
+
+  static void _applyLegendStyle(XmlElement? chart, ChartDisplay display) {
+    final properties = chart
+        ?.firstChild('legend')
+        ?.firstChild('txPr')
+        ?.firstChild('p')
+        ?.firstChild('pPr')
+        ?.firstChild('defRPr');
+    final size = int.tryParse(properties?.getAttribute('sz') ?? '');
+    if (size != null && size >= 600 && size <= 3600) {
+      display.legendSize = size / 100;
+    }
+    display.legendFamily = properties
+        ?.firstChild('latin')
+        ?.getAttribute('typeface');
   }
 
   static void _projectPieChart(
@@ -500,7 +521,8 @@ abstract final class SheetDrawingIo {
     final pie = chart?.firstChild('plotArea')?.firstChild('pieChart');
     final series = pie?.firstChild('ser');
     if (series == null) return;
-    _applyTitleSize(chart?.firstChild('title'), visual.chart);
+    _applyTitleStyle(chart?.firstChild('title'), visual.chart);
+    _applyLegendStyle(chart, visual.chart);
     final explicit = <int, String>{};
     for (final point in series.childrenNamed('dPt')) {
       final index = int.tryParse(
@@ -657,7 +679,10 @@ abstract final class SheetDrawingIo {
       );
     }
 
-    _applyTitleSize(chart.firstChild('title'), visual.chart);
+    _applyTitleStyle(chart.firstChild('title'), visual.chart);
+    _applyLegendStyle(chart, visual.chart);
+    final axis = plot.firstChild('valAx');
+    final categoryAxis = plot.firstChild('catAx');
     final title = titleText(chart.firstChild('title'));
     visual.title = title.isEmpty ? name : title;
     visual.chart
@@ -674,6 +699,12 @@ abstract final class SheetDrawingIo {
         locale:
             chart.parent?.firstChild('lang')?.getAttribute('val') ?? 'en_US',
         connectGaps: blanks == 'span',
+        betweenCategories:
+            axis?.firstChild('crossBetween')?.getAttribute('val') == 'between',
+        labelsAtZero:
+            axis?.firstChild('crosses')?.getAttribute('val') == 'autoZero' &&
+            categoryAxis?.firstChild('tickLblPos')?.getAttribute('val') ==
+                'nextTo',
       );
     }
   }

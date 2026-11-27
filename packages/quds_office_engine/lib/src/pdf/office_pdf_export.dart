@@ -2042,6 +2042,8 @@ abstract final class OfficePdfExport {
               drawing.visual,
               sink.images,
               drawText: sink.drawText,
+              measureChartText: sink.measureChartText,
+              drawChartText: sink.drawChartText,
               nextImageName: sink.nextImageName,
             );
             sink.canvas.restore();
@@ -2076,6 +2078,8 @@ abstract final class OfficePdfExport {
             drawing.visual,
             sink.images,
             drawText: sink.drawText,
+            measureChartText: sink.measureChartText,
+            drawChartText: sink.drawChartText,
             nextImageName: sink.nextImageName,
           );
           sink.canvas.restore();
@@ -4163,6 +4167,23 @@ class _PageSink {
       ).length,
     );
   }
+
+  double measureChartText(
+    String text,
+    double size,
+    bool bold,
+    String? family,
+  ) => measureStyled(text, size, bold: bold, family: family);
+
+  void drawChartText(
+    String text,
+    double x,
+    double y,
+    double size,
+    String color,
+    bool bold,
+    String? family,
+  ) => drawText(text, x, y, size, color, bold: bold, family: family);
 
   /// Advance width of a single space for line layout.
   double spaceWidth(

@@ -7,6 +7,18 @@ import 'pdf_canvas.dart';
 import 'pdf_document.dart';
 import 'pdf_image.dart';
 
+/// Draws a styled chart title or legend label.
+typedef PdfChartText =
+    void Function(
+      String text,
+      double x,
+      double y,
+      double size,
+      String color,
+      bool bold,
+      String? family,
+    );
+
 /// Paints [OfficeVisual] charts, diagrams, and pictures onto a PDF page.
 abstract final class OfficePdfVisuals {
   /// paint API.
@@ -27,6 +39,8 @@ abstract final class OfficePdfVisuals {
     )
     drawText,
     String Function()? nextImageName,
+    ChartTextMeasure? measureChartText,
+    PdfChartText? drawChartText,
   }) {
     switch (visual.kind) {
       case OfficeVisualKind.picture:
@@ -46,9 +60,29 @@ abstract final class OfficePdfVisuals {
       case OfficeVisualKind.chartBar:
         _bar(canvas, x, y, width, height, visual, drawText);
       case OfficeVisualKind.chartPie:
-        _pie(canvas, x, y, width, height, visual, drawText);
+        _pie(
+          canvas,
+          x,
+          y,
+          width,
+          height,
+          visual,
+          drawText,
+          measureChartText,
+          drawChartText,
+        );
       case OfficeVisualKind.chartLine:
-        _line(canvas, x, y, width, height, visual, drawText);
+        _line(
+          canvas,
+          x,
+          y,
+          width,
+          height,
+          visual,
+          drawText,
+          measureChartText,
+          drawChartText,
+        );
       case OfficeVisualKind.diagramProcess:
         _process(canvas, x, y, width, height, visual, drawText);
       case OfficeVisualKind.diagramCycle:
@@ -244,14 +278,39 @@ abstract final class OfficePdfVisuals {
     double h,
     OfficeVisual visual,
     void Function(String, double, double, double, String) drawText,
+    ChartTextMeasure? measure,
+    PdfChartText? styled,
   ) {
-    final layout = OfficePieLayout(visual, w, h);
+    final layout = OfficePieLayout(visual, w, h, measure: measure);
     canvas.fillRect(x, y, w, h, 'FFFFFF');
     canvas.strokeRect(x, y, w, h, 'D0D0D0');
+    final chartText =
+        styled ??
+        (
+          String text,
+          double x,
+          double y,
+          double size,
+          String color,
+          bool bold,
+          String? family,
+        ) => drawText(text, x, y, size, color);
     for (final (index, title) in layout.titleLines.indexed) {
       final size = layout.titleSize;
-      final offset = math.max(8.0, (w - title.runes.length * size * .5) / 2);
-      drawText(title, x + offset, y + size * (index + 1) + 3, size, '222222');
+      final family = visual.chart.titleFamily;
+      final bold = visual.chart.titleBold;
+      final advance =
+          measure?.call(title, size, bold, family) ??
+          title.runes.length * size * .5;
+      chartText(
+        title,
+        x + math.max(10, (w - advance) / 2),
+        y + size * (index + 1) + 3,
+        size,
+        '222222',
+        bold,
+        family,
+      );
     }
     final cx = x + layout.cx;
     final cy = y + layout.cy;
@@ -301,9 +360,24 @@ abstract final class OfficePdfVisuals {
       final left = x + entry.x;
       final top = y + entry.y;
       canvas.save();
-      canvas.clipRect(left, top, entry.width, 12);
-      canvas.fillRect(left + 2, top + 4, 6, 6, entry.point.color);
-      drawText(entry.point.label, left + 10, top + 10, 8, '333333');
+      canvas.clipRect(left, top, entry.width, layout.legendRowHeight);
+      final key = math.min(6.0, layout.legendSize * .7);
+      canvas.fillRect(
+        left + 2,
+        top + (layout.legendRowHeight - key) / 2,
+        key,
+        key,
+        entry.point.color,
+      );
+      chartText(
+        entry.point.label,
+        left + 10,
+        top + layout.legendSize + 1,
+        layout.legendSize,
+        '333333',
+        false,
+        visual.chart.legendFamily,
+      );
       canvas.restore();
     }
   }
@@ -316,10 +390,23 @@ abstract final class OfficePdfVisuals {
     double h,
     OfficeVisual visual,
     void Function(String, double, double, double, String) drawText,
+    ChartTextMeasure? measure,
+    PdfChartText? styled,
   ) {
     final imported = visual.importedLineChart;
     if (imported != null && w >= 90 && h >= 70) {
-      _importedLine(canvas, x, y, w, h, visual, imported, drawText);
+      _importedLine(
+        canvas,
+        x,
+        y,
+        w,
+        h,
+        visual,
+        imported,
+        drawText,
+        measure,
+        styled,
+      );
       return;
     }
     _frame(canvas, x, y, w, h, visual, drawText);
@@ -357,24 +444,51 @@ abstract final class OfficePdfVisuals {
     OfficeVisual visual,
     OfficeLineChart chart,
     void Function(String, double, double, double, String) drawText,
+    ChartTextMeasure? measure,
+    PdfChartText? styled,
   ) {
     canvas.fillRect(x, y, w, h, 'FFFFFF');
     canvas.strokeRect(x, y, w, h, 'D0D0D0');
+    final chartText =
+        styled ??
+        (
+          String text,
+          double x,
+          double y,
+          double size,
+          String color,
+          bool bold,
+          String? family,
+        ) => drawText(text, x, y, size, color);
     final titleSize = visual.chart.titleSize ?? 11;
-    final titleLines = visual.chartTitleLines(w, titleSize);
+    final titleLines = visual.chartTitleLines(w, titleSize, measure: measure);
+    final family = visual.chart.titleFamily;
+    final bold = visual.chart.titleBold;
     for (final (index, title) in titleLines.indexed) {
-      final offset = math.max(
-        8.0,
-        (w - title.runes.length * titleSize * .5) / 2,
-      );
-      drawText(
+      final advance =
+          measure?.call(title, titleSize, bold, family) ??
+          title.runes.length * titleSize * .5;
+      chartText(
         title,
-        x + offset,
+        x + math.max(10, (w - advance) / 2),
         y + titleSize * (index + 1) + 3,
         titleSize,
         '222222',
+        bold,
+        family,
       );
     }
+    final legend = OfficeChartLegend(
+      visual.chart.showLegend
+          ? chart.series.map((series) => series.name).toList()
+          : [],
+      width: w - 24,
+      maxHeight: h * .28,
+      size: visual.chart.legendSize ?? 8,
+      family: visual.chart.legendFamily,
+      measure: measure,
+      keyWidth: 22,
+    );
     final left =
         x +
         (visual.chart.showAxes
@@ -383,7 +497,7 @@ abstract final class OfficePdfVisuals {
     final top =
         y + (titleLines.isEmpty ? 8 : titleSize * titleLines.length + 13);
     final plotW = x + w - 18 - left;
-    final bottom = y + h - (visual.chart.showLegend ? 42 : 24);
+    final bottom = y + h - legend.height - 30;
     final plotH = bottom - top;
     if (plotH <= 0) return;
     final ticks = chart.axisTicks;
@@ -413,12 +527,15 @@ abstract final class OfficePdfVisuals {
       }
     }
     if (visual.chart.showAxes) {
+      final categoryY = chart.labelsAtZero && limits.min < 0 && limits.max > 0
+          ? ordinate(0)
+          : bottom;
       for (final index in chart.labelIndices) {
         final label = chart.categories[index];
         drawText(
           label,
           category(index) - label.length * 1.8,
-          bottom + 11,
+          categoryY + 11,
           7,
           '444444',
         );
@@ -494,22 +611,32 @@ abstract final class OfficePdfVisuals {
         }
       }
     }
-    if (visual.chart.showLegend) {
-      final slot = (w - 20) / chart.series.length;
-      for (final (index, series) in chart.series.indexed) {
-        final lx = x + 10 + index * slot;
-        canvas.save();
-        canvas.clipRect(lx, y + h - 15, slot, 13);
-        canvas.fillRect(
-          lx,
-          y + h - 11,
-          6,
-          6,
-          series.color ?? series.points.first.color,
-        );
-        drawText(series.name, lx + 8, y + h - 5, 7, '333333');
-        canvas.restore();
-      }
+    for (final entry in legend.entries) {
+      final series = chart.series[entry.index];
+      final lx = x + 12 + entry.x;
+      final ly = y + h - legend.height - 5 + entry.y;
+      final mid = ly + legend.rowHeight / 2;
+      final color = series.color ?? series.points.first.color;
+      canvas.save();
+      canvas.clipRect(lx, ly, entry.width, legend.rowHeight);
+      canvas.setStrokeColor(color);
+      canvas.setLineWidth(1.2);
+      canvas.moveTo(lx + 2, mid);
+      canvas.lineTo(lx + 15, mid);
+      canvas.stroke();
+      canvas.setFillColor(color);
+      canvas.ellipse(lx + 6, mid - 2, 4, 4);
+      canvas.fill();
+      chartText(
+        series.name,
+        lx + 17,
+        ly + legend.fontSize + 1,
+        legend.fontSize,
+        '333333',
+        false,
+        visual.chart.legendFamily,
+      );
+      canvas.restore();
     }
   }
 
