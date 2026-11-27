@@ -4,6 +4,7 @@ import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
 import '../model/word_bookmarks.dart';
+import 'word_property_io.dart';
 
 /// Native endpoints use the same validated model as editing and range lookup.
 abstract final class WordBookmarkIo {
@@ -18,13 +19,17 @@ abstract final class WordBookmarkIo {
     final empty = reader.isEmptyElement;
     final attributeCount = reader.attributeCount;
     final source = XmlDocument.readElement(reader);
+    final isStart = source.localName == 'bookmarkStart';
+    final name = source.getAttribute('name', namespaceUri: OfficeNamespaces.w);
+    final plain = empty && _hasPlainSource(source, attributeCount, isStart, name);
+    if (plain) WordPropertyIo.compactScalarWordFragment(source);
     final marker = WmlBookmarkBoundary(
       id: source.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
-      isStart: source.localName == 'bookmarkStart',
-      name: source.getAttribute('name', namespaceUri: OfficeNamespaces.w),
+      isStart: isStart,
+      name: name,
       sourceXml: XmlDocument(root: source).toXmlString(declaration: false),
     );
-    if (empty && _hasPlainSource(source, attributeCount, marker)) {
+    if (plain) {
       // The captured element already owns these attributes and the native
       // namespace. Plain decimal IDs and ASCII names survive XML serialization.
       WordBookmarks.canonicalId(marker.id);
@@ -37,12 +42,13 @@ abstract final class WordBookmarkIo {
   static bool _hasPlainSource(
     XmlElement source,
     int attributeCount,
-    WmlBookmarkBoundary marker,
+    bool isStart,
+    String? name,
   ) {
     if (source.prefix != 'w' ||
         source.namespaceUri != OfficeNamespaces.w ||
-        source.localName != (marker.isStart ? 'bookmarkStart' : 'bookmarkEnd') ||
-        attributeCount != (marker.isStart ? 2 : 1)) {
+        source.localName != (isStart ? 'bookmarkStart' : 'bookmarkEnd') ||
+        attributeCount != (isStart ? 2 : 1)) {
       return false;
     }
     for (var i = 0; i < attributeCount; i++) {
@@ -52,8 +58,7 @@ abstract final class WordBookmarkIo {
         return false;
       }
     }
-    final name = marker.name;
-    return !marker.isStart ||
+    return !isStart ||
         name != null &&
             name.isNotEmpty &&
             !_nonPlainNameCharacter.hasMatch(name);

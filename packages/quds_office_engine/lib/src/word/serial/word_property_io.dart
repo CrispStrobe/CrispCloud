@@ -5,6 +5,15 @@ import '../properties/wml_properties.dart';
 /// Sparse source properties and effective values must remain separate: writing
 /// inherited values as direct formatting would prevent subsequent style edits.
 abstract final class WordPropertyIo {
+  /// Keep captured native Word XML self-contained after the caller has verified
+  /// that the fragment only uses the Word prefix and has no local declarations.
+  static void compactScalarWordFragment(XmlElement element) {
+    element.attributes.removeWhere(
+      (attribute) =>
+          attribute.prefix == 'xmlns' && attribute.localName != 'w',
+    );
+  }
+
   /// Private, ignorable provenance for runs whose ODF script formatting was
   /// flattened into the editor's scalar controls. Ordinary DOCX properties
   /// retain their independent native slots and never acquire this ownership.

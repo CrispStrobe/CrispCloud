@@ -130,13 +130,14 @@ void main() {
         chartXml:
             '''
 <c:chartSpace xmlns:c="${OfficeNamespaces.c}" xmlns:a="${OfficeNamespaces.a}">
-<c:chart><c:title><c:tx><c:rich><a:p><a:r><a:t>Trading results</a:t></a:r></a:p></c:rich></c:tx></c:title>
+<c:lang val="de-DE"/>
+<c:chart><c:title><c:tx><c:rich><a:p><a:r><a:rPr sz="1800"/><a:t>Trading results</a:t></a:r></a:p></c:rich></c:tx></c:title>
 <c:plotArea><c:lineChart><c:grouping val="standard"/>
 <c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Retail</c:v></c:tx>
 <c:spPr><a:ln><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln></c:spPr>
 <c:cat><c:strLit><c:ptCount val="3"/><c:pt idx="0"><c:v>April</c:v></c:pt><c:pt idx="1"><c:v>May</c:v></c:pt><c:pt idx="2"><c:v>June</c:v></c:pt></c:strLit></c:cat>
 <c:val><c:numLit><c:ptCount val="3"/><c:pt idx="2"><c:v>20</c:v></c:pt><c:pt idx="0"><c:v>-10</c:v></c:pt></c:numLit></c:val></c:ser>
-<c:ser><c:idx val="1"/><c:order val="1"/><c:tx><c:v>Services</c:v></c:tx>
+<c:ser><c:idx val="1"/><c:order val="1"/><c:tx><c:v>Services</c:v></c:tx><c:dLbls><c:showVal val="1"/></c:dLbls>
 <c:spPr><a:ln><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:ln></c:spPr>
 <c:val><c:numLit><c:ptCount val="3"/><c:pt idx="0"><c:v>3</c:v></c:pt><c:pt idx="1"><c:v>12</c:v></c:pt><c:pt idx="2"><c:v>7</c:v></c:pt></c:numLit></c:val></c:ser>
 </c:lineChart><c:catAx><c:title><c:tx><c:rich><a:p><a:r><a:t>Month</a:t></a:r></a:p></c:rich></c:tx></c:title></c:catAx>
@@ -150,6 +151,11 @@ void main() {
         final visual = version.firstSheet.drawings.single.visual;
         final line = visual.importedLineChart!;
         expect(visual.title, 'Trading results');
+        expect(visual.chart.titleSize, 18);
+        expect(line.pointLabel(0, 1234), isEmpty);
+        expect(line.pointLabel(1, 1234), '1.234');
+        expect(line.axisTicks.first, lessThanOrEqualTo(-10));
+        expect(line.axisTicks.last, greaterThanOrEqualTo(20));
         expect(visual.chart.categoryTitle, 'Month');
         expect(line.categories, ['April', 'May', 'June']);
         expect(line.series.map((series) => series.name), [
@@ -194,6 +200,67 @@ void main() {
         12,
         7,
       ]);
+    },
+  );
+
+  test('XLSX pie charts keep indexed fills, percentages and bottom legend', () {
+    final book = _openChart(
+      '',
+      cat: '',
+      chartXml:
+          '''
+<c:chartSpace xmlns:c="${OfficeNamespaces.c}" xmlns:a="${OfficeNamespaces.a}">
+<c:chart><c:plotArea><c:pieChart><c:ser>
+<c:dPt><c:idx val="1"/><c:spPr><a:solidFill><a:srgbClr val="112233"/></a:solidFill></c:spPr></c:dPt>
+<c:dLbls><c:showPercent val="1"/></c:dLbls>
+<c:cat><c:strLit><c:pt idx="0"><c:v>Retail</c:v></c:pt><c:pt idx="1"><c:v>Parts</c:v></c:pt></c:strLit></c:cat>
+<c:val><c:numLit><c:pt idx="0"><c:v>25</c:v></c:pt><c:pt idx="1"><c:v>75</c:v></c:pt></c:numLit></c:val>
+</c:ser><c:firstSliceAng val="90"/></c:pieChart></c:plotArea>
+<c:legend><c:legendPos val="b"/></c:legend></c:chart></c:chartSpace>''',
+    );
+    final reopened = SheetDeserializer().readBytes(
+      SheetSerializer().writeBytes(book),
+    );
+    final visual = reopened.firstSheet.drawings.single.visual;
+    final layout = OfficePieLayout(visual, 300, 200);
+    expect(layout.slices.map((slice) => slice.label), ['25%', '75%']);
+    expect(layout.slices.first.start, 0);
+    expect(layout.slices.first.point.color, isNot('112233'));
+    expect(layout.slices.last.point.color, '112233');
+    expect(layout.legend, hasLength(2));
+    expect(layout.legend.first.y, greaterThan(layout.cy + layout.radius));
+
+    final pdf = PdfFile.open(OfficePrint.workbook(reopened));
+    final content = [
+      for (var i = 0; i < pdf.pageCount; i++)
+        String.fromCharCodes(
+          pdf.store.streamBytes(pdf.pageDict(i)['Contents'])!,
+        ),
+    ].join();
+    expect(content, contains('25%'));
+    expect(content, contains('75%'));
+  });
+
+  test(
+    'pie labels preserve zero and allocate whole percentages to total 100',
+    () {
+      final visual = OfficeVisual(
+        kind: OfficeVisualKind.chartPie,
+        chart: ChartDisplay(showPercent: true),
+        points: [
+          for (final (index, value) in [56.4673, 31.3724, 12.1603, 0.0].indexed)
+            ChartPoint(label: 'Category ${index + 1}', value: value),
+        ],
+      );
+      final layout = OfficePieLayout(visual, 400, 300);
+      expect(layout.slices.map((slice) => slice.label), [
+        '57%',
+        '31%',
+        '12%',
+        '0%',
+      ]);
+      expect(layout.slices.last.sweep, 0);
+      expect(layout.legend, hasLength(4));
     },
   );
 

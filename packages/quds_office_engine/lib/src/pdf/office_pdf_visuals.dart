@@ -245,40 +245,66 @@ abstract final class OfficePdfVisuals {
     OfficeVisual visual,
     void Function(String, double, double, double, String) drawText,
   ) {
-    _frame(canvas, x, y, w, h, visual, drawText);
-    final List<ChartPoint> pts = <ChartPoint>[
-      for (final ChartPoint p in visual.points)
-        if (p.value.isFinite && p.value > 0) p,
-    ];
-    if (pts.isEmpty) {
-      return;
+    final layout = OfficePieLayout(visual, w, h);
+    canvas.fillRect(x, y, w, h, 'FFFFFF');
+    canvas.strokeRect(x, y, w, h, 'D0D0D0');
+    for (final (index, title) in layout.titleLines.indexed) {
+      final size = layout.titleSize;
+      final offset = math.max(8.0, (w - title.runes.length * size * .5) / 2);
+      drawText(title, x + offset, y + size * (index + 1) + 3, size, '222222');
     }
-    final double cx = x + w * 0.38;
-    final double cy = y + h * 0.58;
-    final double r = math.min(w, h) * 0.28;
-    final double sum = pts.fold<double>(
-      0,
-      (double a, ChartPoint p) => a + p.value,
-    );
-    var angle = -math.pi / 2;
-    for (int i = 0; i < pts.length; i++) {
-      final double sweep = 2 * math.pi * (pts[i].value / sum);
-      canvas.setFillColor(pts[i].color);
+    final cx = x + layout.cx;
+    final cy = y + layout.cy;
+    final radius = layout.radius;
+    for (final slice in layout.slices) {
+      if (slice.sweep == 0) continue;
+      canvas.setFillColor(slice.point.color);
       canvas.moveTo(cx, cy);
-      const int steps = 16;
-      for (int s = 0; s <= steps; s++) {
-        final double a = angle + sweep * (s / steps);
-        canvas.lineTo(cx + r * math.cos(a), cy + r * math.sin(a));
+      canvas.lineTo(
+        cx + radius * math.cos(slice.start),
+        cy + radius * math.sin(slice.start),
+      );
+      final segments = (slice.sweep / (math.pi / 2)).ceil();
+      for (var i = 0; i < segments; i++) {
+        final start = slice.start + i * slice.sweep / segments;
+        final end = slice.start + (i + 1) * slice.sweep / segments;
+        final t = 4 / 3 * math.tan((end - start) / 4);
+        final sx = math.cos(start);
+        final sy = math.sin(start);
+        final ex = math.cos(end);
+        final ey = math.sin(end);
+        canvas.curveTo(
+          cx + radius * (sx - t * sy),
+          cy + radius * (sy + t * sx),
+          cx + radius * (ex + t * ey),
+          cy + radius * (ey - t * ex),
+          cx + radius * ex,
+          cy + radius * ey,
+        );
       }
       canvas.closePath();
       canvas.fill();
-      angle += sweep;
     }
-    var ly = y + 28;
-    for (final ChartPoint p in pts) {
-      canvas.fillRect(x + w * 0.68, ly - 6, 7, 7, p.color);
-      drawText(p.label, x + w * 0.68 + 10, ly, 8, '333333');
-      ly += 12;
+    for (final slice in layout.slices) {
+      if (slice.label.isEmpty) continue;
+      final angle = slice.start + slice.sweep / 2;
+      final distance = radius * (slice.sweep < .22 ? 1.10 : .73);
+      drawText(
+        slice.label,
+        cx + distance * math.cos(angle) - slice.label.length * 2,
+        cy + distance * math.sin(angle) + 3,
+        9,
+        '222222',
+      );
+    }
+    for (final entry in layout.legend) {
+      final left = x + entry.x;
+      final top = y + entry.y;
+      canvas.save();
+      canvas.clipRect(left, top, entry.width, 12);
+      canvas.fillRect(left + 2, top + 4, 6, 6, entry.point.color);
+      drawText(entry.point.label, left + 10, top + 10, 8, '333333');
+      canvas.restore();
     }
   }
 
@@ -334,24 +360,41 @@ abstract final class OfficePdfVisuals {
   ) {
     canvas.fillRect(x, y, w, h, 'FFFFFF');
     canvas.strokeRect(x, y, w, h, 'D0D0D0');
-    if (visual.chart.showTitle) {
-      drawText(visual.title, x + 10, y + 14, 11, '222222');
+    final titleSize = visual.chart.titleSize ?? 11;
+    final titleLines = visual.chartTitleLines(w, titleSize);
+    for (final (index, title) in titleLines.indexed) {
+      final offset = math.max(
+        8.0,
+        (w - title.runes.length * titleSize * .5) / 2,
+      );
+      drawText(
+        title,
+        x + offset,
+        y + titleSize * (index + 1) + 3,
+        titleSize,
+        '222222',
+      );
     }
-    final left = x + (visual.chart.showAxes ? 39 : 10);
-    final top = y + (visual.chart.showTitle ? 24 : 8);
+    final left =
+        x +
+        (visual.chart.showAxes
+            ? (visual.chart.valueTitle.isEmpty ? 48 : 63)
+            : 10);
+    final top =
+        y + (titleLines.isEmpty ? 8 : titleSize * titleLines.length + 13);
     final plotW = x + w - 18 - left;
     final bottom = y + h - (visual.chart.showLegend ? 42 : 24);
     final plotH = bottom - top;
     if (plotH <= 0) return;
-    final limits = chart.limits;
+    final ticks = chart.axisTicks;
+    final limits = (min: ticks.first, max: ticks.last);
     double category(int index) => left + chart.categoryFraction(index) * plotW;
     double ordinate(double value) =>
         bottom - OfficeLineChart.valueFraction(value, limits) * plotH;
 
     canvas.setLineWidth(0.5);
-    for (var tick = 0; tick <= 4; tick++) {
-      final fraction = tick / 4;
-      final py = bottom - plotH * fraction;
+    for (final (tick, value) in ticks.indexed) {
+      final py = ordinate(value);
       if (visual.chart.showGridlines || (tick == 0 && visual.chart.showAxes)) {
         canvas.setStrokeColor(tick == 0 ? '808080' : 'D0D0D0');
         canvas.moveTo(left, py);
@@ -359,8 +402,14 @@ abstract final class OfficePdfVisuals {
         canvas.stroke();
       }
       if (visual.chart.showAxes) {
-        final value = limits.min * (1 - fraction) + limits.max * fraction;
-        drawText(OfficeLineChart.formatTick(value), x + 5, py + 2, 7, '444444');
+        final label = chart.axisLabel(value);
+        drawText(
+          label,
+          left - 5 - label.runes.length * 3.6,
+          py + 2,
+          7,
+          '444444',
+        );
       }
     }
     if (visual.chart.showAxes) {
@@ -374,7 +423,29 @@ abstract final class OfficePdfVisuals {
           '444444',
         );
       }
-      drawText(visual.chart.categoryTitle, left, bottom + 21, 7, '444444');
+      final title = visual.chart.categoryTitle;
+      drawText(
+        title,
+        left + (plotW - title.runes.length * 3.6) / 2,
+        bottom + 21,
+        7,
+        '444444',
+      );
+      final valueTitle = visual.chart.valueTitle;
+      if (valueTitle.isNotEmpty) {
+        final axisX = x + 11;
+        final axisY = top + plotH / 2;
+        canvas.save();
+        canvas.rotateAround(axisX, axisY, -90);
+        drawText(
+          valueTitle,
+          axisX - valueTitle.runes.length * 1.8,
+          axisY,
+          7,
+          '444444',
+        );
+        canvas.restore();
+      }
     }
     canvas.save();
     canvas.clipRect(left - 3, top - 3, plotW + 6, plotH + 6);
@@ -407,6 +478,22 @@ abstract final class OfficePdfVisuals {
       }
     }
     canvas.restore();
+    if (visual.chart.showDataLabels) {
+      for (final (index, series) in chart.series.indexed) {
+        for (final point in series.points) {
+          final label = chart.pointLabel(index, point.value);
+          if (label.isEmpty) continue;
+          final px = category(point.x!.toInt());
+          drawText(
+            label,
+            px - label.runes.length * 1.8,
+            ordinate(point.value) - 4,
+            7,
+            '222222',
+          );
+        }
+      }
+    }
     if (visual.chart.showLegend) {
       final slot = (w - 20) / chart.series.length;
       for (final (index, series) in chart.series.indexed) {

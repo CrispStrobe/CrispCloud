@@ -151,6 +151,8 @@ abstract final class SheetChartData {
     drawing.visual.importedLineChart = OfficeLineChart(
       categories: imported.categories,
       connectGaps: imported.connectGaps,
+      labelFormats: imported.labelFormats,
+      locale: imported.locale,
       series: [
         ChartSeries(
           name: first.name,

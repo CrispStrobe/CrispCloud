@@ -2307,6 +2307,7 @@ class WordDeserializer {
   }
 
   static _ImportedFieldChar _parseFieldChar(XmlPullReader reader) {
+    final attributeCount = reader.attributeCount;
     final node = XmlDocument.readElement(reader);
     final kind = switch (node.getAttribute(
       'fldCharType',
@@ -2317,6 +2318,20 @@ class WordDeserializer {
       'end' => WmlFieldBoundaryKind.end,
       _ => null,
     };
+    if (kind != null &&
+        node.prefix == 'w' &&
+        node.namespaceUri == OfficeNamespaces.w &&
+        node.children.isEmpty &&
+        node.attributes.take(attributeCount).every(
+          (attribute) =>
+              attribute.prefix == 'w' &&
+              attribute.namespaceUri == OfficeNamespaces.w &&
+              const {'fldCharType', 'fldLock', 'dirty'}.contains(
+                attribute.localName,
+              ),
+        )) {
+      WordPropertyIo.compactScalarWordFragment(node);
+    }
     return (
       kind: kind,
       xml: kind == null
@@ -2812,10 +2827,7 @@ class WordDeserializer {
       // These leaf properties have only scalar Word attributes. They do not
       // use inherited namespace bindings beyond the canonical Word prefix.
       // Keep explicit declarations and the full scope of all opaque markup.
-      node.attributes.removeWhere(
-        (attribute) =>
-            attribute.prefix == 'xmlns' && attribute.localName != 'w',
-      );
+      WordPropertyIo.compactScalarWordFragment(node);
     }
     final sourceXml = XmlDocument(root: node).toXmlString(declaration: false);
     final change = node.firstChild(

@@ -1,7 +1,10 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:intl/intl.dart';
+
 import '../builders/office_markup.dart';
+import '../sheet/styles/sml_styles.dart' show applyNumberFormat;
 
 /// In-document visual: picture, chart, or SmartArt-style diagram.
 enum OfficeVisualKind {
@@ -248,6 +251,7 @@ class ChartDisplay {
     this.showTitle = true,
     this.showPercent = false,
     this.legendPos = ChartLegendPos.bottom,
+    this.titleSize,
     this.categoryTitle = '',
     this.valueTitle = '',
     this.gapWidth = 120,
@@ -277,6 +281,9 @@ class ChartDisplay {
 
   /// legendPos API.
   ChartLegendPos legendPos;
+
+  /// Point size of the authored chart title, when available.
+  double? titleSize;
 
   /// categoryTitle API.
   String categoryTitle;
@@ -308,6 +315,7 @@ class ChartDisplay {
     showTitle: showTitle,
     showPercent: showPercent,
     legendPos: legendPos,
+    titleSize: titleSize,
     categoryTitle: categoryTitle,
     valueTitle: valueTitle,
     gapWidth: gapWidth,
@@ -357,6 +365,149 @@ abstract final class VisualPalette {
   }
 }
 
+/// Geometry shared by the editor and PDF pie-chart renderers.
+class OfficePieLayout {
+  /// Builds the pie, its slice labels and its legend in chart coordinates.
+  OfficePieLayout(OfficeVisual visual, double width, double height) {
+    final chart = visual.chart;
+    final points = visual.points
+        .where((point) => point.value.isFinite && point.value >= 0)
+        .toList();
+    titleSize = chart.titleSize ?? 11;
+    titleLines = visual.chartTitleLines(width, titleSize);
+    var left = 8.0;
+    var right = width - 8;
+    var top = titleLines.isEmpty ? 6.0 : titleSize * titleLines.length + 10;
+    var bottom = height - 6;
+    if (chart.showLegend && points.isNotEmpty && right > left) {
+      final side =
+          chart.legendPos == ChartLegendPos.left ||
+          chart.legendPos == ChartLegendPos.right ||
+          chart.legendPos == ChartLegendPos.topRight;
+      if (side) {
+        final legendWidth = (right - left) * .35;
+        final x = chart.legendPos == ChartLegendPos.left
+            ? left
+            : right - legendWidth;
+        for (final (index, point) in points.indexed) {
+          final y = top + index * 12;
+          if (y + 12 > bottom) break;
+          legend.add((point: point, x: x, y: y, width: legendWidth));
+        }
+        if (chart.legendPos == ChartLegendPos.left) {
+          left += legendWidth + 6;
+        } else {
+          right -= legendWidth + 6;
+        }
+      } else {
+        final rows = <List<({ChartPoint point, double width})>>[[]];
+        final rowWidths = <double>[0];
+        final available = right - left;
+        for (final point in points) {
+          final slot = math.min(available, 16 + point.label.runes.length * 4.1);
+          if (rows.last.isNotEmpty && rowWidths.last + slot > available) {
+            rows.add([]);
+            rowWidths.add(0);
+          }
+          rows.last.add((point: point, width: slot));
+          rowWidths[rowWidths.length - 1] += slot;
+        }
+        final maxRows = math.max(0, ((bottom - top) * .35 / 12).floor());
+        final count = math.min(rows.length, maxRows);
+        final above = chart.legendPos == ChartLegendPos.top;
+        final startY = above ? top : bottom - count * 12;
+        for (var row = 0; row < count; row++) {
+          var x = left + (available - rowWidths[row]) / 2;
+          for (final slot in rows[row]) {
+            legend.add((
+              point: slot.point,
+              x: x,
+              y: startY + row * 12,
+              width: slot.width,
+            ));
+            x += slot.width;
+          }
+        }
+        if (above) {
+          top += count * 12;
+        } else {
+          bottom -= count * 12;
+        }
+      }
+    }
+    cx = (left + right) / 2;
+    cy = (top + bottom) / 2;
+    radius = math.max(0, math.min(right - left, bottom - top) * .4 - 3);
+    if (points.isEmpty || radius == 0) return;
+    final largest = points.fold(
+      0.0,
+      (maximum, point) => math.max(maximum, point.value),
+    );
+    if (largest == 0) return;
+    final total = points.fold(0.0, (sum, point) => sum + point.value / largest);
+    final shares = [
+      for (final point in points) (point.value / largest) / total,
+    ];
+    final percentages = chart.showPercent
+        ? _wholePercentages(shares)
+        : const <int>[];
+    var start = (chart.firstSliceAng - 90) * math.pi / 180;
+    for (final (index, point) in points.indexed) {
+      final sweep = 2 * math.pi * shares[index];
+      final label = chart.showPercent
+          ? '${percentages[index]}%'
+          : chart.showDataLabels
+          ? OfficeLineChart.formatTick(point.value)
+          : '';
+      if (sweep > 0 || label.isNotEmpty) {
+        slices.add((point: point, start: start, sweep: sweep, label: label));
+      }
+      start += sweep;
+    }
+  }
+
+  static List<int> _wholePercentages(List<double> shares) {
+    final exact = shares.map((share) => share * 100).toList();
+    final result = exact.map((value) => value.floor()).toList();
+    final remaining =
+        100 - result.fold<int>(0, (total, value) => total + value);
+    // Distribute the rounding remainder so visible labels sum to 100%.
+    final order = List<int>.generate(exact.length, (index) => index)
+      ..sort((a, b) {
+        final byRemainder = (exact[b] - result[b]).compareTo(
+          exact[a] - result[a],
+        );
+        return byRemainder == 0 ? a.compareTo(b) : byRemainder;
+      });
+    for (final index in order.take(math.max(0, remaining))) {
+      result[index]++;
+    }
+    return result;
+  }
+
+  /// Drawn slices and labels, in source order.
+  final slices =
+      <({ChartPoint point, double start, double sweep, String label})>[];
+
+  /// Legend entries with local bounds.
+  final legend = <({ChartPoint point, double x, double y, double width})>[];
+
+  /// Chart title size in points.
+  late final double titleSize;
+
+  /// Chart title broken at word boundaries.
+  late final List<String> titleLines;
+
+  /// Horizontal position of the pie center within the chart.
+  late final double cx;
+
+  /// Vertical position of the pie center within the chart.
+  late final double cy;
+
+  /// Radius of the chart's pie.
+  late final double radius;
+}
+
 /// Read-only line-chart data projected from an imported DrawingML cache.
 class OfficeLineChart {
   /// Creates a chart whose point X values are zero-based category indices.
@@ -364,8 +515,11 @@ class OfficeLineChart {
     required List<String> categories,
     required List<ChartSeries> series,
     required this.connectGaps,
+    List<String?> labelFormats = const [],
+    this.locale = 'en_US',
   }) : categories = List.unmodifiable(categories),
-       series = List.unmodifiable(series);
+       series = List.unmodifiable(series),
+       labelFormats = List.unmodifiable(labelFormats);
 
   /// Shared category axis, including slots with missing values.
   final List<String> categories;
@@ -375,6 +529,62 @@ class OfficeLineChart {
 
   /// Whether a line spans empty cells.
   final bool connectGaps;
+
+  /// Source format for each enabled series' point labels.
+  final List<String?> labelFormats;
+
+  /// Language used by the native chart's labels.
+  final String locale;
+
+  /// A formatted label, or an empty string when its series has labels disabled.
+  String pointLabel(int seriesIndex, double value) {
+    if (seriesIndex >= labelFormats.length) return '';
+    final format = labelFormats[seriesIndex];
+    return format == null ? '' : _format(value, format);
+  }
+
+  /// Numeric axis labels follow the chart locale.
+  String axisLabel(double value) =>
+      _format(value, value.abs() >= 1 || value == 0 ? '#,##0' : '0.###');
+
+  String _format(double value, String code) {
+    final verified = Intl.verifiedLocale(
+      locale,
+      NumberFormat.localeExists,
+      onFailure: (_) => 'en_US',
+    );
+    final symbols = NumberFormat.decimalPattern(verified).symbols;
+    return applyNumberFormat(
+      value,
+      code,
+      displayDecimalSeparator: symbols.DECIMAL_SEP,
+      displayGroupSeparator: symbols.GROUP_SEP,
+    );
+  }
+
+  /// Regular grid ticks that enclose the data range.
+  List<double> get axisTicks {
+    final range = limits;
+    final span = range.max - range.min;
+    if (span.isFinite && span > 1e-300 && span < 1e300) {
+      final target = span / 8;
+      final power = math
+          .pow(10, (math.log(target) / math.ln10).floor())
+          .toDouble();
+      final scale = target / power;
+      const steps = [1.0, 2.0, 2.5, 5.0, 10.0];
+      final nearest = steps.reduce(
+        (a, b) => (a - scale).abs() <= (b - scale).abs() ? a : b,
+      );
+      final step = nearest * power;
+      final first = (range.min / step).floor();
+      final last = (range.max / step).ceil();
+      return [for (var i = first; i <= last; i++) i * step];
+    }
+    return [
+      for (var i = 0; i <= 4; i++) range.min * (1 - i / 4) + range.max * i / 4,
+    ];
+  }
 
   /// Shared signed limits for all series.
   ({double min, double max}) get limits {
@@ -460,6 +670,29 @@ class OfficeVisual {
 
   /// Native line-chart display data, independent of the editable point list.
   OfficeLineChart? importedLineChart;
+
+  /// Wraps an authored chart title within its frame.
+  List<String> chartTitleLines(double width, double size) {
+    if (!chart.showTitle || title.isEmpty) return const [];
+    final available = width - 16;
+    if (available <= 0) return const [];
+    final lines = <String>[];
+    for (final paragraph in title.split('\n')) {
+      var line = '';
+      for (final word in paragraph.split(RegExp(r'\s+'))) {
+        if (word.isEmpty) continue;
+        final next = line.isEmpty ? word : '$line $word';
+        if (line.isNotEmpty && next.runes.length * size * .53 > available) {
+          lines.add(line);
+          line = word;
+        } else {
+          line = next;
+        }
+      }
+      if (line.isNotEmpty) lines.add(line);
+    }
+    return lines;
+  }
 
   /// imageBytes API.
   Uint8List? imageBytes;

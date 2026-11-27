@@ -980,7 +980,12 @@ class SheetDeserializer {
     if (pageSetup != null) {
       sheet.pageSetup = pageSetup;
     }
-    SheetDrawingIo.readSheet(sheet, package, sheetUri);
+    SheetDrawingIo.readSheet(
+      sheet,
+      package,
+      sheetUri,
+      themeColors: styles?.themeColors ?? const [],
+    );
     _readSheetExtras(sheet, package, sheetUri);
     sheet.sourceValidationState = sheet.validationState();
     sheet.sourceConditionalFormatState = sheet.conditionalFormatState();

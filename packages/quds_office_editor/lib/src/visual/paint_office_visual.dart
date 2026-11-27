@@ -519,45 +519,76 @@ abstract final class PaintOfficeVisual {
     OfficeVisual visual,
     String fontFamily,
   ) {
-    _frame(canvas, rect, visual, fontFamily);
-    final Rect plot = _plot(rect, visual);
-    final List<ChartPoint> pts = visual.points;
-    final double sum = pts.fold<double>(
-      0,
-      (double a, ChartPoint p) => a + p.value,
+    final layout = OfficePieLayout(visual, rect.width, rect.height);
+    canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = const Color(0xFFD0D0D0)
+        ..style = PaintingStyle.stroke,
     );
-    if (sum <= 0) {
-      return;
+    for (final (index, title) in layout.titleLines.indexed) {
+      _label(
+        canvas,
+        Rect.fromLTWH(
+          rect.left + 8,
+          rect.top + 3 + index * layout.titleSize,
+          rect.width - 16,
+          layout.titleSize + 5,
+        ),
+        title,
+        fontSize: layout.titleSize,
+        fontFamily: fontFamily,
+        bold: true,
+      );
     }
-    final double side = math.min(plot.width * 0.55, plot.height);
-    final Rect pie = Rect.fromCenter(
-      center: Offset(plot.left + side / 2 + 8, plot.center.dy),
-      width: side,
-      height: side,
-    );
-    var start = -math.pi / 2;
-    for (final ChartPoint p in pts) {
-      final double sweep = (p.value / sum) * math.pi * 2;
-      canvas.drawArc(pie, start, sweep, true, Paint()..color = _hex(p.color));
-      start += sweep;
+    final cx = rect.left + layout.cx;
+    final cy = rect.top + layout.cy;
+    final pie = Rect.fromCircle(center: Offset(cx, cy), radius: layout.radius);
+    for (final slice in layout.slices) {
+      if (slice.sweep == 0) continue;
+      canvas.drawArc(
+        pie,
+        slice.start,
+        slice.sweep,
+        true,
+        Paint()..color = _hex(slice.point.color),
+      );
     }
-    if (visual.chart.showLegend) {
-      var ly = plot.top + 8;
-      for (final ChartPoint p in pts) {
-        final Rect swatch = Rect.fromLTWH(pie.right + 16, ly + 3, 8, 8);
-        canvas.drawRect(swatch, Paint()..color = _hex(p.color));
-        _label(
-          canvas,
-          Rect.fromLTWH(swatch.right + 6, ly, 90, 16),
-          visual.chart.showDataLabels
-              ? '${p.label} ${p.value.toStringAsFixed(0)}'
-              : p.label,
-          fontSize: 10,
-          fontFamily: fontFamily,
-          align: TextAlign.left,
-        );
-        ly += 16;
-      }
+    for (final slice in layout.slices) {
+      if (slice.label.isEmpty) continue;
+      final angle = slice.start + slice.sweep / 2;
+      final distance = layout.radius * (slice.sweep < .22 ? 1.10 : .73);
+      _label(
+        canvas,
+        Rect.fromCenter(
+          center: Offset(
+            cx + distance * math.cos(angle),
+            cy + distance * math.sin(angle),
+          ),
+          width: 48,
+          height: 12,
+        ),
+        slice.label,
+        fontSize: 9,
+        fontFamily: fontFamily,
+      );
+    }
+    for (final entry in layout.legend) {
+      final left = rect.left + entry.x;
+      final top = rect.top + entry.y;
+      canvas.drawRect(
+        Rect.fromLTWH(left + 2, top + 4, 6, 6),
+        Paint()..color = _hex(entry.point.color),
+      );
+      _label(
+        canvas,
+        Rect.fromLTWH(left + 10, top, entry.width - 10, 12),
+        entry.point.label,
+        fontSize: 8,
+        fontFamily: fontFamily,
+        align: TextAlign.left,
+      );
     }
   }
 
@@ -616,32 +647,42 @@ abstract final class PaintOfficeVisual {
         ..color = const Color(0xFFD0D0D0)
         ..style = PaintingStyle.stroke,
     );
-    if (visual.chart.showTitle) {
+    final titleSize = visual.chart.titleSize ?? 11;
+    final titleLines = visual.chartTitleLines(rect.width, titleSize);
+    for (final (index, title) in titleLines.indexed) {
       _label(
         canvas,
-        Rect.fromLTWH(rect.left + 10, rect.top + 2, rect.width - 20, 18),
-        visual.title,
+        Rect.fromLTWH(
+          rect.left + 8,
+          rect.top + 3 + index * titleSize,
+          rect.width - 16,
+          titleSize + 5,
+        ),
+        title,
+        fontSize: titleSize,
         fontFamily: fontFamily,
-        align: TextAlign.left,
         bold: true,
       );
     }
     final plot = Rect.fromLTRB(
-      rect.left + (visual.chart.showAxes ? 39 : 10),
-      rect.top + (visual.chart.showTitle ? 24 : 8),
+      rect.left +
+          (visual.chart.showAxes
+              ? (visual.chart.valueTitle.isEmpty ? 48 : 63)
+              : 10),
+      rect.top + (titleLines.isEmpty ? 8 : titleSize * titleLines.length + 13),
       rect.right - 18,
       rect.bottom - (visual.chart.showLegend ? 42 : 24),
     );
     if (plot.isEmpty) return;
-    final limits = chart.limits;
+    final ticks = chart.axisTicks;
+    final limits = (min: ticks.first, max: ticks.last);
     double category(int index) =>
         plot.left + chart.categoryFraction(index) * plot.width;
     double ordinate(double value) =>
         plot.bottom -
         OfficeLineChart.valueFraction(value, limits) * plot.height;
-    for (var tick = 0; tick <= 4; tick++) {
-      final fraction = tick / 4;
-      final y = plot.bottom - plot.height * fraction;
+    for (final (tick, value) in ticks.indexed) {
+      final y = ordinate(value);
       if (visual.chart.showGridlines || (tick == 0 && visual.chart.showAxes)) {
         canvas.drawLine(
           Offset(plot.left, y),
@@ -653,11 +694,10 @@ abstract final class PaintOfficeVisual {
         );
       }
       if (visual.chart.showAxes) {
-        final value = limits.min * (1 - fraction) + limits.max * fraction;
         _label(
           canvas,
-          Rect.fromLTWH(rect.left + 4, y - 6, 32, 12),
-          OfficeLineChart.formatTick(value),
+          Rect.fromLTWH(plot.left - 47, y - 6, 43, 12),
+          chart.axisLabel(value),
           fontFamily: fontFamily,
           fontSize: 8,
           align: TextAlign.right,
@@ -680,8 +720,20 @@ abstract final class PaintOfficeVisual {
         visual.chart.categoryTitle,
         fontFamily: fontFamily,
         fontSize: 8,
-        align: TextAlign.left,
       );
+      if (visual.chart.valueTitle.isNotEmpty) {
+        canvas.save();
+        canvas.translate(rect.left + 10, plot.center.dy);
+        canvas.rotate(-math.pi / 2);
+        _label(
+          canvas,
+          Rect.fromLTWH(-plot.height / 2, -6, plot.height, 12),
+          visual.chart.valueTitle,
+          fontFamily: fontFamily,
+          fontSize: 8,
+        );
+        canvas.restore();
+      }
     }
     canvas.save();
     canvas.clipRect(plot.inflate(3));
@@ -718,6 +770,22 @@ abstract final class PaintOfficeVisual {
       );
     }
     canvas.restore();
+    if (visual.chart.showDataLabels) {
+      for (final (index, series) in chart.series.indexed) {
+        for (final point in series.points) {
+          final label = chart.pointLabel(index, point.value);
+          if (label.isEmpty) continue;
+          final px = category(point.x!.toInt());
+          _label(
+            canvas,
+            Rect.fromLTWH(px - 28, ordinate(point.value) - 14, 56, 11),
+            label,
+            fontFamily: fontFamily,
+            fontSize: 7,
+          );
+        }
+      }
+    }
     if (visual.chart.showLegend) {
       final slot = (rect.width - 20) / chart.series.length;
       for (final (index, series) in chart.series.indexed) {

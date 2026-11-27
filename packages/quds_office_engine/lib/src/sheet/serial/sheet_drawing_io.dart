@@ -235,8 +235,9 @@ abstract final class SheetDrawingIo {
   static void readSheet(
     SmlWorksheet sheet,
     OpcPackage package,
-    String sheetUri,
-  ) {
+    String sheetUri, {
+    List<String> themeColors = const [],
+  }) {
     final PackageRelationship? rel = package
         .relationshipsFor(sheetUri)
         .firstByType(RelationshipTypes.drawing);
@@ -250,7 +251,9 @@ abstract final class SheetDrawingIo {
     }
     sheet.drawings
       ..clear()
-      ..addAll(_parse(part.readText(), package, drawingUri, sheet));
+      ..addAll(
+        _parse(part.readText(), package, drawingUri, sheet, themeColors),
+      );
   }
 
   static List<SmlDrawing> _parse(
@@ -258,6 +261,7 @@ abstract final class SheetDrawingIo {
     OpcPackage package,
     String drawingUri,
     SmlWorksheet sheet,
+    List<String> themeColors,
   ) {
     final List<SmlDrawing> out = <SmlDrawing>[];
     final XmlPullReader reader = XmlPullReader(xml);
@@ -332,6 +336,8 @@ abstract final class SheetDrawingIo {
           );
           if (visual.kind == OfficeVisualKind.chartLine) {
             _projectLineChart(chartXml, visual, name);
+          } else if (visual.kind == OfficeVisualKind.chartPie) {
+            _projectPieChart(chartXml, visual, themeColors);
           }
           final ({String? categories, String? values}) refs =
               DrawingmlVisualIo.chartSeriesRefs(chartXml);
@@ -472,6 +478,59 @@ abstract final class SheetDrawingIo {
     return out;
   }
 
+  static void _applyTitleSize(XmlElement? node, ChartDisplay display) {
+    final rich = node?.firstChild('tx')?.firstChild('rich');
+    final paragraph = rich?.firstChild('p');
+    final run = paragraph?.firstChild('r')?.firstChild('rPr');
+    final defaults = paragraph?.firstChild('pPr')?.firstChild('defRPr');
+    final size = int.tryParse(
+      run?.getAttribute('sz') ?? defaults?.getAttribute('sz') ?? '',
+    );
+    if (size != null && size >= 600 && size <= 7200) {
+      display.titleSize = size / 100;
+    }
+  }
+
+  static void _projectPieChart(
+    String xml,
+    OfficeVisual visual,
+    List<String> themeColors,
+  ) {
+    final chart = XmlDocument.parse(xml).root?.firstChild('chart');
+    final pie = chart?.firstChild('plotArea')?.firstChild('pieChart');
+    final series = pie?.firstChild('ser');
+    if (series == null) return;
+    _applyTitleSize(chart?.firstChild('title'), visual.chart);
+    final explicit = <int, String>{};
+    for (final point in series.childrenNamed('dPt')) {
+      final index = int.tryParse(
+        point.firstChild('idx')?.getAttribute('val') ?? '',
+      );
+      final fill = point.firstChild('spPr')?.firstChild('solidFill');
+      final rgb = fill?.firstChild('srgbClr')?.getAttribute('val');
+      final scheme = fill?.firstChild('schemeClr')?.getAttribute('val');
+      final accent = scheme != null && scheme.startsWith('accent')
+          ? int.tryParse(scheme.substring(6))
+          : null;
+      if (index == null || index < 0) continue;
+      if (rgb != null && RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(rgb)) {
+        explicit[index] = rgb.toUpperCase();
+      } else if (accent != null &&
+          accent >= 1 &&
+          accent <= 6 &&
+          accent + 3 < themeColors.length) {
+        explicit[index] = themeColors[accent + 3];
+      }
+    }
+    final colors = themeColors.length >= 10
+        ? themeColors.sublist(4, 10)
+        : VisualPalette.fills;
+    for (var i = 0; i < visual.points.length; i++) {
+      final color = explicit[i] ?? colors[i % colors.length];
+      visual.points[i] = visual.points[i].copyWith(color: color);
+    }
+  }
+
   static void _projectLineChart(String xml, OfficeVisual visual, String name) {
     final chart = XmlDocument.parse(xml).root?.firstChild('chart');
     final plot = chart?.firstChild('plotArea');
@@ -518,6 +577,7 @@ abstract final class SheetDrawingIo {
 
     final labels = <int, String>{};
     final series = <ChartSeries>[];
+    final labelFormats = <String?>[];
     var categoryCount = 0;
     var sampleBudget = 65536;
     final blanks = chart.firstChild('dispBlanksAs')?.getAttribute('val');
@@ -573,6 +633,21 @@ abstract final class SheetDrawingIo {
         }
       }
       if (samples.isEmpty) continue;
+      final labelSettings = item.firstChild('dLbls');
+      final sharedSettings = line.firstChild('dLbls');
+      final show =
+          labelSettings?.firstChild('showVal')?.getAttribute('val') ??
+          sharedSettings?.firstChild('showVal')?.getAttribute('val');
+      labelFormats.add(
+        show == '1' || show == 'true'
+            ? labelSettings?.firstChild('numFmt')?.getAttribute('formatCode') ??
+                  sharedSettings
+                      ?.firstChild('numFmt')
+                      ?.getAttribute('formatCode') ??
+                  valueCache?.firstChild('formatCode')?.text ??
+                  '#,##0'
+            : null,
+      );
       series.add(
         ChartSeries(
           name: seriesName.isEmpty ? 'Series ${series.length + 1}' : seriesName,
@@ -582,6 +657,7 @@ abstract final class SheetDrawingIo {
       );
     }
 
+    _applyTitleSize(chart.firstChild('title'), visual.chart);
     final title = titleText(chart.firstChild('title'));
     visual.title = title.isEmpty ? name : title;
     visual.chart
@@ -594,6 +670,9 @@ abstract final class SheetDrawingIo {
           for (var i = 0; i < categoryCount; i++) labels[i] ?? '${i + 1}',
         ],
         series: series,
+        labelFormats: labelFormats,
+        locale:
+            chart.parent?.firstChild('lang')?.getAttribute('val') ?? 'en_US',
         connectGaps: blanks == 'span',
       );
     }

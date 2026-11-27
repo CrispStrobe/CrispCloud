@@ -70,6 +70,54 @@ void main() {
     expect(plain.properties.bold, isTrue);
   });
 
+  test(
+    'compacts plain field and bookmark markers with inherited namespaces',
+    () {
+      final package = OpcPackage.create(OpcPackageKind.word);
+      package
+          .getPart('/word/document.xml')!
+          .writeText(
+            '<w:document xmlns:w="${OfficeNamespaces.w}" '
+            'xmlns:ext="urn:fixture:ext" xmlns:kind="urn:fixture:kind">'
+            '<w:body><w:p><w:bookmarkStart w:id="1" w:name="Target"/>'
+            '<w:r><w:t>See </w:t></w:r>'
+            '<w:r><w:fldChar w:fldCharType="begin" w:fldLock="1"/></w:r>'
+            '<w:r><w:instrText> PAGEREF Target </w:instrText></w:r>'
+            '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+            '<w:r><w:t>4</w:t></w:r>'
+            '<w:r><w:fldChar w:fldCharType="end" ext:type="kind:Choice"/></w:r>'
+            '<w:bookmarkEnd w:id="1" ext:type="kind:Choice"/>'
+            '</w:p></w:body></w:document>',
+          );
+
+      void verify(WmlDocument document) {
+        final paragraph = document.paragraphs.single;
+        expect(paragraph.text, 'See 4');
+        final fields = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
+        expect(fields.first.sourceXml, contains('w:fldLock="1"'));
+        expect(fields.first.sourceXml, isNot(contains('xmlns:kind')));
+        expect(
+          fields.last.sourceXml,
+          contains('xmlns:kind="urn:fixture:kind"'),
+        );
+        expect(fields.last.sourceXml, contains('ext:type="kind:Choice"'));
+        final bookmarks = paragraph.inlines.whereType<WmlBookmarkBoundary>();
+        expect(bookmarks.first.sourceXml, isNot(contains('xmlns:kind')));
+        expect(
+          bookmarks.last.sourceXml,
+          contains('xmlns:kind="urn:fixture:kind"'),
+        );
+        expect(bookmarks.last.sourceXml, contains('ext:type="kind:Choice"'));
+      }
+
+      final document = WordDeserializer().read(package);
+      verify(document);
+      verify(
+        WordDeserializer().readBytes(WordSerializer().write(document).save()),
+      );
+    },
+  );
+
   test('footer text flows upward from the bottom margin', () {
     WmlParagraph paragraph(String text, int halfPoints, double lineHeight) =>
         WmlParagraph(
