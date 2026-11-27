@@ -2803,7 +2803,20 @@ class WordDeserializer {
     XmlPullReader reader,
     WmlRunProps props,
   ) {
+    final hasSourceAttributes = reader.attributeCount != 0;
     final XmlElement node = XmlDocument.readElement(reader);
+    if (!hasSourceAttributes &&
+        node.prefix == 'w' &&
+        node.namespaceUri == OfficeNamespaces.w &&
+        node.children.every(_isSimpleRunProperty)) {
+      // These leaf properties have only scalar Word attributes. They do not
+      // use inherited namespace bindings beyond the canonical Word prefix.
+      // Keep explicit declarations and the full scope of all opaque markup.
+      node.attributes.removeWhere(
+        (attribute) =>
+            attribute.prefix == 'xmlns' && attribute.localName != 'w',
+      );
+    }
     final sourceXml = XmlDocument(root: node).toXmlString(declaration: false);
     final change = node.firstChild(
       'rPrChange',
@@ -2822,6 +2835,58 @@ class WordDeserializer {
     )..next();
     _parseRPr(source, props);
     return (change: change, sourceXml: sourceXml);
+  }
+
+  static bool _isSimpleRunProperty(XmlNode node) {
+    if (node is! XmlElement ||
+        node.prefix != 'w' ||
+        node.namespaceUri != OfficeNamespaces.w ||
+        node.children.isNotEmpty) {
+      return false;
+    }
+    final scalarAttributes = switch (node.localName) {
+      'rFonts' => const {
+        'ascii',
+        'hAnsi',
+        'eastAsia',
+        'cs',
+        'hint',
+        'asciiTheme',
+        'hAnsiTheme',
+        'eastAsiaTheme',
+        'cstheme',
+      },
+      'lang' => const {'val', 'eastAsia', 'bidi'},
+      'color' => const {'val', 'themeColor', 'themeTint', 'themeShade'},
+      'b' ||
+      'bCs' ||
+      'i' ||
+      'iCs' ||
+      'caps' ||
+      'smallCaps' ||
+      'strike' ||
+      'dstrike' ||
+      'noProof' ||
+      'webHidden' ||
+      'snapToGrid' ||
+      'rtl' ||
+      'cs' ||
+      'rStyle' ||
+      'sz' ||
+      'szCs' ||
+      'vertAlign' ||
+      'kern' ||
+      'position' ||
+      'highlight' => const {'val'},
+      _ => null,
+    };
+    return scalarAttributes != null &&
+        node.attributes.every(
+          (attribute) =>
+              attribute.prefix == 'w' &&
+              attribute.namespaceUri == OfficeNamespaces.w &&
+              scalarAttributes.contains(attribute.localName),
+        );
   }
 
   void _parseRPr(XmlPullReader reader, WmlRunProps props) {

@@ -23,6 +23,53 @@ void main() {
     );
   });
 
+  test('compacts inherited namespaces only for ordinary run formatting', () {
+    final package = OpcPackage.openBytes(
+      (DocxDocumentBuilder()..paragraph('Placeholder')).build(),
+    );
+    final part = package.getPart('/word/document.xml')!;
+    part.writeText(
+      '<w:document xmlns:w="${OfficeNamespaces.w}" '
+      'xmlns:ext="urn:fixture:extension" xmlns:kind="urn:fixture:types">'
+      '<w:body><w:p>'
+      '<w:r><w:rPr><w:b/><w:rFonts w:ascii="Test Font"/>'
+      '<w:lang w:val="de-DE"/></w:rPr><w:t>Plain</w:t></w:r>'
+      '<w:r><w:rPr><w:b ext:type="kind:Choice"/></w:rPr>'
+      '<w:t>Extension</w:t></w:r>'
+      '<w:r><w:rPr xmlns:local="urn:fixture:local"><w:b/></w:rPr>'
+      '<w:t>Explicit</w:t></w:r>'
+      '</w:p></w:body></w:document>',
+    );
+    final document = WordDeserializer().readBytes(package.save());
+    final runs = document.paragraphs.single.inlines
+        .whereType<WmlRun>()
+        .toList();
+    expect(
+      runs[0].properties.sourcePropertiesXml,
+      isNot(contains('xmlns:ext')),
+    );
+    expect(
+      runs[0].properties.sourcePropertiesXml,
+      isNot(contains('xmlns:kind')),
+    );
+    expect(runs[0].properties.proofingLanguage, 'de-DE');
+    expect(runs[0].properties.asciiFont, 'Test Font');
+    expect(runs[0].properties.bold, isTrue);
+    runs[0].properties.proofingLanguage = 'de-AT';
+
+    final saved = WordSerializer().write(document);
+    final output = saved.getPart('/word/document.xml')!.readText();
+    expect(output, contains('xmlns:kind="urn:fixture:types"'));
+    expect(output, contains('ext:type="kind:Choice"'));
+    expect(output, contains('xmlns:local="urn:fixture:local"'));
+    final reopened = WordDeserializer().readBytes(saved.save());
+    final plain = reopened.paragraphs.single.inlines.whereType<WmlRun>().first;
+    expect(plain.text, 'Plain');
+    expect(plain.properties.proofingLanguage, 'de-AT');
+    expect(plain.properties.asciiFont, 'Test Font');
+    expect(plain.properties.bold, isTrue);
+  });
+
   test('footer text flows upward from the bottom margin', () {
     WmlParagraph paragraph(String text, int halfPoints, double lineHeight) =>
         WmlParagraph(
