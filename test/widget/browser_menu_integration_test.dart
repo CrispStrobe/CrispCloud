@@ -30,6 +30,7 @@ import 'package:crisp_cloud/widgets/external_comparison_dialog.dart';
 import 'package:crisp_cloud/widgets/external_editing_dialog.dart';
 import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,8 +123,11 @@ void main() {
     theme.dispose();
   });
 
-  Future<void> mount(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1250, 950);
+  Future<void> mount(
+    WidgetTester tester, {
+    Size size = const Size(1250, 950),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -142,6 +146,32 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('iPhone has one toolbar menu with access to the drawer', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await mount(tester, size: const Size(390, 844));
+
+    final menu = find.byKey(const ValueKey('browser-menu-compact'));
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: menu),
+      findsOneWidget,
+    );
+    expect(find.byType(DrawerButton), findsNothing);
+
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('browser-menu-controls')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('browser-menu-open-drawer')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.state<ScaffoldState>(find.byType(Scaffold).first).isDrawerOpen,
+      isTrue,
+    );
+  });
 
   testWidgets(
     'every default menu command resolves to the real screen registry',
@@ -366,7 +396,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ConfigurableBrowserMenu), findsNothing);
     expect(find.byType(WindowsPlatformMenuBar), findsOneWidget);
-    expect(find.byKey(const ValueKey('windows-context-menu-Help')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('windows-context-menu-Help')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('windows-context-menu-File')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('windows-context-item-Save')));

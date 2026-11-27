@@ -155,6 +155,7 @@ class ConfigurableBrowserMenu extends StatelessWidget {
     required this.fixedCommands,
     this.preview = false,
     this.inToolbar = false,
+    this.onOpenDrawer,
   });
   final BrowserMenuLayout layout;
   final Map<String, BrowserMenuCommandBinding> commands;
@@ -164,6 +165,9 @@ class ConfigurableBrowserMenu extends StatelessWidget {
   /// Windows displays its application menus inside the top AppBar, not in
   /// a second Material menu row. Other platforms retain the existing layout.
   final bool inToolbar;
+
+  /// The iPhone toolbar uses the same button for menus and access to the drawer.
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -266,27 +270,55 @@ class ConfigurableBrowserMenu extends StatelessWidget {
           ],
           child: toolbarMode
               ? MenuAcceleratorLabel(
-                  windowsMenuAcceleratorLabel(strings.text('controls'), usedAccelerators),
+                  windowsMenuAcceleratorLabel(
+                    strings.text('controls'),
+                    usedAccelerators,
+                  ),
                 )
               : Text(strings.text('controls')),
         ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < (inToolbar ? 600 : 650);
+        final openDrawer = onOpenDrawer;
+        final compact =
+            openDrawer != null ||
+            constraints.maxWidth < (inToolbar ? 600 : 650);
         final menus = menusFor(toolbarMode: inToolbar && !compact);
         if (compact) {
           return Align(
             alignment: AlignmentDirectional.centerStart,
             child: MenuAnchor(
-              menuChildren: menus,
-              builder: (context, controller, _) => TextButton.icon(
-                key: const ValueKey('browser-menu-compact'),
-                icon: const Icon(Icons.menu, size: 18),
-                label: Text(strings.text('menus')),
-                onPressed: () =>
-                    controller.isOpen ? controller.close() : controller.open(),
-              ),
+              menuChildren: [
+                ...menus,
+                if (openDrawer != null)
+                  MenuItemButton(
+                    key: const ValueKey('browser-menu-open-drawer'),
+                    leadingIcon: const Icon(Icons.space_dashboard_outlined),
+                    onPressed: openDrawer,
+                    child: Text(
+                      MaterialLocalizations.of(context).openAppDrawerTooltip,
+                    ),
+                  ),
+              ],
+              builder: (context, controller, _) {
+                const key = ValueKey('browser-menu-compact');
+                void toggle() =>
+                    controller.isOpen ? controller.close() : controller.open();
+                return openDrawer == null
+                    ? TextButton.icon(
+                        key: key,
+                        icon: const Icon(Icons.menu, size: 18),
+                        label: Text(strings.text('menus')),
+                        onPressed: toggle,
+                      )
+                    : IconButton(
+                        key: key,
+                        tooltip: strings.text('menus'),
+                        icon: const Icon(Icons.menu),
+                        onPressed: toggle,
+                      );
+              },
             ),
           );
         }

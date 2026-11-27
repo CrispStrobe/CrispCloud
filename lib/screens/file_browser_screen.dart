@@ -288,8 +288,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // layoutPresetProvider kept for persistence but no longer drives layout.
     // Layout is now controlled by showDualPanelProvider + showTreeSidebarProvider.
 
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isNarrow = screenWidth <= 800;
+    final screenSize = MediaQuery.sizeOf(context);
+    final isNarrow = screenSize.width <= 800;
+    final isIosPhone =
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        screenSize.shortestSide < 600;
     // Platform checks for hiding irrelevant features
     final bool isDesktopPlatform =
         !kIsWeb &&
@@ -322,6 +326,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               elevation: isWindowsDesktop ? 0 : null,
               scrolledUnderElevation: isWindowsDesktop ? 0 : null,
               surfaceTintColor: isWindowsDesktop ? Colors.transparent : null,
+              leading: isIosPhone && browserMenusVisible
+                  ? Builder(
+                      builder: (toolbarContext) => ConfigurableBrowserMenu(
+                        layout: menuStore.layout,
+                        commands: _browserMenuBindings(context, ref),
+                        fixedCommands: _fixedBrowserMenuBindings(context, ref),
+                        onOpenDrawer: Scaffold.of(toolbarContext).openDrawer,
+                      ),
+                    )
+                  : null,
               title: isWindowsDesktop
                   ? (browserMenusVisible
                         ? ConfigurableBrowserMenu(
@@ -356,8 +370,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       isNarrow: isNarrow,
                       showToolbar: showTopToolbar && browserMenusVisible,
                     )
-                  : isNarrow
-                  ? _buildNarrowActions(context, auth)
+                  : isNarrow || isIosPhone
+                  ? _buildNarrowActions(
+                      context,
+                      auth,
+                      compactAccount: isIosPhone,
+                    )
                   : _buildWideActions(
                       context,
                       auth,
@@ -372,6 +390,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         child: Column(
           children: [
             if (!isWindowsDesktop &&
+                !isIosPhone &&
                 (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) &&
                 browserMenusVisible)
               ConfigurableBrowserMenu(
@@ -419,9 +438,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ],
         ),
       ),
-      drawer: MediaQuery.of(context).size.width <= 800
-          ? _buildDrawer(context)
-          : null,
+      drawer: isNarrow || isIosPhone ? _buildDrawer(context) : null,
     );
 
     // macOS: wrap with native menu bar
@@ -2469,7 +2486,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   /// Narrow screens (<=800px): essential buttons + overflow popup.
   /// The drawer already provides full access to all features.
-  List<Widget> _buildNarrowActions(BuildContext context, AuthNotifier auth) {
+  List<Widget> _buildNarrowActions(
+    BuildContext context,
+    AuthNotifier auth, {
+    required bool compactAccount,
+  }) {
     final l = AppLocalizations.of(context)!;
     return [
       IconButton(
@@ -2491,7 +2512,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           onPressed: () => showConnectionDialogScreen(context),
         )
       else
-        _buildUserMenu(context, auth),
+        _buildUserMenu(context, auth, compact: compactAccount),
     ];
   }
 
@@ -3565,7 +3586,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     }
   }
 
-  Widget _buildUserMenu(BuildContext context, AuthNotifier auth) {
+  Widget _buildUserMenu(
+    BuildContext context,
+    AuthNotifier auth, {
+    bool compact = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: PopupMenuButton<String>(
@@ -3611,13 +3636,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
           ),
         ],
-        child: Chip(
-          avatar: const Icon(Icons.account_circle, size: 20),
-          label: Text(
-            auth.userEmail ?? context.commanderTr("Connected"),
-            style: const TextStyle(fontSize: 13),
-          ),
-        ),
+        icon: compact ? const Icon(Icons.account_circle_outlined) : null,
+        tooltip: compact
+            ? auth.userEmail ?? context.commanderTr('Connected')
+            : null,
+        child: compact
+            ? null
+            : Chip(
+                avatar: const Icon(Icons.account_circle, size: 20),
+                label: Text(
+                  auth.userEmail ?? context.commanderTr("Connected"),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
       ),
     );
   }
