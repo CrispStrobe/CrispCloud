@@ -171,6 +171,13 @@ jobs:
           archive="$RUNNER_TEMP/storage-ff16.zip"
           digest=99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e
           verified() { printf '%s  %s\n' "$digest" "$1" | sha256sum --check --status; }
+          # elm-chan.org blocks data-centre addresses (runner timeouts, 403 from a
+          # VPS since 2026-11-27), so a copy of the same digest-pinned archive is
+          # committed; the download stays as the fallback.
+          vendored=test/fixtures/external/fatfs-r016-ff16.zip
+          if ! verified "$archive" && verified "$vendored"; then
+            cp "$vendored" "$archive"
+          fi
           if ! verified "$archive"; then
             for source in https://elm-chan.org/fsw/ff/arc/ff16.zip http://elm-chan.org/fsw/ff/arc/ff16.zip; do
               if curl --fail --location --connect-timeout 15 --max-time 60 \

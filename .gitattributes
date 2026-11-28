@@ -50,3 +50,6 @@ docs/validation/**/*.log -text -whitespace
 
 # Retain Word-produced XML fixture bytes, including its CRLF declaration.
 packages/quds_office_engine/test/fixtures/word_reviews/*.xml -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Upstream archive pinned by SHA-256 in storage-capabilities.yml.
+test/fixtures/external/*.zip binary
